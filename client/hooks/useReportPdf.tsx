@@ -187,7 +187,7 @@ export const useReportPdf = ({ report, url, screenshots, whiteLabelLogo, default
             for (let i = 0; i < pages.length; i++) {
                 const page = pages[i];
                 const canvas = await html2canvas(page, {
-                    scale: 3, // High Quality
+                    scale: 2, // High Quality
                     useCORS: true,
                     logging: false,
                     backgroundColor: '#ffffff',
@@ -198,7 +198,7 @@ export const useReportPdf = ({ report, url, screenshots, whiteLabelLogo, default
                         });
                     }
                 });
-                const imgData = canvas.toDataURL('image/jpeg', 0.98);
+                const imgData = canvas.toDataURL('image/jpeg', 0.80);
                 const imgWidth = pdfWidth - (MARGIN * 2);
                 const imgHeight = (canvas.height * imgWidth) / canvas.width;
 
