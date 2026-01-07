@@ -124,6 +124,8 @@ export const analyzeWebsiteStream = async (
         const tasks = [{ url: input.url, isMobile: false }];
         if (isPrimary) tasks.push({ url: input.url, isMobile: true });
 
+        // Run scrape tasks in parallel
+        // Run scrape tasks sequentially to avoid 429/Concurrency limits
         for (const task of tasks) {
           try {
             const response = await fetch(functionUrl, {
@@ -136,8 +138,11 @@ export const analyzeWebsiteStream = async (
 
             const result = await response.json();
 
+            // Push to shared array safely
             allScreenshots.push(result.screenshot);
+
             if (!result.screenshot.isMobile) {
+              // Append text (order might vary, but that's acceptable for context)
               aggregatedLiveText += `\n\n--- CONTENT FROM ${input.url} ---\n${result.liveText || '(No text found)'}\n\n`;
               if (isPrimary) {
                 animationData = result.animationData;
@@ -147,7 +152,7 @@ export const analyzeWebsiteStream = async (
             successfulAcquisitions++;
           } catch (e) {
             console.error(e);
-            onStatus(`⚠️ Failed to scrape ${input.url}. Skipping.`);
+            onStatus(`⚠️ Failed to scrape ${input.url} (${task.isMobile ? 'Mobile' : 'Desktop'}). Skipping.`);
           }
         }
 
@@ -210,13 +215,32 @@ export const analyzeWebsiteStream = async (
     onStatus('✓ Data acquired. Beginning AI analysis...');
 
 
-    // --- Phase 2: Analyze Data ---
+
+    // --- Phase 2: Analyze Data & Upload Resources (PARALLEL) ---
     const primaryScreenshot = allScreenshots[0]; // Logic: Use first available
     const primaryMobileScreenshot = allScreenshots.find(s => s.isMobile);
 
     // Collect all desktop screenshots for combined analysis
     const allDesktopScreenshots = allScreenshots.filter(s => !s.isMobile);
     const allDesktopScreenshotsBase64 = allDesktopScreenshots.map(s => s.data).filter(Boolean);
+
+    // 1. Start Uploads in Background
+    onStatus('Uploading resources in background...');
+    const uploadPromise = (async () => {
+      try {
+        const response = await fetch(functionUrl, {
+          method: 'POST',
+          headers: commonHeaders,
+          body: JSON.stringify({ screenshots: allScreenshots, mode: 'upload-screenshots' }),
+        });
+        if (!response.ok) throw new Error("Upload failed");
+        const data = await response.json();
+        return data.uploadedScreenshots; // Returns array with URLs
+      } catch (e) {
+        console.error("Background upload failed:", e);
+        throw e;
+      }
+    })();
 
     const analysisExperts: ExpertKey[] = [
       'Strategy Audit expert',
@@ -289,15 +313,29 @@ export const analyzeWebsiteStream = async (
 
     onStatus('✓ All analyses complete. Finalizing report...');
 
+    // Wait for uploads to finish if they haven't already
+    let uploadedScreenshotsWithUrls = [];
+    try {
+      uploadedScreenshotsWithUrls = await uploadPromise;
+      // Merge URLs back into finalReport if needed or just pass to save
+      // The report itself usually doesn't strictly need the URLs inside the JSON unless we want them there.
+      // Let's ensure the report object has what it needs.
+      finalReport.screenshots = uploadedScreenshotsWithUrls;
+    } catch (e) {
+      onStatus('⚠️ background upload failed, retrying in final step...');
+      // Fallback or fail? If upload failed, we can't save effectively.
+      throw new Error("Failed to upload screenshots.");
+    }
+
     // --- Phase 3: Finalize Report ---
     const finalizeResponse = await fetch(functionUrl, {
       method: 'POST',
       headers: commonHeaders,
       body: JSON.stringify({
         report: finalReport,
-        screenshots: allScreenshots,
+        screenshots: uploadedScreenshotsWithUrls,
         url: primaryUrl,
-        mode: 'finalize'
+        mode: 'save-audit'
       }),
     });
 
