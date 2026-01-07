@@ -7,8 +7,6 @@ const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYm
 
 const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
-const BUCKET_NAME = 'shared-audits'; // Will use existing 'screenshots' bucket or create this
-
 export interface SharedAuditData {
     id: string;
     url: string;
@@ -20,7 +18,7 @@ export interface SharedAuditData {
 }
 
 /**
- * Save audit data to Supabase Storage as a JSON file
+ * Save audit data to Supabase 'audits' table (Unified Storage)
  * Returns the unique audit ID
  */
 export async function saveSharedAudit(data: {
@@ -30,68 +28,68 @@ export async function saveSharedAudit(data: {
     screenshotMimeType: string;
     whiteLabelLogo?: string | null;
 }): Promise<string> {
-    // Generate unique ID
-    const auditId = crypto.randomUUID();
 
-    // Prepare audit data
-    const auditData: SharedAuditData = {
-        id: auditId,
-        url: data.url,
-        report: data.report,
-        screenshots: data.screenshots,
-        screenshotMimeType: data.screenshotMimeType,
-        whiteLabelLogo: data.whiteLabelLogo,
-        createdAt: new Date().toISOString(),
-    };
+    // We only store the primary screenshot URL in the simple 'audits' schema
+    const primaryScreenshot = data.screenshots.find(s => !s.isMobile)?.url || '';
 
-    // Convert to JSON
-    const jsonData = JSON.stringify(auditData);
-    const blob = new Blob([jsonData], { type: 'application/json' });
-
-    // Upload to Supabase Storage
-    const fileName = `${auditId}.json`;
-    const { error } = await supabase.storage
-        .from(BUCKET_NAME)
-        .upload(fileName, blob, {
-            contentType: 'application/json',
-            upsert: false,
-        });
+    // Insert into 'audits' table
+    const { data: record, error } = await supabase
+        .from('audits')
+        .insert({
+            url: data.url,
+            report_data: data.report,
+            screenshot_url: primaryScreenshot
+            // Note: whiteLabelLogo is not currently persisted in the simple schema
+        })
+        .select('id')
+        .single();
 
     if (error) {
-        console.error('Error uploading shared audit:', error);
+        console.error('Error saving shared audit to DB:', error);
         throw new Error(`Failed to save audit: ${error.message}`);
     }
 
-    return auditId;
+    return record.id;
 }
 
 /**
- * Retrieve shared audit data by ID
+ * Retrieve shared audit data by ID from the DB
  * Returns null if not found
  */
 export async function getSharedAudit(auditId: string): Promise<SharedAuditData | null> {
-    const fileName = `${auditId}.json`;
 
-    // Download from Supabase Storage
-    const { data, error } = await supabase.storage
-        .from(BUCKET_NAME)
-        .download(fileName);
+    // Fetch from 'audits' table
+    const { data: auditRecord, error } = await supabase
+        .from('audits')
+        .select('*')
+        .eq('id', auditId)
+        .single();
 
     if (error) {
-        if (error.message.includes('not found') || error.message.includes('404')) {
-            return null;
-        }
-        console.error('Error downloading shared audit:', error);
-        throw new Error(`Failed to fetch audit: ${error.message}`);
-    }
-
-    if (!data) {
+        console.error('Error fetching audit from DB:', error);
         return null;
     }
 
-    // Parse JSON
-    const text = await data.text();
-    const auditData = JSON.parse(text) as SharedAuditData;
+    if (!auditRecord) {
+        return null;
+    }
 
-    return auditData;
+    // Map DB fields to Frontend Interface
+    const screenshots: Screenshot[] = [{
+        url: auditRecord.screenshot_url,
+        isMobile: false, // Defaulting to desktop for API audits
+        path: '', // Not needed for display
+        data: '' // Required by type, but unused when URL is present
+    }];
+
+    return {
+        id: auditRecord.id,
+        url: auditRecord.url,
+        report: auditRecord.report_data,
+        screenshots: screenshots,
+        screenshotMimeType: 'image/jpeg', // Default for backend API
+        whiteLabelLogo: null,
+        createdAt: auditRecord.created_at
+    };
 }
+

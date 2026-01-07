@@ -108,6 +108,7 @@ function AppWithRouting() {
                 <Routes>
                     <Route path="/" element={<App />} />
                     <Route path="/shared/:auditId" element={<SharedAuditView />} />
+                    <Route path="/report/:auditId" element={<SharedAuditView />} />
                 </Routes>
             </BrowserRouter>
         </AuthProvider>

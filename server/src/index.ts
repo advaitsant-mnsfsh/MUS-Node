@@ -8,6 +8,9 @@ dotenv.config();
 const app = express();
 const port = process.env.PORT || 3000;
 
+import apiRoutes from './api/routes';
+
+// ...
 app.use(cors());
 app.use(express.json({ limit: '50mb' }));
 
@@ -15,6 +18,8 @@ app.get('/', (req, res) => {
     res.send('MUS Audit Server is running');
 });
 
+// Mount External API
+app.use('/api/v1', apiRoutes);
 app.post('/api/audit', async (req, res) => {
     try {
         await handleAuditRequest(req, res);

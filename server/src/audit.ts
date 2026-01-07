@@ -191,9 +191,217 @@ const handleSingleAnalysisStream = async (res: Response, expertKey: string, anal
     }
 };
 
+// --- RELEASED FUNCTIONS FOR HEADLESS USE ---
+
+export const performScrape = async (url: string, isMobile: boolean, isFirstPage: boolean, browserEndpoint?: string) => {
+    let browser;
+    try {
+        if (browserEndpoint) {
+            const connectBrowser = () => puppeteer.connect({ browserWSEndpoint: browserEndpoint });
+            browser = await retryWithBackoff(connectBrowser, 5, 2000, "Puppeteer Connect");
+        } else {
+            browser = await puppeteer.launch({
+                headless: "new",
+                args: [
+                    '--no-sandbox',
+                    '--disable-setuid-sandbox',
+                    '--disable-dev-shm-usage',
+                    '--disable-gpu'
+                ]
+            });
+        }
+
+        const page = await browser.newPage();
+        page.setDefaultNavigationTimeout(60000); // Increased timeout
+
+        const viewport = isMobile ? { width: 390, height: 844, isMobile: true, hasTouch: true } : { width: 1920, height: 1080 };
+        await page.setViewport(viewport);
+
+        await page.goto(url, { waitUntil: 'networkidle2', timeout: 60000 });
+
+        // Scroll logic
+        await page.evaluate(async () => {
+            await new Promise<void>((resolve) => {
+                let totalHeight = 0;
+                const distance = 250;
+                const maxScrolls = 15; // Reduced from 40 for speed
+                let scrolls = 0;
+                const timer = setInterval(() => {
+                    const scrollHeight = document.body.scrollHeight;
+                    window.scrollBy(0, distance);
+                    totalHeight += distance;
+                    scrolls++;
+                    if (totalHeight >= scrollHeight || scrolls >= maxScrolls) {
+                        clearInterval(timer);
+                        resolve();
+                    }
+                }, 100);
+            });
+        });
+
+        // Fix fixed positions
+        await page.evaluate(() => {
+            document.querySelectorAll('*').forEach((el: any) => {
+                const style = window.getComputedStyle(el);
+                if (style.position === 'fixed' || style.position === 'sticky') {
+                    el.style.position = 'absolute';
+                }
+            });
+            window.scrollTo(0, 0);
+        });
+
+        const screenshotBuffer = await page.screenshot({ type: 'jpeg', quality: 40, fullPage: true });
+        const pagePath = new URL(url).pathname;
+
+        const screenshot = {
+            path: pagePath,
+            data: Buffer.from(screenshotBuffer).toString('base64'),
+            isMobile
+        };
+
+        const pageData = await page.evaluate((isFirstPageDesktop: boolean) => {
+            const text = document.body.innerText;
+            let animationData = null;
+            let accessibilityData = null;
+
+            if (isFirstPageDesktop) {
+                // @ts-ignore
+                animationData = Array.from(document.querySelectorAll('*')).filter((el: any) => {
+                    const style = window.getComputedStyle(el);
+                    return style.getPropertyValue('animation-name') !== 'none' || (style.getPropertyValue('transition-property') !== 'all' && style.getPropertyValue('transition-property') !== '');
+                }).map((el: any) => `${el.tagName.toLowerCase()}${el.id ? `#${el.id}` : ''}${el.className && typeof el.className === 'string' ? `.${el.className.split(' ').filter((c: any) => c).join('.')}` : ''}`).slice(0, 20);
+
+                // @ts-ignore
+                accessibilityData = {
+                    imagesMissingAlt: Array.from(document.querySelectorAll('img:not([alt])')).length,
+                    inputsMissingLabels: Array.from(document.querySelectorAll('input:not([id]), textarea:not([id])')).filter((el: any) => !el.closest('label')).length + Array.from(document.querySelectorAll('input[id], textarea[id]')).filter((el: any) => !document.querySelector(`label[for="${el.id}"]`)).length,
+                    hasSemanticElements: !!document.querySelector('main, nav, header, footer, article, section, aside'),
+                    hasAriaAttributes: !!document.querySelector('[role], [aria-label], [aria-labelledby], [aria-describedby]')
+                };
+            }
+            return { liveText: text, animationData, accessibilityData };
+        }, isFirstPage && !isMobile);
+
+        await page.close();
+        return { screenshot, ...pageData };
+
+    } catch (error: any) {
+        console.error("Scraping failed:", error);
+        throw new Error(`Scraping failed: ${error.message}`);
+    } finally {
+        if (browser) await browser.disconnect();
+    }
+};
+
+export const performPerformanceCheck = async (url: string, apiKey: string, secrets: any) => {
+    try {
+        let pageSpeedApiKey = secrets['PAGESPEED_API_KEY'];
+        if (!pageSpeedApiKey) {
+            pageSpeedApiKey = process.env.PAGESPEED_API_KEY;
+        }
+        const usedKey = pageSpeedApiKey || apiKey;
+
+        const psiUrl = `https://www.googleapis.com/pagespeedonline/v5/runPagespeed?url=${encodeURIComponent(url)}&key=${usedKey}&category=performance&strategy=desktop`;
+
+        const maskedKey = usedKey ? `...${usedKey.slice(-4)}` : 'undefined';
+        console.log(`[Performance] Starting audit for: ${url}`);
+        console.log(`[Performance] Using API Key: ${maskedKey}`);
+
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 60000);
+
+        console.log(`[Performance] Fetching PageSpeed data...`);
+        const psiResponse = await fetch(psiUrl, { signal: controller.signal });
+        clearTimeout(timeoutId);
+
+        console.log(`[Performance] Response Status: ${psiResponse.status}`);
+
+        let performanceData = null;
+        let error = null;
+
+        if (!psiResponse.ok) {
+            const errorText = await psiResponse.text();
+            console.error(`[Performance] API Error Body:`, errorText);
+            try {
+                const errorBody = JSON.parse(errorText);
+                error = errorBody?.error?.message || `API Error ${psiResponse.status}`;
+            } catch (e) {
+                error = `API Error ${psiResponse.status}: ${errorText}`;
+            }
+        } else {
+            const psiData: any = await psiResponse.json();
+            console.log(`[Performance] Data received. Lighthouse Result Present: ${!!psiData.lighthouseResult}`);
+
+            if (psiData.lighthouseResult) {
+                const audits = psiData.lighthouseResult.audits;
+                performanceData = {
+                    lcp: audits['largest-contentful-paint']?.displayValue || 'N/A',
+                    cls: audits['cumulative-layout-shift']?.displayValue || 'N/A',
+                    tbt: audits['total-blocking-time']?.displayValue || 'N/A',
+                    fcp: audits['first-contentful-paint']?.displayValue || 'N/A',
+                    tti: audits['interactive']?.displayValue || 'N/A',
+                    si: audits['speed-index']?.displayValue || 'N/A'
+                };
+                console.log(`[Performance] Extracted metrics:`, performanceData);
+            } else {
+                console.warn(`[Performance] No lighthouseResult found in response.`);
+                error = psiData.error ? psiData.error.message : "Lighthouse returned an empty result.";
+            }
+        }
+        return { performanceData, error };
+    } catch (e: any) {
+        const error = e.name === 'AbortError' ? "Google PageSpeed Insights API timed out after 1 minute." : e.message;
+        return { performanceData: null, error };
+    }
+};
+
+export const performAnalysis = async (ai: GoogleGenAI, mode: string, body: any) => {
+    const schemas = getSchemas();
+    const expertMap: any = {
+        'analyze-ux': { key: 'UX Audit expert', role: 'UX Auditor', schema: schemas.uxAuditSchema },
+        'analyze-product': { key: 'Product Audit expert', role: 'Product Auditor', schema: schemas.productAuditSchema },
+        'analyze-visual': { key: 'Visual Audit expert', role: 'Visual Designer', schema: schemas.visualAuditSchema },
+        'analyze-strategy': { key: 'Strategy Audit expert', role: 'Strategy Auditor', schema: schemas.strategyAuditSchema }
+    };
+
+    const expertConfig = expertMap[mode];
+    if (mode === 'analyze-strategy') {
+        const { liveText } = body;
+        return {
+            key: expertConfig.key,
+            data: await callApi(ai, getStrategySystemInstruction(), liveText, expertConfig.schema)
+        };
+    } else {
+        const { url, screenshotBase64, mobileScreenshotBase64, liveText, performanceData, screenshotMimeType, performanceAnalysisError, animationData, accessibilityData } = body;
+
+        const mobileCaptureSucceeded = !!mobileScreenshotBase64;
+        const isMultiPage = liveText.includes("--- START CONTENT FROM"); // Note: check logic slightly differs from client string, adjusting to match typical input
+
+        let systemInstruction = "";
+        const contextPrompt = getWebsiteContextPrompt(url, performanceData, performanceAnalysisError, animationData, accessibilityData, isMultiPage);
+
+        if (mode === 'analyze-ux') {
+            systemInstruction = getUXSystemInstruction(mobileCaptureSucceeded, isMultiPage);
+        } else if (mode === 'analyze-product') {
+            systemInstruction = getProductSystemInstruction(isMultiPage);
+        } else if (mode === 'analyze-visual') {
+            systemInstruction = getVisualSystemInstruction(mobileCaptureSucceeded, isMultiPage);
+        }
+
+        const fullContent = `${contextPrompt}\n### Live Website Text Content ###\n${liveText}`;
+
+        return {
+            key: expertConfig.key,
+            data: await callApi(ai, systemInstruction, fullContent, expertConfig.schema, screenshotBase64, screenshotMimeType, mobileScreenshotBase64)
+        };
+    }
+};
+
+
 // --- MAIN HANDLER ---
 
 export const handleAuditRequest = async (req: Request, res: Response) => {
+    // ... (DB Init and Secrets fetch - kept same)
     const supabaseUrl = process.env.SUPABASE_URL;
     const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
@@ -201,7 +409,6 @@ export const handleAuditRequest = async (req: Request, res: Response) => {
         return res.status(500).json({ message: `Missing environment variables: SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY` });
     }
 
-    // Fetch Secrets from Supabase (app_secrets table)
     const supabaseAdmin = createClient(supabaseUrl, supabaseServiceRoleKey);
     const { data: secretData, error: secretError } = await supabaseAdmin
         .from('app_secrets')
@@ -215,7 +422,6 @@ export const handleAuditRequest = async (req: Request, res: Response) => {
 
     const { mode } = req.body;
 
-
     const secrets = secretData.reduce((acc: any, item: any) => {
         acc[item.key_name] = item.key_value;
         return acc;
@@ -223,193 +429,38 @@ export const handleAuditRequest = async (req: Request, res: Response) => {
 
     let apiKey = secrets['API_KEY'];
     if (!apiKey) {
-        // Fallback to process.env
         apiKey = process.env.API_KEY || process.env.GEMINI_API_KEY;
     }
 
     if (!apiKey) {
-        console.error("API_KEY not found in Supabase secrets or environment variables.");
         return res.status(500).json({ message: "Missing AI API Key." });
     }
 
-    const browserEndpoint = secrets['PUPPETEER_BROWSER_ENDPOINT']; // Optional, undefined if missing
-
-    // Explicitly check for AI key before init
+    const browserEndpoint = secrets['PUPPETEER_BROWSER_ENDPOINT'];
     const ai = new GoogleGenAI({ apiKey });
 
-    // Set streaming headers for analysis modes
     if (mode.startsWith('analyze-')) {
-        res.setHeader('Content-Type', 'text/event-stream'); // Or application/x-ndjson
+        res.setHeader('Content-Type', 'text/event-stream');
         res.setHeader('Cache-Control', 'no-cache');
         res.setHeader('Connection', 'keep-alive');
-        // We use standard JSON streaming with newlines as per client expectation (NDJSON-ish)
-        // Client uses `onData` callback processing chunks.
     }
 
     switch (mode) {
         case 'scrape-single-page': {
-            const { url, isMobile, isFirstPage } = req.body;
-            let browser;
             try {
-                if (browserEndpoint) {
-                    const connectBrowser = () => puppeteer.connect({ browserWSEndpoint: browserEndpoint });
-                    browser = await retryWithBackoff(connectBrowser, 5, 2000, "Puppeteer Connect");
-                } else {
-                    browser = await puppeteer.launch({
-                        headless: "new",
-                        args: [
-                            '--no-sandbox',
-                            '--disable-setuid-sandbox',
-                            '--disable-dev-shm-usage',
-                            '--disable-gpu'
-                        ]
-                    });
-                }
-
-                const page = await browser.newPage();
-                page.setDefaultNavigationTimeout(60000); // Increased timeout
-
-                const viewport = isMobile ? { width: 390, height: 844, isMobile: true, hasTouch: true } : { width: 1920, height: 1080 };
-                await page.setViewport(viewport);
-
-                await page.goto(url, { waitUntil: 'networkidle2', timeout: 60000 });
-
-                // Scroll logic
-                await page.evaluate(async () => {
-                    await new Promise<void>((resolve) => {
-                        let totalHeight = 0;
-                        const distance = 250;
-                        const maxScrolls = 15; // Reduced from 40 for speed
-                        let scrolls = 0;
-                        const timer = setInterval(() => {
-                            const scrollHeight = document.body.scrollHeight;
-                            window.scrollBy(0, distance);
-                            totalHeight += distance;
-                            scrolls++;
-                            if (totalHeight >= scrollHeight || scrolls >= maxScrolls) {
-                                clearInterval(timer);
-                                resolve();
-                            }
-                        }, 100);
-                    });
-                });
-
-                // Fix fixed positions
-                await page.evaluate(() => {
-                    document.querySelectorAll('*').forEach((el: any) => {
-                        const style = window.getComputedStyle(el);
-                        if (style.position === 'fixed' || style.position === 'sticky') {
-                            el.style.position = 'absolute';
-                        }
-                    });
-                    window.scrollTo(0, 0);
-                });
-
-                const screenshotBuffer = await page.screenshot({ type: 'jpeg', quality: 40, fullPage: true });
-                const pagePath = new URL(url).pathname;
-
-                const screenshot = {
-                    path: pagePath,
-                    data: Buffer.from(screenshotBuffer).toString('base64'),
-                    isMobile
-                };
-
-                const pageData = await page.evaluate((isFirstPageDesktop: boolean) => {
-                    const text = document.body.innerText;
-                    let animationData = null;
-                    let accessibilityData = null;
-
-                    if (isFirstPageDesktop) {
-                        // @ts-ignore
-                        animationData = Array.from(document.querySelectorAll('*')).filter((el: any) => {
-                            const style = window.getComputedStyle(el);
-                            return style.getPropertyValue('animation-name') !== 'none' || (style.getPropertyValue('transition-property') !== 'all' && style.getPropertyValue('transition-property') !== '');
-                        }).map((el: any) => `${el.tagName.toLowerCase()}${el.id ? `#${el.id}` : ''}${el.className && typeof el.className === 'string' ? `.${el.className.split(' ').filter((c: any) => c).join('.')}` : ''}`).slice(0, 20);
-
-                        // @ts-ignore
-                        accessibilityData = {
-                            imagesMissingAlt: Array.from(document.querySelectorAll('img:not([alt])')).length,
-                            inputsMissingLabels: Array.from(document.querySelectorAll('input:not([id]), textarea:not([id])')).filter((el: any) => !el.closest('label')).length + Array.from(document.querySelectorAll('input[id], textarea[id]')).filter((el: any) => !document.querySelector(`label[for="${el.id}"]`)).length,
-                            hasSemanticElements: !!document.querySelector('main, nav, header, footer, article, section, aside'),
-                            hasAriaAttributes: !!document.querySelector('[role], [aria-label], [aria-labelledby], [aria-describedby]')
-                        };
-                    }
-                    return { liveText: text, animationData, accessibilityData };
-                }, isFirstPage && !isMobile);
-
-                await page.close();
-                res.json({ screenshot, ...pageData });
-
+                const { url, isMobile, isFirstPage } = req.body;
+                const result = await performScrape(url, isMobile, isFirstPage, browserEndpoint);
+                res.json(result);
             } catch (error: any) {
-                console.error("Scraping failed:", error);
-                res.status(500).json({ message: `Scraping failed: ${error.message}` });
-            } finally {
-                if (browser) await browser.disconnect(); // Or close() if local
+                res.status(500).json({ message: error.message });
             }
             break;
         }
 
         case 'scrape-performance': {
-            try {
-                const { url } = req.body;
-                let pageSpeedApiKey = secrets['PAGESPEED_API_KEY'];
-                if (!pageSpeedApiKey) {
-                    pageSpeedApiKey = process.env.PAGESPEED_API_KEY; // Fallback to env
-                }
-                const usedKey = pageSpeedApiKey || apiKey; // Fallback to main API key if specific one missing
-
-                const psiUrl = `https://www.googleapis.com/pagespeedonline/v5/runPagespeed?url=${encodeURIComponent(url)}&key=${usedKey}&category=performance&strategy=desktop`;
-
-                const maskedKey = usedKey ? `...${usedKey.slice(-4)}` : 'undefined';
-                console.log(`[Performance] Starting audit for: ${url}`);
-                console.log(`[Performance] Using API Key: ${maskedKey}`);
-
-                const controller = new AbortController();
-                const timeoutId = setTimeout(() => controller.abort(), 60000); // 60s timeout
-
-                console.log(`[Performance] Fetching PageSpeed data...`);
-                const psiResponse = await fetch(psiUrl, { signal: controller.signal });
-                clearTimeout(timeoutId);
-
-                console.log(`[Performance] Response Status: ${psiResponse.status}`);
-
-                let performanceData = null;
-                let error = null;
-
-                if (!psiResponse.ok) {
-                    const errorText = await psiResponse.text();
-                    console.error(`[Performance] API Error Body:`, errorText);
-                    try {
-                        const errorBody = JSON.parse(errorText);
-                        error = errorBody?.error?.message || `API Error ${psiResponse.status}`;
-                    } catch (e) {
-                        error = `API Error ${psiResponse.status}: ${errorText}`;
-                    }
-                } else {
-                    const psiData: any = await psiResponse.json();
-                    console.log(`[Performance] Data received. Lighthouse Result Present: ${!!psiData.lighthouseResult}`);
-
-                    if (psiData.lighthouseResult) {
-                        const audits = psiData.lighthouseResult.audits;
-                        performanceData = {
-                            lcp: audits['largest-contentful-paint']?.displayValue || 'N/A',
-                            cls: audits['cumulative-layout-shift']?.displayValue || 'N/A',
-                            tbt: audits['total-blocking-time']?.displayValue || 'N/A',
-                            fcp: audits['first-contentful-paint']?.displayValue || 'N/A',
-                            tti: audits['interactive']?.displayValue || 'N/A',
-                            si: audits['speed-index']?.displayValue || 'N/A'
-                        };
-                        console.log(`[Performance] Extracted metrics:`, performanceData);
-                    } else {
-                        console.warn(`[Performance] No lighthouseResult found in response.`);
-                        error = psiData.error ? psiData.error.message : "Lighthouse returned an empty result.";
-                    }
-                }
-                res.json({ performanceData, error });
-            } catch (e: any) {
-                const error = e.name === 'AbortError' ? "Google PageSpeed Insights API timed out after 1 minute." : e.message;
-                res.json({ performanceData: null, error });
-            }
+            const { url } = req.body;
+            const result = await performPerformanceCheck(url, apiKey, secrets);
+            res.json(result);
             break;
         }
 
@@ -417,44 +468,26 @@ export const handleAuditRequest = async (req: Request, res: Response) => {
         case 'analyze-product':
         case 'analyze-visual':
         case 'analyze-strategy': {
-            const schemas = getSchemas();
-            const expertMap: any = {
-                'analyze-ux': { key: 'UX Audit expert', role: 'UX Auditor', schema: schemas.uxAuditSchema },
-                'analyze-product': { key: 'Product Audit expert', role: 'Product Auditor', schema: schemas.productAuditSchema },
-                'analyze-visual': { key: 'Visual Audit expert', role: 'Visual Designer', schema: schemas.visualAuditSchema },
-                'analyze-strategy': { key: 'Strategy Audit expert', role: 'Strategy Auditor', schema: schemas.strategyAuditSchema }
-            };
+            try {
+                // Streaming Wrapper
+                const write = (chunk: any) => {
+                    res.write(JSON.stringify(chunk) + '\n');
+                };
+                const expertName = mode.replace('analyze-', ' ').toUpperCase(); // Rough name
 
-            const expertConfig = expertMap[mode];
-            const analysisFn = async () => {
-                if (mode === 'analyze-strategy') {
-                    const { liveText } = req.body;
-                    return callApi(ai, getStrategySystemInstruction(), liveText, expertConfig.schema);
-                } else {
-                    const { url, screenshotBase64, mobileScreenshotBase64, liveText, performanceData, screenshotMimeType, performanceAnalysisError, animationData, accessibilityData } = req.body;
+                write({ type: 'status', message: `Running ${expertName} analysis...` });
 
-                    const mobileCaptureSucceeded = !!mobileScreenshotBase64;
-                    const isMultiPage = liveText.includes("--- START CONTENT FROM");
+                const result = await performAnalysis(ai, mode, req.body);
 
-                    let systemInstruction = "";
-                    const contextPrompt = getWebsiteContextPrompt(url, performanceData, performanceAnalysisError, animationData, accessibilityData, isMultiPage);
+                write({ type: 'data', payload: { key: result.key, data: result.data } });
+                write({ type: 'status', message: `✓ ${result.key} analysis complete.` });
 
-                    if (mode === 'analyze-ux') {
-                        systemInstruction = getUXSystemInstruction(mobileCaptureSucceeded, isMultiPage);
-                    } else if (mode === 'analyze-product') {
-                        systemInstruction = getProductSystemInstruction(isMultiPage);
-                    } else if (mode === 'analyze-visual') {
-                        systemInstruction = getVisualSystemInstruction(mobileCaptureSucceeded, isMultiPage);
-                    }
-
-                    const fullContent = `${contextPrompt}\n### Live Website Text Content ###\n${liveText}`;
-
-                    return callApi(ai, systemInstruction, fullContent, expertConfig.schema, screenshotBase64, screenshotMimeType, mobileScreenshotBase64);
-                }
-            };
-
-            await handleSingleAnalysisStream(res, expertConfig.key, analysisFn);
-            res.end(); // End the stream
+            } catch (error: any) {
+                console.error(`Analysis failed for ${mode}:`, error);
+                const errorMessage = error.stack ? `${error.message}\n${error.stack}` : error.message;
+                res.write(JSON.stringify({ type: 'error', message: `Error in ${mode}: ${errorMessage}` }) + '\n');
+            }
+            res.end();
             break;
         }
 
