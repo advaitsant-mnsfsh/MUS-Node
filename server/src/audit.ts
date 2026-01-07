@@ -252,17 +252,18 @@ export const handleAuditRequest = async (req: Request, res: Response) => {
             let browser;
             try {
                 if (browserEndpoint) {
-                    browser = await puppeteer.connect({ browserWSEndpoint: browserEndpoint });
+                    const connectBrowser = () => puppeteer.connect({ browserWSEndpoint: browserEndpoint });
+                    browser = await retryWithBackoff(connectBrowser, 5, 2000, "Puppeteer Connect");
                 } else {
-                   browser = await puppeteer.launch({
-    headless: "new",
-    args: [
-        '--no-sandbox',
-        '--disable-setuid-sandbox',
-        '--disable-dev-shm-usage',
-        '--disable-gpu'
-    ]
-});
+                    browser = await puppeteer.launch({
+                        headless: "new",
+                        args: [
+                            '--no-sandbox',
+                            '--disable-setuid-sandbox',
+                            '--disable-dev-shm-usage',
+                            '--disable-gpu'
+                        ]
+                    });
                 }
 
                 const page = await browser.newPage();
@@ -278,7 +279,7 @@ export const handleAuditRequest = async (req: Request, res: Response) => {
                     await new Promise<void>((resolve) => {
                         let totalHeight = 0;
                         const distance = 250;
-                        const maxScrolls = 40;
+                        const maxScrolls = 15; // Reduced from 40 for speed
                         let scrolls = 0;
                         const timer = setInterval(() => {
                             const scrollHeight = document.body.scrollHeight;
@@ -304,7 +305,7 @@ export const handleAuditRequest = async (req: Request, res: Response) => {
                     window.scrollTo(0, 0);
                 });
 
-                const screenshotBuffer = await page.screenshot({ type: 'jpeg', quality: 50, fullPage: true });
+                const screenshotBuffer = await page.screenshot({ type: 'jpeg', quality: 40, fullPage: true });
                 const pagePath = new URL(url).pathname;
 
                 const screenshot = {
@@ -539,9 +540,9 @@ ${JSON.stringify(allIssues, null, 2)}`;
             break;
         }
 
-        case 'finalize': {
+        case 'upload-screenshots': {
             try {
-                const { report, screenshots, url } = req.body;
+                const { screenshots } = req.body;
                 const supabaseAdmin = createClient(supabaseUrl, supabaseServiceRoleKey);
                 const auditUUID = crypto.randomUUID();
 
@@ -566,12 +567,25 @@ ${JSON.stringify(allIssues, null, 2)}`;
                     };
                 }));
 
-                const reportToSave = { ...report, screenshots: uploadedScreenshots };
-                const primaryScreenshot = uploadedScreenshots.find((s) => s.url && !s.isMobile);
+                res.json({ uploadedScreenshots });
+            } catch (error: any) {
+                console.error("Upload failed:", error);
+                res.status(500).json({ message: `Upload failed: ${error.message}` });
+            }
+            break;
+        }
+
+        case 'save-audit': {
+            try {
+                const { report, screenshots, url } = req.body;
+                const supabaseAdmin = createClient(supabaseUrl, supabaseServiceRoleKey);
+
+                // Expect screenshots to already have URLs from the 'upload-screenshots' step
+                const primaryScreenshot = screenshots.find((s: any) => s.url && !s.isMobile);
 
                 const { data: auditRecord, error: insertError } = await supabaseAdmin.from('audits').insert({
                     url,
-                    report_data: reportToSave,
+                    report_data: report, // Save the report as is
                     screenshot_url: primaryScreenshot?.url
                 }).select('id').single();
 
@@ -580,9 +594,15 @@ ${JSON.stringify(allIssues, null, 2)}`;
                 res.json({ auditId: auditRecord.id, screenshotUrl: primaryScreenshot?.url });
 
             } catch (error: any) {
-                console.error("Finalization failed:", error);
-                res.status(500).json({ message: `Finalization failed: ${error.message}` });
+                console.error("Save audit failed:", error);
+                res.status(500).json({ message: `Save audit failed: ${error.message}` });
             }
+            break;
+        }
+
+        case 'finalize': {
+            // Deprecated. Use upload-screenshots and save-audit.
+            res.status(400).json({ message: "Deprecated. Use upload-screenshots and save-audit." });
             break;
         }
 
