@@ -1,4 +1,3 @@
-
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
@@ -10,24 +9,11 @@ const app = express();
 const port = process.env.PORT || 3000;
 
 app.use(cors());
-app.use(express.json({ limit: '50mb' })); // Increased limit for base64 images
+app.use(express.json({ limit: '50mb' }));
 
 app.get('/', (req, res) => {
     res.send('MUS Audit Server is running');
 });
-
-// Map legacy edge function modes to a single endpoint or separate routes
-// The edge function used a single endpoint with "mode" in the body.
-// To minimize frontend changes, we can keep a single endpoint '/audit' that dispatches.
-// OR we can create specific routes. The frontend refactor task allows us to update the client.
-// Better to create specific routes for clarity: /audit/scrape, /audit/analyze, etc.
-// BUT, to simplify the migration of logic, keeping the switch case might be easier first, 
-// then refactoring.
-// Let's stick to a single endpoint '/audit' to mimic the edge function, 
-// but asking the user to update the URL in client is expected.
-// IF I change to specific routes, I have to refactor the complex switch statement.
-// The switch statement shares a lot of setup (AI init).
-// I will keep the single endpoint `/api/audit` for now to minimize logic drift.
 
 app.post('/api/audit', async (req, res) => {
     try {
