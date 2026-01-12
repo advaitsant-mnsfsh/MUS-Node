@@ -149,10 +149,9 @@ export const EmbeddableInput: React.FC<EmbeddableInputProps> = ({ config }) => {
             }));
 
             // 2. Submit to API
-            // Note: We use relative path assuming widget is hosted on same origin, 
-            // OR we need to use the absolute backend URL.
-            // Since it's an iframe served by US, relative /api/external/audit works if we proxy or are on same domain.
-            const response = await fetch('/api/external/audit', {
+            // Use absolute URL from environment to support cross-domain hosting (Vercel + Render)
+            const apiUrl = import.meta.env.VITE_API_URL || '';
+            const response = await fetch(`${apiUrl}/api/external/audit`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
