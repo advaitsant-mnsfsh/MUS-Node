@@ -103,6 +103,10 @@ export const analyzeWebsiteStream = async (
     let performanceAnalysisError = null;
     let animationData: any[] = [];
     let accessibilityData: any = null;
+    let axeViolations: any[] = [];
+    let axePasses: any[] = [];
+    let axeIncomplete: any[] = [];
+    let axeInapplicable: any[] = [];
 
     // --- Phase 1: Data Acquisition (Mixed URL/Upload) ---
     onStatus('Processing mixed inputs (URLs & Uploads)...');
@@ -147,6 +151,10 @@ export const analyzeWebsiteStream = async (
               if (isPrimary) {
                 animationData = result.animationData;
                 accessibilityData = result.accessibilityData;
+                axeViolations = result.axeViolations || [];
+                axePasses = result.axePasses || [];
+                axeIncomplete = result.axeIncomplete || [];
+                axeInapplicable = result.axeInapplicable || [];
               }
             }
             successfulAcquisitions++;
@@ -247,6 +255,7 @@ export const analyzeWebsiteStream = async (
       'UX Audit expert',
       'Product Audit expert',
       'Visual Audit expert',
+      'Accessibility Audit expert',
     ];
 
     // BUFFERING LOGIC: Capture data updates to show all at once
@@ -271,6 +280,10 @@ export const analyzeWebsiteStream = async (
         performanceAnalysisError,
         animationData,
         accessibilityData,
+        axeViolations,
+        axePasses,
+        axeIncomplete,
+        axeInapplicable,
         mode,
       };
 

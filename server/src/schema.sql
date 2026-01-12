@@ -20,6 +20,14 @@ CREATE TABLE IF NOT EXISTS audit_jobs (
   updated_at timestamp with time zone DEFAULT timezone('utc'::text, now()) NOT NULL
 );
 
+CREATE TABLE IF NOT EXISTS audits (
+  id uuid DEFAULT gen_random_uuid() PRIMARY KEY,
+  url text,
+  report_data jsonb,
+  screenshot_url text,
+  created_at timestamp with time zone DEFAULT timezone('utc'::text, now()) NOT NULL
+);
+
 -- Enable RLS (Optional, but good practice)
 ALTER TABLE api_keys ENABLE ROW LEVEL SECURITY;
 ALTER TABLE audit_jobs ENABLE ROW LEVEL SECURITY;

@@ -33,7 +33,8 @@ export type ExpertKey =
   | 'Strategy Audit expert'
   | 'UX Audit expert'
   | 'Product Audit expert'
-  | 'Visual Audit expert';
+  | 'Visual Audit expert'
+  | 'Accessibility Audit expert';
 
 
 // NEW Types for Mixed Inputs
@@ -73,6 +74,7 @@ export interface ScoredParameter {
   Recommendation?: string;
   Citations: string[];
   KeyFinding?: string;
+  FailingElements?: string[]; // Array of HTML strings for failing nodes
 }
 
 // UX Audit Expert Types
@@ -180,8 +182,38 @@ export interface UserPersona {
 }
 
 export interface StrategyAudit {
+  ExecutiveSummary?: string; // Added for top-level summary
   DomainAnalysis: DomainAnalysisData;
   PurposeAnalysis: PurposeAnalysisData;
   TargetAudience: TargetAudienceData;
   UserPersonas: UserPersona[];
+}
+// Accessibility Audit Types
+export interface AutomatedCompliance {
+  SectionScore: number;
+  Parameters: ScoredParameter[];
+}
+
+export interface ScreenReaderExperience {
+  SectionScore: number;
+  Parameters: ScoredParameter[];
+}
+
+export interface VisualAccessibility {
+  SectionScore: number;
+  Parameters: ScoredParameter[];
+}
+
+export interface AccessibilityAudit {
+  CategoryScore: number;
+  ComplianceScore?: number;
+  RiskLevel?: 'Critical' | 'High' | 'Moderate' | 'Low';
+  Top5CriticalAccessibilityIssues: CriticalIssue[];
+  AutomatedCompliance: AutomatedCompliance;
+  ScreenReaderExperience: ScreenReaderExperience;
+  VisualAccessibility: VisualAccessibility;
+  PassedAudits?: AutomatedCompliance; // Reusing structure
+  ManualChecks?: { id: string; description: string; nodes?: { html: string; failureSummary?: string }[] }[];
+  NotApplicable?: { id: string; description: string; }[];
+  OverallRecommendations: string[];
 }

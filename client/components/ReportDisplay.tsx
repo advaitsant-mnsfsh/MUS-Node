@@ -15,6 +15,7 @@ import { ScoreDisplayCard } from './report/ScoreComponents';
 import { CriticalIssueCard } from './report/AuditCards';
 import { DetailedAuditView, DetailedAuditType } from './report/DetailedAuditView';
 import { ASSETS } from './report/constants';
+import AccessibilityAuditView from './report/AccessibilityAuditView';
 
 // --- YOUR PDF HOOK ---
 import { useReportPdf } from '../hooks/useReportPdf';
@@ -45,7 +46,7 @@ export function ReportDisplay({
     // --- STATE ---
     const [activeTab, setActiveTab] = useState('Executive Summary');
     const [isSharing, setIsSharing] = useState(false);
-    const TABS = ['Executive Summary', 'UX Audit', 'Product Audit', 'Visual Design'];
+    const TABS = ['Executive Summary', 'UX Audit', 'Product Audit', 'Visual Design', 'Accessibility Audit'];
 
     // --- AUTH LOGIC (Partner's Feature) ---
     const { user, isLoading: isAuthLoading } = useAuth();
@@ -68,17 +69,25 @@ export function ReportDisplay({
     });
 
     // --- DATA ---
-    const { "UX Audit expert": ux, "Product Audit expert": product, "Visual Audit expert": visual, "Strategy Audit expert": strategy, Top5ContextualIssues } = report || {};
+    const {
+        "UX Audit expert": ux,
+        "Product Audit expert": product,
+        "Visual Audit expert": visual,
+        "Strategy Audit expert": strategy,
+        "Accessibility Audit expert": accessibility,
+        Top5ContextualIssues
+    } = report || {};
     const primaryScreenshot = screenshots.find(s => !s.isMobile);
     const primaryScreenshotSrc = primaryScreenshot?.url || (primaryScreenshot?.data ? `data:image/jpeg;base64,${primaryScreenshot.data}` : undefined);
-    const isReportReady = report && ux && product && visual && strategy;
+    const isReportReady = report && ux && product && visual && strategy && accessibility;
 
     const overallScore = useMemo(() => {
         if (!report) return 0;
-        const scores = [ux?.CategoryScore, product?.CategoryScore, visual?.CategoryScore].filter(s => typeof s === 'number') as number[];
+        const scores = [ux?.CategoryScore, product?.CategoryScore, visual?.CategoryScore, accessibility?.CategoryScore]
+            .filter(s => typeof s === 'number') as number[];
         if (scores.length === 0) return 0;
         return Math.round((scores.reduce((a, b) => a + b, 0) / scores.length) * 10) / 10;
-    }, [ux, product, visual, report]);
+    }, [ux, product, visual, accessibility, report]);
 
     // --- ACTIONS ---
     const handleShareAudit = async () => {
@@ -141,8 +150,8 @@ export function ReportDisplay({
                                         key={tab}
                                         onClick={() => setActiveTab(tab)}
                                         className={`whitespace-nowrap py-2 px-4 rounded-lg font-bold text-sm transition-all ${activeTab === tab
-                                                ? 'bg-white text-indigo-600 shadow-sm'
-                                                : 'text-slate-500 hover:text-slate-700 hover:bg-slate-200/50'
+                                            ? 'bg-white text-indigo-600 shadow-sm'
+                                            : 'text-slate-500 hover:text-slate-700 hover:bg-slate-200/50'
                                             }`}
                                     >
                                         {tab}
@@ -191,10 +200,11 @@ export function ReportDisplay({
                                             <div className="w-full max-w-md mx-auto mb-6">
                                                 <ScoreDisplayCard score={overallScore} label="Overall Score" isHero={true} />
                                             </div>
-                                            <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-8">
+                                            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
                                                 {product ? <ScoreDisplayCard score={product.CategoryScore} label="Product Audit" /> : <SkeletonLoader className="h-32" />}
                                                 {ux ? <ScoreDisplayCard score={ux.CategoryScore} label="UX Audit" /> : <SkeletonLoader className="h-32" />}
                                                 {visual ? <ScoreDisplayCard score={visual.CategoryScore} label="Visual Design" /> : <SkeletonLoader className="h-32" />}
+                                                {accessibility ? <ScoreDisplayCard score={accessibility.CategoryScore} label="Access" /> : <SkeletonLoader className="h-32" />}
                                             </div>
                                             {primaryScreenshotSrc ? (
                                                 <div className="self-stretch w-full mb-8">
@@ -210,7 +220,7 @@ export function ReportDisplay({
                                         {strategy?.ExecutiveSummary && (
                                             <div className="mb-8 p-6 bg-indigo-50 border border-indigo-100 rounded-xl relative overflow-hidden">
                                                 <div className="relative z-10">
-                                                    <h3 className="text-indigo-900 font-bold text-xl mb-3">Executive Summary</h3>
+                                                    <h3 className="text-indigo-900 font-bold text-xl mb-3">Audit Diagnosis</h3>
                                                     <p className="text-indigo-900/90 leading-relaxed text-base font-medium whitespace-pre-line">
                                                         {strategy.ExecutiveSummary}
                                                     </p>
@@ -233,11 +243,22 @@ export function ReportDisplay({
                                     </div>
                                 )}
 
+                                {/* Accessibility Tab */}
+                                {activeTab === 'Accessibility Audit' && (
+                                    <div className="animate-in fade-in slide-in-from-bottom-4">
+                                        {accessibility ? (
+                                            <AccessibilityAuditView data={accessibility} />
+                                        ) : (
+                                            <SkeletonLoader className="h-96 w-full" />
+                                        )}
+                                    </div>
+                                )}
+
                                 {/* Other Tabs */}
-                                {activeTab !== 'Executive Summary' && (
+                                {['UX Audit', 'Product Audit', 'Visual Design'].includes(activeTab) && (
                                     <div className="animate-in fade-in slide-in-from-bottom-4">
                                         <DetailedAuditView
-                                            auditData={activeTab === 'UX Audit' ? ux : activeTab === 'Product Audit' ? product : activeTab === 'Visual Design' ? visual : strategy}
+                                            auditData={activeTab === 'UX Audit' ? ux : activeTab === 'Product Audit' ? product : visual}
                                             auditType={activeTab as DetailedAuditType}
                                         />
                                     </div>

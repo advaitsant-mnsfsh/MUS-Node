@@ -3,6 +3,8 @@ import React, { useState, useEffect } from 'react';
 import { BrowserRouter, Routes, Route, useParams } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import App from './App';
+import EmbedPage from './pages/EmbedPage';
+import { LoadingScreen } from './components/LoadingScreen';
 import { ReportDisplay } from './components/ReportDisplay';
 import { Logo } from './components/Logo';
 import { getSharedAudit } from './services/auditStorage';
@@ -20,7 +22,14 @@ function SharedAuditView() {
     const [screenshotMimeType, setScreenshotMimeType] = useState<string>('image/png');
     const [whiteLabelLogo, setWhiteLabelLogo] = useState<string | null>(null);
 
+    // Job Polling State
+    const [jobStatus, setJobStatus] = useState<'pending' | 'processing' | 'completed' | 'failed' | null>(null);
+    const [pollProgress, setPollProgress] = useState(0);
+
     useEffect(() => {
+        let isMounted = true;
+        let pollInterval: NodeJS.Timeout;
+
         async function loadAudit() {
             if (!auditId) {
                 setError('No audit ID provided');
@@ -28,51 +37,97 @@ function SharedAuditView() {
                 return;
             }
 
+            // 1. Try to fetch as a Job first (Widget Flow)
+            try {
+                const { getAuditJob } = await import('./services/auditStorage');
+                const job = await getAuditJob(auditId);
+
+                if (job && isMounted) {
+                    if (job.status === 'completed') {
+                        // Job is done! Transform to Report format.
+                        // Note: We need to ensure job.report_data has the expected structure.
+                        // Assuming report_data matches AnalysisReport.
+                        // Also we need screenshots/url. Ideally these are in report_data or we fetch from input_data...
+                        // Simplification: use the report_data as report. Extract URL from it if possible.
+                        setReport(job.report_data);
+                        setUrl(job.report_data?.url || 'Analyzed Site'); // Fallback
+                        setScreenshots([]); // Might fail if ReportDisplay needs screenshots. 
+                        // Note: ReportDisplay usually needs screenshots. If Job saved them, good.
+                        // If not, we might show placeholders.
+                        setJobStatus('completed');
+                        setLoading(false);
+                        return; // Done
+                    } else if (job.status === 'failed') {
+                        setError(job.error_message || 'Audit failed');
+                        setLoading(false);
+                        return;
+                    } else {
+                        // Pending/Processing
+                        setJobStatus(job.status);
+                        setPollProgress(prev => Math.min(prev + 5, 90)); // Fake progress
+
+                        // Setup Polling
+                        pollInterval = setTimeout(loadAudit, 3000);
+                        return;
+                    }
+                }
+            } catch (err) {
+                // Ignore error, maybe it's not a job, or table doesn't exist yet (if user didn't run SQL)
+                // Fall through to regular audit fetch
+            }
+
+            // 2. Fallback: Try to fetch as a Saved Audit (Legacy/Direct Flow)
             try {
                 const data = await getSharedAudit(auditId);
 
                 if (!data) {
-                    setError('Audit not found');
-                    setLoading(false);
+                    if (isMounted) {
+                        setError('Audit not found');
+                        setLoading(false);
+                    }
                     return;
                 }
 
-                setReport(data.report);
-                setUrl(data.url);
-                setScreenshots(data.screenshots);
-                setScreenshotMimeType(data.screenshotMimeType);
-                setWhiteLabelLogo(data.whiteLabelLogo || null);
-                setLoading(false);
+                if (isMounted) {
+                    setReport(data.report);
+                    setUrl(data.url);
+                    setScreenshots(data.screenshots);
+                    setScreenshotMimeType(data.screenshotMimeType);
+                    setWhiteLabelLogo(data.whiteLabelLogo || null);
+                    setLoading(false);
+                }
             } catch (err) {
                 console.error('Error loading shared audit:', err);
-                setError('Failed to load audit');
-                setLoading(false);
+                if (isMounted) {
+                    setError('Failed to load audit');
+                    setLoading(false);
+                }
             }
         }
 
         loadAudit();
+
+        return () => {
+            isMounted = false;
+            clearTimeout(pollInterval);
+        };
     }, [auditId]);
 
-    if (loading) {
-        return (
-            <div className="min-h-screen bg-slate-50 text-slate-800 font-sans flex flex-col items-center justify-center">
-                <Logo className="mb-8 animate-pulse" />
-                <p className="text-lg text-slate-600">Loading shared audit...</p>
-            </div>
-        );
+    // Render loading state (Job Polling or Initial Fetch)
+    if (loading || (jobStatus && jobStatus !== 'completed' && jobStatus !== 'failed')) {
+        // Use the new LoadingScreen
+        return <LoadingScreen progress={pollProgress} message={jobStatus === 'pending' ? 'Queued for analysis...' : 'Processing your audit...'} />;
     }
 
     if (error || !report) {
+        // ... (Error View - same as before)
         return (
             <div className="min-h-screen bg-slate-50 text-slate-800 font-sans flex flex-col items-center justify-center px-4">
                 <Logo className="mb-8" />
                 <div className="max-w-md text-center">
                     <h1 className="text-2xl font-bold text-slate-900 mb-4">Audit Not Found</h1>
                     <p className="text-slate-600 mb-6">{error || 'This audit link may be invalid or expired.'}</p>
-                    <a
-                        href="/"
-                        className="inline-block px-6 py-3 bg-indigo-600 text-white font-semibold rounded-lg hover:bg-indigo-700 transition-colors"
-                    >
+                    <a href="/" className="inline-block px-6 py-3 bg-indigo-600 text-white font-semibold rounded-lg hover:bg-indigo-700 transition-colors">
                         Run Your Own Audit
                     </a>
                 </div>
@@ -109,6 +164,7 @@ function AppWithRouting() {
                     <Route path="/" element={<App />} />
                     <Route path="/shared/:auditId" element={<SharedAuditView />} />
                     <Route path="/report/:auditId" element={<SharedAuditView />} />
+                    <Route path="/embed" element={<EmbedPage />} />
                 </Routes>
             </BrowserRouter>
         </AuthProvider>

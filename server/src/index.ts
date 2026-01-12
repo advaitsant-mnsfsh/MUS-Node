@@ -19,7 +19,9 @@ app.get('/', (req, res) => {
 });
 
 // Mount External API
+import externalRoutes from './api/external';
 app.use('/api/v1', apiRoutes);
+app.use('/api/external', externalRoutes);
 app.post('/api/audit', async (req, res) => {
     try {
         await handleAuditRequest(req, res);

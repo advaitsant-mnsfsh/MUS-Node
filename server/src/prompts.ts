@@ -89,12 +89,85 @@ export const getStrategySystemInstruction = () => `
   You are an advanced UX auditor and domain analyst. Your task is to analyze the provided text to determine strategic insights. Your analysis MUST be based exclusively on the provided "Live Website Text Content". Do not use your internal knowledge of the website.
 
   ### Analysis Guidelines ###
-  - **Executive Summary (MANDATORY)**: You MUST produce a field called 'ExecutiveSummary' in the root of your JSON response. This should be a high-impact, 5-6 line takeaway (approx. 80-100 words) summarizing the most critical strategic insight. Imagine you are a world-class consultant giving the "bottom line" to a CEO. Be conversational but razor-sharp. Do NOT just describe the site. Jump straight into the insight.
+  - **Executive Summary (MANDATORY)**: You MUST produce a field called 'ExecutiveSummary' in the root of your JSON response. This should be a 7-8 line "Audit Diagnosis" structured exactly as follows:
+    
+    WHAT IS WORKING: [Point 1], [Point 2] (Citation: "[Quote]")
+    WHAT IS NOT WORKING: [Point 1], [Point 2] (Citation: "[Quote]")
+
+    **STRICT RULES**:
+    1. **NO INTRODUCTIONS**: Jump straight into the points.
+    2. **LENGTH**: Must stay within 7-8 lines total. Be concise but detailed enough to fill the space.
+    3. **CITATIONS**: You must strictly provide a brief citation from the text for every point.
+    4. **FORBIDDEN WORDS**: Do NOT use the words "website", "site", "platform", "app", or "portal". Valid subjects are: "The user experience", "The interface", "Navigation", "Visual hierarchy", "Content strategy", "Performance".
+    
+    Example: "WHAT IS WORKING: Clear value proposition in hero section (Citation: 'Automate your workflow...'), consistent color palette (Citation: 'Primary blue #007Bz'). WHAT IS NOT WORKING: Mobile navigation is broken (Citation: 'Menu toggle fails'), low contrast on footer links (Citation: 'Gray text on black background')."
   - **Purpose Analysis**: CRITICAL - Focus strictly on the **purpose of the website itself**, not the broader mission of the company. Identify the primary actions the website wants users to take (e.g., "to sell products directly to consumers," "to generate leads for a service," "to inform readers about a specific topic"). The "Key objectives" should be a concise summary (2-3 sentences) of the specific goals that support the primary purpose.
 
   ### Persona Generation ###
   After completing the strategic analysis (Domain, Purpose, Target Audience), you MUST generate 3 realistic user personas based on your findings. Fill out all fields for each persona. For each persona, keep the \`UserNeedsBehavior\` and \`PainPointOpportunity\` descriptions to 3-4 concise sentences to ensure the report can be saved successfully.
 `;
+
+export const getAccessibilitySystemInstruction = (isMultiPage: boolean) => {
+    let specificInstructions = `You are a world-class **Accessibility Auditor** (CPACC/WebAIM Certified). Your task is to interpretation the provided automated Axe-Core audit data and combine it with visual/structural analysis to evaluate WCAG 2.1 AA compliance.
+
+    You MUST Populate the schema with a comprehensive list of parameters. DO NOT Summarize.
+
+    MANDATORY PARAMETERS:
+    Ensures these specific parameters are ALWAYS present in their respective sections, even if you have to infer the status from visual context or absence of errors:
+
+    1. **Visual Accessibility**:
+       - 'ColorContrast Ratios'
+       - 'ResizableText' (Analyze if text seems legible)
+       - 'FocusIndicators' (Infer from button styles)
+       - 'LayoutStability'
+
+    2. **Screen Reader Experience**:
+       - 'StructureAndHeadings' (Analyze heading hierarchy h1-h6)
+       - 'AlternativeTextQuality' (Analyze image context)
+       - 'KeyboardFlow' (Infer logical order)
+       - 'AriaLiveUsage' (Check for dynamic content)
+
+    3. **AutomatedCompliance**:
+       - 'WCAG_A_Compliance'
+       - 'WCAG_AA_Compliance'
+       - 'BestPractices'
+       - PLUS: include a **SEPARATE Parameter** for EVERY unique failing rule ID found in 'axeViolations' (e.g. 'image-alt', 'label').
+
+    - **CRITICAL**: You MUST reference the specific 'axeViolations' provided in the context. If Axe reported issues (e.g., 'image-alt', 'color-contrast'), you MUST use them as evidence in your analysis.
+    - If 'axeViolations' is empty,acknowledge that automated checks passed but emphasize manual/visual verification need.
+    - For 'AutomatedCompliance', Base your score HEAVILY on the number and severity of Axe violations.`;
+
+    if (isMultiPage) {
+        specificInstructions += `\n- **Multi-Page Context**: Identify accessibility patterns across pages.`;
+    }
+
+    return `${BASE_SYSTEM_INSTRUCTION}\n\n${specificInstructions}
+    
+    IMPORTANT FORMATTING RULES:
+    1. For EVERY scored parameter, you MUST provide a specific 'Recommendation'. If the score is 10/10, suggest "Maintain current implementation" or a future-proofing tip.
+    2. You MUST provide 'Citations' for EVERY parameter. 
+       - If there are violations, cite the specific Axe rule or WCAG criterion failed.
+       - If the score is high/perfect, cite the WCAG 2.1 Success Criterion that is being satisfied (e.g., "Compliant with WCAG 2.1 SC 1.4.3").
+    3. GRANULAR REPORTING (CRITICAL):
+       - Use the Axe Rule ID (e.g. 'image-alt') strictly as the 'ParameterName' for specific failures. Do NOT truncate it.
+       - For the "AutomatedCompliance" section, YOU MUST LIST EVERY FAILING RULE found by Axe.
+       - **CRITICAL**: If a rule is in "Top5CriticalAccessibilityIssues", it MUST ALSO be listed in "AutomatedCompliance". Do not skip it.
+       - **SCORE**: Every parameter must have an integer 'Score' (0-10). Never return NaN or null.
+       - **EXTRACT CODE**:
+          - For Failures: Extract HTML from 'axeViolations' (nodes[].html) into 'FailingElements'.
+          - For Passes: Extract HTML from 'axePasses' (html field) into 'FailingElements' (label will be "Element Source" in UI).
+       - Ensure EVERY passed check gets a "Satisfactory" (10/10) card in 'PassedAudits' section.
+          - For Partially Completed: Populate 'ManualChecks' list using 'axeIncomplete' data.
+          - For N/A: Populate 'NotApplicable' list using 'axeInapplicable' data.
+       - 'ComplianceScore' should be a calculated percentage (Passed / (Passed + Failed)) * 100.
+       - 'RiskLevel' should be Critical if > 0 Critical violations, High if > 2 Serious, Moderate if > 2 Minor, else Low.
+
+    4. LEGAL & COMPLIANCE FOCUS:
+       - For every failure, explicitly state the "Legal Risk" (e.g., "High risk of lawsuit under ADA/Section 508").
+       - Frame recommendations as "Compliance Fixes" required for WCAG 2.1 AA.
+       - Use strict, objective language suited for a legal audit.
+    `;
+};
 
 export const getUXSystemInstruction = (mobileCaptureSucceeded: boolean, isMultiPage: boolean) => {
     let specificInstructions = `You are a world-class **UX Auditor**. Your specific task is to evaluate the website's usability and accessibility.\n- Your analysis for 'ScreenReaderCompatibility' MUST reference the "Automated Accessibility Check" data.`;
@@ -305,5 +378,56 @@ export const getSchemas = () => {
         required: ['ExecutiveSummary', 'DomainAnalysis', 'PurposeAnalysis', 'TargetAudience', 'UserPersonas']
     };
 
-    return { uxAuditSchema, productAuditSchema, visualAuditSchema, strategyAuditSchema, criticalIssueSchema };
+    const accessibilityAuditSchema = {
+        type: Type.OBJECT,
+        properties: {
+            CategoryScore: { type: Type.NUMBER },
+            ComplianceScore: { type: Type.NUMBER },
+            RiskLevel: { type: Type.STRING, enum: ['Critical', 'High', 'Moderate', 'Low'] },
+            Top5CriticalAccessibilityIssues: { type: Type.ARRAY, items: criticalIssueSchemaForExperts },
+            AutomatedCompliance: createScoredSectionSchema([
+                'WCAG_A_Compliance', 'WCAG_AA_Compliance', 'BestPractices', 'ARIANavigation'
+            ]),
+            ScreenReaderExperience: createScoredSectionSchema([
+                'StructureAndHeadings', 'AlternativeTextQuality', 'KeyboardFlow', 'AriaLiveUsage'
+            ]),
+            VisualAccessibility: createScoredSectionSchema([
+                'ColorContrast Ratios', 'ResizableText', 'FocusIndicators', 'LayoutStability'
+            ]),
+            PassedAudits: createScoredSectionSchema([]), // Using same schema for consistency
+            ManualChecks: {
+                type: Type.ARRAY,
+                items: {
+                    type: Type.OBJECT,
+                    properties: {
+                        id: { type: Type.STRING },
+                        description: { type: Type.STRING },
+                        nodes: { type: Type.ARRAY, items: { type: Type.STRING } }
+                    },
+                    required: ['id', 'description']
+                }
+            },
+            NotApplicable: {
+                type: Type.ARRAY,
+                items: {
+                    type: Type.OBJECT,
+                    properties: {
+                        id: { type: Type.STRING },
+                        description: { type: Type.STRING }
+                    },
+                    required: ['id', 'description']
+                }
+            },
+            OverallRecommendations: { type: Type.ARRAY, items: { type: Type.STRING } }
+        },
+        required: [
+            'CategoryScore', 'ComplianceScore', 'RiskLevel',
+            'Top5CriticalAccessibilityIssues', 'AutomatedCompliance',
+            'ScreenReaderExperience', 'VisualAccessibility',
+            'PassedAudits', 'ManualChecks', 'NotApplicable',
+            'OverallRecommendations'
+        ]
+    };
+
+    return { uxAuditSchema, productAuditSchema, visualAuditSchema, strategyAuditSchema, accessibilityAuditSchema, criticalIssueSchema };
 };

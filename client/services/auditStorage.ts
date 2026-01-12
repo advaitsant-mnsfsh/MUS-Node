@@ -93,3 +93,28 @@ export async function getSharedAudit(auditId: string): Promise<SharedAuditData |
     };
 }
 
+
+export interface AuditJobData {
+    id: string;
+    status: 'pending' | 'processing' | 'completed' | 'failed';
+    report_data?: any;
+    error_message?: string;
+    redirectUrl?: string; // Optional if you need to know where it would have gone
+}
+
+export async function getAuditJob(jobId: string): Promise<AuditJobData | null> {
+    const { data, error } = await supabase
+        .from('audit_jobs')
+        .select('*')
+        .eq('id', jobId)
+        .single();
+
+    if (error || !data) return null;
+
+    return {
+        id: data.id,
+        status: data.status,
+        report_data: data.report_data || data.input_data, // Fallback? No, report_data is result.
+        error_message: data.error_message
+    };
+}

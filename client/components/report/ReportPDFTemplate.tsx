@@ -4,6 +4,7 @@ import { SkeletonLoader } from '../SkeletonLoader';
 import { CriticalIssueCard } from './AuditCards';
 import { ScoreDisplayCard } from './ScoreComponents';
 import { DetailedAuditView, DetailedAuditType } from './DetailedAuditView';
+import AccessibilityAuditView from './AccessibilityAuditView';
 
 interface ReportPDFTemplateProps {
     report: AnalysisReport;
@@ -12,15 +13,23 @@ interface ReportPDFTemplateProps {
 }
 
 export const ReportPDFTemplate: React.FC<ReportPDFTemplateProps> = ({ report, url, screenshots }) => {
-    const { "UX Audit expert": ux, "Product Audit expert": product, "Visual Audit expert": visual, "Strategy Audit expert": strategy, Top5ContextualIssues } = report;
+    const {
+        "UX Audit expert": ux,
+        "Product Audit expert": product,
+        "Visual Audit expert": visual,
+        "Strategy Audit expert": strategy,
+        "Accessibility Audit expert": accessibility,
+        Top5ContextualIssues
+    } = report;
     const primaryScreenshot = screenshots.find(s => !s.isMobile);
     const primaryScreenshotSrc = primaryScreenshot?.url || (primaryScreenshot?.data ? `data:image/jpeg;base64,${primaryScreenshot.data}` : undefined);
 
     const overallScore = useMemo(() => {
-        const scores = [ux?.CategoryScore, product?.CategoryScore, visual?.CategoryScore].filter(s => typeof s === 'number') as number[];
+        const scores = [ux?.CategoryScore, product?.CategoryScore, visual?.CategoryScore, accessibility?.CategoryScore]
+            .filter(s => typeof s === 'number') as number[];
         if (scores.length === 0) return 0;
         return Math.round((scores.reduce((a, b) => a + b, 0) / scores.length) * 10) / 10;
-    }, [ux, product, visual]);
+    }, [ux, product, visual, accessibility]);
 
     // Safety check for Top 5 Issues
     const safeIssues = Top5ContextualIssues || [];
@@ -47,10 +56,11 @@ export const ReportPDFTemplate: React.FC<ReportPDFTemplateProps> = ({ report, ur
                     <div className="w-full max-w-[400px] mx-auto">
                         <ScoreDisplayCard score={overallScore} label="Overall Score" isHero={true} isPdf={true} />
                     </div>
-                    <div className="grid grid-cols-3 gap-3">
-                        {product ? <ScoreDisplayCard score={product.CategoryScore} label="Product Audit" isPdf={true} /> : <SkeletonLoader className="h-28 rounded-lg" />}
-                        {ux ? <ScoreDisplayCard score={ux.CategoryScore} label="UX Audit" isPdf={true} /> : <SkeletonLoader className="h-28 rounded-lg" />}
-                        {visual ? <ScoreDisplayCard score={visual.CategoryScore} label="Visual Design" isPdf={true} /> : <SkeletonLoader className="h-28 rounded-lg" />}
+                    <div className="grid grid-cols-4 gap-2">
+                        {product ? <ScoreDisplayCard score={product.CategoryScore} label="Product" isPdf={true} /> : <SkeletonLoader className="h-28 rounded-lg" />}
+                        {ux ? <ScoreDisplayCard score={ux.CategoryScore} label="UX" isPdf={true} /> : <SkeletonLoader className="h-28 rounded-lg" />}
+                        {visual ? <ScoreDisplayCard score={visual.CategoryScore} label="Visual" isPdf={true} /> : <SkeletonLoader className="h-28 rounded-lg" />}
+                        {accessibility ? <ScoreDisplayCard score={accessibility.CategoryScore} label="Access" isPdf={true} /> : <SkeletonLoader className="h-28 rounded-lg" />}
                     </div>
                 </div>
 
@@ -68,7 +78,7 @@ export const ReportPDFTemplate: React.FC<ReportPDFTemplateProps> = ({ report, ur
                 {/* Executive Summary in PDF Hero */}
                 {strategy?.ExecutiveSummary && (
                     <div className="p-4 rounded-lg bg-slate-50 border border-slate-100 text-slate-600 text-sm leading-relaxed mb-4 break-inside-avoid pdf-item">
-                        <p><strong className="text-slate-900">Executive Summary:</strong> {strategy.ExecutiveSummary}</p>
+                        <p><strong className="text-slate-900">Audit Diagnosis:</strong> {strategy.ExecutiveSummary}</p>
                     </div>
                 )}
             </div>
@@ -92,8 +102,14 @@ export const ReportPDFTemplate: React.FC<ReportPDFTemplateProps> = ({ report, ur
             {/* --- STRATEGY (Force Break) --- */}
             {strategy && (
                 <div className="mt-2">
-                    {/* Strategy has internal break logic */}
                     <DetailedAuditView auditData={strategy} auditType={'Strategic Foundation'} isPdf={true} />
+                </div>
+            )}
+
+            {/* --- ACCESSIBILITY (Force Break) --- */}
+            {accessibility && (
+                <div className="mt-2 force-page-break-before">
+                    <AccessibilityAuditView data={accessibility} isPdf={true} />
                 </div>
             )}
 

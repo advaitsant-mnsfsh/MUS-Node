@@ -1,0 +1,163 @@
+Part 1: The Box Paste this div exactly where you want the widget to appear on your page:
+
+html
+<div id="audit-widget-root" style="width: 100%; min-height: 400px;"></div>
+Part 2: The Logic Paste this code at the very bottom of your HTML file, right before the closing </body> tag:
+
+html
+<!-- Load the Widget Script -->
+<!-- CHANGE THE URL TO YOUR PRODUCTION DOMAIN -->
+<script src="http://localhost:5173/widget.js"></script>
+<script>
+  // Initialize when the page loads
+  window.addEventListener('load', function() {
+    AuditWidget.mount({
+      container: '#audit-widget-root',
+      apiKey: 'YOUR_API_KEY_HERE', // <--- REPLACE THIS
+      styles: {
+                        // --- LAYOUT & ALIGNMENT ---
+                        // 'vertical': Stacks the Input Box above the Run Audit Button.
+                        // 'horizontal': Places Input Box and Button side-by-side.
+                        layout: 'vertical',
+                        
+                        // 'center', 'left', or 'right'.
+                        // Controls where the boxes sit if they are not 100% width.
+                        alignment: 'center',
+                        
+                        // Space between the Input Box and the Button (e.g., '20px', '1rem').
+                        gap: '20px',
+                        
+                        // Scales the container padding. 100 = Standard (24px). 50 = Half (12px).
+                        paddingPercentage: 100,
+
+                        // --- DIMENSIONS ---
+                        // Width of the Input Box and Button in percentages (0-100).
+                        // For vertical layout, 100 is usually best.
+                        inputWidthPercentage: 100,
+                        buttonWidthPercentage: 100,
+
+                        // --- COLORS ---
+                        primaryColor: '#4F46E5',         // Button background color
+                        backgroundColor: '#FFFFFF',      // Widget container background
+                        textColor: '#1E293B',            // Main text color
+                        inputBackgroundColor: '#F8FAFC', // Input box background
+                        placeholderColor: '#94A3B8',     // "Enter URL..." text color
+
+                        // --- FONTS & SHAPE ---
+                        fontFamily: 'inherit',           // Use your website's font
+                        borderRadius: '12px',            // Roundness of corners
+
+                        // --- CONTENT ---
+                        placeholderText: 'Enter URL...',
+                        inputHeight: 'auto',             // Height of the input field
+                        buttonHeight: 'auto',            // Height of the button
+
+                        // --- BRANDING ---
+                        // Monsoonfish Logo Position
+                        monsoonLogoPosition: 'bottom-center',
+                        monsoonLogoHeight: '20px',
+
+                        // --- CLIENT LOGO (Uncomment to use) ---
+                        // logoUrl: 'https://your-website.com/logo.png',
+                        // logoPosition: 'top-center',
+                        // logoHeight: '40px'
+		}
+    });
+  });
+</script>
+
+
+
+HTML
+---------------------------------
+
+"use client";
+
+import React, { useEffect } from 'react';
+
+export default function Widget() {
+    // Change URL to your production domain when deploying
+    const WIDGET_URL = "http://localhost:5173/widget.js";
+
+    useEffect(() => {
+        // Load Script
+        if (!document.querySelector(`script[src="${WIDGET_URL}"]`)) {
+            const script = document.createElement('script');
+            script.src = WIDGET_URL;
+            script.async = true;
+            document.body.appendChild(script);
+        }
+
+        // Mount Widget when ready
+        const timer = setInterval(() => {
+            // @ts-ignore
+            if (window.AuditWidget) {
+                clearInterval(timer);
+                // @ts-ignore
+                window.AuditWidget.mount({
+                    container: '#audit-widget-spot', // Matches the ID below
+                    apiKey: 'YOUR_API_KEY_HERE',
+                    styles: {
+                        // --- LAYOUT & ALIGNMENT ---
+                        // 'vertical': Stacks the Input Box above the Run Audit Button.
+                        // 'horizontal': Places Input Box and Button side-by-side.
+                        layout: 'vertical',
+                        
+                        // 'center', 'left', or 'right'.
+                        // Controls where the boxes sit if they are not 100% width.
+                        alignment: 'center',
+                        
+                        // Space between the Input Box and the Button (e.g., '20px', '1rem').
+                        gap: '20px',
+                        
+                        // Scales the container padding. 100 = Standard (24px). 50 = Half (12px).
+                        paddingPercentage: 100,
+
+                        // --- DIMENSIONS ---
+                        // Width of the Input Box and Button in percentages (0-100).
+                        // For vertical layout, 100 is usually best.
+                        inputWidthPercentage: 100,
+                        buttonWidthPercentage: 100,
+
+                        // --- COLORS ---
+                        primaryColor: '#4F46E5',         // Button background color
+                        backgroundColor: '#FFFFFF',      // Widget container background
+                        textColor: '#1E293B',            // Main text color
+                        inputBackgroundColor: '#F8FAFC', // Input box background
+                        placeholderColor: '#94A3B8',     // "Enter URL..." text color
+
+                        // --- FONTS & SHAPE ---
+                        fontFamily: 'inherit',           // Use your website's font
+                        borderRadius: '12px',            // Roundness of corners
+
+                        // --- CONTENT ---
+                        placeholderText: 'Enter URL...',
+                        inputHeight: 'auto',             // Height of the input field
+                        buttonHeight: 'auto',            // Height of the button
+
+                        // --- BRANDING ---
+                        // Monsoonfish Logo Position
+                        monsoonLogoPosition: 'bottom-center',
+                        monsoonLogoHeight: '20px',
+
+                        // --- CLIENT LOGO (Uncomment to use) ---
+                        // logoUrl: 'https://your-website.com/logo.png',
+                        // logoPosition: 'top-center',
+                        // logoHeight: '40px'
+			}
+                });
+            }
+        }, 100);
+
+        return () => clearInterval(timer);
+    }, []);
+
+    return (
+        <div id="audit-widget-spot" style={{ width: '100%', minHeight: '400px' }}></div>
+    );
+}
+
+
+WIDGET.jsx
+
+and import Widget in page.tsx

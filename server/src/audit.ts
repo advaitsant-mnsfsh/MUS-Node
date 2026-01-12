@@ -4,12 +4,14 @@ import { createClient } from '@supabase/supabase-js';
 import { GoogleGenAI, HarmCategory, HarmBlockThreshold, Type } from '@google/genai';
 import puppeteer from 'puppeteer';
 import { jsonrepair } from 'jsonrepair';
+import { AxePuppeteer } from '@axe-core/puppeteer';
 import {
     getWebsiteContextPrompt,
     getStrategySystemInstruction,
     getUXSystemInstruction,
     getProductSystemInstruction,
     getVisualSystemInstruction,
+    getAccessibilitySystemInstruction,
     getSchemas
 } from './prompts';
 
@@ -282,8 +284,53 @@ export const performScrape = async (url: string, isMobile: boolean, isFirstPage:
             return { liveText: text, animationData, accessibilityData };
         }, isFirstPage && !isMobile);
 
+        // --- AXE-CORE ANALYSIS (Desktop First Page Only) ---
+        let axeViolations: any[] = [];
+        let axePasses: any[] = [];
+        let axeIncomplete: any[] = [];
+        let axeInapplicable: any[] = [];
+        if (isFirstPage && !isMobile) {
+            try {
+                // Wait for animations/react to settle
+                await new Promise(r => setTimeout(r, 5000));
+                console.log(`[AXE] Running analysis on ${url}...`);
+
+                const results = await new AxePuppeteer(page)
+                    .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'best-practice'])
+                    .analyze();
+
+                console.log(`[AXE] Found ${results.violations.length} violations.`);
+                axeViolations = results.violations;
+
+                // Capture passes for granularity
+                const axePassesRaw = results.passes || [];
+                axePasses = axePassesRaw.map((p: any) => ({
+                    id: p.id,
+                    help: p.help,
+                    html: (p.nodes && p.nodes.length > 0 && p.nodes[0].html) ? p.nodes[0].html : null
+                }));
+
+                // Capture incomplete (Manual Checks)
+                const axeIncompleteRaw = results.incomplete || [];
+                axeIncomplete = axeIncompleteRaw.map((p: any) => ({
+                    id: p.id,
+                    help: p.help,
+                    nodes: p.nodes ? p.nodes.map((n: any) => ({ html: n.html, failureSummary: n.failureSummary })) : []
+                }));
+
+                // Capture inapplicable (N/A)
+                const axeInapplicableRaw = results.inapplicable || [];
+                axeInapplicable = axeInapplicableRaw.map((p: any) => ({
+                    id: p.id,
+                    help: p.help
+                }));
+            } catch (axeError) {
+                console.error("Axe-Core failed:", axeError);
+            }
+        }
+
         await page.close();
-        return { screenshot, ...pageData };
+        return { screenshot, ...pageData, axeViolations, axePasses, axeIncomplete, axeInapplicable };
 
     } catch (error: any) {
         console.error("Scraping failed:", error);
@@ -361,7 +408,8 @@ export const performAnalysis = async (ai: GoogleGenAI, mode: string, body: any) 
         'analyze-ux': { key: 'UX Audit expert', role: 'UX Auditor', schema: schemas.uxAuditSchema },
         'analyze-product': { key: 'Product Audit expert', role: 'Product Auditor', schema: schemas.productAuditSchema },
         'analyze-visual': { key: 'Visual Audit expert', role: 'Visual Designer', schema: schemas.visualAuditSchema },
-        'analyze-strategy': { key: 'Strategy Audit expert', role: 'Strategy Auditor', schema: schemas.strategyAuditSchema }
+        'analyze-strategy': { key: 'Strategy Audit expert', role: 'Strategy Auditor', schema: schemas.strategyAuditSchema },
+        'analyze-accessibility': { key: 'Accessibility Audit expert', role: 'Accessibility Auditor', schema: schemas.accessibilityAuditSchema }
     };
 
     const expertConfig = expertMap[mode];
@@ -372,13 +420,13 @@ export const performAnalysis = async (ai: GoogleGenAI, mode: string, body: any) 
             data: await callApi(ai, getStrategySystemInstruction(), liveText, expertConfig.schema)
         };
     } else {
-        const { url, screenshotBase64, mobileScreenshotBase64, liveText, performanceData, screenshotMimeType, performanceAnalysisError, animationData, accessibilityData } = body;
+        const { url, screenshotBase64, mobileScreenshotBase64, liveText, performanceData, screenshotMimeType, performanceAnalysisError, animationData, accessibilityData, axeViolations } = body;
 
         const mobileCaptureSucceeded = !!mobileScreenshotBase64;
-        const isMultiPage = liveText.includes("--- START CONTENT FROM"); // Note: check logic slightly differs from client string, adjusting to match typical input
+        const isMultiPage = liveText.includes("--- START CONTENT FROM") || liveText.includes("--- CONTENT FROM");
 
         let systemInstruction = "";
-        const contextPrompt = getWebsiteContextPrompt(url, performanceData, performanceAnalysisError, animationData, accessibilityData, isMultiPage);
+        let contextPrompt = getWebsiteContextPrompt(url, performanceData, performanceAnalysisError, animationData, accessibilityData, isMultiPage);
 
         if (mode === 'analyze-ux') {
             systemInstruction = getUXSystemInstruction(mobileCaptureSucceeded, isMultiPage);
@@ -386,6 +434,11 @@ export const performAnalysis = async (ai: GoogleGenAI, mode: string, body: any) 
             systemInstruction = getProductSystemInstruction(isMultiPage);
         } else if (mode === 'analyze-visual') {
             systemInstruction = getVisualSystemInstruction(mobileCaptureSucceeded, isMultiPage);
+        } else if (mode === 'analyze-accessibility') {
+            systemInstruction = getAccessibilitySystemInstruction(isMultiPage);
+            if (axeViolations) {
+                contextPrompt += `\n### Automated Axe-Core Accessibility Violations ###\n${JSON.stringify(axeViolations, null, 2)}\n`;
+            }
         }
 
         const fullContent = `${contextPrompt}\n### Live Website Text Content ###\n${liveText}`;
@@ -467,7 +520,8 @@ export const handleAuditRequest = async (req: Request, res: Response) => {
         case 'analyze-ux':
         case 'analyze-product':
         case 'analyze-visual':
-        case 'analyze-strategy': {
+        case 'analyze-strategy':
+        case 'analyze-accessibility': {
             try {
                 // Streaming Wrapper
                 const write = (chunk: any) => {
@@ -497,7 +551,8 @@ export const handleAuditRequest = async (req: Request, res: Response) => {
                 const allIssues = [
                     ...report['UX Audit expert']?.Top5CriticalUXIssues?.map((i: any) => ({ ...i, source: 'UX Audit' })) || [],
                     ...report['Product Audit expert']?.Top5CriticalProductIssues?.map((i: any) => ({ ...i, source: 'Product Audit' })) || [],
-                    ...report['Visual Audit expert']?.Top5CriticalVisualIssues?.map((i: any) => ({ ...i, source: 'Visual Design' })) || []
+                    ...report['Visual Audit expert']?.Top5CriticalVisualIssues?.map((i: any) => ({ ...i, source: 'Visual Design' })) || [],
+                    ...report['Accessibility Audit expert']?.Top5CriticalAccessibilityIssues?.map((i: any) => ({ ...i, source: 'Accessibility Audit' })) || []
                 ];
 
                 if (!report['Strategy Audit expert'] || allIssues.length === 0) {
@@ -525,6 +580,7 @@ ${strategyContext}
 3. Return ONLY these 5 issues, sorted from most to least critical.
 4. You MUST return the issues in the exact same JSON structure as they were provided, including all original fields.
 5. EXCLUSION CRITERIA: Do NOT select any issues primarily related to "Screen Reader Compatibility", "Missing Alt Text", or "Missing Form Labels".
+                5. EXCLUSION CRITERIA: Do NOT select any issues primarily related to "Screen Reader Compatibility", "Missing Alt Text", or "Missing Form Labels".
 ### Critical Issues List (JSON) ###
 ${JSON.stringify(allIssues, null, 2)}`;
 
