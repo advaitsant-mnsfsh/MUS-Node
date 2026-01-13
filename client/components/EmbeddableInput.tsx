@@ -167,10 +167,21 @@ export const EmbeddableInput: React.FC<EmbeddableInputProps> = ({ config }) => {
                 throw new Error(data.message || 'Submission failed');
             }
 
-            // 3. Redirect Top Window
-            if (data.redirectUrl) {
-                window.top!.location.href = data.redirectUrl;
-            }
+            // 3. Success Feedback & Delay
+            setIsLoading(false);
+            const successMsg = document.createElement('div');
+            successMsg.innerText = 'Success! Redirecting to your report...';
+            successMsg.style.color = '#10b981'; // Green-500
+            successMsg.style.marginTop = '1rem';
+            successMsg.style.textAlign = 'center';
+            successMsg.style.fontWeight = 'bold';
+            document.querySelector('.widget-container')?.appendChild(successMsg);
+
+            setTimeout(() => {
+                if (data.redirectUrl) {
+                    window.top!.location.href = data.redirectUrl;
+                }
+            }, 2000);
 
         } catch (err: any) {
             setError(err.message || 'Error submitting audit');

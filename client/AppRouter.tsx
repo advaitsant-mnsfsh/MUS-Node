@@ -29,6 +29,8 @@ function SharedAuditView() {
     useEffect(() => {
         let isMounted = true;
         let pollInterval: NodeJS.Timeout;
+        let retryCount = 0;
+        const maxRetries = 5; // Total ~15 seconds of waiting for the record to appear
 
         async function loadAudit() {
             if (!auditId) {
@@ -45,15 +47,9 @@ function SharedAuditView() {
                 if (job && isMounted) {
                     if (job.status === 'completed') {
                         // Job is done! Transform to Report format.
-                        // Note: We need to ensure job.report_data has the expected structure.
-                        // Assuming report_data matches AnalysisReport.
-                        // Also we need screenshots/url. Ideally these are in report_data or we fetch from input_data...
-                        // Simplification: use the report_data as report. Extract URL from it if possible.
                         setReport(job.report_data);
                         setUrl(job.report_data?.url || 'Analyzed Site'); // Fallback
-                        setScreenshots([]); // Might fail if ReportDisplay needs screenshots. 
-                        // Note: ReportDisplay usually needs screenshots. If Job saved them, good.
-                        // If not, we might show placeholders.
+                        setScreenshots([]);
                         setJobStatus('completed');
                         setLoading(false);
                         return; // Done
@@ -70,6 +66,12 @@ function SharedAuditView() {
                         pollInterval = setTimeout(loadAudit, 3000);
                         return;
                     }
+                } else if (!job && retryCount < maxRetries && isMounted) {
+                    // Job not found yet? It might be a race condition. Retry.
+                    retryCount++;
+                    setJobStatus('pending'); // Show loading state even if record isn't found yet
+                    pollInterval = setTimeout(loadAudit, 3000);
+                    return;
                 }
             } catch (err) {
                 // Ignore error, maybe it's not a job, or table doesn't exist yet (if user didn't run SQL)
