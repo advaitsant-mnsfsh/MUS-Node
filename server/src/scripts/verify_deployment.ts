@@ -15,6 +15,16 @@ const submitUrl = `${baseUrl}/api/v1/audit`;
 console.log(`\nTesting API at: ${baseUrl}`);
 console.log(`Using Key:      ${apiKey.substring(0, 12)}...`);
 
+interface SubmitResponse {
+    jobId: string;
+}
+
+interface StatusResponse {
+    status: 'pending' | 'processing' | 'completed' | 'failed';
+    resultUrl?: string;
+    errorMessage?: string;
+}
+
 async function runTest() {
     try {
         // 1. Submit Job
@@ -35,7 +45,7 @@ async function runTest() {
             throw new Error(`Submission Failed (${submitResponse.status}): ${text}`);
         }
 
-        const submitData = await submitResponse.json();
+        const submitData = (await submitResponse.json()) as SubmitResponse;
         const jobId = submitData.jobId;
         console.log(`   ✓ Job Started! ID: ${jobId}`);
 
@@ -55,7 +65,7 @@ async function runTest() {
             if (!statusRes.ok) {
                 console.log(`   ⚠️ Status check failed (${statusRes.status}) - Retrying...`);
             } else {
-                const statusData = await statusRes.json();
+                const statusData = (await statusRes.json()) as StatusResponse;
                 const status = statusData.status;
                 process.stdout.write(`   [Attempt ${attempts}] Status: ${status}\r`);
 
