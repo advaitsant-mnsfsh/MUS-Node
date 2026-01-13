@@ -31,9 +31,8 @@ router.post('/audit', async (req, res) => {
         });
 
         // 3. Construct Redirect URL
-        // This assumes the frontend is hosted at the Referer or specific env var.
-        // For now, we'll use a standard base URL variable.
-        const frontendBaseUrl = process.env.FRONTEND_BASE_URL || 'http://localhost:5173'; // Default to local dev
+        // Priority: 1. CLIENT_URL env var 2. Request Origin (if trusted) 3. Localhost
+        const frontendBaseUrl = process.env.CLIENT_URL || origin || 'http://localhost:5173';
         const redirectUrl = `${frontendBaseUrl}/report/${job.id}`;
 
         // 4. Return immediately (Fire & Forget processing)

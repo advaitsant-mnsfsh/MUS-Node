@@ -12,7 +12,8 @@ import apiRoutes from './api/routes';
 
 // ...
 app.use(cors());
-app.use(express.json({ limit: '50mb' }));
+app.use(express.json({ limit: '150mb' }));
+app.use(express.urlencoded({ limit: '150mb', extended: true }));
 
 app.get('/', (req, res) => {
     res.send('MUS Audit Server is running');

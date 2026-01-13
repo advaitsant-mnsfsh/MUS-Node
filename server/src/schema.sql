@@ -15,6 +15,7 @@ CREATE TABLE IF NOT EXISTS audit_jobs (
   status text NOT NULL CHECK (status IN ('pending', 'processing', 'completed', 'failed')),
   input_data jsonb NOT NULL,
   result_url text,
+  report_data jsonb,
   error_message text,
   created_at timestamp with time zone DEFAULT timezone('utc'::text, now()) NOT NULL,
   updated_at timestamp with time zone DEFAULT timezone('utc'::text, now()) NOT NULL
