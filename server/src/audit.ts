@@ -680,6 +680,39 @@ ${JSON.stringify(allIssues, null, 2)}`;
 
                 if (insertError) throw new Error(`Supabase insert failed: ${insertError.message}`);
 
+                // --- NEW: Also upload to 'shared-audits' bucket for reliable sharing ---
+                const BUCKET = 'shared-audits';
+                const storageFileName = `${auditRecord.id}.json`;
+
+                // Ensure bucket exists (same logic as jobProcessor)
+                const { data: buckets } = await supabaseAdmin.storage.listBuckets();
+                if (!buckets?.find(b => b.name === BUCKET)) {
+                    console.log(`[SaveAudit] Creating ${BUCKET} bucket...`);
+                    await supabaseAdmin.storage.createBucket(BUCKET, { public: true });
+                }
+
+                // Construct data matching SharedAuditData interface
+                const sharedData = {
+                    id: auditRecord.id,
+                    url,
+                    report,
+                    status: 'completed'
+                };
+
+                const { error: uploadError } = await supabaseAdmin.storage
+                    .from(BUCKET)
+                    .upload(storageFileName, JSON.stringify(sharedData), {
+                        contentType: 'application/json',
+                        upsert: true
+                    });
+
+                if (uploadError) {
+                    console.warn(`[SaveAudit] Failed to upload report to storage:`, uploadError);
+                } else {
+                    console.log(`[SaveAudit] Uploaded report to ${BUCKET}/${storageFileName}`);
+                }
+                // -------------------------------------------------------------
+
                 res.json({ auditId: auditRecord.id, screenshotUrl: primaryScreenshot?.url });
 
             } catch (error: any) {
