@@ -94,13 +94,19 @@ export function ReportDisplay({
         if (!report || isSharing) return;
         setIsSharing(true);
         try {
-            const sharedAuditId = await saveSharedAudit({
-                url,
-                report,
-                screenshots,
-                screenshotMimeType,
-                whiteLabelLogo,
-            });
+            let sharedAuditId = auditId;
+
+            // Only create a new record if we don't have an ID yet (unlikely in current flow)
+            if (!sharedAuditId) {
+                sharedAuditId = await saveSharedAudit({
+                    url,
+                    report,
+                    screenshots,
+                    screenshotMimeType,
+                    whiteLabelLogo,
+                });
+            }
+
             const shareUrl = `${window.location.origin}/shared/${sharedAuditId}`;
             await navigator.clipboard.writeText(shareUrl);
             toast.success('Share link copied to clipboard!', { icon: '🔗' });
