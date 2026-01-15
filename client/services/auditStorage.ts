@@ -104,27 +104,41 @@ export interface AuditJobData {
 
 export async function getAuditJob(jobId: string): Promise<AuditJobData | null> {
     try {
-        // Use public API endpoint instead of direct Supabase query
-        const backendUrl = import.meta.env.VITE_BACKEND_URL || 'https://mus-node.onrender.com';
-        const response = await fetch(`${backendUrl}/api/public/jobs/${jobId}`);
+        // Fetch from 'shared-audits' Storage Bucket (Public JSON file)
+        // This is much more reliable than database/API calls for public sharing
+        const fileName = `${jobId}.json`;
+        const { data, error } = await supabase.storage
+            .from('shared-audits')
+            .download(fileName);
 
-        if (!response.ok) {
-            if (response.status === 404 || response.status === 403) {
-                return null;
+        if (error) {
+            // Fallback: Try the API endpoint if file missing (migration support)
+            console.warn('Storage fetch failed, trying API fallback...', error.message);
+            const backendUrl = import.meta.env.VITE_BACKEND_URL || 'https://mus-node.onrender.com';
+            const response = await fetch(`${backendUrl}/api/public/jobs/${jobId}`);
+            if (response.ok) {
+                const apiData = await response.json();
+                return {
+                    id: apiData.id,
+                    status: apiData.status,
+                    report_data: apiData.report_data,
+                    error_message: apiData.error_message
+                };
             }
-            throw new Error(`Failed to fetch job: ${response.status}`);
+            return null;
         }
 
-        const data = await response.json();
+        const text = await data.text();
+        const reportJson = JSON.parse(text);
 
         return {
-            id: data.id,
-            status: data.status,
-            report_data: data.report_data,
-            error_message: data.error_message
+            id: jobId,
+            status: 'completed', // If file exists, it's completed
+            report_data: reportJson
         };
+
     } catch (error) {
-        console.error('Error fetching job:', error);
+        console.error('Error fetching job from storage:', error);
         return null;
     }
 }

@@ -42,7 +42,10 @@ export class JobService {
             .eq('id', jobId)
             .single();
 
-        if (error) return null;
+        if (error) {
+            console.error(`[JobService] getJob failed for ${jobId}:`, error);
+            return null;
+        }
         return data;
     }
 }

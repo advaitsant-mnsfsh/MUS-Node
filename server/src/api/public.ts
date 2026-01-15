@@ -28,15 +28,18 @@ router.get('/debug', async (req, res) => {
 router.get('/jobs/:jobId', async (req, res) => {
     try {
         const { jobId } = req.params;
+        console.log(`[Public API] Fetching job: ${jobId}`);
 
         // Fetch Job
         const job = await JobService.getJob(jobId);
         if (!job) {
+            console.error(`[Public API] Job not found: ${jobId}`);
             return res.status(404).json({ message: 'Job not found' });
         }
 
         // Only allow fetching COMPLETED jobs (security: don't expose pending/failed)
         if (job.status !== 'completed') {
+            console.warn(`[Public API] Job not completed: ${jobId} is ${job.status}`);
             return res.status(403).json({
                 message: 'Job not ready yet',
                 status: job.status

@@ -119,8 +119,35 @@ export class JobProcessor {
                 ...report
             };
 
-            // Generate shareable report URL
+            // 1. Upload Report to Storage (Reliable sharing)
+            const BUCKET = 'shared-audits';
+            const storageFileName = `${jobId}.json`;
+
+            // Ensure bucket exists
+            const { data: buckets } = await supabase.storage.listBuckets();
+            if (!buckets?.find(b => b.name === BUCKET)) {
+                console.log(`[JobProcessor] Creating ${BUCKET} bucket...`);
+                await supabase.storage.createBucket(BUCKET, { public: true });
+            }
+
+            const { error: uploadError } = await supabase.storage
+                .from(BUCKET)
+                .upload(storageFileName, JSON.stringify(reportData), {
+                    contentType: 'application/json',
+                    upsert: true
+                });
+
+            if (uploadError) {
+                console.warn(`[JobProcessor] Failed to upload report to storage:`, uploadError);
+                // Continue anyway, DB save might still work
+            } else {
+                console.log(`[JobProcessor] Uploaded report to ${BUCKET}/${storageFileName}`);
+            }
+
+            // 2. Generate Result URL (Client URL)
             const baseUrl = process.env.FRONTEND_URL || 'https://mus-node.vercel.app';
+
+            // We still point to /report/:jobId on frontend, but frontend will now fetch from Storage
             const resultUrl = `${baseUrl}/report/${jobId}`;
             console.log(`[JobProcessor] Generated result URL: ${resultUrl}`);
 
