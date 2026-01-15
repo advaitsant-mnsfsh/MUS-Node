@@ -26,6 +26,10 @@ export interface WidgetConfig {
     gap?: string;
     alignment?: 'left' | 'center' | 'right';
     apiKey?: string;
+    // Container Styling
+    containerBorder?: string;
+    containerBorderRadius?: string;
+    containerBoxShadow?: string;
 }
 
 interface EmbeddableInputProps {
@@ -247,7 +251,10 @@ export const EmbeddableInput: React.FC<EmbeddableInputProps> = ({ config }) => {
         display: 'flex',
         flexDirection: 'column',
         position: 'relative',
-        boxSizing: 'border-box'
+        boxSizing: 'border-box',
+        border: config.containerBorder || 'none',
+        borderRadius: config.containerBorderRadius || '0px',
+        boxShadow: config.containerBoxShadow || 'none'
     };
 
     const defaultLogo = '/logo.png'; // Relative path works because widget runs in Iframe on our domain

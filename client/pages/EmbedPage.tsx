@@ -31,6 +31,9 @@ const EmbedPage: React.FC = () => {
             buttonWidthPercentage: searchParams.get('buttonWidthPercentage') ? Number(searchParams.get('buttonWidthPercentage')) : undefined,
             gap: searchParams.get('gap') || undefined,
             alignment: (searchParams.get('alignment') as any) || undefined,
+            containerBorder: searchParams.get('containerBorder') || undefined,
+            containerBorderRadius: searchParams.get('containerBorderRadius') || undefined,
+            containerBoxShadow: searchParams.get('containerBoxShadow') || undefined,
         };
     }, [searchParams]);
 

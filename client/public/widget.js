@@ -81,8 +81,13 @@
                 alignment: styles.alignment,
                 inputHeight: styles.inputHeight,
                 buttonHeight: styles.buttonHeight,
+                inputHeight: styles.inputHeight,
+                buttonHeight: styles.buttonHeight,
                 logoHeight: styles.logoHeight,
-                monsoonLogoHeight: styles.monsoonLogoHeight
+                monsoonLogoHeight: styles.monsoonLogoHeight,
+                containerBorder: styles.containerBorder,
+                containerBorderRadius: styles.containerBorderRadius,
+                containerBoxShadow: styles.containerBoxShadow
             };
 
             const queryString = createQueryString(params);
