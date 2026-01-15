@@ -79,8 +79,9 @@ router.get('/audit/:jobId', async (req, res) => {
             return res.status(403).json({ message: 'Forbidden: You do not have access to this job.' });
         }
 
+        // Use result_url from database if available, otherwise generate it
         const frontendBaseUrl = process.env.CLIENT_URL || origin || 'http://localhost:5173';
-        const resultUrl = `${frontendBaseUrl}/report/${job.id}`;
+        const resultUrl = job.result_url || `${frontendBaseUrl}/report/${job.id}`;
 
         res.json({
             jobId: job.id,

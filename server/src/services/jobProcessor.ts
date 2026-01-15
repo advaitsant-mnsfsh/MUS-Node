@@ -119,7 +119,12 @@ export class JobProcessor {
                 ...report
             };
 
-            await JobService.updateJobStatus(jobId, 'completed', reportData);
+            // Generate shareable report URL
+            const baseUrl = process.env.FRONTEND_URL || 'https://mus-node.vercel.app';
+            const resultUrl = `${baseUrl}/report/${jobId}`;
+            console.log(`[JobProcessor] Generated result URL: ${resultUrl}`);
+
+            await JobService.updateJobStatus(jobId, 'completed', reportData, undefined, resultUrl);
 
         } catch (error: any) {
             console.error(`[JobProcessor] Job ${jobId} failed:`, error);

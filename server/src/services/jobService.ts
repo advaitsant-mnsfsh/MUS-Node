@@ -21,10 +21,11 @@ export class JobService {
         return data;
     }
 
-    static async updateJobStatus(jobId: string, status: 'processing' | 'completed' | 'failed', result?: any, errorMsg?: string) {
+    static async updateJobStatus(jobId: string, status: 'processing' | 'completed' | 'failed', result?: any, errorMsg?: string, resultUrl?: string) {
         const updatePayload: any = { status, updated_at: new Date().toISOString() };
         if (result) updatePayload.report_data = result;
         if (errorMsg) updatePayload.error_message = errorMsg;
+        if (resultUrl) updatePayload.result_url = resultUrl;
 
         const { error } = await supabase
             .from('audit_jobs')
