@@ -96,6 +96,26 @@ export const EmbeddableInput: React.FC<EmbeddableInputProps> = ({ config }) => {
     const [statusMessage, setStatusMessage] = useState('Initializing...');
     const [error, setError] = useState<string | null>(null);
 
+    // Send height to parent for iframe auto-resize
+    useEffect(() => {
+        const sendHeight = () => {
+            // Use scrollHeight + fixed buffer for absolute logo
+            const height = document.documentElement.scrollHeight + 60;
+            window.parent.postMessage({ type: 'widget-resize', height }, '*');
+        };
+
+        sendHeight();
+
+        // Send again after a short delay to catch late renders
+        setTimeout(sendHeight, 100);
+        setTimeout(sendHeight, 500);
+
+        const observer = new ResizeObserver(sendHeight);
+        observer.observe(document.body);
+
+        return () => observer.disconnect();
+    }, [items, pollingJobId, error]);
+
     const handleAddUrl = () => {
         if (!url.trim()) return;
         try {
@@ -251,7 +271,7 @@ export const EmbeddableInput: React.FC<EmbeddableInputProps> = ({ config }) => {
 
     // If bottom logo exists, ensure bottom padding is at least logo height + gap
     // 20px is approx 1.25rem. Let's reserve 2.5rem (~40px) if logo is there.
-    const reservedBottomSpace = hasBottomLogo ? 2.5 : 0;
+    const reservedBottomSpace = hasBottomLogo ? 3.5 : 0;
 
     const finalPaddingBottom = Math.max(basePadding, reservedBottomSpace);
 
@@ -263,15 +283,15 @@ export const EmbeddableInput: React.FC<EmbeddableInputProps> = ({ config }) => {
         paddingLeft: paddingValue,
         paddingRight: paddingValue,
         paddingBottom: `${finalPaddingBottom}rem`,
-        height: '100%',
+        minHeight: '100%',
+        height: 'auto',
         display: 'flex',
         flexDirection: 'column',
         position: 'relative',
         boxSizing: 'border-box',
         border: config.containerBorder || 'none',
         borderRadius: config.containerBorderRadius || '0px',
-        boxShadow: config.containerBoxShadow || 'none',
-        overflow: 'hidden' // Ensure content (like button) clips to border radius
+        boxShadow: config.containerBoxShadow || 'none'
     };
 
     const defaultLogo = '/logo.png'; // Relative path works because widget runs in Iframe on our domain
@@ -281,24 +301,19 @@ export const EmbeddableInput: React.FC<EmbeddableInputProps> = ({ config }) => {
         const pos = position || (isMonsoon ? 'bottom-center' : 'top-center');
         const isTop = pos.startsWith('top');
 
-        // FORCE absolute positioning for Monsoon Logo to prevent hiding
+        // FORCE positioning for Monsoon Logo to prevent hiding
         if (isMonsoon) {
-            const absoluteStyle: React.CSSProperties = {
-                position: 'absolute',
-                zIndex: 50,
+            const flowStyle: React.CSSProperties = {
+                display: 'block',
+                marginTop: 'auto',
+                alignSelf: pos.includes('left') ? 'flex-start' : pos.includes('right') ? 'flex-end' : 'center',
                 maxHeight: heightStr || '40px',
                 height: heightStr || 'auto',
                 objectFit: 'contain',
-                // Vertical Position
-                ...(isTop ? { top: '0.5rem' } : { bottom: '0.5rem' }),
-                // Horizontal Position
-                ...(pos.includes('left') ? { left: '0.5rem' } : {}),
-                ...(pos.includes('right') ? { right: '0.5rem' } : {}),
-                ...(pos.includes('center') ? { left: '50%', transform: 'translateX(-50%)' } : {}),
-                pointerEvents: 'none', // Allow clicking through if it overlaps input
-                opacity: 0.8 // Slight transparency to look more like a watermark if overlapping
+                pointerEvents: 'none',
+                opacity: 0.8
             };
-            return <img src={url} alt="Powered by Monsoonfish" style={absoluteStyle} />;
+            return <img src={url} alt="Powered by Monsoonfish" style={flowStyle} />;
         }
 
         // Standard flow for Client Logo (user controlled)
@@ -319,6 +334,11 @@ export const EmbeddableInput: React.FC<EmbeddableInputProps> = ({ config }) => {
     return (
         <div style={containerStyle} className="widget-container">
             <style>{`
+                html, body {
+                    background-color: transparent !important;
+                    margin: 0;
+                    padding: 0;
+                }
                 .widget-input::placeholder {
                     color: ${placeholderColor} !important;
                     opacity: 1;
@@ -353,8 +373,8 @@ export const EmbeddableInput: React.FC<EmbeddableInputProps> = ({ config }) => {
                 return (isNaN(h) || h < 15) ? '20px' : config.monsoonLogoHeight;
             })())}
 
+
             <div style={{
-                flex: 1,
                 display: 'flex',
                 flexDirection: layout === 'horizontal' ? 'row' : 'column',
                 flexWrap: 'wrap',
@@ -444,7 +464,6 @@ export const EmbeddableInput: React.FC<EmbeddableInputProps> = ({ config }) => {
                     onClick={handleSubmit}
                     disabled={isLoading || (items.length === 0 && !url)}
                     style={{
-                        marginTop: 'auto',
                         backgroundColor: primaryColor,
                         color: '#fff',
                         border: 'none',

@@ -96,11 +96,19 @@
             const iframe = document.createElement('iframe');
             iframe.src = iframeSrc;
             iframe.width = '100%';
-            iframe.height = config.height || '100%';
             iframe.style.border = 'none';
             iframe.style.overflow = 'hidden';
-            iframe.style.minHeight = '100px';
+            iframe.style.backgroundColor = 'transparent';
+            iframe.setAttribute('allowtransparency', 'true');
+            iframe.setAttribute('scrolling', 'no');
             iframe.title = 'Audit Widget';
+
+            // Auto-resize iframe based on content height
+            window.addEventListener('message', function (e) {
+                if (e.data && e.data.type === 'widget-resize' && e.data.height) {
+                    iframe.style.height = e.data.height + 'px';
+                }
+            });
 
             container.innerHTML = ''; // Clear container
             container.appendChild(iframe);
