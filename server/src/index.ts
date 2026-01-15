@@ -25,6 +25,7 @@ import publicRoutes from './api/public';
 app.use('/api/v1', apiRoutes);
 app.use('/api/external', externalRoutes);
 app.use('/api/public', publicRoutes);
+console.log('✓ API routes mounted: /api/v1, /api/external, /api/public');
 app.post('/api/audit', async (req, res) => {
     try {
         await handleAuditRequest(req, res);
