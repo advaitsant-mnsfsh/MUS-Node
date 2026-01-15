@@ -68,7 +68,7 @@ export class JobProcessor {
 
             // 4. Run Experts (Parallel with timeout and individual error handling)
             console.log(`[JobProcessor] Running experts...`);
-            const modes = ['analyze-ux', 'analyze-product', 'analyze-visual', 'analyze-strategy'];
+            const modes = ['analyze-ux', 'analyze-product', 'analyze-visual', 'analyze-strategy', 'analyze-accessibility'];
 
             const runExpertWithTimeout = async (mode: string, timeout = 60000) => {
                 console.log(`[JobProcessor] Starting ${mode}...`);
