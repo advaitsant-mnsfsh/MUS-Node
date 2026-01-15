@@ -103,18 +103,28 @@ export interface AuditJobData {
 }
 
 export async function getAuditJob(jobId: string): Promise<AuditJobData | null> {
-    const { data, error } = await supabase
-        .from('audit_jobs')
-        .select('*')
-        .eq('id', jobId)
-        .single();
+    try {
+        // Use public API endpoint instead of direct Supabase query
+        const backendUrl = import.meta.env.VITE_BACKEND_URL || 'https://mus-node.onrender.com';
+        const response = await fetch(`${backendUrl}/api/public/jobs/${jobId}`);
 
-    if (error || !data) return null;
+        if (!response.ok) {
+            if (response.status === 404 || response.status === 403) {
+                return null;
+            }
+            throw new Error(`Failed to fetch job: ${response.status}`);
+        }
 
-    return {
-        id: data.id,
-        status: data.status,
-        report_data: data.report_data || data.input_data, // Fallback? No, report_data is result.
-        error_message: data.error_message
-    };
+        const data = await response.json();
+
+        return {
+            id: data.id,
+            status: data.status,
+            report_data: data.report_data,
+            error_message: data.error_message
+        };
+    } catch (error) {
+        console.error('Error fetching job:', error);
+        return null;
+    }
 }
