@@ -8,6 +8,21 @@ router.get('/test', (req, res) => {
     res.json({ message: 'Public API is working!' });
 });
 
+// DEBUG: List recent jobs (to verify DB access)
+router.get('/debug', async (req, res) => {
+    try {
+        const { data, error } = await import('../lib/supabase').then(m => m.supabase
+            .from('audit_jobs')
+            .select('id, status, created_at')
+            .order('created_at', { ascending: false })
+            .limit(5)
+        );
+        res.json({ data, error });
+    } catch (err: any) {
+        res.json({ error: err.message });
+    }
+});
+
 // GET /api/public/jobs/:jobId
 // Public endpoint to fetch completed job report data for sharing
 router.get('/jobs/:jobId', async (req, res) => {
