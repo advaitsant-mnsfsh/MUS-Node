@@ -242,11 +242,27 @@ export const EmbeddableInput: React.FC<EmbeddableInputProps> = ({ config }) => {
         };
     }, [pollingJobId, config.apiKey]);
 
+    // Dynamic Padding Bottom to prevent logo overlap
+    // If a bottom logo is present, ensure we have at least enough padding
+    const hasBottomLogo = config.monsoonLogoPosition?.startsWith('bottom') || config.logoPosition?.startsWith('bottom');
+    const bottomLogoHeightVal = parseInt(config.monsoonLogoHeight || '20');
+    // Base padding (from percentage)
+    const basePadding = 1.5 * (paddingPercentage / 100); // rem
+
+    // If bottom logo exists, ensure bottom padding is at least logo height + gap
+    // 20px is approx 1.25rem. Let's reserve 2.5rem (~40px) if logo is there.
+    const reservedBottomSpace = hasBottomLogo ? 2.5 : 0;
+
+    const finalPaddingBottom = Math.max(basePadding, reservedBottomSpace);
+
     const containerStyle: React.CSSProperties = {
         backgroundColor,
         color: textColor,
         fontFamily,
-        padding: paddingValue,
+        paddingTop: paddingValue,
+        paddingLeft: paddingValue,
+        paddingRight: paddingValue,
+        paddingBottom: `${finalPaddingBottom}rem`,
         height: '100%',
         display: 'flex',
         flexDirection: 'column',
@@ -254,7 +270,8 @@ export const EmbeddableInput: React.FC<EmbeddableInputProps> = ({ config }) => {
         boxSizing: 'border-box',
         border: config.containerBorder || 'none',
         borderRadius: config.containerBorderRadius || '0px',
-        boxShadow: config.containerBoxShadow || 'none'
+        boxShadow: config.containerBoxShadow || 'none',
+        overflow: 'hidden' // Ensure content (like button) clips to border radius
     };
 
     const defaultLogo = '/logo.png'; // Relative path works because widget runs in Iframe on our domain
