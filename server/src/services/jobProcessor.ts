@@ -66,10 +66,36 @@ export class JobProcessor {
                 };
             }
 
-            // 4. Run Experts (Parallel)
+            // 4. Run Experts (Parallel with timeout and individual error handling)
             console.log(`[JobProcessor] Running experts...`);
             const modes = ['analyze-ux', 'analyze-product', 'analyze-visual', 'analyze-strategy'];
-            const results = await Promise.all(modes.map(mode => performAnalysis(ai, mode, analysisContext)));
+
+            const runExpertWithTimeout = async (mode: string, timeout = 60000) => {
+                console.log(`[JobProcessor] Starting ${mode}...`);
+                const startTime = Date.now();
+
+                try {
+                    const timeoutPromise = new Promise((_, reject) =>
+                        setTimeout(() => reject(new Error(`${mode} timed out after ${timeout}ms`)), timeout)
+                    );
+
+                    const result = await Promise.race([
+                        performAnalysis(ai, mode, analysisContext),
+                        timeoutPromise
+                    ]);
+
+                    const duration = Date.now() - startTime;
+                    console.log(`[JobProcessor] ✓ ${mode} completed in ${duration}ms`);
+                    return result;
+                } catch (error: any) {
+                    const duration = Date.now() - startTime;
+                    console.error(`[JobProcessor] ✗ ${mode} failed after ${duration}ms:`, error.message);
+                    return { key: mode, data: null, error: error.message };
+                }
+            };
+
+            const results = await Promise.all(modes.map(mode => runExpertWithTimeout(mode)));
+            console.log(`[JobProcessor] All experts completed`);
 
             // 5. Aggregate
             const report: any = {};
