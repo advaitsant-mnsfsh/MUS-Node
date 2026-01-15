@@ -81,13 +81,24 @@
                 alignment: styles.alignment,
                 inputHeight: styles.inputHeight,
                 buttonHeight: styles.buttonHeight,
-                inputHeight: styles.inputHeight,
-                buttonHeight: styles.buttonHeight,
                 logoHeight: styles.logoHeight,
                 monsoonLogoHeight: styles.monsoonLogoHeight,
                 containerBorder: styles.containerBorder,
                 containerBorderRadius: styles.containerBorderRadius,
-                containerBoxShadow: styles.containerBoxShadow
+                containerBoxShadow: styles.containerBoxShadow,
+                // Enhanced spacing controls
+                inputMarginBottom: styles.inputMarginBottom,
+                buttonMarginBottom: styles.buttonMarginBottom,
+                logoMarginTop: styles.logoMarginTop,
+                contentMarginTop: styles.contentMarginTop,
+                contentMarginBottom: styles.contentMarginBottom,
+                contentMarginLeft: styles.contentMarginLeft,
+                contentMarginRight: styles.contentMarginRight,
+                // Widget size constraints
+                widgetMinHeight: styles.widgetMinHeight,
+                widgetMaxHeight: styles.widgetMaxHeight,
+                widgetMinWidth: styles.widgetMinWidth,
+                widgetMaxWidth: styles.widgetMaxWidth
             };
 
             const queryString = createQueryString(params);
@@ -106,7 +117,8 @@
             // Auto-resize iframe based on content height
             window.addEventListener('message', function (e) {
                 if (e.data && e.data.type === 'widget-resize' && e.data.height) {
-                    iframe.style.height = e.data.height + 'px';
+                    console.log('Widget resize:', e.data.height);
+                    iframe.style.setProperty('height', e.data.height + 'px', 'important');
                 }
             });
 

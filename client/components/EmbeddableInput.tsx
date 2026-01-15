@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Zap, ImagePlus, Globe, X, Loader2, Plus } from 'lucide-react';
+import { Zap, ImagePlus, Globe, X, Loader2, Plus, Copy, Check } from 'lucide-react';
 
 export interface WidgetConfig {
     primaryColor?: string;
@@ -30,6 +30,19 @@ export interface WidgetConfig {
     containerBorder?: string;
     containerBorderRadius?: string;
     containerBoxShadow?: string;
+    // Enhanced Spacing Controls
+    inputMarginBottom?: string;  // Space between input and button (vertical) or button (horizontal)
+    buttonMarginBottom?: string; // Space between button and logo (vertical only)
+    logoMarginTop?: string;      // Additional space above logo
+    contentMarginTop?: string;   // Space from top border to content
+    contentMarginBottom?: string; // Space from content to bottom border
+    contentMarginLeft?: string;  // Space from left border to content
+    contentMarginRight?: string; // Space from right border to content
+    // Widget Size Constraints
+    widgetMinHeight?: string;
+    widgetMaxHeight?: string;
+    widgetMinWidth?: string;
+    widgetMaxWidth?: string;
 }
 
 interface EmbeddableInputProps {
@@ -95,20 +108,26 @@ export const EmbeddableInput: React.FC<EmbeddableInputProps> = ({ config }) => {
     const [pollingJobId, setPollingJobId] = useState<string | null>(null);
     const [statusMessage, setStatusMessage] = useState('Initializing...');
     const [error, setError] = useState<string | null>(null);
+    const [shareableLink, setShareableLink] = useState<string | null>(null);
+    const [showResult, setShowResult] = useState(false);
 
     // Send height to parent for iframe auto-resize
     useEffect(() => {
         const sendHeight = () => {
-            // Use scrollHeight + fixed buffer for absolute logo
-            const height = document.documentElement.scrollHeight + 60;
+            // Use max of html and body scrollHeight + large buffer for logo
+            const htmlHeight = document.documentElement.scrollHeight;
+            const bodyHeight = document.body.scrollHeight;
+            const height = Math.max(htmlHeight, bodyHeight) + 200; // Large buffer
             window.parent.postMessage({ type: 'widget-resize', height }, '*');
         };
 
         sendHeight();
 
-        // Send again after a short delay to catch late renders
+        // Send again after delays to catch late renders
         setTimeout(sendHeight, 100);
         setTimeout(sendHeight, 500);
+        setTimeout(sendHeight, 1000);
+        setTimeout(sendHeight, 2000);
 
         const observer = new ResizeObserver(sendHeight);
         observer.observe(document.body);
@@ -228,17 +247,18 @@ export const EmbeddableInput: React.FC<EmbeddableInputProps> = ({ config }) => {
 
                 if (data.status === 'completed') {
                     setStatusMessage('Report Ready! Redirecting...');
-                    // Success! Redirect.
+                    // Success! Show result card then redirect
+                    setStatusMessage('Complete! Generating shareable link...');
+                    setShareableLink(data.resultUrl);
+                    setShowResult(true);
+                    setPollingJobId(null);
+
+                    // Redirect after 5 seconds
                     setTimeout(() => {
                         if (data.resultUrl) {
                             window.top!.location.href = data.resultUrl;
-                        } else {
-                            // Fallback
-                            setPollingJobId(null);
-                            setIsLoading(false);
-                            setError('Report generated but no URL returned.');
                         }
-                    }, 1000);
+                    }, 5000);
                 } else if (data.status === 'failed') {
                     setPollingJobId(null);
                     setIsLoading(false);
@@ -262,28 +282,24 @@ export const EmbeddableInput: React.FC<EmbeddableInputProps> = ({ config }) => {
         };
     }, [pollingJobId, config.apiKey]);
 
-    // Dynamic Padding Bottom to prevent logo overlap
-    // If a bottom logo is present, ensure we have at least enough padding
-    const hasBottomLogo = config.monsoonLogoPosition?.startsWith('bottom') || config.logoPosition?.startsWith('bottom');
-    const bottomLogoHeightVal = parseInt(config.monsoonLogoHeight || '20');
-    // Base padding (from percentage)
-    const basePadding = 1.5 * (paddingPercentage / 100); // rem
-
-    // If bottom logo exists, ensure bottom padding is at least logo height + gap
-    // 20px is approx 1.25rem. Let's reserve 2.5rem (~40px) if logo is there.
-    const reservedBottomSpace = hasBottomLogo ? 3.5 : 0;
-
-    const finalPaddingBottom = Math.max(basePadding, reservedBottomSpace);
+    // Use granular spacing controls or fall back to paddingPercentage
+    const contentMarginTop = config.contentMarginTop || paddingValue;
+    const contentMarginBottom = config.contentMarginBottom || paddingValue;
+    const contentMarginLeft = config.contentMarginLeft || paddingValue;
+    const contentMarginRight = config.contentMarginRight || paddingValue;
 
     const containerStyle: React.CSSProperties = {
         backgroundColor,
         color: textColor,
         fontFamily,
-        paddingTop: paddingValue,
-        paddingLeft: paddingValue,
-        paddingRight: paddingValue,
-        paddingBottom: `${finalPaddingBottom}rem`,
-        minHeight: '100%',
+        paddingTop: contentMarginTop,
+        paddingLeft: contentMarginLeft,
+        paddingRight: contentMarginRight,
+        paddingBottom: contentMarginBottom,
+        minHeight: config.widgetMinHeight || '100%',
+        maxHeight: config.widgetMaxHeight || 'none',
+        minWidth: config.widgetMinWidth || 'auto',
+        maxWidth: config.widgetMaxWidth || 'none',
         height: 'auto',
         display: 'flex',
         flexDirection: 'column',
@@ -305,7 +321,7 @@ export const EmbeddableInput: React.FC<EmbeddableInputProps> = ({ config }) => {
         if (isMonsoon) {
             const flowStyle: React.CSSProperties = {
                 display: 'block',
-                marginTop: 'auto',
+                marginTop: config.logoMarginTop || '2rem', // Use config or default
                 alignSelf: pos.includes('left') ? 'flex-start' : pos.includes('right') ? 'flex-end' : 'center',
                 maxHeight: heightStr || '40px',
                 height: heightStr || 'auto',
@@ -365,6 +381,88 @@ export const EmbeddableInput: React.FC<EmbeddableInputProps> = ({ config }) => {
                 </div>
             )}
 
+            {/* Result Card */}
+            {showResult && shareableLink && (
+                <div style={{
+                    position: 'absolute',
+                    inset: 0,
+                    backgroundColor: 'rgba(255,255,255,0.98)',
+                    backdropFilter: 'blur(10px)',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    zIndex: 40,
+                    borderRadius,
+                    padding: '2rem',
+                    textAlign: 'center',
+                    animation: 'fadeIn 0.3s ease-in-out'
+                }}>
+                    <Check size={48} style={{ color: '#10b981', marginBottom: '1rem' }} />
+                    <h3 style={{ color: textColor, marginBottom: '0.5rem', fontSize: '1.25rem', fontWeight: 600 }}>Audit Complete!</h3>
+                    <p style={{ color: textColor, opacity: 0.7, marginBottom: '1.5rem', fontSize: '0.9rem' }}>Your report is ready. Redirecting in 5 seconds...</p>
+
+                    <div style={{
+                        width: '100%',
+                        maxWidth: '400px',
+                        padding: '0.75rem 1rem',
+                        backgroundColor: 'rgba(0,0,0,0.05)',
+                        borderRadius: '8px',
+                        marginBottom: '1rem',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '0.5rem'
+                    }}>
+                        <input
+                            readOnly
+                            value={shareableLink}
+                            style={{
+                                flex: 1,
+                                border: 'none',
+                                background: 'transparent',
+                                color: textColor,
+                                fontSize: '0.85rem',
+                                outline: 'none'
+                            }}
+                        />
+                        <button
+                            onClick={() => {
+                                navigator.clipboard.writeText(shareableLink);
+                            }}
+                            style={{
+                                background: primaryColor,
+                                color: '#fff',
+                                border: 'none',
+                                padding: '0.5rem',
+                                borderRadius: '6px',
+                                cursor: 'pointer',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center'
+                            }}
+                        >
+                            <Copy size={16} />
+                        </button>
+                    </div>
+
+                    <button
+                        onClick={() => window.top!.location.href = shareableLink}
+                        style={{
+                            background: primaryColor,
+                            color: '#fff',
+                            border: 'none',
+                            padding: '0.75rem 1.5rem',
+                            borderRadius: '8px',
+                            cursor: 'pointer',
+                            fontWeight: 600,
+                            fontSize: '0.95rem'
+                        }}
+                    >
+                        View Report Now
+                    </button>
+                </div>
+            )}
+
             {/* Top Logos */}
             {config.logoUrl && (config.logoPosition?.startsWith('top') || (!config.logoPosition && false)) && renderLogo(config.logoUrl, config.logoPosition, false, config.logoHeight)}
             {(config.monsoonLogoPosition?.startsWith('top')) && renderLogo(defaultLogo, config.monsoonLogoPosition, true, (() => {
@@ -393,7 +491,8 @@ export const EmbeddableInput: React.FC<EmbeddableInputProps> = ({ config }) => {
                     backgroundColor: inputBackgroundColor,
                     transition: 'border-color 0.2s',
                     width: inputWidthStyle,
-                    boxSizing: 'border-box'
+                    boxSizing: 'border-box',
+                    marginBottom: config.inputMarginBottom || '0'
                 }}>
                     <input
                         className="widget-input"
@@ -477,7 +576,8 @@ export const EmbeddableInput: React.FC<EmbeddableInputProps> = ({ config }) => {
                         justifyContent: 'center',
                         gap: '0.5rem',
                         width: buttonWidthStyle,
-                        boxSizing: 'border-box'
+                        boxSizing: 'border-box',
+                        marginBottom: config.buttonMarginBottom || '0'
                     }}
                 >
                     {isLoading ? <Loader2 className="animate-spin" size={20} /> : 'Run Audit'}

@@ -34,6 +34,19 @@ const EmbedPage: React.FC = () => {
             containerBorder: searchParams.get('containerBorder') || undefined,
             containerBorderRadius: searchParams.get('containerBorderRadius') || undefined,
             containerBoxShadow: searchParams.get('containerBoxShadow') || undefined,
+            // Enhanced spacing controls
+            inputMarginBottom: searchParams.get('inputMarginBottom') || undefined,
+            buttonMarginBottom: searchParams.get('buttonMarginBottom') || undefined,
+            logoMarginTop: searchParams.get('logoMarginTop') || undefined,
+            contentMarginTop: searchParams.get('contentMarginTop') || undefined,
+            contentMarginBottom: searchParams.get('contentMarginBottom') || undefined,
+            contentMarginLeft: searchParams.get('contentMarginLeft') || undefined,
+            contentMarginRight: searchParams.get('contentMarginRight') || undefined,
+            // Widget size constraints
+            widgetMinHeight: searchParams.get('widgetMinHeight') || undefined,
+            widgetMaxHeight: searchParams.get('widgetMaxHeight') || undefined,
+            widgetMinWidth: searchParams.get('widgetMinWidth') || undefined,
+            widgetMaxWidth: searchParams.get('widgetMaxWidth') || undefined,
         };
     }, [searchParams]);
 
