@@ -88,6 +88,8 @@ export const EmbeddableInput: React.FC<EmbeddableInputProps> = ({ config }) => {
     const [url, setUrl] = useState('');
     const [items, setItems] = useState<{ type: 'url' | 'file'; value: string | File; id: string }[]>([]);
     const [isLoading, setIsLoading] = useState(false);
+    const [pollingJobId, setPollingJobId] = useState<string | null>(null);
+    const [statusMessage, setStatusMessage] = useState('Initializing...');
     const [error, setError] = useState<string | null>(null);
 
     const handleAddUrl = () => {
@@ -149,14 +151,12 @@ export const EmbeddableInput: React.FC<EmbeddableInputProps> = ({ config }) => {
             }));
 
             // 2. Submit to API
-            // Use absolute URL from environment to support cross-domain hosting (Vercel + Render)
             const apiUrl = import.meta.env.VITE_API_URL || '';
             const response = await fetch(`${apiUrl}/api/external/audit`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${config.apiKey || 'YOUR_PUBLIC_KEY'}` // User should provide key in param, or we hardcode a public one?
-                    // Actually, the plan says apiKey is passed in query params.
+                    'Authorization': `Bearer ${config.apiKey || 'YOUR_PUBLIC_KEY'}`
                 },
                 body: JSON.stringify({ inputs: processedInputs })
             });
@@ -167,27 +167,76 @@ export const EmbeddableInput: React.FC<EmbeddableInputProps> = ({ config }) => {
                 throw new Error(data.message || 'Submission failed');
             }
 
-            // 3. Success Feedback & Delay
-            setIsLoading(false);
-            const successMsg = document.createElement('div');
-            successMsg.innerText = 'Success! Redirecting to your report...';
-            successMsg.style.color = '#10b981'; // Green-500
-            successMsg.style.marginTop = '1rem';
-            successMsg.style.textAlign = 'center';
-            successMsg.style.fontWeight = 'bold';
-            document.querySelector('.widget-container')?.appendChild(successMsg);
-
-            setTimeout(() => {
-                if (data.redirectUrl) {
-                    window.top!.location.href = data.redirectUrl;
-                }
-            }, 2000);
+            // 3. Start Polling
+            setPollingJobId(data.jobId);
+            setStatusMessage('Analyzing your request...');
 
         } catch (err: any) {
             setError(err.message || 'Error submitting audit');
             setIsLoading(false);
         }
     };
+
+    // Polling Effect
+    useEffect(() => {
+        if (!pollingJobId) return;
+
+        let isMounted = true;
+        const apiUrl = import.meta.env.VITE_API_URL || '';
+
+        const checkStatus = async () => {
+            try {
+                const response = await fetch(`${apiUrl}/api/external/audit/${pollingJobId}`, {
+                    headers: {
+                        'Authorization': `Bearer ${config.apiKey || 'YOUR_PUBLIC_KEY'}`
+                    }
+                });
+
+                if (!response.ok) {
+                    // If error, keep retrying or fail?
+                    console.warn("Polling error", response.status);
+                    return;
+                }
+
+                const data = await response.json();
+
+                if (!isMounted) return;
+
+                if (data.status === 'completed') {
+                    setStatusMessage('Report Ready! Redirecting...');
+                    // Success! Redirect.
+                    setTimeout(() => {
+                        if (data.resultUrl) {
+                            window.top!.location.href = data.resultUrl;
+                        } else {
+                            // Fallback
+                            setPollingJobId(null);
+                            setIsLoading(false);
+                            setError('Report generated but no URL returned.');
+                        }
+                    }, 1000);
+                } else if (data.status === 'failed') {
+                    setPollingJobId(null);
+                    setIsLoading(false);
+                    setError(data.error || 'Audit failed during analysis.');
+                } else {
+                    // Still processing
+                    setStatusMessage('Analyzing... This may take a moment.');
+                }
+
+            } catch (err) {
+                console.error("Polling fetch error", err);
+            }
+        };
+
+        const interval = setInterval(checkStatus, 3000);
+
+        // Initial check immediately? No, wait 3s.
+        return () => {
+            isMounted = false;
+            clearInterval(interval);
+        };
+    }, [pollingJobId, config.apiKey]);
 
     const containerStyle: React.CSSProperties = {
         backgroundColor,
@@ -251,6 +300,27 @@ export const EmbeddableInput: React.FC<EmbeddableInputProps> = ({ config }) => {
                     opacity: 1;
                 }
             `}</style>
+
+            {/* Loading Overlay */}
+            {pollingJobId && (
+                <div style={{
+                    position: 'absolute',
+                    inset: 0,
+                    backgroundColor: 'rgba(255,255,255,0.95)',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    zIndex: 40, // Below logo (50)
+                    borderRadius,
+                    padding: '1rem',
+                    textAlign: 'center'
+                }}>
+                    <Loader2 className="animate-spin" size={32} style={{ color: primaryColor, marginBottom: '1rem' }} />
+                    <div style={{ color: textColor, fontWeight: 500 }}>{statusMessage}</div>
+                </div>
+            )}
+
             {/* Top Logos */}
             {config.logoUrl && (config.logoPosition?.startsWith('top') || (!config.logoPosition && false)) && renderLogo(config.logoUrl, config.logoPosition, false, config.logoHeight)}
             {(config.monsoonLogoPosition?.startsWith('top')) && renderLogo(defaultLogo, config.monsoonLogoPosition, true, (() => {
