@@ -246,19 +246,12 @@ export const EmbeddableInput: React.FC<EmbeddableInputProps> = ({ config }) => {
                 if (!isMounted) return;
 
                 if (data.status === 'completed') {
-                    setStatusMessage('Report Ready! Redirecting...');
-                    // Success! Show result card then redirect
-                    setStatusMessage('Complete! Generating shareable link...');
+                    // Success! Show result card - NO auto-redirect
+                    setStatusMessage('Complete! Your audit is ready.');
                     setShareableLink(data.resultUrl);
                     setShowResult(true);
                     setPollingJobId(null);
-
-                    // Redirect after 5 seconds
-                    setTimeout(() => {
-                        if (data.resultUrl) {
-                            window.top!.location.href = data.resultUrl;
-                        }
-                    }, 5000);
+                    setIsLoading(false);
                 } else if (data.status === 'failed') {
                     setPollingJobId(null);
                     setIsLoading(false);
@@ -400,7 +393,7 @@ export const EmbeddableInput: React.FC<EmbeddableInputProps> = ({ config }) => {
                 }}>
                     <Check size={48} style={{ color: '#10b981', marginBottom: '1rem' }} />
                     <h3 style={{ color: textColor, marginBottom: '0.5rem', fontSize: '1.25rem', fontWeight: 600 }}>Audit Complete!</h3>
-                    <p style={{ color: textColor, opacity: 0.7, marginBottom: '1.5rem', fontSize: '0.9rem' }}>Your report is ready. Redirecting in 5 seconds...</p>
+                    <p style={{ color: textColor, opacity: 0.7, marginBottom: '1.5rem', fontSize: '0.9rem' }}>Your report is ready. Copy the link or view it now.</p>
 
                     <div style={{
                         width: '100%',
