@@ -208,6 +208,27 @@ export const EmbeddableInput: React.FC<EmbeddableInputProps> = ({ config }) => {
         const pos = position || (isMonsoon ? 'bottom-center' : 'top-center');
         const isTop = pos.startsWith('top');
 
+        // FORCE absolute positioning for Monsoon Logo to prevent hiding
+        if (isMonsoon) {
+            const absoluteStyle: React.CSSProperties = {
+                position: 'absolute',
+                zIndex: 50,
+                maxHeight: heightStr || '40px',
+                height: heightStr || 'auto',
+                objectFit: 'contain',
+                // Vertical Position
+                ...(isTop ? { top: '0.5rem' } : { bottom: '0.5rem' }),
+                // Horizontal Position
+                ...(pos.includes('left') ? { left: '0.5rem' } : {}),
+                ...(pos.includes('right') ? { right: '0.5rem' } : {}),
+                ...(pos.includes('center') ? { left: '50%', transform: 'translateX(-50%)' } : {}),
+                pointerEvents: 'none', // Allow clicking through if it overlaps input
+                opacity: 0.8 // Slight transparency to look more like a watermark if overlapping
+            };
+            return <img src={url} alt="Powered by Monsoonfish" style={absoluteStyle} />;
+        }
+
+        // Standard flow for Client Logo (user controlled)
         const style: React.CSSProperties = {
             maxHeight: heightStr || '40px',
             height: heightStr || 'auto',
@@ -219,7 +240,7 @@ export const EmbeddableInput: React.FC<EmbeddableInputProps> = ({ config }) => {
             ...(pos.includes('left') ? { marginRight: 'auto', display: 'block' } : {})
         };
 
-        return <img src={url} alt={isMonsoon ? "Monsoonfish" : "Client Logo"} style={style} />;
+        return <img src={url} alt="Client Logo" style={style} />;
     };
 
     return (
