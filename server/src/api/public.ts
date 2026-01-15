@@ -3,6 +3,11 @@ import { JobService } from '../services/jobService';
 
 const router = Router();
 
+// Test endpoint to verify router is working
+router.get('/test', (req, res) => {
+    res.json({ message: 'Public API is working!' });
+});
+
 // GET /api/public/jobs/:jobId
 // Public endpoint to fetch completed job report data for sharing
 router.get('/jobs/:jobId', async (req, res) => {
