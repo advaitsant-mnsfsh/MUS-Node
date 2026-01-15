@@ -131,10 +131,13 @@ export async function getAuditJob(jobId: string): Promise<AuditJobData | null> {
         const text = await data.text();
         const reportJson = JSON.parse(text);
 
+        // Extract the actual report object if nested (common in storage files)
+        const actualReport = reportJson.report || reportJson.report_data || reportJson;
+
         return {
             id: jobId,
             status: 'completed', // If file exists, it's completed
-            report_data: reportJson
+            report_data: actualReport
         };
 
     } catch (error) {
