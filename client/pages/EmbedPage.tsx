@@ -5,6 +5,12 @@ import { EmbeddableInput, WidgetConfig } from '../components/EmbeddableInput';
 const EmbedPage: React.FC = () => {
     const [searchParams] = useSearchParams();
 
+    // Ensure iframe body is transparent
+    React.useEffect(() => {
+        document.body.style.backgroundColor = 'transparent';
+        document.documentElement.style.backgroundColor = 'transparent';
+    }, []);
+
     const config: WidgetConfig = useMemo(() => {
         return {
             primaryColor: searchParams.get('primaryColor') || undefined,
