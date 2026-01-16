@@ -1,6 +1,37 @@
 import React, { useState, useEffect } from 'react';
 import { Zap, ImagePlus, Globe, X, Loader2, Plus, Copy, Check } from 'lucide-react';
 
+// Helper to determine if background is dark
+const isDarkBackground = (color: string | undefined): boolean => {
+    if (!color || color === 'transparent') return false;
+
+    let r = 255, g = 255, b = 255;
+
+    if (color.startsWith('#')) {
+        const hex = color.replace('#', '');
+        if (hex.length === 3) {
+            r = parseInt(hex[0] + hex[0], 16);
+            g = parseInt(hex[1] + hex[1], 16);
+            b = parseInt(hex[2] + hex[2], 16);
+        } else if (hex.length >= 6) {
+            r = parseInt(hex.substring(0, 2), 16);
+            g = parseInt(hex.substring(2, 4), 16);
+            b = parseInt(hex.substring(4, 6), 16);
+        }
+    } else if (color.startsWith('rgb')) {
+        const match = color.match(/\d+/g);
+        if (match && match.length >= 3) {
+            r = parseInt(match[0]);
+            g = parseInt(match[1]);
+            b = parseInt(match[2]);
+        }
+    }
+
+    // Perceived brightness (Luma)
+    const luma = 0.2126 * r + 0.7152 * g + 0.0722 * b;
+    return luma < 128;
+};
+
 export interface WidgetConfig {
     primaryColor?: string;
     backgroundColor?: string;
@@ -10,6 +41,8 @@ export interface WidgetConfig {
     logoUrl?: string;
     logoPosition?: 'top-left' | 'top-center' | 'top-right' | 'bottom-left' | 'bottom-center' | 'bottom-right';
     monsoonLogoPosition?: 'top-left' | 'top-center' | 'top-right' | 'bottom-left' | 'bottom-center' | 'bottom-right';
+    // ... (rest of interface is implied unchanged by context, but I need to be careful not to delete it)
+
     inputHeight?: string;
     buttonHeight?: string;
     logoHeight?: string;
@@ -67,6 +100,9 @@ export const EmbeddableInput: React.FC<EmbeddableInputProps> = ({ config }) => {
     const tagBackgroundColor = config.tagBackgroundColor || '#f1f5f9';
     const tagTextColor = config.tagTextColor || 'inherit';
     const inputBorderColor = config.inputBorderColor || '#e2e8f0';
+
+    // Auto-determine logo color if not forced
+    const derivedLogoColor = config.monsoonLogoColor || (isDarkBackground(config.backgroundColor) ? 'white' : 'original');
 
     // Layout
     const layout = config.layout || 'vertical';
@@ -327,8 +363,8 @@ export const EmbeddableInput: React.FC<EmbeddableInputProps> = ({ config }) => {
                 objectFit: 'contain',
                 pointerEvents: 'none',
                 opacity: 0.8,
-                filter: config.monsoonLogoColor === 'white' ? 'brightness(0) invert(1)' :
-                    config.monsoonLogoColor === 'black' ? 'grayscale(100%) brightness(0)' : 'none'
+                filter: derivedLogoColor === 'white' ? 'brightness(0) invert(1)' :
+                    derivedLogoColor === 'black' ? 'grayscale(100%) brightness(0)' : 'none'
             };
             return <img src={url} alt="Powered by Monsoonfish" style={flowStyle} />;
         }
