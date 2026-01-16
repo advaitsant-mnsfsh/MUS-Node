@@ -99,7 +99,10 @@
                 widgetMaxHeight: styles.widgetMaxHeight,
                 widgetMinWidth: styles.widgetMinWidth,
                 widgetMaxWidth: styles.widgetMaxWidth,
-                monsoonLogoColor: styles.monsoonLogoColor
+                monsoonLogoColor: styles.monsoonLogoColor,
+                tagBackgroundColor: styles.tagBackgroundColor,
+                tagTextColor: styles.tagTextColor,
+                inputBorderColor: styles.inputBorderColor
             };
 
             const queryString = createQueryString(params);

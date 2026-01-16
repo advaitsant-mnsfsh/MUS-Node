@@ -48,6 +48,9 @@ const EmbedPage: React.FC = () => {
             widgetMinWidth: searchParams.get('widgetMinWidth') || undefined,
             widgetMaxWidth: searchParams.get('widgetMaxWidth') || undefined,
             monsoonLogoColor: (searchParams.get('monsoonLogoColor') as any) || undefined,
+            tagBackgroundColor: searchParams.get('tagBackgroundColor') || undefined,
+            tagTextColor: searchParams.get('tagTextColor') || undefined,
+            inputBorderColor: searchParams.get('inputBorderColor') || undefined,
         };
     }, [searchParams]);
 

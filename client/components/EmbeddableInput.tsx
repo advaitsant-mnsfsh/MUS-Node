@@ -44,6 +44,9 @@ export interface WidgetConfig {
     widgetMinWidth?: string;
     widgetMaxWidth?: string;
     monsoonLogoColor?: 'original' | 'white' | 'black';
+    tagBackgroundColor?: string;
+    tagTextColor?: string;
+    inputBorderColor?: string;
 }
 
 interface EmbeddableInputProps {
@@ -60,6 +63,9 @@ export const EmbeddableInput: React.FC<EmbeddableInputProps> = ({ config }) => {
     const inputBackgroundColor = config.inputBackgroundColor || '#ffffff';
     const placeholderColor = config.placeholderColor || '#94a3b8'; // slate-400 default
     const placeholderText = config.placeholderText || 'Enter URL...';
+    const tagBackgroundColor = config.tagBackgroundColor || '#f1f5f9';
+    const tagTextColor = config.tagTextColor || 'inherit';
+    const inputBorderColor = config.inputBorderColor || '#e2e8f0';
 
     // Layout
     const layout = config.layout || 'vertical';
@@ -479,7 +485,7 @@ export const EmbeddableInput: React.FC<EmbeddableInputProps> = ({ config }) => {
                 <div style={{
                     display: 'flex',
                     alignItems: 'center',
-                    border: '1px solid #e2e8f0',
+                    border: `1px solid ${inputBorderColor}`,
                     borderRadius,
                     padding: '0.5rem',
                     backgroundColor: inputBackgroundColor,
@@ -537,7 +543,8 @@ export const EmbeddableInput: React.FC<EmbeddableInputProps> = ({ config }) => {
                             alignItems: 'center',
                             gap: '0.5rem',
                             padding: '0.25rem 0.5rem',
-                            background: '#f1f5f9',
+                            background: tagBackgroundColor,
+                            color: tagTextColor,
                             borderRadius: '99px',
                             fontSize: '0.875rem',
                             maxWidth: '100%'
