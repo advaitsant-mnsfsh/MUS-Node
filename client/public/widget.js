@@ -110,6 +110,7 @@
                 loadingBackgroundColor: styles.loadingBackgroundColor,
                 loadingTextColor: styles.loadingTextColor,
                 loadingSpinnerColor: styles.loadingSpinnerColor,
+                loadingMessageFontSize: styles.loadingMessageFontSize,
 
                 // Success
                 successTitle: styles.successTitle,
@@ -119,8 +120,12 @@
                 shareLinkBackgroundColor: styles.shareLinkBackgroundColor,
                 shareLinkTextColor: styles.shareLinkTextColor,
                 copyButtonColor: styles.copyButtonColor,
+                copyButtonIconColor: styles.copyButtonIconColor,
                 viewReportButtonColor: styles.viewReportButtonColor,
-                viewReportButtonTextColor: styles.viewReportButtonTextColor
+                viewReportButtonTextColor: styles.viewReportButtonTextColor,
+                viewReportButtonText: styles.viewReportButtonText,
+                resultLayout: styles.resultLayout,
+                resultGap: styles.resultGap
             };
 
             const queryString = createQueryString(params);

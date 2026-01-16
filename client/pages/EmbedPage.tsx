@@ -64,6 +64,7 @@ const EmbedPage: React.FC = () => {
             loadingBackgroundColor: searchParams.get('loadingBackgroundColor') || undefined,
             loadingTextColor: searchParams.get('loadingTextColor') || undefined,
             loadingSpinnerColor: searchParams.get('loadingSpinnerColor') || undefined,
+            loadingMessageFontSize: searchParams.get('loadingMessageFontSize') || undefined,
 
             // Success State
             successTitle: searchParams.get('successTitle') || undefined,
@@ -73,8 +74,12 @@ const EmbedPage: React.FC = () => {
             shareLinkBackgroundColor: searchParams.get('shareLinkBackgroundColor') || undefined,
             shareLinkTextColor: searchParams.get('shareLinkTextColor') || undefined,
             copyButtonColor: searchParams.get('copyButtonColor') || undefined,
+            copyButtonIconColor: searchParams.get('copyButtonIconColor') || undefined,
             viewReportButtonColor: searchParams.get('viewReportButtonColor') || undefined,
             viewReportButtonTextColor: searchParams.get('viewReportButtonTextColor') || undefined,
+            viewReportButtonText: searchParams.get('viewReportButtonText') || undefined,
+            resultLayout: (searchParams.get('resultLayout') as any) || undefined,
+            resultGap: searchParams.get('resultGap') || undefined,
         };
     }, [searchParams]);
 

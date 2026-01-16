@@ -87,6 +87,7 @@ export interface WidgetConfig {
     loadingBackgroundColor?: string;
     loadingTextColor?: string;
     loadingSpinnerColor?: string;
+    loadingMessageFontSize?: string;
 
     // Success/Share State Styling
     successTitle?: string;
@@ -96,8 +97,12 @@ export interface WidgetConfig {
     shareLinkBackgroundColor?: string;
     shareLinkTextColor?: string;
     copyButtonColor?: string;
+    copyButtonIconColor?: string;
     viewReportButtonColor?: string;
     viewReportButtonTextColor?: string;
+    viewReportButtonText?: string;
+    resultLayout?: 'vertical' | 'horizontal';
+    resultGap?: string;
 }
 
 interface EmbeddableInputProps {
@@ -380,6 +385,8 @@ export const EmbeddableInput: React.FC<EmbeddableInputProps> = ({ config }) => {
                 objectFit: 'contain',
                 pointerEvents: 'none',
                 opacity: 0.8,
+                position: 'relative',
+                zIndex: 60,
                 filter: derivedLogoColor === 'white' ? 'brightness(0) invert(1)' :
                     derivedLogoColor === 'black' ? 'grayscale(100%) brightness(0)' : 'none'
             };
@@ -391,6 +398,8 @@ export const EmbeddableInput: React.FC<EmbeddableInputProps> = ({ config }) => {
             maxHeight: heightStr || '40px',
             height: heightStr || 'auto',
             objectFit: 'contain',
+            position: 'relative',
+            zIndex: 60,
             marginBottom: isTop ? '1rem' : 0,
             marginTop: !isTop ? '1rem' : 0,
             ...(pos.includes('center') ? { marginLeft: 'auto', marginRight: 'auto', display: 'block' } : {}),
@@ -404,11 +413,12 @@ export const EmbeddableInput: React.FC<EmbeddableInputProps> = ({ config }) => {
     // Derived State Styles
     const isDark = isDarkBackground(config.backgroundColor);
 
-    const loadingBg = config.loadingBackgroundColor || (isDark ? 'rgba(10,10,10,0.95)' : 'rgba(255,255,255,0.95)');
+    const loadingBg = config.loadingBackgroundColor || (isDark ? '#000000' : '#ffffff');
     const loadingTxt = config.loadingTextColor || config.textColor || (isDark ? '#e2e8f0' : '#1e293b');
     const loadingSpin = config.loadingSpinnerColor || config.primaryColor;
+    const loadingMsgSize = config.loadingMessageFontSize || '1rem';
 
-    const successBg = config.successBackgroundColor || (isDark ? 'rgba(10,10,10,0.98)' : 'rgba(255,255,255,0.98)');
+    const successBg = config.successBackgroundColor || (isDark ? '#000000' : '#ffffff');
     const successTxt = config.successTextColor || config.textColor || (isDark ? '#e2e8f0' : '#1e293b');
     const shareLinkBg = config.shareLinkBackgroundColor || (isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)');
     const shareLinkTxt = config.shareLinkTextColor || successTxt;
@@ -416,8 +426,13 @@ export const EmbeddableInput: React.FC<EmbeddableInputProps> = ({ config }) => {
     const successTitleText = config.successTitle || 'Audit Complete!';
     const successDescText = config.successDescription || 'Your report is ready. Copy the link or view it now.';
     const copyBtnColor = config.copyButtonColor || config.primaryColor;
+    const copyIconCol = config.copyButtonIconColor || '#fff';
     const viewBtnColor = config.viewReportButtonColor || config.primaryColor;
     const viewBtnTxtColor = config.viewReportButtonTextColor || '#fff';
+    const viewBtnLabel = config.viewReportButtonText || 'View Report Now';
+
+    const resultLayout = config.resultLayout || 'vertical';
+    const resultGap = config.resultGap || '1rem';
 
     return (
         <div style={containerStyle} className="widget-container">
@@ -475,63 +490,76 @@ export const EmbeddableInput: React.FC<EmbeddableInputProps> = ({ config }) => {
                     <p style={{ color: successTxt, opacity: 0.7, marginBottom: '1.5rem', fontSize: '0.9rem' }}>{successDescText}</p>
 
                     <div style={{
-                        width: '100%',
-                        maxWidth: '400px',
-                        padding: '0.75rem 1rem',
-                        backgroundColor: shareLinkBg,
-                        borderRadius: '8px',
-                        marginBottom: '1rem',
                         display: 'flex',
+                        flexDirection: resultLayout === 'horizontal' ? 'row' : 'column',
+                        width: '100%',
+                        maxWidth: '100%',
+                        gap: resultGap,
                         alignItems: 'center',
-                        gap: '0.5rem'
+                        justifyContent: 'center'
                     }}>
-                        <input
-                            readOnly
-                            value={shareableLink}
-                            style={{
-                                flex: 1,
-                                border: 'none',
-                                background: 'transparent',
-                                color: shareLinkTxt,
-                                fontSize: '0.85rem',
-                                outline: 'none'
-                            }}
-                        />
+                        <div style={{
+                            width: resultLayout === 'horizontal' ? 'auto' : '100%',
+                            flex: resultLayout === 'horizontal' ? 1 : 'none',
+                            maxWidth: '400px',
+                            padding: '0.75rem 1rem',
+                            backgroundColor: shareLinkBg,
+                            borderRadius: '8px',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '0.5rem',
+                            boxSizing: 'border-box'
+                        }}>
+                            <input
+                                readOnly
+                                value={shareableLink}
+                                style={{
+                                    flex: 1,
+                                    border: 'none',
+                                    background: 'transparent',
+                                    color: shareLinkTxt,
+                                    fontSize: '0.85rem',
+                                    outline: 'none',
+                                    minWidth: 0
+                                }}
+                            />
+                            <button
+                                onClick={() => {
+                                    navigator.clipboard.writeText(shareableLink);
+                                }}
+                                style={{
+                                    background: copyBtnColor,
+                                    color: copyIconCol,
+                                    border: 'none',
+                                    padding: '0.5rem',
+                                    borderRadius: '6px',
+                                    cursor: 'pointer',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center'
+                                }}
+                            >
+                                <Copy size={16} />
+                            </button>
+                        </div>
+
                         <button
-                            onClick={() => {
-                                navigator.clipboard.writeText(shareableLink);
-                            }}
+                            onClick={() => window.top!.location.href = shareableLink}
                             style={{
-                                background: copyBtnColor,
-                                color: '#fff',
+                                background: viewBtnColor,
+                                color: viewBtnTxtColor,
                                 border: 'none',
-                                padding: '0.5rem',
-                                borderRadius: '6px',
+                                padding: '0.75rem 1.5rem',
+                                borderRadius: '8px',
                                 cursor: 'pointer',
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center'
+                                fontWeight: 600,
+                                fontSize: '0.95rem',
+                                whiteSpace: 'nowrap'
                             }}
                         >
-                            <Copy size={16} />
+                            {viewBtnLabel}
                         </button>
                     </div>
-
-                    <button
-                        onClick={() => window.top!.location.href = shareableLink}
-                        style={{
-                            background: viewBtnColor,
-                            color: viewBtnTxtColor,
-                            border: 'none',
-                            padding: '0.75rem 1.5rem',
-                            borderRadius: '8px',
-                            cursor: 'pointer',
-                            fontWeight: 600,
-                            fontSize: '0.95rem'
-                        }}
-                    >
-                        View Report Now
-                    </button>
                 </div>
             )}
 
