@@ -81,6 +81,23 @@ export interface WidgetConfig {
     tagTextColor?: string;
     inputBorderColor?: string;
     buttonTextColor?: string;
+
+    // Loading State Styling
+    loadingText?: string;
+    loadingBackgroundColor?: string;
+    loadingTextColor?: string;
+    loadingSpinnerColor?: string;
+
+    // Success/Share State Styling
+    successTitle?: string;
+    successDescription?: string;
+    successBackgroundColor?: string;
+    successTextColor?: string;
+    shareLinkBackgroundColor?: string;
+    shareLinkTextColor?: string;
+    copyButtonColor?: string;
+    viewReportButtonColor?: string;
+    viewReportButtonTextColor?: string;
 }
 
 interface EmbeddableInputProps {
@@ -254,7 +271,7 @@ export const EmbeddableInput: React.FC<EmbeddableInputProps> = ({ config }) => {
 
             // 3. Start Polling
             setPollingJobId(data.jobId);
-            setStatusMessage('Analyzing your request...');
+            setStatusMessage(config.loadingText || 'Analyzing your request...');
 
         } catch (err: any) {
             setError(err.message || 'Error submitting audit');
@@ -384,6 +401,24 @@ export const EmbeddableInput: React.FC<EmbeddableInputProps> = ({ config }) => {
         return <img src={url} alt="Client Logo" style={style} />;
     };
 
+    // Derived State Styles
+    const isDark = isDarkBackground(config.backgroundColor);
+
+    const loadingBg = config.loadingBackgroundColor || (isDark ? 'rgba(10,10,10,0.95)' : 'rgba(255,255,255,0.95)');
+    const loadingTxt = config.loadingTextColor || config.textColor || (isDark ? '#e2e8f0' : '#1e293b');
+    const loadingSpin = config.loadingSpinnerColor || config.primaryColor;
+
+    const successBg = config.successBackgroundColor || (isDark ? 'rgba(10,10,10,0.98)' : 'rgba(255,255,255,0.98)');
+    const successTxt = config.successTextColor || config.textColor || (isDark ? '#e2e8f0' : '#1e293b');
+    const shareLinkBg = config.shareLinkBackgroundColor || (isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)');
+    const shareLinkTxt = config.shareLinkTextColor || successTxt;
+
+    const successTitleText = config.successTitle || 'Audit Complete!';
+    const successDescText = config.successDescription || 'Your report is ready. Copy the link or view it now.';
+    const copyBtnColor = config.copyButtonColor || config.primaryColor;
+    const viewBtnColor = config.viewReportButtonColor || config.primaryColor;
+    const viewBtnTxtColor = config.viewReportButtonTextColor || '#fff';
+
     return (
         <div style={containerStyle} className="widget-container">
             <style>{`
@@ -403,18 +438,18 @@ export const EmbeddableInput: React.FC<EmbeddableInputProps> = ({ config }) => {
                 <div style={{
                     position: 'absolute',
                     inset: 0,
-                    backgroundColor: 'rgba(255,255,255,0.95)',
+                    backgroundColor: loadingBg,
                     display: 'flex',
                     flexDirection: 'column',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    zIndex: 40, // Below logo (50)
+                    zIndex: 40,
                     borderRadius,
                     padding: '1rem',
                     textAlign: 'center'
                 }}>
-                    <Loader2 className="animate-spin" size={32} style={{ color: primaryColor, marginBottom: '1rem' }} />
-                    <div style={{ color: textColor, fontWeight: 500 }}>{statusMessage}</div>
+                    <Loader2 className="animate-spin" size={32} style={{ color: loadingSpin, marginBottom: '1rem' }} />
+                    <div style={{ color: loadingTxt, fontWeight: 500 }}>{statusMessage}</div>
                 </div>
             )}
 
@@ -423,7 +458,7 @@ export const EmbeddableInput: React.FC<EmbeddableInputProps> = ({ config }) => {
                 <div style={{
                     position: 'absolute',
                     inset: 0,
-                    backgroundColor: 'rgba(255,255,255,0.98)',
+                    backgroundColor: successBg,
                     backdropFilter: 'blur(10px)',
                     display: 'flex',
                     flexDirection: 'column',
@@ -436,14 +471,14 @@ export const EmbeddableInput: React.FC<EmbeddableInputProps> = ({ config }) => {
                     animation: 'fadeIn 0.3s ease-in-out'
                 }}>
                     <Check size={48} style={{ color: '#10b981', marginBottom: '1rem' }} />
-                    <h3 style={{ color: textColor, marginBottom: '0.5rem', fontSize: '1.25rem', fontWeight: 600 }}>Audit Complete!</h3>
-                    <p style={{ color: textColor, opacity: 0.7, marginBottom: '1.5rem', fontSize: '0.9rem' }}>Your report is ready. Copy the link or view it now.</p>
+                    <h3 style={{ color: successTxt, marginBottom: '0.5rem', fontSize: '1.25rem', fontWeight: 600 }}>{successTitleText}</h3>
+                    <p style={{ color: successTxt, opacity: 0.7, marginBottom: '1.5rem', fontSize: '0.9rem' }}>{successDescText}</p>
 
                     <div style={{
                         width: '100%',
                         maxWidth: '400px',
                         padding: '0.75rem 1rem',
-                        backgroundColor: 'rgba(0,0,0,0.05)',
+                        backgroundColor: shareLinkBg,
                         borderRadius: '8px',
                         marginBottom: '1rem',
                         display: 'flex',
@@ -457,7 +492,7 @@ export const EmbeddableInput: React.FC<EmbeddableInputProps> = ({ config }) => {
                                 flex: 1,
                                 border: 'none',
                                 background: 'transparent',
-                                color: textColor,
+                                color: shareLinkTxt,
                                 fontSize: '0.85rem',
                                 outline: 'none'
                             }}
@@ -467,7 +502,7 @@ export const EmbeddableInput: React.FC<EmbeddableInputProps> = ({ config }) => {
                                 navigator.clipboard.writeText(shareableLink);
                             }}
                             style={{
-                                background: primaryColor,
+                                background: copyBtnColor,
                                 color: '#fff',
                                 border: 'none',
                                 padding: '0.5rem',
@@ -485,8 +520,8 @@ export const EmbeddableInput: React.FC<EmbeddableInputProps> = ({ config }) => {
                     <button
                         onClick={() => window.top!.location.href = shareableLink}
                         style={{
-                            background: primaryColor,
-                            color: '#fff',
+                            background: viewBtnColor,
+                            color: viewBtnTxtColor,
                             border: 'none',
                             padding: '0.75rem 1.5rem',
                             borderRadius: '8px',
