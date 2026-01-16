@@ -47,6 +47,7 @@ export interface WidgetConfig {
     tagBackgroundColor?: string;
     tagTextColor?: string;
     inputBorderColor?: string;
+    buttonTextColor?: string;
 }
 
 interface EmbeddableInputProps {
@@ -565,7 +566,7 @@ export const EmbeddableInput: React.FC<EmbeddableInputProps> = ({ config }) => {
                     disabled={isLoading || (items.length === 0 && !url)}
                     style={{
                         backgroundColor: primaryColor,
-                        color: '#fff',
+                        color: config.buttonTextColor || '#fff',
                         border: 'none',
                         padding: '0.75rem',
                         borderRadius,

@@ -102,7 +102,8 @@
                 monsoonLogoColor: styles.monsoonLogoColor,
                 tagBackgroundColor: styles.tagBackgroundColor,
                 tagTextColor: styles.tagTextColor,
-                inputBorderColor: styles.inputBorderColor
+                inputBorderColor: styles.inputBorderColor,
+                buttonTextColor: styles.buttonTextColor
             };
 
             const queryString = createQueryString(params);

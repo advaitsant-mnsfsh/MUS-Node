@@ -51,6 +51,7 @@ const EmbedPage: React.FC = () => {
             tagBackgroundColor: searchParams.get('tagBackgroundColor') || undefined,
             tagTextColor: searchParams.get('tagTextColor') || undefined,
             inputBorderColor: searchParams.get('inputBorderColor') || undefined,
+            buttonTextColor: searchParams.get('buttonTextColor') || undefined,
         };
     }, [searchParams]);
 
