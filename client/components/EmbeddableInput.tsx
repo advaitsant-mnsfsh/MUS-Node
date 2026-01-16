@@ -43,6 +43,7 @@ export interface WidgetConfig {
     widgetMaxHeight?: string;
     widgetMinWidth?: string;
     widgetMaxWidth?: string;
+    monsoonLogoColor?: 'original' | 'white' | 'black';
 }
 
 interface EmbeddableInputProps {
@@ -318,7 +319,9 @@ export const EmbeddableInput: React.FC<EmbeddableInputProps> = ({ config }) => {
                 height: heightStr || 'auto',
                 objectFit: 'contain',
                 pointerEvents: 'none',
-                opacity: 0.8
+                opacity: 0.8,
+                filter: config.monsoonLogoColor === 'white' ? 'brightness(0) invert(1)' :
+                    config.monsoonLogoColor === 'black' ? 'grayscale(100%) brightness(0)' : 'none'
             };
             return <img src={url} alt="Powered by Monsoonfish" style={flowStyle} />;
         }

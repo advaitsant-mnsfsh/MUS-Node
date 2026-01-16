@@ -47,6 +47,7 @@ const EmbedPage: React.FC = () => {
             widgetMaxHeight: searchParams.get('widgetMaxHeight') || undefined,
             widgetMinWidth: searchParams.get('widgetMinWidth') || undefined,
             widgetMaxWidth: searchParams.get('widgetMaxWidth') || undefined,
+            monsoonLogoColor: (searchParams.get('monsoonLogoColor') as any) || undefined,
         };
     }, [searchParams]);
 

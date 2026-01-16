@@ -98,7 +98,8 @@
                 widgetMinHeight: styles.widgetMinHeight,
                 widgetMaxHeight: styles.widgetMaxHeight,
                 widgetMinWidth: styles.widgetMinWidth,
-                widgetMaxWidth: styles.widgetMaxWidth
+                widgetMaxWidth: styles.widgetMaxWidth,
+                monsoonLogoColor: styles.monsoonLogoColor
             };
 
             const queryString = createQueryString(params);
