@@ -441,6 +441,7 @@ export const EmbeddableInput: React.FC<EmbeddableInputProps> = ({ config }) => {
                     background-color: transparent !important;
                     margin: 0;
                     padding: 0;
+                    padding-bottom: 10px; /* Prevent bottom border/shadow clipping */
                 }
                 .widget-input::placeholder {
                     color: ${placeholderColor} !important;
