@@ -114,10 +114,8 @@ export const EmbeddableInput: React.FC<EmbeddableInputProps> = ({ config }) => {
     // Send height to parent for iframe auto-resize
     useEffect(() => {
         const sendHeight = () => {
-            // Use max of html and body scrollHeight + large buffer for logo
-            const htmlHeight = document.documentElement.scrollHeight;
-            const bodyHeight = document.body.scrollHeight;
-            const height = Math.max(htmlHeight, bodyHeight) + 200; // Large buffer
+            // Calculate height based on content
+            const height = document.body.scrollHeight;
             window.parent.postMessage({ type: 'widget-resize', height }, '*');
         };
 
