@@ -1,86 +1,90 @@
-Part 1: The Box Paste this div exactly where you want the widget to appear on your page:
+Part 1: The Box
+Paste this div exactly where you want the widget to appear on your page:
 
-html
-<div id="audit-widget-root" style="width: 100%; min-height: 400px;"></div>
-Part 2: The Logic Paste this code at the very bottom of your HTML file, right before the closing </body> tag:
+```html
+<div id="audit-widget-root" style="width: 100%;"></div>
+```
 
-html
+Part 2: The Logic (HTML/Vanilla JS)
+Paste this code at the very bottom of your HTML file, right before the closing </body> tag:
+
+```html
 <!-- Load the Widget Script -->
-<!-- CHANGE THE URL TO YOUR PRODUCTION DOMAIN -->
-<script src="http://localhost:5173/widget.js"></script>
+<script src="https://mus-node.vercel.app/widget.js"></script>
 <script>
-  // Initialize when the page loads
   window.addEventListener('load', function() {
-    AuditWidget.mount({
-      container: '#audit-widget-root',
-      apiKey: 'YOUR_API_KEY_HERE', // <--- REPLACE THIS
-      styles: {
-                        // --- LAYOUT & ALIGNMENT ---
-                        // 'vertical': Stacks the Input Box above the Run Audit Button.
-                        // 'horizontal': Places Input Box and Button side-by-side.
-                        layout: 'vertical',
-                        
-                        // 'center', 'left', or 'right'.
-                        // Controls where the boxes sit if they are not 100% width.
-                        alignment: 'center',
-                        
-                        // Space between the Input Box and the Button (e.g., '20px', '1rem').
-                        gap: '20px',
-                        
-                        // Scales the container padding. 100 = Standard (24px). 50 = Half (12px).
-                        paddingPercentage: 100,
+    if (typeof AuditWidget !== 'undefined') {
+        AuditWidget.mount({
+          container: '#audit-widget-root',
+          apiKey: 'YOUR_API_KEY_HERE', // <--- REPLACE THIS
+          styles: {
+            // --- LAYOUT ---
+            // 'vertical' (stack elements) or 'horizontal' (side-by-side)
+            layout: 'vertical',
+            // Alignment of content: 'left', 'center', 'right'
+            alignment: 'center',
+            // Space between input and button
+            gap: '20px',
 
-                        // --- DIMENSIONS ---
-                        // Width of the Input Box and Button in percentages (0-100).
-                        // For vertical layout, 100 is usually best.
-                        inputWidthPercentage: 100,
-                        buttonWidthPercentage: 100,
+            // --- SIZING ---
+            // Scale container padding (0-100)
+            paddingPercentage: 100,
+            // Width of input box relative to container (0-100)
+            inputWidthPercentage: 100,
+            // Width of button relative to container (0-100)
+            buttonWidthPercentage: 100,
+            // Fixed height for input and button
+            inputHeight: '50px',
+            buttonHeight: '50px',
 
-                        // --- COLORS ---
-                        primaryColor: '#4F46E5',         // Button background color
-                        backgroundColor: '#FFFFFF',      // Widget container background
-                        textColor: '#1E293B',            // Main text color
-                        inputBackgroundColor: '#F8FAFC', // Input box background
-                        placeholderColor: '#94A3B8',     // "Enter URL..." text color
+            // --- COLORS & TYPOGRAPHY ---
+            fontFamily: 'inherit',
+            primaryColor: '#4F46E5',         // Button Background
+            backgroundColor: '#FFFFFF',      // Widget Background
+            textColor: '#1E293B',            // Main Text Color
+            
+            // --- INPUT STYLING ---
+            inputBackgroundColor: '#F8FAFC', 
+            inputBorderColor: '#E2E8F0',     // Border color (use 'transparent' for clean look)
+            placeholderColor: '#94A3B8',
+            
+            // --- BUTTON TEXT ---
+            buttonTextColor: '#FFFFFF',      // Text color inside the button
 
-                        // --- FONTS & SHAPE ---
-                        fontFamily: 'inherit',           // Use your website's font
-                        borderRadius: '12px',            // Roundness of corners
+            // --- CHIPS/TAGS STYLING ---
+            tagBackgroundColor: '#F1F5F9',   // Background of added URL chips
+            tagTextColor: '#0F172A',         // Text color of chips
 
-                        // --- CONTENT ---
-                        placeholderText: 'Enter URL...',
-                        inputHeight: 'auto',             // Height of the input field
-                        buttonHeight: 'auto',            // Height of the button
+            // --- CONTAINER STYLING ---
+            borderRadius: '12px',            // Roundness of elements
+            containerBorder: '1px solid #E2E8F0',
+            containerBorderRadius: '16px',
+            containerBoxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
 
-                        // --- BRANDING ---
-                        // Monsoonfish Logo Position
-                        monsoonLogoPosition: 'bottom-center',
-                        monsoonLogoHeight: '20px',
-
-                        // --- CLIENT LOGO (Uncomment to use) ---
-                        // logoUrl: 'https://your-website.com/logo.png',
-                        // logoPosition: 'top-center',
-                        // logoHeight: '40px'
-		}
-    });
+            // --- BRANDING ---
+            monsoonLogoPosition: 'bottom-right',
+            monsoonLogoHeight: '20px',
+            // monsoonLogoColor: 'original', // 'white', 'black', or 'original'. Auto-detects if omitted.
+          }
+        });
+    }
   });
 </script>
+```
 
+Part 3: React / Next.js (JSX)
+Create a component (e.g., `Widget.jsx`):
 
-
-HTML
----------------------------------
-
+```jsx
 "use client";
-
 import React, { useEffect } from 'react';
 
 export default function Widget() {
-    // Change URL to your production domain when deploying
-    const WIDGET_URL = "http://localhost:5173/widget.js";
+    const WIDGET_URL = "https://mus-node.vercel.app/widget.js";
+    const API_KEY = "YOUR_API_KEY_HERE";
 
     useEffect(() => {
-        // Load Script
+        // 1. Load Script
         if (!document.querySelector(`script[src="${WIDGET_URL}"]`)) {
             const script = document.createElement('script');
             script.src = WIDGET_URL;
@@ -88,63 +92,53 @@ export default function Widget() {
             document.body.appendChild(script);
         }
 
-        // Mount Widget when ready
+        // 2. Mount Widget
         const timer = setInterval(() => {
             // @ts-ignore
             if (window.AuditWidget) {
                 clearInterval(timer);
                 // @ts-ignore
                 window.AuditWidget.mount({
-                    container: '#audit-widget-spot', // Matches the ID below
-                    apiKey: 'YOUR_API_KEY_HERE',
+                    container: '#audit-widget-spot',
+                    apiKey: API_KEY,
                     styles: {
-                        // --- LAYOUT & ALIGNMENT ---
-                        // 'vertical': Stacks the Input Box above the Run Audit Button.
-                        // 'horizontal': Places Input Box and Button side-by-side.
+                        // --- LAYOUT ---
                         layout: 'vertical',
-                        
-                        // 'center', 'left', or 'right'.
-                        // Controls where the boxes sit if they are not 100% width.
                         alignment: 'center',
-                        
-                        // Space between the Input Box and the Button (e.g., '20px', '1rem').
                         gap: '20px',
-                        
-                        // Scales the container padding. 100 = Standard (24px). 50 = Half (12px).
-                        paddingPercentage: 100,
 
-                        // --- DIMENSIONS ---
-                        // Width of the Input Box and Button in percentages (0-100).
-                        // For vertical layout, 100 is usually best.
+                        // --- SIZING ---
+                        paddingPercentage: 100,
                         inputWidthPercentage: 100,
                         buttonWidthPercentage: 100,
+                        inputHeight: '50px',
+                        buttonHeight: '50px',
 
                         // --- COLORS ---
-                        primaryColor: '#4F46E5',         // Button background color
-                        backgroundColor: '#FFFFFF',      // Widget container background
-                        textColor: '#1E293B',            // Main text color
-                        inputBackgroundColor: '#F8FAFC', // Input box background
-                        placeholderColor: '#94A3B8',     // "Enter URL..." text color
-
-                        // --- FONTS & SHAPE ---
-                        fontFamily: 'inherit',           // Use your website's font
-                        borderRadius: '12px',            // Roundness of corners
-
-                        // --- CONTENT ---
-                        placeholderText: 'Enter URL...',
-                        inputHeight: 'auto',             // Height of the input field
-                        buttonHeight: 'auto',            // Height of the button
+                        primaryColor: '#4F46E5',
+                        backgroundColor: '#FFFFFF',
+                        textColor: '#1E293B',
+                        
+                        // --- DETAILED STYLING ---
+                        inputBackgroundColor: '#F8FAFC',
+                        inputBorderColor: '#E2E8F0',
+                        placeholderColor: '#94A3B8',
+                        buttonTextColor: '#FFFFFF',
+                        tagBackgroundColor: '#F1F5F9',
+                        tagTextColor: '#0F172A',
+                        
+                        // --- BORDERS & CONTAINER ---
+                        fontFamily: 'inherit',
+                        borderRadius: '12px',
+                        containerBorder: 'none',
+                        containerBorderRadius: '0px',
+                        containerBoxShadow: 'none',
 
                         // --- BRANDING ---
-                        // Monsoonfish Logo Position
-                        monsoonLogoPosition: 'bottom-center',
+                        monsoonLogoPosition: 'bottom-right',
                         monsoonLogoHeight: '20px',
-
-                        // --- CLIENT LOGO (Uncomment to use) ---
-                        // logoUrl: 'https://your-website.com/logo.png',
-                        // logoPosition: 'top-center',
-                        // logoHeight: '40px'
-			}
+                        // monsoonLogoColor: 'original' 
+                    }
                 });
             }
         }, 100);
@@ -152,12 +146,6 @@ export default function Widget() {
         return () => clearInterval(timer);
     }, []);
 
-    return (
-        <div id="audit-widget-spot" style={{ width: '100%', minHeight: '400px' }}></div>
-    );
+    return <div id="audit-widget-spot" style={{ width: '100%' }}></div>;
 }
-
-
-WIDGET.jsx
-
-and import Widget in page.tsx
+```
