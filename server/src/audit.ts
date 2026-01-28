@@ -62,7 +62,7 @@ async function retryWithBackoff(operation: any, retries = 10, initialDelay = 100
     }
 }
 
-const callApi = async (ai: any, systemInstruction: string, contents: string, schema: any, imageBase64: string | null = null, mimeType = 'image/png', mobileImageBase64: string | null = null) => {
+const callApi = async (apiKeys: string[], systemInstruction: string, contents: string, schema: any, imageBase64: string | null = null, mimeType = 'image/png', mobileImageBase64: string | null = null) => {
     const parts: any[] = [];
     if (imageBase64) {
         parts.push({
@@ -86,22 +86,28 @@ const callApi = async (ai: any, systemInstruction: string, contents: string, sch
 
     const requestContents = (imageBase64 || mobileImageBase64) ? { parts } : contents;
 
-    const apiCall = () => ai.models.generateContent({
-        model: "gemini-2.5-flash",
-        contents: requestContents,
-        config: {
-            systemInstruction,
-            responseMimeType: "application/json",
-            responseSchema: schema,
-            maxOutputTokens: 8192,
-            safetySettings: [
-                { category: HarmCategory.HARM_CATEGORY_HATE_SPEECH, threshold: HarmBlockThreshold.BLOCK_NONE },
-                { category: HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT, threshold: HarmBlockThreshold.BLOCK_NONE },
-                { category: HarmCategory.HARM_CATEGORY_HARASSMENT, threshold: HarmBlockThreshold.BLOCK_NONE },
-                { category: HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT, threshold: HarmBlockThreshold.BLOCK_NONE },
-            ]
-        }
-    });
+    const apiCall = async () => {
+        // Randomly select an API Key for load balancing / rotation
+        const randomKey = apiKeys[Math.floor(Math.random() * apiKeys.length)];
+        const ai = new GoogleGenAI({ apiKey: randomKey });
+
+        return ai.models.generateContent({
+            model: "gemini-2.5-flash",
+            contents: requestContents,
+            config: {
+                systemInstruction,
+                responseMimeType: "application/json",
+                responseSchema: schema,
+                maxOutputTokens: 8192,
+                safetySettings: [
+                    { category: HarmCategory.HARM_CATEGORY_HATE_SPEECH, threshold: HarmBlockThreshold.BLOCK_NONE },
+                    { category: HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT, threshold: HarmBlockThreshold.BLOCK_NONE },
+                    { category: HarmCategory.HARM_CATEGORY_HARASSMENT, threshold: HarmBlockThreshold.BLOCK_NONE },
+                    { category: HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT, threshold: HarmBlockThreshold.BLOCK_NONE },
+                ]
+            }
+        });
+    };
 
     const response = await retryWithBackoff(apiCall, 10, 2000, "Generate Content");
     try {
@@ -402,7 +408,7 @@ export const performPerformanceCheck = async (url: string, apiKey: string, secre
     }
 };
 
-export const performAnalysis = async (ai: GoogleGenAI, mode: string, body: any) => {
+export const performAnalysis = async (apiKeys: string[], mode: string, body: any) => {
     const schemas = getSchemas();
     const expertMap: any = {
         'analyze-ux': { key: 'UX Audit expert', role: 'UX Auditor', schema: schemas.uxAuditSchema },
@@ -417,7 +423,7 @@ export const performAnalysis = async (ai: GoogleGenAI, mode: string, body: any) 
         const { liveText } = body;
         return {
             key: expertConfig.key,
-            data: await callApi(ai, getStrategySystemInstruction(), liveText, expertConfig.schema)
+            data: await callApi(apiKeys, getStrategySystemInstruction(), liveText, expertConfig.schema)
         };
     } else {
         const { url, screenshotBase64, mobileScreenshotBase64, liveText, performanceData, screenshotMimeType, performanceAnalysisError, animationData, accessibilityData, axeViolations } = body;
@@ -441,11 +447,17 @@ export const performAnalysis = async (ai: GoogleGenAI, mode: string, body: any) 
             }
         }
 
-        const fullContent = `${contextPrompt}\n### Live Website Text Content ###\n${liveText}`;
+        // Optimizing Token Usage: Truncate very long text
+        const MAX_TEXT_LENGTH = 60000; // ~15k tokens
+        const truncatedText = liveText.length > MAX_TEXT_LENGTH
+            ? liveText.substring(0, MAX_TEXT_LENGTH) + "\n...[truncated for length]..."
+            : liveText;
+
+        const fullContent = `${contextPrompt}\n### Live Website Text Content ###\n${truncatedText}`;
 
         return {
             key: expertConfig.key,
-            data: await callApi(ai, systemInstruction, fullContent, expertConfig.schema, screenshotBase64, screenshotMimeType, mobileScreenshotBase64)
+            data: await callApi(apiKeys, systemInstruction, fullContent, expertConfig.schema, screenshotBase64, screenshotMimeType, mobileScreenshotBase64)
         };
     }
 };
@@ -480,17 +492,22 @@ export const handleAuditRequest = async (req: Request, res: Response) => {
         return acc;
     }, {});
 
-    let apiKey = secrets['API_KEY'];
-    if (!apiKey) {
-        apiKey = process.env.API_KEY || process.env.GEMINI_API_KEY;
+    let apiKeyRaw = secrets['API_KEY'];
+    if (!apiKeyRaw) {
+        apiKeyRaw = process.env.API_KEY || process.env.GEMINI_API_KEY;
     }
 
-    if (!apiKey) {
+    if (!apiKeyRaw) {
         return res.status(500).json({ message: "Missing AI API Key." });
     }
 
+    // Split comma-separated keys
+    const apiKeys = apiKeyRaw.split(',').map((k: string) => k.trim()).filter((k: string) => k.length > 0);
+    const primaryKey = apiKeys[0];
+
     const browserEndpoint = secrets['PUPPETEER_BROWSER_ENDPOINT'];
-    const ai = new GoogleGenAI({ apiKey });
+    // const ai = new GoogleGenAI({ apiKey }); // Legacy instantiation removed, using pool
+
 
     if (mode.startsWith('analyze-')) {
         res.setHeader('Content-Type', 'text/event-stream');
@@ -512,7 +529,7 @@ export const handleAuditRequest = async (req: Request, res: Response) => {
 
         case 'scrape-performance': {
             const { url } = req.body;
-            const result = await performPerformanceCheck(url, apiKey, secrets);
+            const result = await performPerformanceCheck(url, primaryKey, secrets);
             res.json(result);
             break;
         }
@@ -531,7 +548,7 @@ export const handleAuditRequest = async (req: Request, res: Response) => {
 
                 write({ type: 'status', message: `Running ${expertName} analysis...` });
 
-                const result = await performAnalysis(ai, mode, req.body);
+                const result = await performAnalysis(apiKeys, mode, req.body);
 
                 write({ type: 'data', payload: { key: result.key, data: result.data } });
                 write({ type: 'status', message: `✓ ${result.key} analysis complete.` });
@@ -586,18 +603,22 @@ ${JSON.stringify(allIssues, null, 2)}`;
 
                 const schemas = getSchemas();
                 // We need to use 'responseMimeType' etc. callApi logic but we are not sending image.
-                const callContextRank = () => ai.models.generateContent({
-                    model: "gemini-2.5-flash",
-                    contents: contents,
-                    config: {
-                        systemInstruction,
-                        responseMimeType: "application/json",
-                        responseSchema: {
-                            type: Type.ARRAY,
-                            items: schemas.criticalIssueSchema
+                const callContextRank = async () => {
+                    const randomKey = apiKeys[Math.floor(Math.random() * apiKeys.length)];
+                    const ai = new GoogleGenAI({ apiKey: randomKey });
+                    return ai.models.generateContent({
+                        model: "gemini-2.5-flash",
+                        contents: contents,
+                        config: {
+                            systemInstruction,
+                            responseMimeType: "application/json",
+                            responseSchema: {
+                                type: Type.ARRAY,
+                                items: schemas.criticalIssueSchema
+                            }
                         }
-                    }
-                });
+                    });
+                };
 
                 const response = await retryWithBackoff(callContextRank, 10, 2000, "Contextual Rank");
                 // Same parsing logic as callApi

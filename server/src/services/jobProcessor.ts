@@ -15,10 +15,14 @@ export class JobProcessor {
             if (!job) throw new Error('Job not found');
 
             const secrets = await this.getSecrets();
-            const apiKey = secrets['API_KEY'] || process.env.API_KEY;
-            if (!apiKey) throw new Error('Missing API Key');
+            // const secrets = await this.getSecrets(); // Already declared above
+            const apiKeyRaw = secrets['API_KEY'] || process.env.API_KEY;
+            if (!apiKeyRaw) throw new Error('Missing API Key');
 
-            const ai = new GoogleGenAI({ apiKey });
+            // Parse Multi-Keys
+            const apiKeys = apiKeyRaw.split(',').map((k: string) => k.trim()).filter((k: string) => k.length > 0);
+            const primaryKey = apiKeys[0];
+
             const browserEndpoint = secrets['PUPPETEER_BROWSER_ENDPOINT'];
 
             const inputs = job.input_data.inputs || [];
@@ -37,7 +41,7 @@ export class JobProcessor {
 
                 // B. Performance
                 console.log(`[JobProcessor] Checking performance...`);
-                const perfResult = await performPerformanceCheck(url, apiKey, secrets);
+                const perfResult = await performPerformanceCheck(url, primaryKey, secrets);
 
                 analysisContext = {
                     url,
@@ -80,7 +84,7 @@ export class JobProcessor {
                     );
 
                     const result = await Promise.race([
-                        performAnalysis(ai, mode, analysisContext),
+                        performAnalysis(apiKeys, mode, analysisContext),
                         timeoutPromise
                     ]);
 
@@ -94,8 +98,22 @@ export class JobProcessor {
                 }
             };
 
-            const results = await Promise.all(modes.map(mode => runExpertWithTimeout(mode)));
-            console.log(`[JobProcessor] All experts completed`);
+            const results: any[] = [];
+            const concurrency = 2; // Run max 2 experts at a time to prevent 429 Overload
+
+            for (let i = 0; i < modes.length; i += concurrency) {
+                const batch = modes.slice(i, i + concurrency);
+                console.log(`[JobProcessor] Starting batch ${Math.floor(i / concurrency) + 1}: ${batch.join(', ')}`);
+
+                const batchResults = await Promise.all(batch.map(mode => runExpertWithTimeout(mode)));
+                results.push(...batchResults);
+
+                // Cool-down delay between batches
+                if (i + concurrency < modes.length) {
+                    await new Promise(resolve => setTimeout(resolve, 2000));
+                }
+            }
+            console.log(`[JobProcessor] All batches completed`);
 
             // 5. Aggregate
             const report: any = {};

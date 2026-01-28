@@ -65,6 +65,40 @@ Paste this code at the very bottom of your HTML file, right before the closing <
             monsoonLogoPosition: 'bottom-right',
             monsoonLogoHeight: '20px',
             // monsoonLogoColor: 'original', // 'white', 'black', or 'original'. Auto-detects if omitted.
+
+            // ============================================
+            // NEW: LOADING STATE CUSTOMIZATION
+            // ============================================
+            loadingBackgroundColor: '#FFFFFF',  // Background during scan
+            loadingTextColor: '#1E293B',        // Text color "Analyzing..."
+            loadingSpinnerColor: '#4F46E5',     // Spinner color
+            loadingText: 'Analyzing your request...', // Custom loading message
+            loadingMessageFontSize: '1rem',     // Font size of message
+
+            // ============================================
+            // NEW: RESULT / LANDING PAGE CUSTOMIZATION
+            // ============================================
+            successTitle: 'Audit Complete!',
+            successDescription: 'Your report is ready. Copy the link or view it now.',
+            successBackgroundColor: '#FFFFFF',  // Result screen background
+            successTextColor: '#1E293B',        // Result text color
+            
+            // Result Action Buttons Layout
+            resultLayout: 'vertical',           // 'vertical' or 'horizontal'
+            resultGap: '1rem',                  // Gap between Link Box and View Button
+
+            // Link Box Styling
+            shareLinkBackgroundColor: '#F1F5F9',
+            shareLinkTextColor: '#1E293B',
+            
+            // Copy Button Styling
+            copyButtonColor: '#4F46E5',         // Copy button background
+            copyButtonIconColor: '#FFFFFF',     // Copy icon color
+            
+            // "View Report" Button Styling
+            viewReportButtonColor: '#4F46E5',   // Main action button background
+            viewReportButtonTextColor: '#FFFFFF', // Text color
+            viewReportButtonText: 'View Report Now' // Custom label
           }
         });
     }
@@ -119,7 +153,7 @@ export default function Widget() {
                         backgroundColor: '#FFFFFF',
                         textColor: '#1E293B',
                         
-                        // --- DETAILED STYLING ---
+                        // --- INPUT & BUTTON STYLING ---
                         inputBackgroundColor: '#F8FAFC',
                         inputBorderColor: '#E2E8F0',
                         placeholderColor: '#94A3B8',
@@ -137,7 +171,36 @@ export default function Widget() {
                         // --- BRANDING ---
                         monsoonLogoPosition: 'bottom-right',
                         monsoonLogoHeight: '20px',
-                        // monsoonLogoColor: 'original' 
+
+                        // ============================================
+                        // NEW: LOADING STATE CUSTO
+                        // ============================================
+                        loadingBackgroundColor: '#FFFFFF',
+                        loadingTextColor: '#1E293B',
+                        loadingSpinnerColor: '#4F46E5',
+                        loadingText: 'Analyzing...',
+                        loadingMessageFontSize: '1.2rem',
+
+                        // ============================================
+                        // NEW: RESULT / LANDING PAGE CUSTO
+                        // ============================================
+                        successTitle: 'Success!',
+                        successDescription: 'Here is your report link.',
+                        successBackgroundColor: '#FFFFFF',
+                        successTextColor: '#1E293B',
+                        
+                        // Layout & Spacing
+                        resultLayout: 'vertical', // 'horizontal' | 'vertical'
+                        resultGap: '16px',
+
+                        // Colors
+                        shareLinkBackgroundColor: '#F8FAFC',
+                        shareLinkTextColor: '#334155',
+                        copyButtonColor: '#4F46E5',
+                        copyButtonIconColor: '#FFFFFF',
+                        viewReportButtonColor: '#4F46E5',
+                        viewReportButtonTextColor: '#FFFFFF',
+                        viewReportButtonText: 'Open Report'
                     }
                 });
             }

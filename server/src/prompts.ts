@@ -250,7 +250,7 @@ export const getSchemas = () => {
                     items: {
                         type: Type.OBJECT,
                         properties: {
-                            ParameterName: { type: Type.STRING, enum: parameterKeys },
+                            ParameterName: { type: Type.STRING }, // Removed strict enum to allow dynamic keys like Axe rules
                             Score: { type: Type.INTEGER },
                             ImpactLevel: { type: Type.STRING },
                             Confidence: { type: Type.STRING, enum: ['high', 'medium', 'low'] },
