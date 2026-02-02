@@ -1,15 +1,24 @@
 
 import React, { useState, useEffect } from 'react';
-import { BrowserRouter, Routes, Route, useParams } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, useParams, Outlet } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import App from './App';
 import EmbedPage from './pages/EmbedPage';
+import DashboardPage from './pages/DashboardPage';
 import { LoadingScreen } from './components/LoadingScreen';
 import { ReportDisplay } from './components/ReportDisplay';
 import { Logo } from './components/Logo';
 import { getSharedAudit } from './services/auditStorage';
 import { AnalysisReport, Screenshot } from './types';
 import { AuthProvider } from './contexts/AuthContext';
+import { Layout } from './components/Layout';
+
+// Wrapper for Layout to use with Outlet
+const LayoutWrapper = () => (
+    <Layout>
+        <Outlet />
+    </Layout>
+);
 
 // Shared Audit View Component
 function SharedAuditView() {
@@ -163,9 +172,17 @@ function AppWithRouting() {
             <BrowserRouter>
                 <Toaster position="top-center" />
                 <Routes>
-                    <Route path="/" element={<App />} />
-                    <Route path="/analysis/:auditId" element={<App />} />
-                    <Route path="/report/:auditId" element={<App />} />
+                    {/* Main Application with Global Layout */}
+                    <Route element={<LayoutWrapper />}>
+                        <Route path="/" element={<App />} />
+                        <Route path="/analysis/:auditId" element={<App />} />
+                        <Route path="/report/:auditId" element={<App />} />
+                        <Route path="/dashboard" element={<DashboardPage />} />
+                        {/* Auth Routes */}
+                        <Route path="/login" element={<App />} />
+                    </Route>
+
+                    {/* Standalone Views (No Global Nav) */}
                     <Route path="/shared/:auditId" element={<SharedAuditView />} />
                     <Route path="/embed" element={<EmbedPage />} />
                 </Routes>
