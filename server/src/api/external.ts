@@ -1,7 +1,8 @@
 import express from 'express';
 import { ApiKeyService } from '../services/apiKeyService';
 import { JobService } from '../services/jobService';
-import { auditQueue } from '../lib/queue'; // Import Queue
+// import { auditQueue } from '../lib/queue'; // Queue Disabled
+import { JobProcessor } from '../services/jobProcessor';
 
 const router = express.Router();
 
@@ -35,15 +36,16 @@ router.post('/audit', async (req, res) => {
         const frontendBaseUrl = process.env.CLIENT_URL || origin || 'http://localhost:5173';
         const redirectUrl = `${frontendBaseUrl}/report/${job.id}`;
 
-        // 4. Enqueue Job
-        await auditQueue.add('audit-job', { jobId: job.id });
+        // 4. Process Job Directly (Bypass Queue for No-Redis setup)
+        // Fire and forget, similar to main flow
+        JobProcessor.processJob(job.id).catch(err => console.error(`External Job Error ${job.id}:`, err));
 
         // 5. Return Response
         res.json({
             jobId: job.id,
             status: 'pending',
             redirectUrl: redirectUrl,
-            message: 'Audit queued successfully.'
+            message: 'Audit started successfully.'
         });
 
     } catch (error: any) {
