@@ -31,7 +31,7 @@ export const processAuditJob = async (jobId: string, inputs: any[]) => {
 
         if (!apiKey) throw new Error("Missing API Key");
 
-        const ai = new GoogleGenAI({ apiKey });
+        const apiKeys = [apiKey];
 
         // 1. Scrape & Analyze Loop
         // Note: For MVP, we process inputs sequentially to manage resources, 
@@ -111,7 +111,7 @@ export const processAuditJob = async (jobId: string, inputs: any[]) => {
             accessibilityData: scrapeResult.accessibilityData
         };
 
-        const analysisPromises = analysisModes.map(mode => performAnalysis(ai, mode, analysisBody));
+        const analysisPromises = analysisModes.map(mode => performAnalysis(apiKeys, mode, analysisBody));
         const analysisResults = await Promise.all(analysisPromises);
 
         const [uploadResult] = await Promise.all([uploadPromise]);
