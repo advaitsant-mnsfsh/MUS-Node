@@ -58,9 +58,10 @@ if (process.env.RUN_WORKER === 'true') {
         console.log(`Server running on port ${port}`);
 
         // Auto-start worker in dev mode for convenience
-        if (!process.env.NODE_ENV || process.env.NODE_ENV === 'development') {
-            console.log('[System] Dev Mode detected: Starting inline Worker...');
-            require('./workers/auditWorker').startWorker();
-        }
+        // Auto-start worker in dev mode for convenience
+        // if (!process.env.NODE_ENV || process.env.NODE_ENV === 'development') {
+        //     console.log('[System] Dev Mode detected: Starting inline Worker...');
+        //     require('./workers/auditWorker').startWorker();
+        // }
     });
 }
