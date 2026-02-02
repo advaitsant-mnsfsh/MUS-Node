@@ -164,8 +164,9 @@ function AppWithRouting() {
                 <Toaster position="top-center" />
                 <Routes>
                     <Route path="/" element={<App />} />
+                    <Route path="/analysis/:auditId" element={<App />} />
+                    <Route path="/report/:auditId" element={<App />} />
                     <Route path="/shared/:auditId" element={<SharedAuditView />} />
-                    <Route path="/report/:auditId" element={<SharedAuditView />} />
                     <Route path="/embed" element={<EmbedPage />} />
                 </Routes>
             </BrowserRouter>

@@ -112,30 +112,28 @@ export const getAccessibilitySystemInstruction = (isMultiPage: boolean) => {
 
     You MUST Populate the schema with a comprehensive list of parameters. DO NOT Summarize.
 
-    MANDATORY PARAMETERS:
-    Ensures these specific parameters are ALWAYS present in their respective sections, even if you have to infer the status from visual context or absence of errors:
-
+    MANDATORY PARAMETERS (Limit evaluation to these 9 key areas):
     1. **Visual Accessibility**:
-       - 'ColorContrast Ratios'
-       - 'ResizableText' (Analyze if text seems legible)
-       - 'FocusIndicators' (Infer from button styles)
-       - 'LayoutStability'
+       - 'ColorContrast' (Legibility and contrast ratios)
+       - 'ResizableText' (Zoom capabilities and responsiveness)
+       - 'FocusIndicators' (Visibility of focus states on interactive elements)
 
     2. **Screen Reader Experience**:
-       - 'StructureAndHeadings' (Analyze heading hierarchy h1-h6)
-       - 'AlternativeTextQuality' (Analyze image context)
-       - 'KeyboardFlow' (Infer logical order)
-       - 'AriaLiveUsage' (Check for dynamic content)
+       - 'HeadingsAndStructure' (Logical hierarchy h1-h6, landmarks)
+       - 'AlternativeText' (Image descriptions, icon intent)
+       - 'KeyboardNavigation' (Logical tab order, no traps)
 
     3. **AutomatedCompliance**:
-       - 'WCAG_A_Compliance'
-       - 'WCAG_AA_Compliance'
-       - 'BestPractices'
-       - PLUS: include a **SEPARATE Parameter** for EVERY unique failing rule ID found in 'axeViolations' (e.g. 'image-alt', 'label').
+       - 'FormLabels' (Input labelling and instructions)
+       - 'TouchTargetSize' (Spacing and size for mobile/touch)
+       - 'ARIAUsage' (Correct use of roles, states, and properties)
 
-    - **CRITICAL**: You MUST reference the specific 'axeViolations' provided in the context. If Axe reported issues (e.g., 'image-alt', 'color-contrast'), you MUST use them as evidence in your analysis.
-    - If 'axeViolations' is empty,acknowledge that automated checks passed but emphasize manual/visual verification need.
-    - For 'AutomatedCompliance', Base your score HEAVILY on the number and severity of Axe violations.`;
+    - **CRITICAL MAPPING**: Map any 'axeViolations' found to the most relevant parameter above.
+      - e.g. 'image-alt' faults -> 'AlternativeText'
+      - e.g. 'label' faults -> 'FormLabels'
+      - e.g. 'color-contrast' -> 'ColorContrast'
+    - Do NOT create new parameters for Axe rules. Integrate the findings into the Analysis of the 9 parameters above.
+    - If 'axeViolations' is empty, verify these parameters visually/manually.`;
 
     if (isMultiPage) {
         specificInstructions += `\n- **Multi-Page Context**: Identify accessibility patterns across pages.`;
@@ -386,13 +384,13 @@ export const getSchemas = () => {
             RiskLevel: { type: Type.STRING, enum: ['Critical', 'High', 'Moderate', 'Low'] },
             Top5CriticalAccessibilityIssues: { type: Type.ARRAY, items: criticalIssueSchemaForExperts },
             AutomatedCompliance: createScoredSectionSchema([
-                'WCAG_A_Compliance', 'WCAG_AA_Compliance', 'BestPractices', 'ARIANavigation'
+                'FormLabels', 'TouchTargetSize', 'ARIAUsage'
             ]),
             ScreenReaderExperience: createScoredSectionSchema([
-                'StructureAndHeadings', 'AlternativeTextQuality', 'KeyboardFlow', 'AriaLiveUsage'
+                'HeadingsAndStructure', 'AlternativeText', 'KeyboardNavigation'
             ]),
             VisualAccessibility: createScoredSectionSchema([
-                'ColorContrast Ratios', 'ResizableText', 'FocusIndicators', 'LayoutStability'
+                'ColorContrast', 'ResizableText', 'FocusIndicators'
             ]),
             PassedAudits: createScoredSectionSchema([]), // Using same schema for consistency
             ManualChecks: {
@@ -429,5 +427,192 @@ export const getSchemas = () => {
         ]
     };
 
-    return { uxAuditSchema, productAuditSchema, visualAuditSchema, strategyAuditSchema, accessibilityAuditSchema, criticalIssueSchema };
+    const competitorAuditSchema = {
+        type: Type.OBJECT,
+        properties: {
+            ExecutiveSummary: { type: Type.STRING },
+            // CRITICAL SECTIONS MOVED TO TOP FOR PRIORITY
+            CompetitorStrengths: {
+                type: Type.ARRAY,
+                items: {
+                    type: Type.OBJECT,
+                    properties: {
+                        Strength: { type: Type.STRING },
+                        Description: { type: Type.STRING },
+                        Impact: { type: Type.STRING }
+                    },
+                    required: ['Strength', 'Description', 'Impact']
+                }
+            },
+            PrimaryStrengths: {
+                type: Type.ARRAY,
+                items: {
+                    type: Type.OBJECT,
+                    properties: {
+                        Strength: { type: Type.STRING },
+                        Description: { type: Type.STRING },
+                        Impact: { type: Type.STRING }
+                    },
+                    required: ['Strength', 'Description', 'Impact']
+                }
+            },
+            Opportunities: {
+                type: Type.ARRAY,
+                items: {
+                    type: Type.OBJECT,
+                    properties: {
+                        Opportunity: { type: Type.STRING },
+                        ActionPlan: { type: Type.STRING }
+                    },
+                    required: ['Opportunity', 'ActionPlan']
+                }
+            },
+            // Comparisons - REORDERED: Strategy & Accessibility First
+            StrategyComparison: {
+                type: Type.ARRAY,
+                items: {
+                    type: Type.OBJECT,
+                    properties: {
+                        Parameter: { type: Type.STRING },
+                        PrimaryScore: { type: Type.INTEGER },
+                        CompetitorScore: { type: Type.INTEGER },
+                        Analysis: { type: Type.STRING },
+                        Winner: { type: Type.STRING, enum: ['Primary', 'Competitor', 'Tie'] }
+                    },
+                    required: ['Parameter', 'PrimaryScore', 'CompetitorScore', 'Analysis', 'Winner']
+                }
+            },
+            AccessibilityComparison: {
+                type: Type.ARRAY,
+                items: {
+                    type: Type.OBJECT,
+                    properties: {
+                        Parameter: { type: Type.STRING },
+                        PrimaryScore: { type: Type.INTEGER },
+                        CompetitorScore: { type: Type.INTEGER },
+                        Analysis: { type: Type.STRING },
+                        Winner: { type: Type.STRING, enum: ['Primary', 'Competitor', 'Tie'] }
+                    },
+                    required: ['Parameter', 'PrimaryScore', 'CompetitorScore', 'Analysis', 'Winner']
+                }
+            },
+            UXComparison: {
+                type: Type.ARRAY,
+                items: {
+                    type: Type.OBJECT,
+                    properties: {
+                        Parameter: { type: Type.STRING },
+                        PrimaryScore: { type: Type.INTEGER },
+                        CompetitorScore: { type: Type.INTEGER },
+                        Analysis: { type: Type.STRING },
+                        Winner: { type: Type.STRING, enum: ['Primary', 'Competitor', 'Tie'] }
+                    },
+                    required: ['Parameter', 'PrimaryScore', 'CompetitorScore', 'Analysis', 'Winner']
+                }
+            },
+            ProductComparison: {
+                type: Type.ARRAY,
+                items: {
+                    type: Type.OBJECT,
+                    properties: {
+                        Parameter: { type: Type.STRING },
+                        PrimaryScore: { type: Type.INTEGER },
+                        CompetitorScore: { type: Type.INTEGER },
+                        Analysis: { type: Type.STRING },
+                        Winner: { type: Type.STRING, enum: ['Primary', 'Competitor', 'Tie'] }
+                    },
+                    required: ['Parameter', 'PrimaryScore', 'CompetitorScore', 'Analysis', 'Winner']
+                }
+            },
+            VisualComparison: {
+                type: Type.ARRAY,
+                items: {
+                    type: Type.OBJECT,
+                    properties: {
+                        Parameter: { type: Type.STRING },
+                        PrimaryScore: { type: Type.INTEGER },
+                        CompetitorScore: { type: Type.INTEGER },
+                        Analysis: { type: Type.STRING },
+                        Winner: { type: Type.STRING, enum: ['Primary', 'Competitor', 'Tie'] }
+                    },
+                    required: ['Parameter', 'PrimaryScore', 'CompetitorScore', 'Analysis', 'Winner']
+                }
+            },
+        },
+        required: ['ExecutiveSummary', 'CompetitorStrengths', 'PrimaryStrengths', 'Opportunities', 'UXComparison', 'ProductComparison', 'VisualComparison', 'StrategyComparison', 'AccessibilityComparison']
+    };
+
+
+    const competitorAuditSchemaStrategic = {
+        type: Type.OBJECT,
+        properties: {
+            ExecutiveSummary: { type: Type.STRING },
+            CompetitorStrengths: competitorAuditSchema.properties.CompetitorStrengths,
+            PrimaryStrengths: competitorAuditSchema.properties.PrimaryStrengths,
+            Opportunities: competitorAuditSchema.properties.Opportunities,
+            StrategyComparison: competitorAuditSchema.properties.StrategyComparison,
+            AccessibilityComparison: competitorAuditSchema.properties.AccessibilityComparison
+        },
+        required: ['ExecutiveSummary', 'CompetitorStrengths', 'PrimaryStrengths', 'Opportunities', 'StrategyComparison', 'AccessibilityComparison']
+    };
+
+    const competitorAuditSchemaTactical = {
+        type: Type.OBJECT,
+        properties: {
+            UXComparison: competitorAuditSchema.properties.UXComparison,
+            ProductComparison: competitorAuditSchema.properties.ProductComparison,
+            VisualComparison: competitorAuditSchema.properties.VisualComparison
+        },
+        required: ['UXComparison', 'ProductComparison', 'VisualComparison']
+    };
+
+    return { uxAuditSchema, productAuditSchema, visualAuditSchema, strategyAuditSchema, accessibilityAuditSchema, criticalIssueSchema, competitorAuditSchema, competitorAuditSchemaStrategic, competitorAuditSchemaTactical };
 };
+
+export const getCompetitorSystemInstruction = () => `
+  ### Role ###
+  You are a Strategic Competitive Analyst. Your task is to compare two websites (Primary vs. Competitor) based on their text content and screenshots.
+
+  ### Analysis Guidelines ###
+  - **Objective**: Identify where the Competitor outperforms the Primary website and vice-versa.
+  - **Data Source**: You will be provided with:
+    1.  Primary Website Context (URL, text, screenshot analysis)
+    2.  Competitor Website Context (URL, text, screenshot analysis)
+  - **Scoring**: Use a 1-10 scale for all scores (1=Poor, 10=Excellent).
+  
+  ### Output Requirements ###
+  - **Executive Summary**: A concise 5-6 line summary of the key competitive difference.
+  
+    1. **Strategic & Accessibility Comparison**:
+       - Strategy: 'DomainClarity', 'PurposeClarity', 'TargetAudienceAlignment', 'TrustSignals', 'MarketPositioning', 'BrandAuthority'
+       - Accessibility: 'WCAG_A_Compliance', 'WCAG_AA_Compliance', 'BestPractices', 'ARIANavigation', 'StructureAndHeadings', 'AlternativeTextQuality', 'KeyboardFlow', 'AriaLiveUsage', 'ColorContrast Ratios', 'ResizableText', 'FocusIndicators', 'LayoutStability'
+
+    2. **UXComparison**:
+       - 'VisibilityOfSystemStatus', 'MatchBetweenSystemAndRealWorld', 'UserControlAndFreedom'
+       - 'ConsistencyAndStandards', 'ErrorPrevention', 'RecognitionVsRecall'
+       - 'FlexibilityAndEfficiencyOfUse', 'AestheticAndMinimalistDesign'
+       - 'HelpUsersRecoverFromErrors', 'HelpAndDocumentation'
+       - 'TaskCompletionTime', 'ClickDepth', 'NavigationClarity', 'CognitiveLoad', 'ErrorRate'
+       - 'ScreenReaderCompatibility', 'TouchTargetSize'
+
+    3. **ProductComparison**:
+       - 'ClearValueProposition', 'OnboardingEffectiveness', 'FeatureDiscoverability', 'MonetizationModelClarity'
+       - 'GamificationIncentives', 'PersonalizationAdaptability', 'FrictionPoints', 'UserFeedbackIteration'
+       - 'CTAClarityPlacement', 'CheckoutPaymentFlow', 'LeadGenerationForms', 'MicrocopyMessaging'
+       - 'PageSpeedAPI_ActualLoadTime_CoreWebVitals'
+
+    4. **VisualComparison**:
+       - 'ColorPaletteContrast', 'TypographyReadability', 'IconographySymbolism', 'SpacingAlignment'
+       - 'VisualHierarchy', 'ImageryIllustrations', 'AnimationMotionUI', 'WhitespaceMinimalism'
+       - 'MobileOptimization', 'DarkModeTheming'
+
+    *For each parameter, provide a 'PrimaryScore', 'CompetitorScore', a brief 'Analysis' (1 sentence), and declare a 'Winner'.*
+
+  - **Competitor Strengths**: You MUST identify exactly 3 specific things the competitor does BETTER.
+  - **Primary Strengths**: You MUST identify exactly 3 specific things the Primary site does BETTER.
+  **CRITICAL**: You must complete ALL sections.
+  - 'CompetitorStrengths', 'PrimaryStrengths', and 'Opportunities' MUST each contain exactly 3 items.
+  - **NO EMPTY ARRAYS**. If you cannot find explicit differences, you MUST INFER them from general UX/UI best practices and the visual comparison.
+  - **VALUE**: These sections are the most important part of the report. Provide specific, actionable insights, not generic advice.
+  - **IMPACT**: For 'Impact', use values like "High", "Critical", or "Strategic".
+`;

@@ -1,7 +1,7 @@
 import express from 'express';
 import { ApiKeyService } from '../services/apiKeyService';
 import { JobService } from '../services/jobService';
-import { JobProcessor } from '../services/jobProcessor';
+import { auditQueue } from '../lib/queue'; // Import Queue
 
 const router = express.Router();
 
@@ -18,7 +18,7 @@ router.post('/audit', async (req, res) => {
             return res.status(401).json({ message: 'Unauthorized: Invalid API Key or Origin not allowed.' });
         }
 
-        const { inputs } = req.body;
+        const { inputs, auditMode } = req.body;
         if (!inputs || !Array.isArray(inputs) || inputs.length === 0) {
             return res.status(400).json({ message: 'Invalid input: "inputs" array is required.' });
         }
@@ -27,7 +27,7 @@ router.post('/audit', async (req, res) => {
         // We store the raw inputs. The main app will pick this up.
         const job = await JobService.createJob({
             apiKeyId: keyDetails.id,
-            inputData: { inputs }
+            inputData: { inputs, auditMode: auditMode || 'standard' }
         });
 
         // 3. Construct Redirect URL
@@ -35,17 +35,15 @@ router.post('/audit', async (req, res) => {
         const frontendBaseUrl = process.env.CLIENT_URL || origin || 'http://localhost:5173';
         const redirectUrl = `${frontendBaseUrl}/report/${job.id}`;
 
-        // 4. Return immediately (Fire & Forget processing)
+        // 4. Enqueue Job
+        await auditQueue.add('audit-job', { jobId: job.id });
+
+        // 5. Return Response
         res.json({
             jobId: job.id,
             status: 'pending',
-            redirectUrl: redirectUrl
-        });
-
-        // Start background processing
-        // Use setImmediate to ensure it runs after response is sent
-        setImmediate(() => {
-            JobProcessor.processJob(job.id);
+            redirectUrl: redirectUrl,
+            message: 'Audit queued successfully.'
         });
 
     } catch (error: any) {

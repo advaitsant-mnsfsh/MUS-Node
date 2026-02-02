@@ -1,7 +1,9 @@
 import { supabase } from '../lib/supabase';
 import { JobService } from './jobService';
-import { GoogleGenAI } from '@google/genai';
+import { GoogleGenAI, Type } from '@google/genai';
 import { performScrape, performPerformanceCheck, performAnalysis } from '../audit';
+import { callApi } from '../services/aiService';
+import { getSchemas } from '../prompts';
 
 export class JobProcessor {
     static async processJob(jobId: string) {
@@ -15,159 +17,346 @@ export class JobProcessor {
             if (!job) throw new Error('Job not found');
 
             const secrets = await this.getSecrets();
-            // const secrets = await this.getSecrets(); // Already declared above
             const apiKeyRaw = secrets['API_KEY'] || process.env.API_KEY;
+            const apiKeyBup = secrets['API_KEY_BUP'] || process.env.API_KEY_BUP;
             if (!apiKeyRaw) throw new Error('Missing API Key');
 
-            // Parse Multi-Keys
-            const apiKeys = apiKeyRaw.split(',').map((k: string) => k.trim()).filter((k: string) => k.length > 0);
+            // Construct Key Array: [Main, Backup]
+            const apiKeys = [apiKeyRaw];
+            if (apiKeyBup) apiKeys.push(apiKeyBup);
             const primaryKey = apiKeys[0];
 
             const browserEndpoint = secrets['PUPPETEER_BROWSER_ENDPOINT'];
-
             const inputs = job.input_data.inputs || [];
-            const firstInput = inputs[0]; // TODO: Handle multiple inputs
+            const auditMode = job.input_data.auditMode || 'standard';
 
-            let analysisContext: any = {};
-            let url = '';
+            let report: any = {};
+            let finalUrl = '';
+            let finalScreenshots: any[] = [];
+            let finalMimeType = 'image/jpeg';
 
-            // 3. Prepare Context (Scrape or Image)
-            if (firstInput.type === 'url') {
-                url = firstInput.url;
-                console.log(`[JobProcessor] Scraping ${url}...`);
+            // --- BRANCH: COMPETITOR AUDIT ---
+            if (auditMode === 'competitor') {
+                console.log(`[JobProcessor] Mode: Competitor Analysis`);
+                await JobService.updateProgress(jobId, 'Starting Competitor Analysis...');
 
-                // A. Scrape
-                const scrapeResult = await performScrape(url, false, true, browserEndpoint);
+                const primaryInput = inputs.find((i: any) => i.role === 'primary') || inputs[0];
+                const competitorInput = inputs.find((i: any) => i.role === 'competitor') || inputs[1];
 
-                // B. Performance
-                console.log(`[JobProcessor] Checking performance...`);
-                const perfResult = await performPerformanceCheck(url, primaryKey, secrets);
+                if (!primaryInput?.url || !competitorInput?.url) {
+                    throw new Error("Competitor audit requires two URLs (primary and competitor).");
+                }
 
-                analysisContext = {
-                    url,
-                    screenshotBase64: scrapeResult.screenshot.data,
-                    screenshotMimeType: 'image/jpeg',
-                    liveText: scrapeResult.liveText,
-                    animationData: scrapeResult.animationData,
-                    accessibilityData: scrapeResult.accessibilityData,
-                    performanceData: perfResult.performanceData,
-                    performanceAnalysisError: perfResult.error,
-                    mobileScreenshotBase64: null // TODO: Mobile capture
+                finalUrl = primaryInput.url;
+
+                // A. Scrape Primary
+                console.log(`[JobProcessor] Scraping Primary: ${primaryInput.url}`);
+                await JobService.updateProgress(jobId, `Scraping Primary Site: ${primaryInput.url}...`);
+                const primaryScrape = await performScrape(primaryInput.url, false, true, browserEndpoint);
+
+                // B. Scrape Competitor
+                console.log(`[JobProcessor] Scraping Competitor: ${competitorInput.url}`);
+                await JobService.updateProgress(jobId, `Scraping Competitor Site: ${competitorInput.url}...`);
+                const competitorScrape = await performScrape(competitorInput.url, false, true, browserEndpoint);
+                finalScreenshots = [primaryScrape.screenshot, competitorScrape.screenshot];
+
+                // C. Analyze
+                console.log(`[JobProcessor] Running Competitor Analysis...`);
+                await JobService.updateProgress(jobId, 'Analyzed content acquired. Starting AI comparison...');
+
+                const analysisBody = {
+                    primaryUrl: primaryInput.url,
+                    primaryScreenshotsBase64: [primaryScrape.screenshot.data],
+                    primaryLiveText: primaryScrape.liveText,
+                    competitorUrl: competitorInput.url,
+                    competitorScreenshotsBase64: [competitorScrape.screenshot.data],
+                    competitorLiveText: competitorScrape.liveText,
+                    screenshotMimeType: 'image/jpeg'
                 };
 
-            } else if (firstInput.type === 'upload') {
-                // Image Upload
-                // inputs[0].filesData is array of base64
-                const base64 = firstInput.filesData?.[0];
-                if (!base64) throw new Error("No file data provided");
+                const result = await performAnalysis(apiKeys, 'analyze-competitor', analysisBody);
+                report = result.data; // The merged result is returned directly
+                await JobService.updateProgress(jobId, '✓ Competitor Analysis complete.', { 'Competitor Analysis expert': report });
 
-                analysisContext = {
-                    url: 'Uploaded Image',
-                    screenshotBase64: base64,
-                    screenshotMimeType: 'image/png', // Assumption
-                    liveText: "Content extracted from uploaded image.",
-                    performanceData: null
+            } else {
+                // --- BRANCH: STANDARD AUDIT ---
+                console.log(`[JobProcessor] Mode: Standard Analysis`);
+                await JobService.updateProgress(jobId, 'Starting Standard Analysis...');
+
+                const firstInput = inputs[0];
+                let analysisContext: any = {};
+
+                if (firstInput.type === 'url') {
+                    finalUrl = firstInput.url;
+                    console.log(`[JobProcessor] Scraping ${finalUrl}...`);
+                    await JobService.updateProgress(jobId, `Scraping ${finalUrl}...`);
+
+                    // A. Scrape
+                    const scrapeResult = await performScrape(finalUrl, false, true, browserEndpoint);
+
+                    // A2. Scrape Mobile
+                    console.log(`[JobProcessor] Scraping Mobile: ${finalUrl}`);
+                    await JobService.updateProgress(jobId, 'Scraping Mobile view...');
+                    const scrapeResultMobile = await performScrape(finalUrl, true, true, browserEndpoint);
+
+                    // Clone to avoid mutation side-effects on source used for context
+                    finalScreenshots = [{ ...scrapeResult.screenshot }, { ...scrapeResultMobile.screenshot }];
+
+                    // --- UPLOAD SCREENSHOTS EARLY (Fix for race condition) ---
+                    try {
+                        console.log(`[JobProcessor] Uploading screenshots early...`);
+                        const SC_BUCKET = 'screenshots';
+                        // Bucket check (minimal)
+                        try {
+                            const { data: buckets } = await supabase.storage.listBuckets();
+                            const bucket = buckets?.find(b => b.name === SC_BUCKET);
+                            if (!bucket) await supabase.storage.createBucket(SC_BUCKET, { public: true });
+                            else if (bucket.public !== true) await supabase.storage.updateBucket(SC_BUCKET, { public: true });
+                        } catch (e) { }
+
+                        const uploadedScreenshots = await Promise.all(finalScreenshots.map(async (s: any, index: number) => {
+                            if (!s.data) return s;
+                            try {
+                                const buffer = Buffer.from(s.data, 'base64');
+                                const fileName = `${index}-${s.isMobile ? 'mobile' : 'desktop'}.jpeg`;
+                                const filePath = `public/${jobId}/${fileName}`;
+                                await supabase.storage.from(SC_BUCKET).upload(filePath, buffer, { contentType: 'image/jpeg', upsert: true });
+                                const { data: { publicUrl } } = supabase.storage.from(SC_BUCKET).getPublicUrl(filePath);
+                                console.log(`[JobProcessor] (Early) Screenshot uploaded to: ${publicUrl}`);
+                                return { ...s, data: undefined, url: publicUrl };
+                            } catch (e: any) {
+                                console.warn("Early upload failed:", e);
+                                return s;
+                            }
+                        }));
+                        finalScreenshots = uploadedScreenshots;
+                    } catch (e) { console.warn("Early upload process warning:", e); }
+
+                    await JobService.updateProgress(jobId, '✓ Scrape complete. Analyzing content...', {
+                        screenshots: finalScreenshots,
+                        screenshotMimeType: 'image/jpeg'
+                    });
+
+                    // B. Performance
+                    console.log(`[JobProcessor] Checking performance...`);
+                    const perfResult = await performPerformanceCheck(finalUrl, primaryKey, secrets);
+
+                    analysisContext = {
+                        url: finalUrl,
+                        screenshotBase64: scrapeResult.screenshot.data,
+                        screenshotMimeType: 'image/jpeg',
+                        liveText: scrapeResult.liveText,
+                        animationData: scrapeResult.animationData,
+                        accessibilityData: scrapeResult.accessibilityData,
+                        performanceData: perfResult.performanceData,
+                        performanceAnalysisError: perfResult.error,
+                        mobileScreenshotBase64: scrapeResultMobile.screenshot.data
+                    };
+
+                } else if (firstInput.type === 'upload') {
+                    finalUrl = 'Uploaded Image';
+                    const base64 = firstInput.filesData?.[0];
+                    if (!base64) throw new Error("No file data provided");
+                    finalScreenshots = [{ data: base64, isMobile: false }];
+                    finalMimeType = 'image/png';
+
+                    analysisContext = {
+                        url: 'Uploaded Image',
+                        screenshotBase64: base64,
+                        screenshotMimeType: 'image/png',
+                        liveText: "Content extracted from uploaded image.",
+                        performanceData: null
+                    };
+                    await JobService.updateProgress(jobId, 'Processing uploaded image...');
+                }
+
+                // Run Experts
+                console.log(`[JobProcessor] Running experts...`);
+                const modes = ['analyze-ux', 'analyze-product', 'analyze-visual', 'analyze-strategy', 'analyze-accessibility'];
+
+                const runExpertWithTimeout = async (mode: string, timeout = 120000) => { // 2 mins timeout
+                    const expertName = mode.replace('analyze-', ' ').toUpperCase();
+                    console.log(`[JobProcessor] Starting ${mode}...`);
+                    await JobService.updateProgress(jobId, `Running ${expertName}...`);
+
+                    const startTime = Date.now();
+                    try {
+                        const result = await performAnalysis(apiKeys, mode, analysisContext);
+                        console.log(`[JobProcessor] ✓ ${mode} completed in ${Date.now() - startTime}ms`);
+
+                        // Update DB with partial result
+                        await JobService.updateProgress(jobId, `✓ ${expertName} complete.`, { [result.key]: result.data });
+
+                        return result;
+                    } catch (error: any) {
+                        console.error(`[JobProcessor] ✗ ${mode} failed:`, error.message);
+                        return { key: mode, data: null, error: error.message };
+                    }
                 };
+
+                const results: any[] = [];
+                const concurrency = 3; // Increased to 3 per user request
+
+                for (let i = 0; i < modes.length; i += concurrency) {
+                    const batch = modes.slice(i, i + concurrency);
+                    console.log(`[JobProcessor] Starting batch: ${batch.join(', ')}`);
+                    const batchResults = await Promise.all(batch.map(mode => runExpertWithTimeout(mode)));
+                    results.push(...batchResults);
+                    if (i + concurrency < modes.length) await new Promise(r => setTimeout(r, 2000));
+                }
+
+                // Aggregate logic is handled by updateProgress incrementally now, 
+                // but we still need 'report' object for local Finalization step below.
+                results.forEach((res: any) => {
+                    if (res && res.key) report[res.key] = res.data;
+                });
+
+                // --- D. CONTEXTUAL IMPACT ANALYSIS ---
+                if (report['Strategy Audit expert']) {
+                    console.log(`[JobProcessor] Running Contextual Impact Analysis...`);
+                    await JobService.updateProgress(jobId, 'Analyzing issues for strategic impact...');
+                    try {
+                        const allIssues = [
+                            ...report['UX Audit expert']?.Top5CriticalUXIssues?.map((i: any) => ({ ...i, source: 'UX Audit' })) || [],
+                            ...report['Product Audit expert']?.Top5CriticalProductIssues?.map((i: any) => ({ ...i, source: 'Product Audit' })) || [],
+                            ...report['Visual Audit expert']?.Top5CriticalVisualIssues?.map((i: any) => ({ ...i, source: 'Visual Design' })) || [],
+                            ...report['Accessibility Audit expert']?.Top5CriticalAccessibilityIssues?.map((i: any) => ({ ...i, source: 'Accessibility Audit' })) || []
+                        ];
+
+                        if (allIssues.length > 0) {
+                            const strategyAudit = report['Strategy Audit expert'];
+                            const strategyContext = `
+- Website Purpose: ${strategyAudit.PurposeAnalysis?.PrimaryPurpose?.join(', ')}
+- Key Objectives: ${strategyAudit.PurposeAnalysis?.KeyObjectives}
+- Target Audience: ${strategyAudit.TargetAudience?.Primary?.join(', ')} (${strategyAudit.TargetAudience?.DemographicsPsychographics})
+- Website Type: ${strategyAudit.TargetAudience?.WebsiteType}`;
+
+                            const systemInstruction = `You are a Chief Product Strategist. Your task is to analyze a list of critical issues identified for a website, considering the site's strategic context. Re-rank these issues based on which ones have the most significant impact on the website's primary purpose and ability to serve its target audience.`;
+                            const contents = `
+### Strategic Context ###
+${strategyContext}
+### Your Task ###
+1. Review the strategic context and each issue in the provided JSON list.
+2. Select the TOP 5 issues that represent the most critical barriers to the website's success.
+3. Return ONLY these 5 issues, sorted from most to least critical.
+4. You MUST return the issues in the exact same JSON structure as they were provided, including all original fields.
+5. EXCLUSION CRITERIA: Do NOT select any issues primarily related to "Screen Reader Compatibility", "Missing Alt Text", or "Missing Form Labels".
+### Critical Issues List (JSON) ###
+${JSON.stringify(allIssues, null, 2)}`;
+
+                            const schemas = getSchemas();
+                            // Re-fetch API Key just in case or reuse primaryKey
+                            const rankResult = await callApi([primaryKey], systemInstruction, contents, {
+                                type: Type.ARRAY,
+                                items: schemas.criticalIssueSchema
+                            });
+
+                            report['Top5ContextualIssues'] = rankResult;
+                            await JobService.updateProgress(jobId, '✓ Contextual Analysis complete.', { 'Top5ContextualIssues': rankResult });
+                        }
+                    } catch (e: any) {
+                        console.error("[JobProcessor] Contextual Rank Failed:", e);
+                        // Don't fail the job, just skip
+                        await JobService.updateProgress(jobId, '⚠️ Contextual Analysis skipped due to error.');
+                    }
+                }
             }
 
-            // 4. Run Experts (Parallel with timeout and individual error handling)
-            console.log(`[JobProcessor] Running experts...`);
-            const modes = ['analyze-ux', 'analyze-product', 'analyze-visual', 'analyze-strategy', 'analyze-accessibility'];
+            // --- FINALIZATION (Shared) ---
+            console.log(`[JobProcessor] Job ${jobId} completed. Saving...`);
 
-            const runExpertWithTimeout = async (mode: string, timeout = 60000) => {
-                console.log(`[JobProcessor] Starting ${mode}...`);
-                const startTime = Date.now();
+            // --- UPLOAD SCREENSHOTS TO STORAGE ---
+            try {
+                console.log(`[JobProcessor] Uploading screenshots to storage...`);
+                const SC_BUCKET = 'screenshots';
 
+                // Ensure bucket is public (Fix for broken images)
                 try {
-                    const timeoutPromise = new Promise((_, reject) =>
-                        setTimeout(() => reject(new Error(`${mode} timed out after ${timeout}ms`)), timeout)
-                    );
+                    const { data: buckets } = await supabase.storage.listBuckets();
+                    const bucket = buckets?.find(b => b.name === SC_BUCKET);
 
-                    const result = await Promise.race([
-                        performAnalysis(apiKeys, mode, analysisContext),
-                        timeoutPromise
-                    ]);
+                    if (!bucket) {
+                        await supabase.storage.createBucket(SC_BUCKET, { public: true });
+                    } else if (bucket.public !== true) {
+                        console.log(`[JobProcessor] Updating bucket to PUBLIC: ${SC_BUCKET}`);
+                        const { error: updateError } = await supabase.storage.updateBucket(SC_BUCKET, { public: true });
+                        if (updateError) console.warn(`[JobProcessor] Failed to update bucket public status:`, updateError);
+                    }
+                } catch (e) { console.warn("[JobProcessor] Bucket check failed:", e); }
 
-                    const duration = Date.now() - startTime;
-                    console.log(`[JobProcessor] ✓ ${mode} completed in ${duration}ms`);
-                    return result;
-                } catch (error: any) {
-                    const duration = Date.now() - startTime;
-                    console.error(`[JobProcessor] ✗ ${mode} failed after ${duration}ms:`, error.message);
-                    return { key: mode, data: null, error: error.message };
-                }
-            };
+                const uploadedScreenshots = await Promise.all(finalScreenshots.map(async (s: any, index: number) => {
+                    if (!s.data) return s;
 
-            const results: any[] = [];
-            const concurrency = 2; // Run max 2 experts at a time to prevent 429 Overload
+                    try {
+                        const buffer = Buffer.from(s.data, 'base64');
+                        const fileName = `${index}-${s.isMobile ? 'mobile' : 'desktop'}.jpeg`;
+                        const filePath = `public/${jobId}/${fileName}`;
 
-            for (let i = 0; i < modes.length; i += concurrency) {
-                const batch = modes.slice(i, i + concurrency);
-                console.log(`[JobProcessor] Starting batch ${Math.floor(i / concurrency) + 1}: ${batch.join(', ')}`);
+                        const { error: uploadError } = await supabase.storage
+                            .from(SC_BUCKET)
+                            .upload(filePath, buffer, {
+                                contentType: 'image/jpeg',
+                                upsert: true
+                            });
 
-                const batchResults = await Promise.all(batch.map(mode => runExpertWithTimeout(mode)));
-                results.push(...batchResults);
+                        if (uploadError) throw uploadError;
 
-                // Cool-down delay between batches
-                if (i + concurrency < modes.length) {
-                    await new Promise(resolve => setTimeout(resolve, 2000));
-                }
+                        const { data: { publicUrl } } = supabase.storage
+                            .from(SC_BUCKET)
+                            .getPublicUrl(filePath);
+
+                        console.log(`[JobProcessor] Screenshot uploaded to: ${publicUrl}`);
+
+                        return {
+                            ...s,
+                            data: undefined,
+                            url: publicUrl
+                        };
+                    } catch (e: any) {
+                        console.warn(`[JobProcessor] Screenshot upload failed for ${index}:`, e.message);
+                        return s;
+                    }
+                }));
+                finalScreenshots = uploadedScreenshots;
+            } catch (e) {
+                console.warn("[JobProcessor] Screenshot upload process warning:", e);
             }
-            console.log(`[JobProcessor] All batches completed`);
-
-            // 5. Aggregate
-            const report: any = {};
-            results.forEach((res: any) => {
-                if (res && res.key) report[res.key] = res.data;
-            });
-
-            // 6. Save Result
-            console.log(`[JobProcessor] Job ${jobId} completed.`);
-            // We also want to save the screenshot public URL if possible.
-            // For now, we embed the base64 in report? No, that's too heavy for JSONB if large.
-            // Ideally we upload screenshot to storage.
-            // But simplifying: just save the report structure. The frontend keys off 'screenshot_url' usually.
-            // We might need to upload the screenshot to Supabase Storage here if we want persistent display.
-            // Skipping for speed, frontend might show broken image if we don't return one.
-            // We can add a step to upload screenshot if we have time.
-            // Let's at least construct the report object.
 
             const reportData = {
-                url: analysisContext.url,
+                url: finalUrl,
+                screenshots: finalScreenshots,
+                screenshotMimeType: finalMimeType,
                 ...report
             };
 
-            // 1. Upload Report to Storage (Reliable sharing)
+            // 1. Upload Report to Storage (Shared Audits)
             const BUCKET = 'shared-audits';
             const storageFileName = `${jobId}.json`;
+            try {
+                // Ensure bucket is public
+                const { data: buckets } = await supabase.storage.listBuckets();
+                const bucket = buckets?.find(b => b.name === BUCKET);
 
-            // Ensure bucket exists
-            const { data: buckets } = await supabase.storage.listBuckets();
-            if (!buckets?.find(b => b.name === BUCKET)) {
-                console.log(`[JobProcessor] Creating ${BUCKET} bucket...`);
-                await supabase.storage.createBucket(BUCKET, { public: true });
-            }
-
-            const { error: uploadError } = await supabase.storage
-                .from(BUCKET)
-                .upload(storageFileName, JSON.stringify(reportData), {
+                if (!bucket) {
+                    await supabase.storage.createBucket(BUCKET, { public: true });
+                } else if (bucket.public !== true) {
+                    await supabase.storage.updateBucket(BUCKET, { public: true });
+                }
+                await supabase.storage.from(BUCKET).upload(storageFileName, JSON.stringify(reportData), {
                     contentType: 'application/json',
                     upsert: true
                 });
-
-            if (uploadError) {
-                console.warn(`[JobProcessor] Failed to upload report to storage:`, uploadError);
-                // Continue anyway, DB save might still work
-            } else {
-                console.log(`[JobProcessor] Uploaded report to ${BUCKET}/${storageFileName}`);
+                console.log(`[JobProcessor] Uploaded report to ${BUCKET}`);
+            } catch (e) {
+                console.warn("[JobProcessor] Storage upload warning:", e);
             }
 
-            // 2. Generate Result URL (Client URL)
+            // 2. Generate Result URL
             const baseUrl = process.env.FRONTEND_URL || 'https://mus-node.vercel.app';
-
-            // We still point to /report/:jobId on frontend, but frontend will now fetch from Storage
             const resultUrl = `${baseUrl}/report/${jobId}`;
-            console.log(`[JobProcessor] Generated result URL: ${resultUrl}`);
+
+            // STREAM FIX: Send URLs to client before marking complete so active view updates
+            await JobService.updateProgress(jobId, 'Finalizing visuals...', { screenshots: finalScreenshots });
 
             await JobService.updateJobStatus(jobId, 'completed', reportData, undefined, resultUrl);
 
@@ -178,15 +367,8 @@ export class JobProcessor {
     }
 
     static async getSecrets() {
-        const { data, error } = await supabase
-            .from('app_secrets')
-            .select('key_name, key_value');
-
+        const { data, error } = await supabase.from('app_secrets').select('key_name, key_value');
         if (error || !data) return {};
-
-        return data.reduce((acc: any, item: any) => {
-            acc[item.key_name] = item.key_value;
-            return acc;
-        }, {});
+        return data.reduce((acc: any, item: any) => { acc[item.key_name] = item.key_value; return acc; }, {});
     }
 }

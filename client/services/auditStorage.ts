@@ -113,8 +113,8 @@ export async function getAuditJob(jobId: string): Promise<AuditJobData | null> {
 
         if (error) {
             // Fallback: Try the API endpoint if file missing (migration support)
-            console.warn('Storage fetch failed, trying API fallback...', error.message);
-            const backendUrl = import.meta.env.VITE_BACKEND_URL || 'https://mus-node.onrender.com';
+            console.log('Storage fetch failed (expected if new job or private), using API fallback...', error.message);
+            const backendUrl = import.meta.env.VITE_BACKEND_URL || 'http://localhost:3000';
             const response = await fetch(`${backendUrl}/api/public/jobs/${jobId}`);
             if (response.ok) {
                 const apiData = await response.json();

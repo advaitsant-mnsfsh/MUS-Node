@@ -1,7 +1,7 @@
 import { supabase } from '../lib/supabase';
 
 export interface CreateJobParams {
-    apiKeyId: string;
+    apiKeyId?: string; // Made optional for guest/demo usage
     inputData: any;
 }
 
@@ -10,7 +10,7 @@ export class JobService {
         const { data, error } = await supabase
             .from('audit_jobs')
             .insert({
-                api_key_id: params.apiKeyId,
+                api_key_id: params.apiKeyId || null,
                 status: 'pending',
                 input_data: params.inputData,
             })
@@ -35,6 +35,30 @@ export class JobService {
         if (error) console.error(`Failed to update job ${jobId}:`, error);
     }
 
+    static async updateProgress(jobId: string, message: string, partialData?: any) {
+        // Fetch current to merge
+        const current = await this.getJob(jobId);
+        if (!current) return;
+
+        const currentReport = current.report_data || {};
+        const logs = currentReport.logs || [];
+        logs.push({ timestamp: new Date().toISOString(), message });
+
+        const newReport = {
+            ...currentReport,
+            ...partialData,
+            logs
+        };
+
+        await supabase
+            .from('audit_jobs')
+            .update({
+                report_data: newReport,
+                updated_at: new Date().toISOString()
+            })
+            .eq('id', jobId);
+    }
+
     static async getJob(jobId: string) {
         const { data, error } = await supabase
             .from('audit_jobs')
@@ -43,8 +67,8 @@ export class JobService {
             .single();
 
         if (error) {
-            console.error(`[JobService] getJob failed for ${jobId}:`, error);
-            return null;
+            // console.error(`[JobService] getJob failed for ${jobId}:`, error);
+            return null; // Return null if not found/error to allow handling gracefully
         }
         return data;
     }

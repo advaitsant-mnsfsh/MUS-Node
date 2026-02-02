@@ -37,11 +37,10 @@ router.get('/jobs/:jobId', async (req, res) => {
             return res.status(404).json({ message: 'Job not found' });
         }
 
-        // Only allow fetching COMPLETED jobs (security: don't expose pending/failed)
-        if (job.status !== 'completed') {
-            console.warn(`[Public API] Job not completed: ${jobId} is ${job.status}`);
-            return res.status(403).json({
-                message: 'Job not ready yet',
+        // If job is running, return status cleanly (prevents 403 console errors)
+        if (job.status !== 'completed' && job.status !== 'failed') {
+            return res.json({
+                id: job.id,
                 status: job.status
             });
         }

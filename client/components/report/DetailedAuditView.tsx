@@ -69,7 +69,7 @@ export function DetailedAuditView({ auditData, auditType, isPdf = false, forcePa
                 </h2>
 
                 {/* First Section Part 1 */}
-                {firstSection && (
+                {firstSection && firstSection.data && (
                     <div className={hasRestParams ? "mb-0" : sectionMargin}>
                         <AuditSubSectionHeader title={firstSection.title} score={firstSection.data.SectionScore * 10} forceBreak={false} isPdf={isPdf} />
                         <div className={`flex flex-col self-stretch ${cardGap}`}>

@@ -34,7 +34,8 @@ export type ExpertKey =
   | 'UX Audit expert'
   | 'Product Audit expert'
   | 'Visual Audit expert'
-  | 'Accessibility Audit expert';
+  | 'Accessibility Audit expert'
+  | 'Competitor Analysis expert';
 
 
 // NEW Types for Mixed Inputs
@@ -48,6 +49,7 @@ export interface AuditInput {
   fileData?: string; // Base64 (Service)
   filesData?: string[]; // Array of Base64 strings (Service)
   id: string; // Unique ID for React lists
+  role?: 'primary' | 'competitor';
 }
 
 export type ImpactLevel = 'High' | 'Medium' | 'Low';
@@ -187,6 +189,11 @@ export interface StrategyAudit {
   PurposeAnalysis: PurposeAnalysisData;
   TargetAudience: TargetAudienceData;
   UserPersonas: UserPersona[];
+  // Scored Sections
+  TrustSignalsAndCredibility: { SectionScore: number; Parameters: ScoredParameter[] };
+  TargetAudienceAlignment: { SectionScore: number; Parameters: ScoredParameter[] };
+  CompetitiveDifferentiation: { SectionScore: number; Parameters: ScoredParameter[] };
+  CallToActionStrategy: { SectionScore: number; Parameters: ScoredParameter[] };
 }
 // Accessibility Audit Types
 export interface AutomatedCompliance {
@@ -216,4 +223,36 @@ export interface AccessibilityAudit {
   ManualChecks?: { id: string; description: string; nodes?: { html: string; failureSummary?: string }[] }[];
   NotApplicable?: { id: string; description: string; }[];
   OverallRecommendations: string[];
+}
+
+// Competitor Analysis Types
+export interface CompetitorComparisonItem {
+  Parameter: string;
+  PrimaryScore: number;
+  CompetitorScore: number;
+  Analysis: string;
+  Winner: 'Primary' | 'Competitor' | 'Tie';
+}
+
+export interface CompetitorStrength {
+  Strength: string;
+  Description: string;
+  Impact: string;
+}
+
+export interface CompetitorOpportunity {
+  Opportunity: string;
+  ActionPlan: string;
+}
+
+export interface CompetitorAnalysisData {
+  ExecutiveSummary: string;
+  UXComparison: CompetitorComparisonItem[];     // New
+  ProductComparison: CompetitorComparisonItem[]; // New
+  VisualComparison: CompetitorComparisonItem[];  // New
+  StrategyComparison: CompetitorComparisonItem[]; // New
+  AccessibilityComparison: CompetitorComparisonItem[]; // New
+  CompetitorStrengths: CompetitorStrength[];
+  PrimaryStrengths: CompetitorStrength[];
+  Opportunities: CompetitorOpportunity[];
 }

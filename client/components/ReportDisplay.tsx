@@ -16,6 +16,7 @@ import { CriticalIssueCard } from './report/AuditCards';
 import { DetailedAuditView, DetailedAuditType } from './report/DetailedAuditView';
 import { ASSETS } from './report/constants';
 import AccessibilityAuditView from './report/AccessibilityAuditView';
+import { CompetitorAnalysisView } from './report/CompetitorAnalysisView';
 
 // --- YOUR PDF HOOK ---
 import { useReportPdf } from '../hooks/useReportPdf';
@@ -44,9 +45,28 @@ export function ReportDisplay({
 }: ReportDisplayProps) {
 
     // --- STATE ---
-    const [activeTab, setActiveTab] = useState('Executive Summary');
+
+    // --- DATA EXTRACT ---
+    const {
+        "UX Audit expert": ux,
+        "Product Audit expert": product,
+        "Visual Audit expert": visual,
+        "Strategy Audit expert": strategy,
+        "Accessibility Audit expert": accessibility,
+        "Competitor Analysis expert": competitorAnalysis,
+        Top5ContextualIssues
+    } = report || {};
+
+    const isCompetitorReport = !!competitorAnalysis;
+
+    const [activeTab, setActiveTab] = useState(isCompetitorReport ? 'Competitor Analysis' : 'Executive Summary');
     const [isSharing, setIsSharing] = useState(false);
-    const TABS = ['Executive Summary', 'UX Audit', 'Product Audit', 'Visual Design', 'Accessibility Audit'];
+
+    // Dynamic Tabs
+    const TABS = useMemo(() => {
+        if (isCompetitorReport) return ['Competitor Analysis'];
+        return ['Executive Summary', 'UX Audit', 'Product Audit', 'Visual Design', 'Accessibility Audit'];
+    }, [isCompetitorReport]);
 
     // --- AUTH LOGIC (Partner's Feature) ---
     const { user, isLoading: isAuthLoading } = useAuth();
@@ -69,17 +89,17 @@ export function ReportDisplay({
     });
 
     // --- DATA ---
-    const {
-        "UX Audit expert": ux,
-        "Product Audit expert": product,
-        "Visual Audit expert": visual,
-        "Strategy Audit expert": strategy,
-        "Accessibility Audit expert": accessibility,
-        Top5ContextualIssues
-    } = report || {};
-    const primaryScreenshot = screenshots.find(s => !s.isMobile);
+    // Try Desktop first, else fallback to first available
+    const primaryScreenshot = screenshots.find(s => !s.isMobile) || screenshots[0];
+
+    // Debug Logs
+    console.log('[ReportDisplay] All Screenshots:', screenshots);
+    console.log('[ReportDisplay] Primary Selected:', primaryScreenshot);
+
     const primaryScreenshotSrc = primaryScreenshot?.url || (primaryScreenshot?.data ? `data:image/jpeg;base64,${primaryScreenshot.data}` : undefined);
-    const isReportReady = report && ux && product && visual && strategy && accessibility;
+
+    // Modified Ready Check: Ready if Standard keys exist OR Competitor key exists
+    const isReportReady = report && ((ux && product && visual && strategy && accessibility) || competitorAnalysis);
 
     const overallScore = useMemo(() => {
         if (!report) return 0;
@@ -197,8 +217,13 @@ export function ReportDisplay({
 
                             <div className={`p-6 font-['DM_Sans'] transition-all duration-500 ${isLocked ? 'blur-sm pointer-events-none select-none h-[600px] overflow-hidden' : ''}`}>
 
-                                {/* Executive Summary Tab */}
-                                {activeTab === 'Executive Summary' && (
+                                {/* --- COMPETITOR ANALYSIS VIEW --- */}
+                                {activeTab === 'Competitor Analysis' && competitorAnalysis && (
+                                    <CompetitorAnalysisView data={competitorAnalysis} />
+                                )}
+
+                                {/* Executive Summary Tab (Standard Only) */}
+                                {activeTab === 'Executive Summary' && !isCompetitorReport && (
                                     <div className="flex flex-col gap-4 animate-in fade-in slide-in-from-bottom-4">
 
                                         {/* Scores & Screenshot */}
@@ -216,7 +241,12 @@ export function ReportDisplay({
                                                 <div className="self-stretch w-full mb-8">
                                                     <div className="text-[14px] font-bold text-slate-500 uppercase tracking-wider mb-3 text-left">Analyzed Page View</div>
                                                     <div className="rounded-xl border border-slate-200 bg-slate-50 shadow-sm relative overflow-hidden h-[450px]">
-                                                        <img src={primaryScreenshotSrc} className="w-full absolute top-0 left-0 h-auto" alt="Preview" />
+                                                        <img
+                                                            src={primaryScreenshotSrc}
+                                                            className="w-full absolute top-0 left-0 h-auto"
+                                                            alt="Preview"
+                                                            onError={(e) => console.error('[ReportDisplay] Image Load Failed:', e.currentTarget.src)}
+                                                        />
                                                     </div>
                                                 </div>
                                             ) : <SkeletonLoader className="h-[400px] w-full mb-8 rounded-xl" />}

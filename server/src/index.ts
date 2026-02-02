@@ -5,38 +5,62 @@ import { handleAuditRequest } from './audit';
 
 dotenv.config();
 
-const app = express();
-const port = process.env.PORT || 3000;
+// CHECK MODE
+if (process.env.RUN_WORKER === 'true') {
+    // WORKER MODE
+    console.log('[System] Mode: WORKER. Starting Job Consumer...');
+    // Lazy load worker to avoid initializing it in API mode
+    require('./workers/auditWorker').startWorker();
 
-import apiRoutes from './api/routes';
+} else {
+    // API MODE
+    console.log('[System] Mode: API. Starting Web Server...');
 
-// ...
-app.use(cors());
-app.use(express.json({ limit: '150mb' }));
-app.use(express.urlencoded({ limit: '150mb', extended: true }));
+    const app = express();
+    const port = process.env.PORT || 3000;
 
-app.get('/', (req, res) => {
-    res.send('MUS Audit Server is running');
-});
+    app.use(cors());
+    app.use(express.json({ limit: '150mb' }));
+    app.use(express.urlencoded({ limit: '150mb', extended: true }));
 
-// Mount External API
-import externalRoutes from './api/external';
-import publicRoutes from './api/public';
-app.use('/api/v1', apiRoutes);
-app.use('/api/external', externalRoutes);
-app.use('/api/public', publicRoutes);
-console.log('✓ API routes mounted: /api/v1, /api/external, /api/public');
-app.post('/api/audit', async (req, res) => {
-    try {
-        await handleAuditRequest(req, res);
-    } catch (error: any) {
-        console.error('Unhandled server error:', error);
-        if (!res.headersSent) {
-            res.status(500).json({ message: error.message || 'Internal Server Error' });
+    app.get('/', (req, res) => {
+        res.send('MUS Audit Server is running');
+    });
+
+    // Mount Routes
+    // Using require to ensure clean load order
+    const apiRoutes = require('./api/routes').default;
+    const externalRoutes = require('./api/external').default;
+    const publicRoutes = require('./api/public').default;
+
+    app.use('/api/v1', apiRoutes);
+    app.use('/api/external', externalRoutes);
+    app.use('/api/public', publicRoutes);
+
+    console.log('✓ API routes mounted: /api/v1, /api/external, /api/public');
+
+    // Direct Audit Handling
+    const auditHandler = async (req: any, res: any) => {
+        try {
+            await handleAuditRequest(req, res);
+        } catch (error: any) {
+            console.error('Unhandled server error:', error);
+            if (!res.headersSent) {
+                res.status(500).json({ message: error.message || 'Internal Server Error' });
+            }
         }
-    }
-});
+    };
 
-app.listen(port, () => {
-    console.log(`Server running on port ${port}`);
-});
+    app.post('/api/audit', auditHandler);
+    app.get('/api/audit', auditHandler);
+
+    app.listen(port, () => {
+        console.log(`Server running on port ${port}`);
+
+        // Auto-start worker in dev mode for convenience
+        if (!process.env.NODE_ENV || process.env.NODE_ENV === 'development') {
+            console.log('[System] Dev Mode detected: Starting inline Worker...');
+            require('./workers/auditWorker').startWorker();
+        }
+    });
+}
