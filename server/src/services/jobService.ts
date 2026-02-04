@@ -2,6 +2,7 @@ import { supabase } from '../lib/supabase';
 
 export interface CreateJobParams {
     apiKeyId?: string; // Made optional for guest/demo usage
+    userId?: string;   // Optional Link to Supabase User
     inputData: any;
 }
 
@@ -11,6 +12,7 @@ export class JobService {
             .from('audit_jobs')
             .insert({
                 api_key_id: params.apiKeyId || null,
+                user_id: params.userId || null,
                 status: 'pending',
                 input_data: params.inputData,
             })

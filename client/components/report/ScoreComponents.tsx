@@ -1,5 +1,5 @@
 import React from 'react';
-import { SkeletonLoader } from '../SkeletonLoader';
+import { SkeletonLoader } from '../ui/SkeletonLoader';
 
 // --- 🎨 PREMIUM THEME PALETTE ---
 // Logic: Custom colors based on score range (Matches your UI design)
@@ -192,6 +192,39 @@ export function ScoreDisplayCard({ score, label, isHero = false, isPdf = false }
                 ) : (
                     theme.label
                 )}
+            </div>
+        </div>
+    );
+}
+
+// --- LINEAR SCORE COMPONENT (New Redesign) ---
+export function LinearScoreDisplay({ score, label, isLarge = false }: { score?: number; label: string; isLarge?: boolean }) {
+    if (score === undefined) return <SkeletonLoader className={`w-full rounded-none ${isLarge ? 'h-16' : 'h-10'}`} />;
+
+    // Theme logic - simplistic to match wireframe/clean aesthetic
+    const theme = getThemeStyles(score);
+
+    return (
+        <div className={`w-full flex flex-col ${isLarge ? 'gap-3 mb-6' : 'gap-2 mb-4'}`}>
+            <div className="flex justify-between items-end">
+                <span className={`font-bold text-slate-900 ${isLarge ? 'text-2xl' : 'text-lg text-slate-500'}`}>
+                    {label}
+                </span>
+                <span className={`font-bold ${isLarge ? 'text-4xl' : 'text-xl text-slate-700'}`}>
+                    {Math.round(score)}/100
+                </span>
+            </div>
+
+            {/* Progress Bar Container */}
+            <div className={`w-full bg-slate-200 ${isLarge ? 'h-3' : 'h-2'} rounded-none overflow-hidden`}>
+                {/* Fill */}
+                <div
+                    className="h-full bg-slate-500 rounded-none transition-all duration-1000 ease-out"
+                    style={{
+                        width: `${Math.min(100, Math.max(0, score * 10))}%`,
+                        backgroundColor: '#64748B' // slate-500 for a neutral wireframe look
+                    }}
+                />
             </div>
         </div>
     );

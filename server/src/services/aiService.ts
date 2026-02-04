@@ -8,6 +8,7 @@ import {
     getProductSystemInstruction,
     getVisualSystemInstruction,
     getAccessibilitySystemInstruction,
+    getCompetitorSystemInstruction,
     getSchemas
 } from '../prompts';
 
@@ -139,7 +140,34 @@ export const performAnalysis = async (apiKeys: string[], mode: string, body: any
     };
 
     const expertConfig = expertMap[mode];
-    if (mode === 'analyze-strategy') {
+
+    if (mode === 'analyze-competitor') {
+        // Competitor Analysis Mode
+        const {
+            primaryUrl, primaryScreenshotsBase64, primaryLiveText,
+            competitorUrl, competitorScreenshotsBase64, competitorLiveText,
+            screenshotMimeType
+        } = body;
+
+        const MAX_COMP_TEXT = 15000;
+        const fullContent = `
+### PRIMARY WEBSITE ###
+- URL: ${primaryUrl}
+- Content: ${primaryLiveText ? primaryLiveText.substring(0, MAX_COMP_TEXT) : ''}... (truncated)
+
+### COMPETITOR WEBSITE ###
+- URL: ${competitorUrl}
+- Content: ${competitorLiveText ? competitorLiveText.substring(0, MAX_COMP_TEXT) : ''}... (truncated)
+`;
+
+        const allImages = [...(primaryScreenshotsBase64 || []), ...(competitorScreenshotsBase64 || [])];
+        const limitedImages = allImages.slice(0, 10); // Safety cap
+
+        return {
+            key: 'Competitor Analysis expert',
+            data: await callApi(apiKeys, getCompetitorSystemInstruction(), fullContent, schemas.competitorAuditSchema, limitedImages, screenshotMimeType || 'image/jpeg')
+        };
+    } else if (mode === 'analyze-strategy') {
         const { liveText } = body;
         return {
             key: expertConfig.key,
@@ -149,7 +177,7 @@ export const performAnalysis = async (apiKeys: string[], mode: string, body: any
         const { url, screenshotBase64, mobileScreenshotBase64, liveText, performanceData, screenshotMimeType, performanceAnalysisError, animationData, accessibilityData, axeViolations } = body;
 
         const mobileCaptureSucceeded = !!mobileScreenshotBase64;
-        const isMultiPage = liveText.includes("--- START CONTENT FROM") || liveText.includes("--- CONTENT FROM");
+        const isMultiPage = liveText?.includes("--- START CONTENT FROM") || liveText?.includes("--- CONTENT FROM") || false;
 
         let systemInstruction = "";
         let contextPrompt = getWebsiteContextPrompt(url, performanceData, performanceAnalysisError, animationData, accessibilityData, isMultiPage);
@@ -169,9 +197,10 @@ export const performAnalysis = async (apiKeys: string[], mode: string, body: any
 
         // Optimizing Token Usage: Truncate very long text
         const MAX_TEXT_LENGTH = 60000; // ~15k tokens
-        const truncatedText = liveText.length > MAX_TEXT_LENGTH
-            ? liveText.substring(0, MAX_TEXT_LENGTH) + "\n...[truncated for length]..."
-            : liveText;
+        const safeText = liveText || ''; // Fallback to empty string if undefined
+        const truncatedText = safeText.length > MAX_TEXT_LENGTH
+            ? safeText.substring(0, MAX_TEXT_LENGTH) + "\n...[truncated for length]..."
+            : safeText;
 
         const fullContent = `${contextPrompt}\n### Live Website Text Content ###\n${truncatedText}`;
 

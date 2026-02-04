@@ -75,8 +75,8 @@ export class JobProcessor {
                 };
 
                 const result = await performAnalysis(apiKeys, 'analyze-competitor', analysisBody);
-                report = result.data; // The merged result is returned directly
-                await JobService.updateProgress(jobId, '✓ Competitor Analysis complete.', { 'Competitor Analysis expert': report });
+                report = { [result.key]: result.data }; // Wrap in key for proper structure
+                await JobService.updateProgress(jobId, '✓ Competitor Analysis complete.', report);
 
             } else {
                 // --- BRANCH: STANDARD AUDIT ---
@@ -324,6 +324,7 @@ ${JSON.stringify(allIssues, null, 2)}`;
 
             const reportData = {
                 url: finalUrl,
+                competitorUrl: auditMode === 'competitor' ? (inputs.find((i: any) => i.role === 'competitor') || inputs[1])?.url : undefined,
                 screenshots: finalScreenshots,
                 screenshotMimeType: finalMimeType,
                 ...report

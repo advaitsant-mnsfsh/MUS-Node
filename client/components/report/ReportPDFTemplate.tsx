@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react';
 import { AnalysisReport, Screenshot } from '../../types';
-import { SkeletonLoader } from '../SkeletonLoader';
+import { SkeletonLoader } from '../ui/SkeletonLoader';
 import { CriticalIssueCard } from './AuditCards';
 import { ScoreDisplayCard } from './ScoreComponents';
 import { DetailedAuditView, DetailedAuditType } from './DetailedAuditView';

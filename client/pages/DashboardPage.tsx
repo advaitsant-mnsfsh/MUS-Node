@@ -77,12 +77,6 @@ const DashboardPage: React.FC = () => {
                         <h1 className="text-4xl font-bold text-text-primary mb-2">My Assessments</h1>
                         <p className="text-text-secondary">View and manage your UX audits</p>
                     </div>
-                    <Link
-                        to="/"
-                        className="px-6 py-3 bg-brand text-white font-semibold rounded-lg hover:bg-brand-hover transition-colors border-2 border-border-main shadow-neo hover:shadow-neo-hover active:shadow-none active:translate-x-px active:translate-y-px"
-                    >
-                        + New Assessment
-                    </Link>
                 </div>
 
                 {/* Loading State */}

@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { AnalysisReport, Screenshot } from '../types';
-import { SkeletonLoader } from './SkeletonLoader';
+import { SkeletonLoader } from './ui/SkeletonLoader';
 import { ReportPDFTemplate } from './report/ReportPDFTemplate';
 
 // --- Supabase Client Details ---

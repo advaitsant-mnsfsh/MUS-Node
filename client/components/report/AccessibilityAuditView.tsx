@@ -1,6 +1,6 @@
 import React from 'react';
 import { AccessibilityAudit, ScoredParameter } from '../../types';
-import { SkeletonLoader } from '../SkeletonLoader';
+import { SkeletonLoader } from '../ui/SkeletonLoader';
 import { AuditSubSectionHeader, ScoredParameterCard, CriticalIssueCard } from './AuditCards';
 
 interface Props {
@@ -49,8 +49,8 @@ export const AccessibilityAuditView: React.FC<Props> = ({ data, isPdf = false })
                     </div>
                     {data.RiskLevel && (
                         <div className={`px-4 py-2 rounded-lg border flex flex-col items-center min-w-[100px] ${data.RiskLevel === 'Critical' ? 'bg-red-50 border-red-200 text-red-700' :
-                                data.RiskLevel === 'High' ? 'bg-orange-50 border-orange-200 text-orange-700' :
-                                    'bg-green-50 border-green-200 text-green-700'
+                            data.RiskLevel === 'High' ? 'bg-orange-50 border-orange-200 text-orange-700' :
+                                'bg-green-50 border-green-200 text-green-700'
                             }`}>
                             <span className="text-[10px] font-semibold uppercase tracking-wider">Legal Risk</span>
                             <span className="text-lg font-bold">{data.RiskLevel}</span>

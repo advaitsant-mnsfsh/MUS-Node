@@ -5,8 +5,11 @@ import { Toaster } from 'react-hot-toast';
 import App from './App';
 import EmbedPage from './pages/EmbedPage';
 import DashboardPage from './pages/DashboardPage';
+import AboutPage from './pages/AboutPage';
+import PricingPage from './pages/PricingPage';
+import APIKeysPage from './pages/APIKeysPage';
 import { LoadingScreen } from './components/LoadingScreen';
-import { ReportDisplay } from './components/ReportDisplay';
+import { ReportContainer } from './components/report/ReportContainer';
 import { Logo } from './components/Logo';
 import { getSharedAudit } from './services/auditStorage';
 import { AnalysisReport, Screenshot } from './types';
@@ -147,9 +150,9 @@ function SharedAuditView() {
     }
 
     return (
-        <div className="min-h-screen bg-slate-50 text-slate-800 font-sans p-2 sm:p-6 lg:p-8">
-            <div className="max-w-7xl mx-auto">
-                <ReportDisplay
+        <div className="min-h-screen bg-slate-50 text-slate-800 font-sans">
+            <div className="w-full">
+                <ReportContainer
                     report={report}
                     url={url}
                     screenshots={screenshots}
@@ -178,6 +181,9 @@ function AppWithRouting() {
                         <Route path="/analysis/:auditId" element={<App />} />
                         <Route path="/report/:auditId" element={<App />} />
                         <Route path="/dashboard" element={<DashboardPage />} />
+                        <Route path="/about" element={<AboutPage />} />
+                        <Route path="/pricing" element={<PricingPage />} />
+                        <Route path="/api-keys" element={<APIKeysPage />} />
                         {/* Auth Routes */}
                         <Route path="/login" element={<App />} />
                     </Route>

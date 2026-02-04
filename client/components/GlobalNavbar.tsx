@@ -75,7 +75,8 @@ export const GlobalNavbar: React.FC = () => {
                         {user ? (
                             <>
                                 {/* Start Assessment Button - Hide on landing page and dashboard */}
-                                {!isActive('/') && !isActive('/dashboard') && (
+                                {/* Start Assessment Button - Hide on landing page only */}
+                                {!isActive('/') && (
                                     <Link
                                         to="/"
                                         className="px-6 py-2 bg-[#1E293B] text-white font-semibold text-sm rounded-lg hover:bg-[#374151] transition-colors"

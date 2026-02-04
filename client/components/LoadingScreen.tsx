@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Logo } from './Logo';
-import { ProgressBar } from './ProgressBar';
-import { LottieAnimation } from './LottieAnimation';
+import { ProgressBar } from './ui/ProgressBar';
+import { LottieAnimation } from './ui/LottieAnimation';
 
 const loadingMicrocopy = [
     "Analyzing UX with 250+ parameters…",
@@ -33,16 +33,7 @@ export const LoadingScreen: React.FC<LoadingScreenProps> = ({ progress, message 
 
     return (
         <div className="min-h-screen bg-slate-50 text-slate-800 font-sans flex flex-col items-center justify-start pt-16 sm:pt-24">
-            <Logo className="mx-auto mb-12" />
-            <header className="w-full text-center px-4 mb-12">
-                <h1 className="text-3xl sm:text-5xl font-extrabold text-slate-900">
-                    Let's Put Your Website Through a UX Checkup
-                </h1>
-                <p className="mt-4 text-lg sm:text-xl text-slate-600">
-                    AI-powered UX assessment to spot friction, gaps, and quick wins.
-                    <span className="block mt-2 font-semibold" style={{ color: 'rgb(79, 70, 229)' }}>Clear insights. Practical fixes. No fluff.</span>
-                </p>
-            </header>
+
 
             <div className="my-8 sm:my-12">
                 <LottieAnimation animationData={qrCodeAnimationData} className="w-32 h-32 mx-auto" />
