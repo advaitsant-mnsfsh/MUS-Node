@@ -121,8 +121,9 @@ if (process.env.RUN_WORKER === 'true') {
         }
     });
 
-    app.listen(port, () => {
-        console.log(`Server running on port ${port}`);
+    const HOST = '0.0.0.0';
+    app.listen(Number(port), HOST, () => {
+        console.log(`Server running on ${HOST}:${port}`);
 
         // Auto-start worker in dev mode for convenience
         // Auto-start worker in dev mode for convenience
