@@ -12,7 +12,9 @@ export const startWorker = () => {
     // Concurrency: 1 means this worker instance runs 1 job at a time.
     // Scale by adding more Worker Instances (Railway Replicas).
     const worker = new Worker('audit-queue', async (job) => {
+        const counts = await worker.getJobCounts();
         console.log(`[Worker] Picking up job ${job.id} (Data ID: ${job.data.jobId})`);
+        console.log(`[Queue] Status: Active: ${counts.active}, Waiting: ${counts.waiting}, Concurrency: ${process.env.WORKER_CONCURRENCY || 1}`);
 
         try {
             // The job data contains { jobId: string of database ID }
