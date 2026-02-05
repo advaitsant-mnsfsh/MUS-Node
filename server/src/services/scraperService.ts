@@ -21,6 +21,13 @@ export const performScrape = async (url: string, isMobile: boolean, isFirstPage:
         }
 
         if (!browser) {
+            // CRITICAL SAFEGUARD: 
+            // In Production (Railway/Vercel), launching local Chrome usually kills the container (OOM).
+            // We MUST use a remote browser (Browserless, etc.) unless explicitly overridden.
+            if (process.env.NODE_ENV === 'production' && process.env.ALLOW_LOCAL_CHROME !== 'true') {
+                throw new Error("Misconfigured Scraper: Local Puppeteer launch blocked in Production to prevent crash. Please ensure 'PUPPETEER_BROWSER_ENDPOINT' secret is set correctly in Supabase or ENV.");
+            }
+
             console.log('[SCRAPE] Launching local browser...');
             browser = await puppeteer.launch({
                 headless: "new",
