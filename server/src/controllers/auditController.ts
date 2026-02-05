@@ -70,64 +70,88 @@ export const handleAuditRequest = async (req: Request, res: Response) => {
     switch (actualMode) {
         case 'start-audit': {
             try {
+                console.log('[AuditController] Entering start-audit...');
                 const { inputs, auditMode } = req.body;
-                const userId = (req as any).user?.id; // Extracted from middleware
+                const userId = (req as any).user?.id;
 
-                console.log(`[Job] Starting new audit job. Mode: ${auditMode}, User: ${userId || 'Guest'}`);
+                if (!inputs || !Array.isArray(inputs)) {
+                    console.error('[AuditController] Invalid inputs (not an array):', inputs);
+                    return res.status(400).json({ message: 'Invalid inputs. Expected an array.' });
+                }
 
-                console.log(`[Job] Starting new audit job. Mode: ${auditMode}, User: ${userId || 'Guest'}`);
-
-                // Bucket creation is handled in the background worker or lazily. 
-                // We shouldn't block the user request for this admin check.
+                console.log(`[Job] Starting new audit job. Mode: ${auditMode}, User: ${userId || 'Guest'}, Input Count: ${inputs.length}`);
 
                 // --- OPTIMIZATION: Pre-upload large base64 inputs to avoid DB 520 Errors ---
-                const processedInputs = await Promise.all(inputs.map(async (input: any) => {
-                    if (input.type === 'upload' && input.filesData && input.filesData.length > 0) {
-                        try {
-                            const uploadedUrls = await Promise.all(input.filesData.map(async (base64Data: string, idx: number) => {
-                                // Skip if already a URL
-                                if (base64Data.startsWith('http')) return base64Data;
+                let processedInputs = inputs;
+                try {
+                    processedInputs = await Promise.all(inputs.map(async (input: any, index: number) => {
+                        if (!input) return input;
 
-                                const buffer = Buffer.from(base64Data.split(',')[1] || base64Data, 'base64');
-                                const fileName = `input-upload-${Date.now()}-${idx}.jpg`;
-                                const filePath = `public/inputs/${fileName}`;
+                        if (input.type === 'upload' && input.filesData && input.filesData.length > 0) {
+                            try {
+                                console.log(`[AuditController] Processing upload for input ${index}...`);
+                                const uploadedUrls = await Promise.all(input.filesData.map(async (base64Data: string, idx: number) => {
+                                    // Skip if already a URL
+                                    if (typeof base64Data === 'string' && (base64Data.startsWith('http') || base64Data.startsWith('https'))) return base64Data;
+                                    if (!base64Data) return null;
 
-                                await supabaseAdmin.storage.from('screenshots').upload(filePath, buffer, {
-                                    contentType: 'image/jpeg',
-                                    upsert: true
-                                });
+                                    // Extract Base64 if data URI
+                                    let buffer: Buffer;
+                                    if (base64Data.includes(',')) {
+                                        buffer = Buffer.from(base64Data.split(',')[1], 'base64');
+                                    } else {
+                                        buffer = Buffer.from(base64Data, 'base64');
+                                    }
 
-                                const { data } = supabaseAdmin.storage.from('screenshots').getPublicUrl(filePath);
-                                return data.publicUrl;
-                            }));
+                                    const fileName = `input-upload-${Date.now()}-${idx}.jpg`;
+                                    const filePath = `public/inputs/${fileName}`;
 
-                            // Return sanitized input
-                            return {
-                                ...input,
-                                filesData: undefined, // Remove huge base64
-                                fileUrls: uploadedUrls
-                            };
-                        } catch (e) {
-                            console.error("Failed to pre-upload input images:", e);
-                            return input; // Fallback to original (might fail createJob, but worth a try)
+                                    const { error: uploadError } = await supabaseAdmin.storage.from('screenshots').upload(filePath, buffer, {
+                                        contentType: 'image/jpeg',
+                                        upsert: true
+                                    });
+
+                                    if (uploadError) {
+                                        console.error(`[AuditController] Upload failed for ${fileName}:`, uploadError);
+                                        return null;
+                                    }
+
+                                    const { data } = supabaseAdmin.storage.from('screenshots').getPublicUrl(filePath);
+                                    return data.publicUrl;
+                                }));
+
+                                return {
+                                    ...input,
+                                    filesData: undefined,
+                                    fileUrls: uploadedUrls.filter((u: any) => u !== null)
+                                };
+                            } catch (e) {
+                                console.error(`[AuditController] Failed to pre-upload input ${index}:`, e);
+                                return input; // Fallback
+                            }
                         }
-                    }
-                    return input;
-                }));
+                        return input;
+                    }));
+                } catch (mapError) {
+                    console.error('[AuditController] Error in input processing map:', mapError);
+                    processedInputs = inputs; // Fallback
+                }
 
+                console.log('[AuditController] Creating job record in DB...');
                 const job = await JobService.createJob({
                     inputData: { inputs: processedInputs, auditMode },
                     userId: userId,
                     apiKeyId: undefined
                 });
+                console.log(`[AuditController] Job created successfully: ${job.id}`);
 
                 // Fire and forget
                 JobProcessor.processJob(job.id).catch(err => console.error(`Background Job Error ${job.id}:`, err));
 
                 res.json({ success: true, jobId: job.id });
             } catch (error: any) {
-                console.error("Failed to start audit job:", error);
-                res.status(500).json({ message: error.message });
+                console.error("Failed to start audit job [CRITICAL]:", error);
+                res.status(500).json({ message: error.message || "Internal Server Error during Job Creation" });
             }
             break;
         }
