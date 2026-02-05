@@ -56,3 +56,12 @@ CREATE POLICY "Users can insert their own audits"
 
 -- Create policy to allow efficient service role access (if needed explicitly, though service role bypasses RLS)
 -- For now, we assume the Service Role Key is used for all backend operations, which bypasses RLS.
+
+-- Performance Indices
+CREATE INDEX IF NOT EXISTS idx_audit_jobs_user_id ON audit_jobs(user_id);
+CREATE INDEX IF NOT EXISTS idx_audit_jobs_user_id_created_at ON audit_jobs(user_id, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_audit_jobs_api_key_id ON audit_jobs(api_key_id);
+CREATE INDEX IF NOT EXISTS idx_api_keys_user_id ON api_keys(user_id);
+
+-- Leads Table Indices (critical for login/signup performance)
+CREATE INDEX IF NOT EXISTS idx_leads_email ON leads(email);

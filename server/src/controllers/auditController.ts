@@ -73,8 +73,56 @@ export const handleAuditRequest = async (req: Request, res: Response) => {
 
                 console.log(`[Job] Starting new audit job. Mode: ${auditMode}, User: ${userId || 'Guest'}`);
 
+                // --- Ensure Storage Bucket Exists ---
+                try {
+                    const { data: buckets } = await supabaseAdmin.storage.listBuckets();
+                    const bucket = buckets?.find(b => b.name === 'screenshots');
+                    if (!bucket) {
+                        await supabaseAdmin.storage.createBucket('screenshots', { public: true });
+                    } else if (bucket.public !== true) {
+                        await supabaseAdmin.storage.updateBucket('screenshots', { public: true });
+                    }
+                } catch (e) {
+                    console.warn("Bucket check failed (proceeding anyway):", e);
+                }
+
+                // --- OPTIMIZATION: Pre-upload large base64 inputs to avoid DB 520 Errors ---
+                const processedInputs = await Promise.all(inputs.map(async (input: any) => {
+                    if (input.type === 'upload' && input.filesData && input.filesData.length > 0) {
+                        try {
+                            const uploadedUrls = await Promise.all(input.filesData.map(async (base64Data: string, idx: number) => {
+                                // Skip if already a URL
+                                if (base64Data.startsWith('http')) return base64Data;
+
+                                const buffer = Buffer.from(base64Data.split(',')[1] || base64Data, 'base64');
+                                const fileName = `input-upload-${Date.now()}-${idx}.jpg`;
+                                const filePath = `public/inputs/${fileName}`;
+
+                                await supabaseAdmin.storage.from('screenshots').upload(filePath, buffer, {
+                                    contentType: 'image/jpeg',
+                                    upsert: true
+                                });
+
+                                const { data } = supabaseAdmin.storage.from('screenshots').getPublicUrl(filePath);
+                                return data.publicUrl;
+                            }));
+
+                            // Return sanitized input
+                            return {
+                                ...input,
+                                filesData: undefined, // Remove huge base64
+                                fileUrls: uploadedUrls
+                            };
+                        } catch (e) {
+                            console.error("Failed to pre-upload input images:", e);
+                            return input; // Fallback to original (might fail createJob, but worth a try)
+                        }
+                    }
+                    return input;
+                }));
+
                 const job = await JobService.createJob({
-                    inputData: { inputs, auditMode },
+                    inputData: { inputs: processedInputs, auditMode },
                     userId: userId,
                     apiKeyId: undefined
                 });

@@ -155,7 +155,22 @@ export class JobProcessor {
 
                 } else if (firstInput.type === 'upload') {
                     finalUrl = 'Uploaded Image';
-                    const base64 = firstInput.filesData?.[0];
+                    let base64 = firstInput.filesData?.[0];
+
+                    // Handle Pre-uploaded URLs (Fix for 520 Payload Error)
+                    if (!base64 && firstInput.fileUrls && firstInput.fileUrls.length > 0) {
+                        try {
+                            console.log(`[JobProcessor] Fetching input image from: ${firstInput.fileUrls[0]}`);
+                            const resp = await fetch(firstInput.fileUrls[0]);
+                            if (!resp.ok) throw new Error(`Fetch failed: ${resp.statusText}`);
+                            const arrayBuffer = await resp.arrayBuffer();
+                            base64 = Buffer.from(arrayBuffer).toString('base64');
+                        } catch (e: any) {
+                            console.error(`[JobProcessor] Failed to download input image: ${e.message}`);
+                            throw new Error(`Failed to retrieve uploaded image: ${e.message}`);
+                        }
+                    }
+
                     if (!base64) throw new Error("No file data provided");
                     finalScreenshots = [{ data: base64, isMobile: false }];
                     finalMimeType = 'image/png';
