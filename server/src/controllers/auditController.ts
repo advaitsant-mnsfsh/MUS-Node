@@ -32,38 +32,41 @@ export const handleAuditRequest = async (req: Request, res: Response) => {
     }
 
     const supabaseAdmin = createClient(supabaseUrl, supabaseServiceRoleKey);
-    const { data: secretData, error: secretError } = await supabaseAdmin
-        .from('app_secrets')
-        .select('key_name, key_value')
-        .in('key_name', ['API_KEY', 'PUPPETEER_BROWSER_ENDPOINT', 'PAGESPEED_API_KEY', 'API_KEY_BUP']);
 
-    if (secretError || !secretData) {
-        console.error("Failed to fetch secrets from Supabase:", secretError);
-        return res.status(500).json({ message: "Failed to retrieve app credentials." });
-    }
+    // Helper: Lazy load secrets only when needed
+    const loadSecrets = async () => {
+        const { data: secretData, error: secretError } = await supabaseAdmin
+            .from('app_secrets')
+            .select('key_name, key_value')
+            .in('key_name', ['API_KEY', 'PUPPETEER_BROWSER_ENDPOINT', 'PAGESPEED_API_KEY', 'API_KEY_BUP']);
 
-    const secrets = secretData.reduce((acc: any, item: any) => {
-        acc[item.key_name] = item.key_value;
-        return acc;
-    }, {});
+        if (secretError || !secretData) {
+            console.error("Failed to fetch secrets from Supabase:", secretError);
+            throw new Error("Failed to retrieve app credentials from DB.");
+        }
 
-    let apiKey = secrets['API_KEY'];
-    if (!apiKey) {
-        apiKey = process.env.API_KEY || process.env.GEMINI_API_KEY;
-    }
-    const apiKeyBup = secrets['API_KEY_BUP'] || process.env.API_KEY_BUP;
+        const secrets = secretData.reduce((acc: any, item: any) => {
+            acc[item.key_name] = item.key_value;
+            return acc;
+        }, {});
 
-    if (!apiKey) {
-        return res.status(500).json({ message: "Missing AI API Key." });
-    }
+        let apiKey = secrets['API_KEY'];
+        if (!apiKey) {
+            apiKey = process.env.API_KEY || process.env.GEMINI_API_KEY;
+        }
+        const apiKeyBup = secrets['API_KEY_BUP'] || process.env.API_KEY_BUP;
 
-    // Construct Key Array: [Main, Backup]
-    const apiKeys = [apiKey];
-    if (apiKeyBup) {
-        apiKeys.push(apiKeyBup);
-    }
-    const primaryKey = apiKeys[0];
-    const browserEndpoint = secrets['PUPPETEER_BROWSER_ENDPOINT'];
+        if (!apiKey) {
+            throw new Error("Missing AI API Key.");
+        }
+
+        const apiKeys = [apiKey];
+        if (apiKeyBup) {
+            apiKeys.push(apiKeyBup);
+        }
+
+        return { secrets, apiKeys, primaryKey: apiKeys[0] };
+    };
 
     switch (actualMode) {
         case 'start-audit': {
@@ -254,6 +257,8 @@ export const handleAuditRequest = async (req: Request, res: Response) => {
         case 'scrape-single-page': {
             try {
                 const { url, isMobile, isFirstPage } = req.body;
+                const { secrets } = await loadSecrets();
+                const browserEndpoint = secrets['PUPPETEER_BROWSER_ENDPOINT'];
                 const result = await performScrape(url, isMobile, isFirstPage, browserEndpoint);
                 res.json(result);
             } catch (error: any) {
@@ -263,9 +268,14 @@ export const handleAuditRequest = async (req: Request, res: Response) => {
         }
 
         case 'scrape-performance': {
-            const { url } = req.body;
-            const result = await performPerformanceCheck(url, primaryKey, secrets);
-            res.json(result);
+            try {
+                const { url } = req.body;
+                const { primaryKey, secrets } = await loadSecrets();
+                const result = await performPerformanceCheck(url, primaryKey, secrets);
+                res.json(result);
+            } catch (error: any) {
+                res.status(500).json({ message: error.message });
+            }
             break;
         }
 
@@ -275,6 +285,8 @@ export const handleAuditRequest = async (req: Request, res: Response) => {
         case 'analyze-strategy':
         case 'analyze-accessibility': {
             try {
+                const { apiKeys } = await loadSecrets();
+
                 // Streaming Wrapper
                 const write = (chunk: any) => {
                     res.write(JSON.stringify(chunk) + '\n');
@@ -309,6 +321,7 @@ export const handleAuditRequest = async (req: Request, res: Response) => {
             res.write(JSON.stringify({ type: 'status', message: "Running Competitor Analysis expert..." }) + '\n');
 
             try {
+                const { apiKeys } = await loadSecrets();
                 const schemas = getSchemas();
                 const {
                     primaryUrl, primaryScreenshotsBase64, primaryLiveText,
@@ -422,6 +435,8 @@ ${strategyContext}
 ${JSON.stringify(allIssues, null, 2)}`;
 
                 const schemas = getSchemas();
+
+                const { apiKeys } = await loadSecrets();
 
                 // Use callApi for consistency (and robustness)
                 const rankResult = await callApi(apiKeys, systemInstruction, contents, {
