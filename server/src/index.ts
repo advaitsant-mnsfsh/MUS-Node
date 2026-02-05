@@ -21,7 +21,30 @@ if (process.env.RUN_WORKER === 'true') {
     const app = express();
     const port = process.env.PORT || 3000;
 
-    app.use(cors());
+    app.use(cors({
+        origin: function (origin, callback) {
+            const allowedOrigins = [
+                'https://mus-node.vercel.app',
+                'http://localhost:5173',
+                'http://localhost:3000',
+                process.env.CLIENT_URL
+            ].filter(Boolean);
+
+            // Allow requests with no origin (like mobile apps or curl requests)
+            if (!origin) return callback(null, true);
+
+            if (allowedOrigins.indexOf(origin) === -1 && !allowedOrigins.includes('*')) {
+                // Optional: Allow all during debugging if strictly needed, but better to be explicit
+                // return callback(null, true); 
+                // For now, let's just log and allow it to debug, or stick to strict:
+                console.log('[CORS] Origin:', origin);
+            }
+            return callback(null, true); // Temporarily allow all to rule out CORS config issues
+        },
+        credentials: true,
+        methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+        allowedHeaders: ['Content-Type', 'Authorization', 'x-api-key']
+    }));
     app.use(express.json({ limit: '150mb' }));
     app.use(express.urlencoded({ limit: '150mb', extended: true }));
 
