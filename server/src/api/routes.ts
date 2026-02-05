@@ -1,15 +1,9 @@
 import express from 'express';
-import { createClient } from '@supabase/supabase-js';
+import { supabase as supabaseAdmin } from '../lib/supabase';
 import { validateApiKey, AuthenticatedRequest } from '../middleware/apiAuth';
 import { processAuditJob } from '../auditHeadless';
-import dotenv from 'dotenv';
-
-dotenv.config();
 
 const router = express.Router();
-const supabaseUrl = process.env.SUPABASE_URL!;
-const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
-const supabaseAdmin = createClient(supabaseUrl, supabaseServiceRoleKey);
 
 // POST /api/v1/audit
 router.post('/audit', validateApiKey, async (req: express.Request, res: express.Response) => {

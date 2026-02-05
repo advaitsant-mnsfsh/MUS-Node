@@ -1,12 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
-import { createClient } from '@supabase/supabase-js';
-import dotenv from 'dotenv';
-
-dotenv.config();
-
-const supabaseUrl = process.env.SUPABASE_URL!;
-const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
-const supabaseAdmin = createClient(supabaseUrl, supabaseServiceRoleKey);
+import { supabase as supabaseAdmin } from '../lib/supabase';
 
 // Extend Express Request to include apiKey info and optional User
 export interface AuthenticatedRequest extends Request {
