@@ -1,13 +1,13 @@
-import { createClient } from '@supabase/supabase-js';
+// import { createClient } from '@supabase/supabase-js'; // Removed
+import { supabase as supabaseAdmin } from './lib/supabase'; // Singleton
 import { GoogleGenAI } from '@google/genai';
 import { performScrape, performPerformanceCheck, performAnalysis } from './audit';
-import dotenv from 'dotenv';
+// import dotenv from 'dotenv'; // Singleton handles this
+// dotenv.config();
 
-dotenv.config();
-
-const supabaseUrl = process.env.SUPABASE_URL!;
-const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
-const supabaseAdmin = createClient(supabaseUrl, supabaseServiceRoleKey);
+// const supabaseUrl = process.env.SUPABASE_URL!;
+// const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
+// const supabaseAdmin = createClient(supabaseUrl, supabaseServiceRoleKey);
 
 export const processAuditJob = async (jobId: string, inputs: any[]) => {
     console.log(`[Job ${jobId}] Starting processing...`);
