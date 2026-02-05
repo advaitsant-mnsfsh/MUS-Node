@@ -1,12 +1,13 @@
 import { Router, Request, Response } from 'express';
-import { createClient } from '@supabase/supabase-js';
+// import { createClient } from '@supabase/supabase-js'; // Removed
+import { supabase } from '../lib/supabase'; // Use singleton
 import crypto from 'crypto';
 
 const router = Router();
 
-const supabaseUrl = process.env.SUPABASE_URL!;
-const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
-const supabase = createClient(supabaseUrl, supabaseServiceRoleKey);
+// const supabaseUrl = process.env.SUPABASE_URL!;
+// const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
+// const supabase = createClient(supabaseUrl, supabaseServiceRoleKey);
 
 /**
  * POST /api/keys/generate
