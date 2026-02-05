@@ -21,8 +21,8 @@ export const LandingView: React.FC<LandingViewProps> = ({
     renderError
 }) => {
     return (
-        <div className="min-h-screen bg-page-bg text-slate-800 font-sans flex flex-col items-center justify-start pt-12 sm:pt-20">
-            <div className="w-full mb-8">
+        <div className="h-[calc(100vh-5rem)] bg-page-bg text-slate-800 font-sans flex flex-col items-center justify-center p-4 gap-4">
+            <div className="w-full">
                 <LandingHero />
             </div>
 

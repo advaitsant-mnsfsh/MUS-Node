@@ -26,7 +26,7 @@ export const GlobalNavbar: React.FC = () => {
                     {/* Left: Logo */}
                     <div className="shrink-0 z-10">
                         <Link to="/">
-                            <Logo />
+                            <Logo imgClass="h-8" />
                         </Link>
                     </div>
 
@@ -36,8 +36,8 @@ export const GlobalNavbar: React.FC = () => {
                         <Link
                             to="/about"
                             className={`text-sm font-semibold transition-colors ${isActive('/about')
-                                ? 'text-[#6366F1]'
-                                : 'text-[#64748B] hover:text-[#1E293B]'
+                                ? 'text-brand'
+                                : 'text-text-secondary hover:text-text-primary'
                                 }`}
                         >
                             About
@@ -47,8 +47,8 @@ export const GlobalNavbar: React.FC = () => {
                         <Link
                             to="/api-keys"
                             className={`text-sm font-semibold transition-colors ${isActive('/api-keys')
-                                ? 'text-[#6366F1]'
-                                : 'text-[#64748B] hover:text-[#1E293B]'
+                                ? 'text-brand'
+                                : 'text-text-secondary hover:text-text-primary'
                                 }`}
                         >
                             API Keys
@@ -58,8 +58,8 @@ export const GlobalNavbar: React.FC = () => {
                         <Link
                             to="/pricing"
                             className={`text-sm font-semibold transition-colors ${isActive('/pricing')
-                                ? 'text-[#6366F1]'
-                                : 'text-[#64748B] hover:text-[#1E293B]'
+                                ? 'text-brand'
+                                : 'text-text-secondary hover:text-text-primary'
                                 }`}
                         >
                             Pricing
@@ -70,8 +70,8 @@ export const GlobalNavbar: React.FC = () => {
                             <Link
                                 to="/dashboard"
                                 className={`text-sm font-semibold transition-colors ${isActive('/dashboard')
-                                    ? 'text-[#6366F1]'
-                                    : 'text-[#64748B] hover:text-[#1E293B]'
+                                    ? 'text-brand'
+                                    : 'text-text-secondary hover:text-text-primary'
                                     }`}
                             >
                                 Dashboard
@@ -87,7 +87,7 @@ export const GlobalNavbar: React.FC = () => {
                                 {!isActive('/') && !isActive('/dashboard') && (
                                     <Link
                                         to="/"
-                                        className="px-6 py-2 bg-[#1E293B] text-white font-semibold text-sm rounded-lg hover:bg-[#374151] transition-colors"
+                                        className="px-6 py-2 bg-text-primary text-white font-semibold text-sm rounded-lg hover:bg-[#374151] transition-colors"
                                     >
                                         Start Assessment
                                     </Link>
@@ -98,7 +98,7 @@ export const GlobalNavbar: React.FC = () => {
                         ) : (
                             <button
                                 onClick={() => setShowAuthModal(true)}
-                                className="px-7 py-2 bg-white text-[#1E293B] border-2 border-[#000000] font-semibold text-sm hover:bg-slate-50 transition-all shadow-neo hover:shadow-neo-hover active:shadow-none active:translate-x-[1px] active:translate-y-[1px]"
+                                className="px-7 py-2 bg-white text-text-primary border-2 border-border-main font-semibold text-sm hover:bg-slate-50 transition-all shadow-neo hover:shadow-neo-hover active:shadow-none active:translate-x-px active:translate-y-px"
                             >
                                 Login
                             </button>

@@ -205,7 +205,7 @@ export const URLInputForm: React.FC<URLInputFormProps> = ({
             ) : (
               // --- STANDARD MODE INPUTS (SINGLE QUEUE) ---
               <>
-                <p className="text-xs text-text-secondary mb-0">
+                <p className="text-xs text-text-secondary mb-3">
                   You can add up to 5 URLs of the same website
                 </p>
                 <StandardInputControl
