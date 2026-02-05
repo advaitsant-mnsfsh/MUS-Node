@@ -122,9 +122,35 @@ if (process.env.RUN_WORKER === 'true') {
         }
     });
 
+    // --- SYSTEM OBSERVABILITY ---
+    app.get('/', (req, res) => {
+        console.log(`[System] Health Check Ping from ${req.ip}`);
+        res.send('MUS Audit Server is running');
+    });
+
+    // process.on('SIGTERM', () => {
+    //    console.log('[System] SIGTERM received. This usually means the platform is shutting us down (Health check failed? Deploying new version?).');
+    //    process.exit(0);
+    // });
+
+    // process.on('SIGINT', () => {
+    //    console.log('[System] SIGINT received.');
+    //    process.exit(0);
+    // });
+
+    process.on('uncaughtException', (err) => {
+        console.error('[CRITICAL] Uncaught Exception:', err);
+        // Don't exit immediately to allow logs to flush
+    });
+
+    process.on('unhandledRejection', (reason, promise) => {
+        console.error('[CRITICAL] Unhandled Rejection at:', promise, 'reason:', reason);
+    });
+
     const HOST = '0.0.0.0';
     app.listen(Number(port), HOST, () => {
         console.log(`Server running on ${HOST}:${port}`);
+        console.log(`[System] Memory Usage: ${Math.round(process.memoryUsage().heapUsed / 1024 / 1024)}MB`);
 
         // Auto-start worker in dev mode for convenience
         // Auto-start worker in dev mode for convenience
