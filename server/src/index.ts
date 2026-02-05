@@ -21,6 +21,18 @@ if (process.env.RUN_WORKER === 'true') {
     const app = express();
     const port = process.env.PORT || 3000;
 
+    // --- CRITICAL HEALTH CHECKS (Must be first) ---
+    const healthHandler = (req: any, res: any) => {
+        // console.log(`[System] Health Ping (${req.method}) from ${req.ip}`);
+        res.status(200).send('OK');
+    };
+
+    app.get('/', healthHandler);
+    app.head('/', healthHandler);
+    app.get('/health', healthHandler);
+
+    console.log('[System] Health routes registered (/, /health)');
+
     app.use(cors({
         origin: function (origin, callback) {
             const allowedOrigins = [
@@ -31,30 +43,21 @@ if (process.env.RUN_WORKER === 'true') {
                 'https://sobtfbplbpvfqeubjxex.supabase.co'
             ].filter(Boolean);
 
-            // Allow requests with no origin (like mobile apps or curl requests)
             if (!origin) return callback(null, true);
 
             if (allowedOrigins.indexOf(origin) === -1 && !allowedOrigins.includes('*')) {
-                // Optional: Allow all during debugging if strictly needed, but better to be explicit
-                // return callback(null, true); 
-                // For now, let's just log and allow it to debug, or stick to strict:
                 console.log('[CORS] Origin:', origin);
             }
-            return callback(null, true); // Temporarily allow all to rule out CORS config issues
+            return callback(null, true);
         },
         credentials: true,
-        methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+        methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'HEAD'],
         allowedHeaders: ['Content-Type', 'Authorization', 'x-api-key']
     }));
     app.use(express.json({ limit: '150mb' }));
     app.use(express.urlencoded({ limit: '150mb', extended: true }));
 
-    app.get('/', (req, res) => {
-        res.send('MUS Audit Server is running');
-    });
-
     // Mount Routes
-    // Using require to ensure clean load order
     const apiRoutes = require('./api/routes').default;
     const externalRoutes = require('./api/external').default;
     const publicRoutes = require('./api/public').default;
@@ -82,7 +85,6 @@ if (process.env.RUN_WORKER === 'true') {
     app.post('/api/audit', optionalUserAuth, auditHandler);
     app.get('/api/audit', auditHandler);
 
-    // New Endpoint: Claim Audit (Bypass RLS via Admin)
     app.post('/api/audit/claim', optionalUserAuth, async (req: any, res: any) => {
         const user = (req as AuthenticatedRequest).user;
         const { auditId } = req.body;
@@ -97,12 +99,11 @@ if (process.env.RUN_WORKER === 'true') {
         console.log(`[Admin] Claim Request: Audit ${auditId} -> User ${user.id}`);
 
         try {
-            // Admin Update
             const { data, error } = await supabase
                 .from('audit_jobs')
                 .update({ user_id: user.id })
                 .eq('id', auditId)
-                .is('user_id', null) // Safety check: only claim if unowned
+                .is('user_id', null)
                 .select('id');
 
             if (error) {
@@ -123,24 +124,8 @@ if (process.env.RUN_WORKER === 'true') {
     });
 
     // --- SYSTEM OBSERVABILITY ---
-    app.get('/', (req, res) => {
-        console.log(`[System] Health Check Ping from ${req.ip}`);
-        res.send('MUS Audit Server is running');
-    });
-
-    // process.on('SIGTERM', () => {
-    //    console.log('[System] SIGTERM received. This usually means the platform is shutting us down (Health check failed? Deploying new version?).');
-    //    process.exit(0);
-    // });
-
-    // process.on('SIGINT', () => {
-    //    console.log('[System] SIGINT received.');
-    //    process.exit(0);
-    // });
-
     process.on('uncaughtException', (err) => {
         console.error('[CRITICAL] Uncaught Exception:', err);
-        // Don't exit immediately to allow logs to flush
     });
 
     process.on('unhandledRejection', (reason, promise) => {
@@ -151,11 +136,5 @@ if (process.env.RUN_WORKER === 'true') {
     app.listen(Number(port), HOST, () => {
         console.log(`Server running on ${HOST}:${port}`);
         console.log(`[System] Memory Usage: ${Math.round(process.memoryUsage().heapUsed / 1024 / 1024)}MB`);
-
-        // Auto-start worker in dev mode for convenience
-        // Auto-start worker in dev mode for convenience
-        // if (!process.env.NODE_ENV || process.env.NODE_ENV === 'development') {
-        //     console.log('[System] Dev Mode detected: Starting inline Worker...');
-        //     require('./workers/auditWorker').startWorker();\n        // }
     });
 }
