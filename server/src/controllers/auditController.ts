@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
-import { createClient } from '@supabase/supabase-js';
+// import { createClient } from '@supabase/supabase-js'; // Removed: Use singleton
+import { supabase as supabaseAdmin } from '../lib/supabase'; // Reused singleton
 import { GoogleGenAI, Type } from '@google/genai';
 import crypto from 'crypto';
 import { performScrape, performPerformanceCheck } from '../services/scraperService';
@@ -14,11 +15,11 @@ import { JobProcessor } from '../services/jobProcessor';
 
 export const handleAuditRequest = async (req: Request, res: Response) => {
     // 1. Initialize DB & Secrets
-    const supabaseUrl = process.env.SUPABASE_URL;
-    const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+    // Singleton 'supabaseAdmin' fits the existing code usage.
 
-    if (!supabaseUrl || !supabaseServiceRoleKey) {
-        return res.status(500).json({ message: `Missing environment variables: SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY` });
+    // Validate ENV (Optional, but good sanity check)
+    if (!process.env.SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
+        console.warn("Missing Supabase ENV vars in controller check.");
     }
 
     const { mode } = req.body;
@@ -30,8 +31,6 @@ export const handleAuditRequest = async (req: Request, res: Response) => {
         res.setHeader('Cache-Control', 'no-cache');
         res.setHeader('Connection', 'keep-alive');
     }
-
-    const supabaseAdmin = createClient(supabaseUrl, supabaseServiceRoleKey);
 
     // Helper: Lazy load secrets only when needed
     const loadSecrets = async () => {
@@ -449,7 +448,8 @@ ${JSON.stringify(allIssues, null, 2)}`;
             try {
                 console.log('[STANDARD] Finalizing Audit (Uploads & DB Save)...');
                 const { report, screenshots, url } = req.body;
-                const supabaseAdmin = createClient(supabaseUrl, supabaseServiceRoleKey);
+
+                // Uses shared 'supabaseAdmin' from module import
                 const auditUUID = crypto.randomUUID();
 
                 const uploadedScreenshots = await Promise.all(screenshots.map(async (screenshot: any, index: number) => {
