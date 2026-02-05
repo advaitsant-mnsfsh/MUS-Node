@@ -22,14 +22,14 @@ if (process.env.RUN_WORKER === 'true') {
     const port = process.env.PORT || 3000;
 
     // --- CRITICAL HEALTH CHECKS (Must be first) ---
-    const healthHandler = (req: any, res: any) => {
-        // console.log(`[System] Health Ping (${req.method}) from ${req.ip}`);
-        res.status(200).send('OK');
-    };
+    // MUST be before auth middleware and routes
+    app.get("/", (req: any, res: any) => {
+        res.status(200).send("OK");
+    });
 
-    app.get('/', healthHandler);
-    app.head('/', healthHandler);
-    app.get('/health', healthHandler);
+    app.get("/health", (req: any, res: any) => {
+        res.status(200).json({ status: "healthy" });
+    });
 
     console.log('[System] Health routes registered (/, /health)');
 
