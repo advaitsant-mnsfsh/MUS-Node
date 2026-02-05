@@ -145,7 +145,7 @@ export async function getAuditJob(jobId: string): Promise<AuditJobData | null> {
     }
 }
 
-const backendUrl = import.meta.env.VITE_BACKEND_URL || 'http://localhost:3000';
+const backendUrl = import.meta.env.VITE_BACKEND_URL || import.meta.env.VITE_API_URL || (import.meta.env.PROD ? 'https://mus-node-production.up.railway.app' : 'http://localhost:3000');
 
 /**
  * Transfer audit ownership from guest/null user to logged-in user
