@@ -76,18 +76,10 @@ export const handleAuditRequest = async (req: Request, res: Response) => {
 
                 console.log(`[Job] Starting new audit job. Mode: ${auditMode}, User: ${userId || 'Guest'}`);
 
-                // --- Ensure Storage Bucket Exists ---
-                try {
-                    const { data: buckets } = await supabaseAdmin.storage.listBuckets();
-                    const bucket = buckets?.find(b => b.name === 'screenshots');
-                    if (!bucket) {
-                        await supabaseAdmin.storage.createBucket('screenshots', { public: true });
-                    } else if (bucket.public !== true) {
-                        await supabaseAdmin.storage.updateBucket('screenshots', { public: true });
-                    }
-                } catch (e) {
-                    console.warn("Bucket check failed (proceeding anyway):", e);
-                }
+                console.log(`[Job] Starting new audit job. Mode: ${auditMode}, User: ${userId || 'Guest'}`);
+
+                // Bucket creation is handled in the background worker or lazily. 
+                // We shouldn't block the user request for this admin check.
 
                 // --- OPTIMIZATION: Pre-upload large base64 inputs to avoid DB 520 Errors ---
                 const processedInputs = await Promise.all(inputs.map(async (input: any) => {
