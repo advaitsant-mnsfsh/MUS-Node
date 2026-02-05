@@ -1,0 +1,63 @@
+import { Router } from 'express';
+import { JobService } from '../services/jobService';
+
+const router = Router();
+
+// Test endpoint to verify router is working
+router.get('/test', (req, res) => {
+    res.json({ message: 'Public API is working!' });
+});
+
+// DEBUG: List recent jobs (to verify DB access)
+router.get('/debug', async (req, res) => {
+    try {
+        const { data, error } = await import('../lib/supabase').then(m => m.supabase
+            .from('audit_jobs')
+            .select('id, status, created_at')
+            .order('created_at', { ascending: false })
+            .limit(5)
+        );
+        res.json({ data, error });
+    } catch (err: any) {
+        res.json({ error: err.message });
+    }
+});
+
+// GET /api/public/jobs/:jobId
+// Public endpoint to fetch completed job report data for sharing
+router.get('/jobs/:jobId', async (req, res) => {
+    try {
+        const { jobId } = req.params;
+        console.log(`[Public API] Fetching job: ${jobId}`);
+
+        // Fetch Job
+        const job = await JobService.getJob(jobId);
+        if (!job) {
+            console.error(`[Public API] Job not found: ${jobId}`);
+            return res.status(404).json({ message: 'Job not found' });
+        }
+
+        // If job is running, return status cleanly (prevents 403 console errors)
+        if (job.status !== 'completed' && job.status !== 'failed') {
+            return res.json({
+                id: job.id,
+                status: job.status
+            });
+        }
+
+        // Return the report data (no authentication required for sharing)
+        res.json({
+            id: job.id,
+            status: job.status,
+            report_data: job.report_data,
+            created_at: job.created_at,
+            updated_at: job.updated_at
+        });
+
+    } catch (error: any) {
+        console.error('Public Job Fetch Error:', error);
+        res.status(500).json({ message: 'Internal Server Error' });
+    }
+});
+
+export default router;

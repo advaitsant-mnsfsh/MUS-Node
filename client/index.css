@@ -1,0 +1,17 @@
+@import "tailwindcss";
+
+@theme {
+    --font-sans: "DM Sans", sans-serif;
+    --shadow-neo: 1px 1px 0px 0px rgba(0, 0, 0, 1);
+    --shadow-neo-hover: 2px 2px 0px 0px rgba(0, 0, 0, 1);
+
+    /* Global Colors */
+    --color-brand: #6366F1;
+    --color-brand-hover: #4F46E5;
+    --color-page-bg: #FFF9F0;
+    --color-text-primary: #1E293B;
+    --color-text-secondary: #64748B;
+    --color-border-main: #000000;
+    --color-accent-yellow: #FCD34D;
+    --color-accent-pink: #EC4899;
+}

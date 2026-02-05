@@ -1,0 +1,214 @@
+Part 1: The Box
+Paste this div exactly where you want the widget to appear on your page:
+
+```html
+<div id="audit-widget-root" style="width: 100%;"></div>
+```
+
+Part 2: The Logic (HTML/Vanilla JS)
+Paste this code at the very bottom of your HTML file, right before the closing </body> tag:
+
+```html
+<!-- Load the Widget Script -->
+<script src="https://mus-node.vercel.app/widget.js"></script>
+<script>
+  window.addEventListener('load', function() {
+    if (typeof AuditWidget !== 'undefined') {
+        AuditWidget.mount({
+          container: '#audit-widget-root',
+          apiKey: 'YOUR_API_KEY_HERE', // <--- REPLACE THIS
+          styles: {
+            // --- LAYOUT ---
+            // 'vertical' (stack elements) or 'horizontal' (side-by-side)
+            layout: 'vertical',
+            // Alignment of content: 'left', 'center', 'right'
+            alignment: 'center',
+            // Space between input and button
+            gap: '20px',
+
+            // --- SIZING ---
+            // Scale container padding (0-100)
+            paddingPercentage: 100,
+            // Width of input box relative to container (0-100)
+            inputWidthPercentage: 100,
+            // Width of button relative to container (0-100)
+            buttonWidthPercentage: 100,
+            // Fixed height for input and button
+            inputHeight: '50px',
+            buttonHeight: '50px',
+
+            // --- COLORS & TYPOGRAPHY ---
+            fontFamily: 'inherit',
+            primaryColor: '#4F46E5',         // Button Background
+            backgroundColor: '#FFFFFF',      // Widget Background
+            textColor: '#1E293B',            // Main Text Color
+            
+            // --- INPUT STYLING ---
+            inputBackgroundColor: '#F8FAFC', 
+            inputBorderColor: '#E2E8F0',     // Border color (use 'transparent' for clean look)
+            placeholderColor: '#94A3B8',
+            
+            // --- BUTTON TEXT ---
+            buttonTextColor: '#FFFFFF',      // Text color inside the button
+
+            // --- CHIPS/TAGS STYLING ---
+            tagBackgroundColor: '#F1F5F9',   // Background of added URL chips
+            tagTextColor: '#0F172A',         // Text color of chips
+
+            // --- CONTAINER STYLING ---
+            borderRadius: '12px',            // Roundness of elements
+            containerBorder: '1px solid #E2E8F0',
+            containerBorderRadius: '16px',
+            containerBoxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
+
+            // --- BRANDING ---
+            monsoonLogoPosition: 'bottom-right',
+            monsoonLogoHeight: '20px',
+            // monsoonLogoColor: 'original', // 'white', 'black', or 'original'. Auto-detects if omitted.
+
+            // ============================================
+            // NEW: LOADING STATE CUSTOMIZATION
+            // ============================================
+            loadingBackgroundColor: '#FFFFFF',  // Background during scan
+            loadingTextColor: '#1E293B',        // Text color "Analyzing..."
+            loadingSpinnerColor: '#4F46E5',     // Spinner color
+            loadingText: 'Analyzing your request...', // Custom loading message
+            loadingMessageFontSize: '1rem',     // Font size of message
+
+            // ============================================
+            // NEW: RESULT / LANDING PAGE CUSTOMIZATION
+            // ============================================
+            successTitle: 'Audit Complete!',
+            successDescription: 'Your report is ready. Copy the link or view it now.',
+            successBackgroundColor: '#FFFFFF',  // Result screen background
+            successTextColor: '#1E293B',        // Result text color
+            
+            // Result Action Buttons Layout
+            resultLayout: 'vertical',           // 'vertical' or 'horizontal'
+            resultGap: '1rem',                  // Gap between Link Box and View Button
+
+            // Link Box Styling
+            shareLinkBackgroundColor: '#F1F5F9',
+            shareLinkTextColor: '#1E293B',
+            
+            // Copy Button Styling
+            copyButtonColor: '#4F46E5',         // Copy button background
+            copyButtonIconColor: '#FFFFFF',     // Copy icon color
+            
+            // "View Report" Button Styling
+            viewReportButtonColor: '#4F46E5',   // Main action button background
+            viewReportButtonTextColor: '#FFFFFF', // Text color
+            viewReportButtonText: 'View Report Now' // Custom label
+          }
+        });
+    }
+  });
+</script>
+```
+
+Part 3: React / Next.js (JSX)
+Create a component (e.g., `Widget.jsx`):
+
+```jsx
+"use client";
+import React, { useEffect } from 'react';
+
+export default function Widget() {
+    const WIDGET_URL = "https://mus-node.vercel.app/widget.js";
+    const API_KEY = "YOUR_API_KEY_HERE";
+
+    useEffect(() => {
+        // 1. Load Script
+        if (!document.querySelector(`script[src="${WIDGET_URL}"]`)) {
+            const script = document.createElement('script');
+            script.src = WIDGET_URL;
+            script.async = true;
+            document.body.appendChild(script);
+        }
+
+        // 2. Mount Widget
+        const timer = setInterval(() => {
+            // @ts-ignore
+            if (window.AuditWidget) {
+                clearInterval(timer);
+                // @ts-ignore
+                window.AuditWidget.mount({
+                    container: '#audit-widget-spot',
+                    apiKey: API_KEY,
+                    styles: {
+                        // --- LAYOUT ---
+                        layout: 'vertical',
+                        alignment: 'center',
+                        gap: '20px',
+
+                        // --- SIZING ---
+                        paddingPercentage: 100,
+                        inputWidthPercentage: 100,
+                        buttonWidthPercentage: 100,
+                        inputHeight: '50px',
+                        buttonHeight: '50px',
+
+                        // --- COLORS ---
+                        primaryColor: '#4F46E5',
+                        backgroundColor: '#FFFFFF',
+                        textColor: '#1E293B',
+                        
+                        // --- INPUT & BUTTON STYLING ---
+                        inputBackgroundColor: '#F8FAFC',
+                        inputBorderColor: '#E2E8F0',
+                        placeholderColor: '#94A3B8',
+                        buttonTextColor: '#FFFFFF',
+                        tagBackgroundColor: '#F1F5F9',
+                        tagTextColor: '#0F172A',
+                        
+                        // --- BORDERS & CONTAINER ---
+                        fontFamily: 'inherit',
+                        borderRadius: '12px',
+                        containerBorder: 'none',
+                        containerBorderRadius: '0px',
+                        containerBoxShadow: 'none',
+
+                        // --- BRANDING ---
+                        monsoonLogoPosition: 'bottom-right',
+                        monsoonLogoHeight: '20px',
+
+                        // ============================================
+                        // NEW: LOADING STATE CUSTO
+                        // ============================================
+                        loadingBackgroundColor: '#FFFFFF',
+                        loadingTextColor: '#1E293B',
+                        loadingSpinnerColor: '#4F46E5',
+                        loadingText: 'Analyzing...',
+                        loadingMessageFontSize: '1.2rem',
+
+                        // ============================================
+                        // NEW: RESULT / LANDING PAGE CUSTO
+                        // ============================================
+                        successTitle: 'Success!',
+                        successDescription: 'Here is your report link.',
+                        successBackgroundColor: '#FFFFFF',
+                        successTextColor: '#1E293B',
+                        
+                        // Layout & Spacing
+                        resultLayout: 'vertical', // 'horizontal' | 'vertical'
+                        resultGap: '16px',
+
+                        // Colors
+                        shareLinkBackgroundColor: '#F8FAFC',
+                        shareLinkTextColor: '#334155',
+                        copyButtonColor: '#4F46E5',
+                        copyButtonIconColor: '#FFFFFF',
+                        viewReportButtonColor: '#4F46E5',
+                        viewReportButtonTextColor: '#FFFFFF',
+                        viewReportButtonText: 'Open Report'
+                    }
+                });
+            }
+        }, 100);
+
+        return () => clearInterval(timer);
+    }, []);
+
+    return <div id="audit-widget-spot" style={{ width: '100%' }}></div>;
+}
+```

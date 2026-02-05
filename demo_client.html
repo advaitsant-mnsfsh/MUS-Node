@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MUS API Client Demo</title>
+    <style>
+        body { font-family: sans-serif; max-width: 800px; margin: 2rem auto; padding: 0 1rem; }
+        .card { border: 1px solid #ddd; padding: 1.5rem; border-radius: 8px; margin-bottom: 1rem; }
+        label { display: block; margin-bottom: 0.5rem; font-weight: bold; }
+        input { width: 100%; padding: 0.5rem; margin-bottom: 1rem; box-sizing: border-box; }
+        button { background: #4F46E5; color: white; border: none; padding: 0.75rem 1.5rem; border-radius: 6px; cursor: pointer; font-weight: bold; }
+        button:hover { background: #4338ca; }
+        button:disabled { opacity: 0.5; cursor: not-allowed; }
+        #log { background: #f4f4f5; padding: 1rem; border-radius: 6px; font-family: monospace; white-space: pre-wrap; height: 300px; overflow-y: auto; font-size: 0.9rem; }
+        .status-badge { display: inline-block; padding: 0.25rem 0.75rem; border-radius: 999px; font-size: 0.875rem; font-weight: bold; background: #eee; }
+    </style>
+</head>
+<body>
+    <h1>MUS Auditor - API Client</h1>
+    <p>This is a standalone example of how to call your hosted API from any website.</p>
+
+    <div class="card">
+        <label>1. Your Render Server URL</label>
+        <input type="text" id="serverUrl" placeholder="https://your-app.onrender.com" value="http://localhost:3000">
+        
+        <label>2. Your API Key</label>
+        <input type="text" id="apiKey" placeholder="mus_live_..." value="">
+
+        <label>3. Website to Audit</label>
+        <input type="text" id="targetUrl" placeholder="https://example.com" value="https://example.com">
+
+        <button id="startBtn" onclick="runAudit()">Start Audit</button>
+    </div>
+
+    <div class="card">
+        <h3>Live Log</h3>
+        <div id="log">Logs will appear here...</div>
+    </div>
+
+    <script>
+        const logEl = document.getElementById('log');
+        const btn = document.getElementById('startBtn');
+
+        function log(msg) {
+            logEl.textContent += msg + '\n';
+            logEl.scrollTop = logEl.scrollHeight;
+        }
+
+        async function runAudit() {
+            const serverUrl = document.getElementById('serverUrl').value.replace(/\/$/, '');
+            const apiKey = document.getElementById('apiKey').value;
+            const targetUrl = document.getElementById('targetUrl').value;
+
+            if(!apiKey) return alert('Please enter an API Key');
+            
+            btn.disabled = true;
+            logEl.textContent = ''; // Clear
+            log(`🚀 Starting audit for: ${targetUrl}`);
+            log(`🔌 Connecting to: ${serverUrl}`);
+
+            try {
+                // STEP 1: SUBMIT JOB
+                log('\n--- Step 1: Submitting Job ---');
+                const submitRes = await fetch(`${serverUrl}/api/v1/audit`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'x-api-key': apiKey
+                    },
+                    body: JSON.stringify({
+                        inputs: [{ type: 'url', url: targetUrl }]
+                    })
+                });
+
+                if (!submitRes.ok) {
+                    throw new Error(`Submission Failed: ${await submitRes.text()}`);
+                }
+
+                const submitData = await submitRes.json();
+                const jobId = submitData.jobId;
+                log(`✅ Job Submitted! ID: ${jobId}`);
+
+                // STEP 2: POLL STATUS
+                log('\n--- Step 2: Polling Results ---');
+                let isComplete = false;
+                
+                while (!isComplete) {
+                    log('Checking status...');
+                    await new Promise(r => setTimeout(r, 5000)); // Wait 5s
+
+                    const statusRes = await fetch(`${serverUrl}/api/v1/audit/${jobId}`, {
+                        headers: { 'x-api-key': apiKey }
+                    });
+                    
+                    const statusData = await statusRes.json();
+                    
+                    if (statusData.status === 'completed') {
+                        isComplete = true;
+                        log(`\n🎉 DONE! Audit Completed.`);
+                        log(`🔗 REPORT LINK: ${statusData.resultUrl}`);
+                        
+                        // Add clickable link
+                        const link = document.createElement('a');
+                        link.href = statusData.resultUrl;
+                        link.target = '_blank';
+                        link.textContent = 'Click here to open Report';
+                        link.style.display = 'block';
+                        link.style.marginTop = '1rem';
+                        link.style.fontWeight = 'bold';
+                        logEl.parentElement.appendChild(link);
+                    } else if (statusData.status === 'failed') {
+                        throw new Error(`Audit Failed: ${statusData.errorMessage}`);
+                    } else {
+                        log(`Status: ${statusData.status} (Waiting 5s...)`);
+                    }
+                }
+
+            } catch (err) {
+                log(`\n❌ ERROR: ${err.message}`);
+            } finally {
+                btn.disabled = false;
+            }
+        }
+    </script>
+</body>
+</html>
