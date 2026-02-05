@@ -34,13 +34,24 @@ export const handleAuditRequest = async (req: Request, res: Response) => {
 
     // Helper: Lazy load secrets only when needed
     const loadSecrets = async () => {
-        const { data: secretData, error: secretError } = await supabaseAdmin
-            .from('app_secrets')
-            .select('key_name, key_value')
-            .in('key_name', ['API_KEY', 'PUPPETEER_BROWSER_ENDPOINT', 'PAGESPEED_API_KEY', 'API_KEY_BUP']);
+        const fetchSecrets = async () => {
+            const { data: secretData, error: secretError } = await supabaseAdmin
+                .from('app_secrets')
+                .select('key_name, key_value')
+                .in('key_name', ['API_KEY', 'PUPPETEER_BROWSER_ENDPOINT', 'PAGESPEED_API_KEY', 'API_KEY_BUP']);
 
-        if (secretError || !secretData) {
-            console.error("Failed to fetch secrets from Supabase:", secretError);
+            if (secretError) throw secretError;
+            if (!secretData) throw new Error("No data returned from secrets fetch");
+
+            return secretData;
+        };
+
+        let secretData;
+        try {
+            // Retry fetching secrets: 3 attempts, starting at 1s delay
+            secretData = await retryWithBackoff(fetchSecrets, 3, 1000);
+        } catch (error) {
+            console.error("Failed to fetch secrets from Supabase after retries:", error);
             throw new Error("Failed to retrieve app credentials from DB.");
         }
 
