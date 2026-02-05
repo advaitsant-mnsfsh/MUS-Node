@@ -133,8 +133,40 @@ if (process.env.RUN_WORKER === 'true') {
     });
 
     const HOST = '0.0.0.0';
-    app.listen(Number(port), HOST, () => {
+    const server = app.listen(Number(port), HOST, () => {
         console.log(`Server running on ${HOST}:${port}`);
         console.log(`[System] Memory Usage: ${Math.round(process.memoryUsage().heapUsed / 1024 / 1024)}MB`);
+        console.log('[System] Server is ready to accept connections');
     });
+
+    // Prevent premature shutdown
+    let isShuttingDown = false;
+
+    const gracefulShutdown = (signal: string) => {
+        if (isShuttingDown) {
+            console.log(`[System] Already shutting down, ignoring ${signal}`);
+            return;
+        }
+        isShuttingDown = true;
+        console.log(`[System] Received ${signal}, starting graceful shutdown...`);
+
+        server.close(() => {
+            console.log('[System] HTTP server closed');
+            process.exit(0);
+        });
+
+        // Force shutdown after 10 seconds
+        setTimeout(() => {
+            console.error('[System] Forced shutdown after timeout');
+            process.exit(1);
+        }, 10000);
+    };
+
+    process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
+    process.on('SIGINT', () => gracefulShutdown('SIGINT'));
+
+    // Keepalive heartbeat
+    setInterval(() => {
+        console.log(`[Keepalive] Server alive - Memory: ${Math.round(process.memoryUsage().heapUsed / 1024 / 1024)}MB`);
+    }, 30000); // Every 30 seconds
 }
