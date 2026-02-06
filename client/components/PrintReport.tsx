@@ -4,9 +4,8 @@ import { AnalysisReport, Screenshot } from '../types';
 import { SkeletonLoader } from './SkeletonLoader';
 import { ReportPDFTemplate } from './report/ReportPDFTemplate';
 
-// --- Supabase Client Details ---
-const supabaseUrl = 'https://sobtfbplbpvfqeubjxex.supabase.co';
-const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNvYnRmYnBsYnB2ZnFldWJqeGV4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTkxNDgzMDYsImV4cCI6MjA3NDcyNDMwNn0.ewfxDwlapmRpfyvYD3ALb-WyL12ty1eP8nzKyrc66ho';
+// --- Backend API Details ---
+const backendUrl = import.meta.env.VITE_BACKEND_URL || import.meta.env.VITE_API_URL || (import.meta.env.PROD ? 'https://mus-node-production.up.railway.app' : 'http://localhost:8080');
 // -----------------------------
 
 interface PrintReportProps {
@@ -26,26 +25,19 @@ export const PrintReport: React.FC<PrintReportProps> = ({ auditId }) => {
   useEffect(() => {
     const fetchAuditData = async () => {
       try {
-        const functionUrl = `${supabaseUrl}/functions/v1/audit`;
-        const response = await fetch(functionUrl, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${supabaseAnonKey}`,
-            'apikey': supabaseAnonKey,
-          },
-          body: JSON.stringify({ mode: 'get-audit', auditId }),
-        });
+        const response = await fetch(`${backendUrl}/api/public/jobs/${auditId}`);
 
         if (!response.ok) {
-          const errorData = await response.json();
-          throw new Error(errorData.message || `Failed to fetch audit data: ${response.status}`);
+          throw new Error(`Failed to fetch audit data: ${response.status}`);
         }
 
-        const fetchedData = await response.json();
-        setData(fetchedData);
+        const job = await response.json();
+        setData({
+          report: job.report_data,
+          url: job.report_data?.url || 'Analyzed Site'
+        });
       } catch (err) {
-        setError(err.message);
+        setError(err instanceof Error ? err.message : String(err));
       }
     };
 

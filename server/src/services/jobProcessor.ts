@@ -1,8 +1,9 @@
-import { supabase } from '../lib/supabase';
+import { db } from '../lib/db';
+import { SecretService } from './secretService';
 import { JobService } from './jobService';
-import { GoogleGenAI, Type } from '@google/genai';
-import { performScrape, performPerformanceCheck, performAnalysis } from '../audit';
-import { callApi } from '../services/aiService';
+import { Type } from '@google/genai';
+import { performScrape, performPerformanceCheck } from './scraperService';
+import { performAnalysis, callApi } from './aiService';
 import { getSchemas } from '../prompts';
 
 export class JobProcessor {
@@ -16,19 +17,27 @@ export class JobProcessor {
             const job = await JobService.getJob(jobId);
             if (!job) throw new Error('Job not found');
 
-            const secrets = await this.getSecrets();
-            const apiKeyRaw = secrets['API_KEY'] || process.env.API_KEY;
-            const apiKeyBup = secrets['API_KEY_BUP'] || process.env.API_KEY_BUP;
-            if (!apiKeyRaw) throw new Error('Missing API Key');
+            // Use Database Secrets (app_secrets) with Env Var fallback
+            const appSecrets = await SecretService.getSecrets();
+
+            const apiKeyRaw = appSecrets['GEMINI_API_KEY'] || appSecrets['API_KEY'] || process.env.GEMINI_API_KEY || process.env.API_KEY;
+            const apiKeyBup = appSecrets['GEMINI_API_KEY_BUP'] || appSecrets['API_KEY_BUP'] || process.env.GEMINI_API_KEY_BUP || process.env.API_KEY_BUP;
+            const browserEndpoint = appSecrets['PUPPETEER_BROWSER_ENDPOINT'] || process.env.PUPPETEER_BROWSER_ENDPOINT;
+
+            if (!apiKeyRaw) throw new Error('Missing GEMINI_API_KEY in app_secrets or Env Vars');
 
             // Construct Key Array: [Main, Backup]
             const apiKeys = [apiKeyRaw];
             if (apiKeyBup) apiKeys.push(apiKeyBup);
             const primaryKey = apiKeys[0];
 
-            const browserEndpoint = secrets['PUPPETEER_BROWSER_ENDPOINT'];
-            const inputs = job.input_data.inputs || [];
-            const auditMode = job.input_data.auditMode || 'standard';
+            const inputDataRaw = job.input_data as any;
+            const inputs = Array.isArray(inputDataRaw) ? inputDataRaw : (inputDataRaw?.inputs || []);
+            const auditMode = Array.isArray(inputDataRaw) ? 'standard' : (inputDataRaw?.auditMode || 'standard');
+
+            if (!inputs || inputs.length === 0) {
+                throw new Error("No inputs found in job data.");
+            }
 
             let report: any = {};
             let finalUrl = '';
@@ -99,47 +108,17 @@ export class JobProcessor {
                     await JobService.updateProgress(jobId, 'Scraping Mobile view...');
                     const scrapeResultMobile = await performScrape(finalUrl, true, true, browserEndpoint);
 
-                    // Clone to avoid mutation side-effects on source used for context
                     finalScreenshots = [{ ...scrapeResult.screenshot }, { ...scrapeResultMobile.screenshot }];
 
-                    // --- UPLOAD SCREENSHOTS EARLY (Fix for race condition) ---
-                    try {
-                        console.log(`[JobProcessor] Uploading screenshots early...`);
-                        const SC_BUCKET = 'screenshots';
-                        // Bucket check (minimal)
-                        try {
-                            const { data: buckets } = await supabase.storage.listBuckets();
-                            const bucket = buckets?.find(b => b.name === SC_BUCKET);
-                            if (!bucket) await supabase.storage.createBucket(SC_BUCKET, { public: true });
-                            else if (bucket.public !== true) await supabase.storage.updateBucket(SC_BUCKET, { public: true });
-                        } catch (e) { }
-
-                        const uploadedScreenshots = await Promise.all(finalScreenshots.map(async (s: any, index: number) => {
-                            if (!s.data) return s;
-                            try {
-                                const buffer = Buffer.from(s.data, 'base64');
-                                const fileName = `${index}-${s.isMobile ? 'mobile' : 'desktop'}.jpeg`;
-                                const filePath = `public/${jobId}/${fileName}`;
-                                await supabase.storage.from(SC_BUCKET).upload(filePath, buffer, { contentType: 'image/jpeg', upsert: true });
-                                const { data: { publicUrl } } = supabase.storage.from(SC_BUCKET).getPublicUrl(filePath);
-                                console.log(`[JobProcessor] (Early) Screenshot uploaded to: ${publicUrl}`);
-                                return { ...s, data: undefined, url: publicUrl };
-                            } catch (e: any) {
-                                console.warn("Early upload failed:", e);
-                                return s;
-                            }
-                        }));
-                        finalScreenshots = uploadedScreenshots;
-                    } catch (e) { console.warn("Early upload process warning:", e); }
-
                     await JobService.updateProgress(jobId, '✓ Scrape complete. Analyzing content...', {
-                        screenshots: finalScreenshots,
+                        screenshots: finalScreenshots, // Base64 screenshots staying in DB for now
                         screenshotMimeType: 'image/jpeg'
                     });
 
                     // B. Performance
                     console.log(`[JobProcessor] Checking performance...`);
-                    const perfResult = await performPerformanceCheck(finalUrl, primaryKey, secrets);
+                    // Use secrets from DB for PageSpeed if available
+                    const perfResult = await performPerformanceCheck(finalUrl, primaryKey, appSecrets);
 
                     analysisContext = {
                         url: finalUrl,
@@ -155,7 +134,19 @@ export class JobProcessor {
 
                 } else if (firstInput.type === 'upload') {
                     finalUrl = 'Uploaded Image';
-                    const base64 = firstInput.filesData?.[0];
+                    let base64 = firstInput.filesData?.[0] || firstInput.fileData; // Handles different input formats
+
+                    // Handle Pre-uploaded URLs if they ever exist in New Flow
+                    if (!base64 && firstInput.fileUrls && firstInput.fileUrls.length > 0) {
+                        try {
+                            const resp = await fetch(firstInput.fileUrls[0]);
+                            if (resp.ok) {
+                                const arrayBuffer = await resp.arrayBuffer();
+                                base64 = Buffer.from(arrayBuffer).toString('base64');
+                            }
+                        } catch (e) { console.error("Failed to fetch pre-uploaded input", e); }
+                    }
+
                     if (!base64) throw new Error("No file data provided");
                     finalScreenshots = [{ data: base64, isMobile: false }];
                     finalMimeType = 'image/png';
@@ -174,7 +165,7 @@ export class JobProcessor {
                 console.log(`[JobProcessor] Running experts...`);
                 const modes = ['analyze-ux', 'analyze-product', 'analyze-visual', 'analyze-strategy', 'analyze-accessibility'];
 
-                const runExpertWithTimeout = async (mode: string, timeout = 120000) => { // 2 mins timeout
+                const runExpertWithTimeout = async (mode: string) => {
                     const expertName = mode.replace('analyze-', ' ').toUpperCase();
                     console.log(`[JobProcessor] Starting ${mode}...`);
                     await JobService.updateProgress(jobId, `Running ${expertName}...`);
@@ -195,18 +186,15 @@ export class JobProcessor {
                 };
 
                 const results: any[] = [];
-                const concurrency = 3; // Increased to 3 per user request
+                const concurrency = 3;
 
                 for (let i = 0; i < modes.length; i += concurrency) {
                     const batch = modes.slice(i, i + concurrency);
-                    console.log(`[JobProcessor] Starting batch: ${batch.join(', ')}`);
                     const batchResults = await Promise.all(batch.map(mode => runExpertWithTimeout(mode)));
                     results.push(...batchResults);
-                    if (i + concurrency < modes.length) await new Promise(r => setTimeout(r, 2000));
+                    if (i + concurrency < modes.length) await new Promise(r => setTimeout(r, 1000));
                 }
 
-                // Aggregate logic is handled by updateProgress incrementally now, 
-                // but we still need 'report' object for local Finalization step below.
                 results.forEach((res: any) => {
                     if (res && res.key) report[res.key] = res.data;
                 });
@@ -245,7 +233,6 @@ ${strategyContext}
 ${JSON.stringify(allIssues, null, 2)}`;
 
                             const schemas = getSchemas();
-                            // Re-fetch API Key just in case or reuse primaryKey
                             const rankResult = await callApi([primaryKey], systemInstruction, contents, {
                                 type: Type.ARRAY,
                                 items: schemas.criticalIssueSchema
@@ -256,71 +243,13 @@ ${JSON.stringify(allIssues, null, 2)}`;
                         }
                     } catch (e: any) {
                         console.error("[JobProcessor] Contextual Rank Failed:", e);
-                        // Don't fail the job, just skip
-                        await JobService.updateProgress(jobId, '⚠️ Contextual Analysis skipped due to error.');
+                        await JobService.updateProgress(jobId, '\u26a0\ufe0f Contextual Analysis skipped due to error.');
                     }
                 }
             }
 
-            // --- FINALIZATION (Shared) ---
-            console.log(`[JobProcessor] Job ${jobId} completed. Saving...`);
-
-            // --- UPLOAD SCREENSHOTS TO STORAGE ---
-            try {
-                console.log(`[JobProcessor] Uploading screenshots to storage...`);
-                const SC_BUCKET = 'screenshots';
-
-                // Ensure bucket is public (Fix for broken images)
-                try {
-                    const { data: buckets } = await supabase.storage.listBuckets();
-                    const bucket = buckets?.find(b => b.name === SC_BUCKET);
-
-                    if (!bucket) {
-                        await supabase.storage.createBucket(SC_BUCKET, { public: true });
-                    } else if (bucket.public !== true) {
-                        console.log(`[JobProcessor] Updating bucket to PUBLIC: ${SC_BUCKET}`);
-                        const { error: updateError } = await supabase.storage.updateBucket(SC_BUCKET, { public: true });
-                        if (updateError) console.warn(`[JobProcessor] Failed to update bucket public status:`, updateError);
-                    }
-                } catch (e) { console.warn("[JobProcessor] Bucket check failed:", e); }
-
-                const uploadedScreenshots = await Promise.all(finalScreenshots.map(async (s: any, index: number) => {
-                    if (!s.data) return s;
-
-                    try {
-                        const buffer = Buffer.from(s.data, 'base64');
-                        const fileName = `${index}-${s.isMobile ? 'mobile' : 'desktop'}.jpeg`;
-                        const filePath = `public/${jobId}/${fileName}`;
-
-                        const { error: uploadError } = await supabase.storage
-                            .from(SC_BUCKET)
-                            .upload(filePath, buffer, {
-                                contentType: 'image/jpeg',
-                                upsert: true
-                            });
-
-                        if (uploadError) throw uploadError;
-
-                        const { data: { publicUrl } } = supabase.storage
-                            .from(SC_BUCKET)
-                            .getPublicUrl(filePath);
-
-                        console.log(`[JobProcessor] Screenshot uploaded to: ${publicUrl}`);
-
-                        return {
-                            ...s,
-                            data: undefined,
-                            url: publicUrl
-                        };
-                    } catch (e: any) {
-                        console.warn(`[JobProcessor] Screenshot upload failed for ${index}:`, e.message);
-                        return s;
-                    }
-                }));
-                finalScreenshots = uploadedScreenshots;
-            } catch (e) {
-                console.warn("[JobProcessor] Screenshot upload process warning:", e);
-            }
+            // --- FINALIZATION ---
+            console.log(`[JobProcessor] Job ${jobId} completed. Finalizing...`);
 
             const reportData = {
                 url: finalUrl,
@@ -330,46 +259,14 @@ ${JSON.stringify(allIssues, null, 2)}`;
                 ...report
             };
 
-            // 1. Upload Report to Storage (Shared Audits)
-            const BUCKET = 'shared-audits';
-            const storageFileName = `${jobId}.json`;
-            try {
-                // Ensure bucket is public
-                const { data: buckets } = await supabase.storage.listBuckets();
-                const bucket = buckets?.find(b => b.name === BUCKET);
-
-                if (!bucket) {
-                    await supabase.storage.createBucket(BUCKET, { public: true });
-                } else if (bucket.public !== true) {
-                    await supabase.storage.updateBucket(BUCKET, { public: true });
-                }
-                await supabase.storage.from(BUCKET).upload(storageFileName, JSON.stringify(reportData), {
-                    contentType: 'application/json',
-                    upsert: true
-                });
-                console.log(`[JobProcessor] Uploaded report to ${BUCKET}`);
-            } catch (e) {
-                console.warn("[JobProcessor] Storage upload warning:", e);
-            }
-
-            // 2. Generate Result URL
-            const baseUrl = process.env.FRONTEND_URL || 'https://mus-node.vercel.app';
-            const resultUrl = `${baseUrl}/report/${jobId}`;
-
-            // STREAM FIX: Send URLs to client before marking complete so active view updates
-            await JobService.updateProgress(jobId, 'Finalizing visuals...', { screenshots: finalScreenshots });
+            const resultUrl = `/report/${jobId}`;
 
             await JobService.updateJobStatus(jobId, 'completed', reportData, undefined, resultUrl);
+            console.log(`[JobProcessor] Job ${jobId} finished successfully.`);
 
         } catch (error: any) {
             console.error(`[JobProcessor] Job ${jobId} failed:`, error);
             await JobService.updateJobStatus(jobId, 'failed', undefined, error.message);
         }
-    }
-
-    static async getSecrets() {
-        const { data, error } = await supabase.from('app_secrets').select('key_name, key_value');
-        if (error || !data) return {};
-        return data.reduce((acc: any, item: any) => { acc[item.key_name] = item.key_value; return acc; }, {});
     }
 }

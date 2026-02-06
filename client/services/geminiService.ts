@@ -1,10 +1,6 @@
 import { StreamChunk, AnalysisReport, ExpertKey, Screenshot, AuditInput } from '../types';
 
-// --- Supabase Client Details ---
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
-const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3000';
-// -----------------------------
+const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3000'; // Fallback to dev server port
 
 interface StreamCallbacks {
   onScrapeComplete: (screenshots: Screenshot[], screenshotMimeType: string) => void;
@@ -26,7 +22,7 @@ interface AnalyzeParams {
 const commonHeaders = {
   'Content-Type': 'application/json',
 };
-const functionUrl = `${apiUrl}/api/audit`;
+const functionUrl = `${apiUrl}/api/v1/audit`;
 
 
 // Helper to convert File to Base64
@@ -52,12 +48,14 @@ export const monitorJobStream = async (jobId: string, callbacks: StreamCallbacks
 
   try {
     const streamUrl = `${functionUrl}?mode=stream-job&jobId=${jobId}`;
+    console.log('[Stream] Connecting to:', streamUrl);
 
     const response = await fetch(streamUrl, {
       headers: {
         'Cache-Control': 'no-cache',
         'Connection': 'keep-alive'
-      }
+      },
+      credentials: 'include'
     });
 
     if (!response.ok) {
@@ -147,7 +145,8 @@ export const analyzeWebsiteStream = async (
     const startResponse = await fetch(functionUrl, {
       method: 'POST',
       headers: headers,
-      body: JSON.stringify({ mode: 'start-audit', inputs: processedInputs, auditMode })
+      body: JSON.stringify({ mode: 'start-audit', inputs: processedInputs, auditMode }),
+      credentials: 'include'
     });
 
     if (!startResponse.ok) {

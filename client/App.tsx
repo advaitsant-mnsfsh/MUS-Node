@@ -103,8 +103,6 @@ const App: React.FC = () => {
         );
     };
 
-    const showReport = !isLoading && (report || (auditId && !error));
-
     // 1. LOADING STATE
     if (isLoading) {
         return (
@@ -122,7 +120,7 @@ const App: React.FC = () => {
     }
 
     // 2. REPORT STATE (Locked or Full)
-    if (showReport && report) {
+    if (!isLoading && auditId && report) {
         return (
             <ReportResultView
                 report={report}
@@ -142,6 +140,7 @@ const App: React.FC = () => {
             />
         );
     }
+
 
     // 3. LANDING STATE (Initial Form)
     return (

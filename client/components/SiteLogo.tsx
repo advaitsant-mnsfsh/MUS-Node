@@ -16,11 +16,23 @@ export default function SiteLogo({ domain, size = 'medium', className = '' }: Si
     const [imageError, setImageError] = useState(false);
 
     // Extract clean domain (remove www, protocols, paths)
-    const cleanDomain = domain
-        .replace(/^https?:\/\//, '')
-        .replace(/^www\./, '')
-        .split('/')[0]
-        .toLowerCase();
+    const getCleanDomain = (rawDomain: string) => {
+        if (!rawDomain || rawDomain === 'Unknown' || rawDomain === 'Manual Upload') return '';
+        try {
+            return rawDomain
+                .toLowerCase()
+                .replace(/^https?:\/\//, '')
+                .replace(/^www\./, '')
+                .split('/')[0]
+                .split('?')[0];
+        } catch (e) {
+            return '';
+        }
+    };
+
+    const cleanDomain = getCleanDomain(domain);
+    const isValidDomain = cleanDomain && cleanDomain.includes('.') && cleanDomain.length > 3;
+
 
     // Size mapping
     const sizeClasses = {
@@ -71,7 +83,7 @@ export default function SiteLogo({ domain, size = 'medium', className = '' }: Si
     };
 
     // Render letter circle fallback
-    if (logoSource === 'fallback' || imageError) {
+    if (logoSource === 'fallback' || imageError || !isValidDomain) {
         return (
             <div
                 className={`${sizeClasses[size]} ${className} rounded-lg flex items-center justify-center font-bold text-white shadow-md`}
@@ -81,6 +93,7 @@ export default function SiteLogo({ domain, size = 'medium', className = '' }: Si
             </div>
         );
     }
+
 
     // Render logo image with crisp rendering
     return (

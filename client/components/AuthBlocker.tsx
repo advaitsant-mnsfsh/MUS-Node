@@ -3,7 +3,6 @@ import toast from 'react-hot-toast';
 import { signUp, signIn, sendOtp, verifyOtp, updateProfile } from '../services/authService';
 import { createLead, verifyLead } from '../services/leadService';
 import { transferAuditOwnership } from '../services/auditStorage';
-import { supabase } from '../lib/supabase';
 
 interface AuthBlockerProps {
     onUnlock: () => void;
@@ -83,12 +82,15 @@ export const AuthBlocker: React.FC<AuthBlockerProps> = ({ onUnlock, isUnlocked, 
 
         setIsLoading(true);
 
-        // Use OTP flow for signup verification
-        const { error } = await sendOtp(email);
+        // BETTER-AUTH MIGRATION: 
+        // Use standard signUp (which sends OTP because of sendVerificationOnSignUp: true)
+        // This sets the password immediately.
+        const { error } = await signUp(email, password, { name, org_type: orgType });
+
         setIsLoading(false);
 
         if (error) {
-            toast.error("Error sending verification code: " + error);
+            toast.error("Error creating account: " + error);
         } else {
             toast.success('Verification code sent to ' + email);
             setStep('otp');
@@ -100,8 +102,8 @@ export const AuthBlocker: React.FC<AuthBlockerProps> = ({ onUnlock, isUnlocked, 
         if (!otp) return;
 
         setIsLoading(true);
-        // 1. Verify OTP
-        const { session, error } = await verifyOtp(email, otp);
+        // 1. Verify OTP (which logs in)
+        const { session, error } = await verifyOtp(email, otp, password);
 
         if (error || !session) {
             setIsLoading(false);
@@ -109,19 +111,7 @@ export const AuthBlocker: React.FC<AuthBlockerProps> = ({ onUnlock, isUnlocked, 
             return;
         }
 
-        // 2. Set Password & Profile Data
-        const { error: updateError } = await updateProfile({
-            password: password,
-            data: {
-                full_name: name,
-                org_type: orgType
-            }
-        });
-
-        if (updateError) {
-            console.error("Error setting password:", updateError);
-            toast.error("Account verified, but failed to set password. You may need to reset it later.");
-        }
+        // 2. Password is already set during signUp, skipping updateProfile.
 
         // 3. Create Lead (Safe now as we are authenticated)
         const { error: leadError } = await createLead({

@@ -1,56 +1,56 @@
 import express from 'express';
-import { createClient } from '@supabase/supabase-js';
+import { db } from '../lib/db';
+import { auditJobs, leads } from '../db/schema';
 import { validateApiKey, AuthenticatedRequest } from '../middleware/apiAuth';
-import { processAuditJob } from '../auditHeadless';
-import dotenv from 'dotenv';
-
-dotenv.config();
+import { JobProcessor } from '../services/jobProcessor';
+import { eq } from 'drizzle-orm';
+import crypto from 'crypto';
 
 const router = express.Router();
-const supabaseUrl = process.env.SUPABASE_URL!;
-const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
-const supabaseAdmin = createClient(supabaseUrl, supabaseServiceRoleKey);
 
 // POST /api/v1/audit
 router.post('/audit', validateApiKey, async (req: express.Request, res: express.Response) => {
     try {
         const { inputs } = req.body;
+        const auditInputs = inputs || req.body.inputs;
         const authReq = req as AuthenticatedRequest;
 
         // Validation
-        if (!inputs || !Array.isArray(inputs) || inputs.length === 0) {
+        if (!auditInputs || !Array.isArray(auditInputs) || auditInputs.length === 0) {
             return res.status(400).json({ error: 'Body must contain "inputs" array' });
         }
-        if (inputs.length > 5) {
+        if (auditInputs.length > 5) {
             return res.status(400).json({ error: 'Maximum 5 inputs allowed per request' });
         }
 
-        // Create Job Record
-        const { data: jobData, error: jobError } = await supabaseAdmin
-            .from('audit_jobs')
-            .insert({
-                api_key_id: authReq.apiKey?.id,
-                status: 'pending',
-                input_data: inputs
-            })
-            .select()
-            .single();
+        const jobId = crypto.randomUUID();
 
-        if (jobError) {
-            console.error("Job Creation Failed:", jobError);
-            return res.status(500).json({ error: 'Database error creating job' });
+        // Create Job Record
+        const [job] = await db.insert(auditJobs).values({
+            id: jobId,
+            api_key_id: authReq.apiKey?.id,
+            status: 'pending',
+            input_data: {
+                inputs: auditInputs,
+                auditMode: req.body.auditMode || 'standard'
+            },
+            user_id: authReq.user?.id || null
+        }).returning();
+
+        if (!job) {
+            throw new Error("Failed to create job record");
         }
 
         // Trigger processing (Fire and Forget)
-        // We do NOT await this.
-        processAuditJob(jobData.id, inputs).catch(err => console.error(`Background Job Error for ${jobData.id}:`, err));
+        // JobProcessor.processJob reads everything it needs from the DB record
+        JobProcessor.processJob(job.id).catch(err => console.error(`Background Job Error for ${job.id}:`, err));
 
         // Return immediately
         res.status(202).json({
             message: 'Audit job submitted successfully',
-            jobId: jobData.id,
+            jobId: job.id,
             status: 'pending',
-            statusUrl: `/api/v1/audit/${jobData.id}`
+            statusUrl: `/api/v1/audit/${job.id}`
         });
 
     } catch (error: any) {
@@ -59,38 +59,163 @@ router.post('/audit', validateApiKey, async (req: express.Request, res: express.
     }
 });
 
-// GET /api/v1/audit/:jobId
+// GET /api/v1/audit (Streaming Support)
+router.get('/audit', async (req: express.Request, res: express.Response) => {
+    const { mode, jobId } = req.query;
+
+    if (mode === 'stream-job' && typeof jobId === 'string') {
+        // Setup Streaming Response
+        res.setHeader('Content-Type', 'text/plain');
+        res.setHeader('Transfer-Encoding', 'chunked');
+        res.setHeader('Cache-Control', 'no-cache');
+        res.setHeader('Connection', 'keep-alive');
+
+        const sendChunk = (data: any) => {
+            res.write(JSON.stringify(data) + '\n');
+        };
+
+        let lastStatus = '';
+        const maxTime = 120000; // 2 minutes timeout
+        const startTime = Date.now();
+
+        const checkStatus = async () => {
+            if (Date.now() - startTime > maxTime) {
+                sendChunk({ type: 'error', message: 'Timeout waiting for job completion' });
+                res.end();
+                return;
+            }
+
+            try {
+                const job = await db.query.auditJobs.findFirst({
+                    where: eq(auditJobs.id, jobId)
+                });
+
+                if (!job) {
+                    sendChunk({ type: 'error', message: 'Job not found' });
+                    res.end();
+                    return;
+                }
+
+                if (job.status === 'failed') {
+                    sendChunk({ type: 'error', message: job.error_message || 'Audit failed' });
+                    res.end();
+                    return;
+                }
+
+                if (job.status === 'completed') {
+                    sendChunk({
+                        type: 'complete',
+                        payload: {
+                            auditId: job.result_url?.split('/').pop() || job.id,
+                            resultUrl: job.result_url
+                        }
+                    });
+                    res.end();
+                    return;
+                }
+
+                // Status Update
+                if (job.status !== lastStatus) {
+                    sendChunk({ type: 'status', message: `Job Status: ${job.status}` });
+                    lastStatus = job.status;
+                }
+
+                // Poll again
+                setTimeout(checkStatus, 2000);
+
+            } catch (err: any) {
+                console.error("Stream Error:", err);
+                sendChunk({ type: 'error', message: 'Internal Server Error' });
+                res.end();
+            }
+        };
+
+        checkStatus();
+    } else {
+        res.status(400).json({ error: 'Invalid mode or missing jobId' });
+    }
+});
+
+// GET /api/v1/audit/:jobId (Polling Support)
 router.get('/audit/:jobId', validateApiKey, async (req: express.Request, res: express.Response) => {
     try {
         const { jobId } = req.params;
         const authReq = req as AuthenticatedRequest;
 
-        const { data, error } = await supabaseAdmin
-            .from('audit_jobs')
-            .select('*')
-            .eq('id', jobId)
-            .single();
+        const job = await db.query.auditJobs.findFirst({
+            where: eq(auditJobs.id, jobId)
+        });
 
-        if (error || !data) {
+        if (!job) {
             return res.status(404).json({ error: 'Job not found' });
         }
 
-        // Security check: Ensure this job belongs to the API Key owner?
-        // Current schema links job to api_key_id.
-        if (data.api_key_id !== authReq.apiKey?.id) {
-            return res.status(403).json({ error: 'Access denied: You do not own this job' });
-        }
-
         res.json({
-            jobId: data.id,
-            status: data.status,
-            resultUrl: data.result_url,
-            errorMessage: data.error_message,
-            createdAt: data.created_at,
-            completedAt: data.status === 'completed' ? data.updated_at : null
+            jobId: job.id,
+            status: job.status,
+            resultUrl: job.result_url,
+            errorMessage: job.error_message,
+            createdAt: job.created_at,
+            updatedAt: job.updated_at,
+            report_data: job.report_data,
+            input_data: job.input_data
         });
 
     } catch (error: any) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// POST /api/v1/leads
+router.post('/leads', async (req, res) => {
+    try {
+        const { email, name, organization_type, audit_url } = req.body;
+
+        if (!email) {
+            return res.status(400).json({ error: 'Email is required' });
+        }
+
+        console.log(`[Leads] Creating/Updating lead: ${email}`);
+
+        await db.insert(leads).values({
+            id: crypto.randomUUID(),
+            email,
+            name: name || null,
+            organization_type: organization_type || null,
+            audit_url: audit_url || null,
+            is_verified: false
+        }).onConflictDoUpdate({
+            target: leads.email,
+            set: {
+                name: name || null,
+                organization_type: organization_type || null,
+                audit_url: audit_url || null,
+                // don't reset is_verified if it was already true
+            }
+        });
+
+        res.status(201).json({ success: true });
+    } catch (error: any) {
+        console.error("[Leads] Creation Error:", error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// PATCH /api/v1/leads/verify
+router.patch('/leads/verify', async (req, res) => {
+    try {
+        const { email } = req.body;
+        if (!email) return res.status(400).json({ error: 'Email is required' });
+
+        console.log(`[Leads] Verifying lead: ${email}`);
+
+        await db.update(leads)
+            .set({ is_verified: true })
+            .where(eq(leads.email, email));
+
+        res.json({ success: true });
+    } catch (error: any) {
+        console.error("[Leads] Verification Error:", error);
         res.status(500).json({ error: error.message });
     }
 });

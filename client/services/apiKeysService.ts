@@ -1,6 +1,4 @@
-import { supabase } from '../lib/supabase';
-
-const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:3000';
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || import.meta.env.VITE_API_URL || (import.meta.env.PROD ? 'https://mus-node-production.up.railway.app' : 'http://localhost:3000');
 
 export interface APIKey {
     id: string;
@@ -13,30 +11,17 @@ export interface APIKey {
 }
 
 /**
- * Get the current user's session token
- */
-async function getAuthToken(): Promise<string | null> {
-    const { data: { session } } = await supabase.auth.getSession();
-    return session?.access_token || null;
-}
-
-/**
  * Generate a new API key for the current user
  */
 export async function generateAPIKey(name: string): Promise<{ success: boolean; apiKey?: APIKey; error?: string }> {
     try {
-        const token = await getAuthToken();
-        if (!token) {
-            return { success: false, error: 'Not authenticated' };
-        }
-
         const response = await fetch(`${BACKEND_URL}/api/keys/generate`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                'Authorization': `Bearer ${token}`
             },
-            body: JSON.stringify({ name })
+            body: JSON.stringify({ name }),
+            credentials: 'include' // Send Session Cookie
         });
 
         const data = await response.json();
@@ -52,34 +37,42 @@ export async function generateAPIKey(name: string): Promise<{ success: boolean; 
     }
 }
 
+let keysCache: Promise<{ success: boolean; apiKeys?: APIKey[]; error?: string }> | null = null;
+
 /**
  * Get all API keys for the current user
+ * Uses deduplication to prevent double-firing in StrictMode
  */
 export async function getUserAPIKeys(): Promise<{ success: boolean; apiKeys?: APIKey[]; error?: string }> {
-    try {
-        const token = await getAuthToken();
-        if (!token) {
-            return { success: false, error: 'Not authenticated' };
-        }
+    if (keysCache) return keysCache;
 
-        const response = await fetch(`${BACKEND_URL}/api/keys`, {
-            method: 'GET',
-            headers: {
-                'Authorization': `Bearer ${token}`
+    keysCache = (async () => {
+        try {
+            const response = await fetch(`${BACKEND_URL}/api/keys`, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                credentials: 'include' // Send Session Cookie
+            });
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                return { success: false, error: data.error || 'Failed to fetch API keys' };
             }
-        });
 
-        const data = await response.json();
-
-        if (!response.ok) {
-            return { success: false, error: data.error || 'Failed to fetch API keys' };
+            return { success: true, apiKeys: data.apiKeys };
+        } catch (error) {
+            console.error('[API Keys Service] Error fetching keys:', error);
+            return { success: false, error: 'Network error' };
+        } finally {
+            // Clear cache after a short delay
+            setTimeout(() => { keysCache = null; }, 5000);
         }
+    })();
 
-        return { success: true, apiKeys: data.apiKeys };
-    } catch (error) {
-        console.error('[API Keys Service] Error fetching keys:', error);
-        return { success: false, error: 'Network error' };
-    }
+    return keysCache;
 }
 
 /**
@@ -87,16 +80,12 @@ export async function getUserAPIKeys(): Promise<{ success: boolean; apiKeys?: AP
  */
 export async function deactivateAPIKey(keyId: string): Promise<{ success: boolean; error?: string }> {
     try {
-        const token = await getAuthToken();
-        if (!token) {
-            return { success: false, error: 'Not authenticated' };
-        }
-
         const response = await fetch(`${BACKEND_URL}/api/keys/${keyId}`, {
             method: 'DELETE',
             headers: {
-                'Authorization': `Bearer ${token}`
-            }
+                'Content-Type': 'application/json'
+            },
+            credentials: 'include' // Send Session Cookie
         });
 
         const data = await response.json();

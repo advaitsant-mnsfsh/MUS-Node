@@ -82,12 +82,15 @@ export const LoginPanel: React.FC<LoginPanelProps> = ({ auditId }) => {
 
         setIsLoading(true);
 
-        // Use OTP flow for signup verification
-        const { error } = await sendOtp(email);
+        // BETTER-AUTH MIGRATION: 
+        // Use standard signUp (which sends OTP because of sendVerificationOnSignUp: true)
+        // This sets the password immediately.
+        const { error } = await signUp(email, password, { name, org_type: orgType });
+
         setIsLoading(false);
 
         if (error) {
-            toast.error("Error sending verification code: " + error);
+            toast.error("Error creating account: " + error);
         } else {
             toast.success('Verification code sent to ' + email);
             setStep('otp');
@@ -99,7 +102,7 @@ export const LoginPanel: React.FC<LoginPanelProps> = ({ auditId }) => {
         if (!otp) return;
 
         setIsLoading(true);
-        // 1. Verify OTP
+        // 1. Verify OTP (which logs in)
         const { session, error } = await verifyOtp(email, otp);
 
         if (error || !session) {
@@ -108,27 +111,14 @@ export const LoginPanel: React.FC<LoginPanelProps> = ({ auditId }) => {
             return;
         }
 
-        // 2. Set Password & Profile Data
-        const { error: updateError } = await updateProfile({
-            password: password,
-            data: {
-                full_name: name,
-                org_type: orgType
-            }
-        });
-
-        if (updateError) {
-            console.error("Error setting password:", updateError);
-            toast.error("Account verified, but failed to set password. You may need to reset it later.");
-        }
+        // 2. Password is already set during signUp, skipping updateProfile.
 
         // 3. Create Lead (Safe now as we are authenticated)
-        // Note: LoginPanel usage context might not have auditUrl easily available, passing empty string or handling elsewhere
         const { error: leadError } = await createLead({
             email,
             name,
             organization_type: orgType,
-            audit_url: window.location.href // Best effort capture
+            audit_url: window.location.href
         });
 
         if (leadError) {

@@ -1,20 +1,11 @@
-import { createClient } from '@supabase/supabase-js';
+import { db } from '../lib/db';
+import { apiKeys } from '../db/schema';
 import dotenv from 'dotenv';
 import crypto from 'crypto';
 
 dotenv.config();
 
-const supabaseUrl = process.env.SUPABASE_URL;
-const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-
-if (!supabaseUrl || !supabaseServiceRoleKey) {
-    console.error('Error: SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY are required in .env');
-    process.exit(1);
-}
-
-const supabase = createClient(supabaseUrl, supabaseServiceRoleKey);
-
-const generateKey = async (ownerName: string) => {
+const generateKey = async (ownerName: string, userId: string) => {
     // Generate a secure random key
     const prefix = 'mus_live_';
     const randomPart = crypto.randomBytes(16).toString('hex');
@@ -22,31 +13,30 @@ const generateKey = async (ownerName: string) => {
 
     console.log(`Generating key for: ${ownerName}...`);
 
-    const { data, error } = await supabase
-        .from('api_keys')
-        .insert({
+    try {
+        const [newKey] = await db.insert(apiKeys).values({
+            id: crypto.randomUUID(),
             key: apiKey,
-            owner_name: ownerName
-        })
-        .select()
-        .single();
+            owner_name: ownerName,
+            user_id: userId
+        }).returning();
 
-    if (error) {
+        console.log('\nSUCCESS! New API Key Created:');
+        console.log('------------------------------------------------');
+        console.log(`Owner: ${newKey.owner_name}`);
+        console.log(`Key:   ${newKey.key}`);
+        console.log('------------------------------------------------');
+        console.log('Share this key securely. It allows access to the Audit API.');
+    } catch (error: any) {
         console.error('Error creating key:', error.message);
-        return;
     }
-
-    console.log('\nSUCCESS! New API Key Created:');
-    console.log('------------------------------------------------');
-    console.log(`Owner: ${data.owner_name}`);
-    console.log(`Key:   ${data.key}`);
-    console.log('------------------------------------------------');
-    console.log('Share this key securely. It allows access to the Audit API.');
 };
 
 const owner = process.argv[2];
-if (!owner) {
-    console.log('Usage: npx ts-node src/scripts/generateKey.ts "Owner Name"');
+const userId = process.argv[3];
+
+if (!owner || !userId) {
+    console.log('Usage: npx ts-node src/scripts/generateKey.ts "Owner Name" "User ID"');
 } else {
-    generateKey(owner);
+    generateKey(owner, userId);
 }

@@ -27,14 +27,16 @@ const DashboardPage: React.FC = () => {
         const fetchData = async () => {
             setLoading(true);
             try {
-                // Fetch audits
-                const userAudits = await getUserAudits();
+                // Fetch audits and API keys in parallel for faster loading
+                const [userAudits, apiKeysResult] = await Promise.all([
+                    getUserAudits(),
+                    getUserAPIKeys()
+                ]);
+
                 setAllAudits(userAudits);
 
-                // Fetch API keys (to show filter chips)
-                const { success, apiKeys: keys } = await getUserAPIKeys();
-                if (success && keys) {
-                    setApiKeys(keys.filter(k => k.isActive)); // Only show active keys
+                if (apiKeysResult.success && apiKeysResult.apiKeys) {
+                    setApiKeys(apiKeysResult.apiKeys.filter(k => k.isActive));
                 }
             } catch (error) {
                 console.error('[DashboardPage] Failed to fetch data:', error);
@@ -46,28 +48,41 @@ const DashboardPage: React.FC = () => {
         fetchData();
     }, []);
 
-    // Filter audits when selection changes
+    // Map audits from backend for display
     useEffect(() => {
         const displayAudits: DisplayAudit[] = allAudits
-            .filter(audit => {
-                if (selectedFilter === 'all') return true;
-                if (selectedFilter === 'direct') return !audit.api_key_id;
-                return audit.api_key_id === selectedFilter;
-            })
-            .map((audit: UserAudit) => ({
-                id: audit.id,
-                url: extractUrl(audit.input_data),
-                competitorUrl: extractCompetitorUrl(audit.input_data),
-                createdAt: audit.created_at,
-                status: audit.status as any,
-                score: calculateOverallScore(audit.report_data) || undefined,
-                screenshotUrl: getScreenshotUrl(audit.report_data) || undefined
-            }));
+            .map((audit: UserAudit) => {
+                const url = extractUrl(audit.input_data);
+                const competitorUrl = extractCompetitorUrl(audit.input_data);
+
+                return {
+                    id: audit.id,
+                    url: url,
+                    competitorUrl: competitorUrl,
+                    createdAt: audit.created_at,
+                    status: audit.status as any,
+                    // Score and Screenshot are null since we don't fetch report_data in the list
+                    score: undefined,
+                    screenshotUrl: undefined
+                };
+            });
 
         setFilteredAudits(displayAudits);
-    }, [allAudits, selectedFilter]);
+    }, [allAudits]);
+
+    const getSafeHostname = (urlStr: string) => {
+        if (!urlStr || urlStr === 'Manual Upload' || urlStr === 'Unknown' || urlStr === 'Uploaded Image') {
+            return urlStr;
+        }
+        try {
+            return new URL(urlStr).hostname;
+        } catch (e) {
+            return urlStr;
+        }
+    };
 
     const getStatusBadge = (status: string) => {
+
         const styles = {
             completed: 'bg-green-100 text-green-800 border-green-200',
             processing: 'bg-yellow-100 text-yellow-800 border-yellow-200',
@@ -111,8 +126,8 @@ const DashboardPage: React.FC = () => {
                         <button
                             onClick={() => setSelectedFilter('all')}
                             className={`px-4 py-2 rounded-full text-sm font-semibold transition-all border-2 border-border-main ${selectedFilter === 'all'
-                                    ? 'bg-brand text-white shadow-neo'
-                                    : 'bg-white text-text-primary hover:bg-gray-50'
+                                ? 'bg-brand text-white shadow-neo'
+                                : 'bg-white text-text-primary hover:bg-gray-50'
                                 }`}
                         >
                             All Audits
@@ -122,8 +137,8 @@ const DashboardPage: React.FC = () => {
                         <button
                             onClick={() => setSelectedFilter('direct')}
                             className={`px-4 py-2 rounded-full text-sm font-semibold transition-all border-2 border-border-main ${selectedFilter === 'direct'
-                                    ? 'bg-brand text-white shadow-neo'
-                                    : 'bg-white text-text-primary hover:bg-gray-50'
+                                ? 'bg-brand text-white shadow-neo'
+                                : 'bg-white text-text-primary hover:bg-gray-50'
                                 }`}
                         >
                             Direct
@@ -135,8 +150,8 @@ const DashboardPage: React.FC = () => {
                                 key={apiKey.id}
                                 onClick={() => setSelectedFilter(apiKey.id)}
                                 className={`px-4 py-2 rounded-full text-sm font-semibold transition-all border-2 border-border-main ${selectedFilter === apiKey.id
-                                        ? 'bg-brand text-white shadow-neo'
-                                        : 'bg-white text-text-primary hover:bg-gray-50'
+                                    ? 'bg-brand text-white shadow-neo'
+                                    : 'bg-white text-text-primary hover:bg-gray-50'
                                     }`}
                             >
                                 {apiKey.name}
@@ -201,17 +216,24 @@ const DashboardPage: React.FC = () => {
                                 </div>
 
                                 {/* Card Content */}
-                                <div className="p-4 flex flex-col flex-1">
+                                <div
+                                    className="p-4 flex flex-col flex-1"
+                                    onMouseEnter={async () => {
+                                        // Speculative pre-fetch: prime the cache while user hovers
+                                        try {
+                                            const { getAuditJob } = await import('../services/auditStorage');
+                                            getAuditJob(audit.id);
+                                        } catch (e) { }
+                                    }}
+                                >
                                     <div className="flex items-start justify-between mb-3">
                                         <div className="flex-1">
                                             <h3 className="text-lg font-bold text-text-primary truncate group-hover:text-brand transition-colors">
-                                                {audit.url !== 'Manual Upload' && audit.url !== 'Unknown'
-                                                    ? new URL(audit.url).hostname
-                                                    : audit.url}
+                                                {getSafeHostname(audit.url)}
                                             </h3>
                                             {audit.competitorUrl && (
                                                 <h3 className="text-lg font-bold text-text-primary truncate group-hover:text-brand transition-colors mt-1">
-                                                    vs {new URL(audit.competitorUrl).hostname}
+                                                    vs {getSafeHostname(audit.competitorUrl)}
                                                 </h3>
                                             )}
                                         </div>

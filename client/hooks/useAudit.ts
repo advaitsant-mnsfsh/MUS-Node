@@ -13,10 +13,16 @@ const loadingMicrocopy = [
 ];
 
 export const useAudit = () => {
+    // --- HOOKS ---
+    const { auditId } = useParams<{ auditId: string }>();
+    const navigate = useNavigate();
+    const location = useLocation();
+    const { user } = useAuth(); // Restore useAuth hook
+
     // --- STATE ---
     const [submittedUrl, setSubmittedUrl] = useState<string>('');
     const [report, setReport] = useState<AnalysisReport | null>(null);
-    const [isLoading, setIsLoading] = useState<boolean>(false);
+    const [isLoading, setIsLoading] = useState<boolean>(!!auditId);
     const [error, setError] = useState<string | null>(null);
     const [loadingMessage, setLoadingMessage] = useState<string>('Initiating multi-faceted audit...');
     const [screenshots, setScreenshots] = useState<Screenshot[]>([]);
@@ -29,11 +35,6 @@ export const useAudit = () => {
     const [reportInputs, setReportInputs] = useState<AuditInput[]>([]);
     const [whiteLabelLogo, setWhiteLabelLogo] = useState<string | null>(null);
 
-    // --- HOOKS ---
-    const { user } = useAuth();
-    const { auditId } = useParams<{ auditId: string }>();
-    const navigate = useNavigate();
-    const location = useLocation();
     const lastLogTime = useRef<number>(Date.now());
 
     // --- EFFECTS ---
@@ -144,6 +145,8 @@ export const useAudit = () => {
     }), [navigate, location.pathname, auditId]);
 
 
+    const hasStarted = useRef<boolean>(false);
+
     // 3. Main Data Loading / Resume Logic
     useEffect(() => {
         if (!auditId) {
@@ -158,79 +161,66 @@ export const useAudit = () => {
                 setTargetProgress(0);
                 setIsLoading(false);
             }
+            hasStarted.current = false;
             return;
         }
 
-        if (report && uiAuditId === auditId) return;
+        // Prevent double-loading in StrictMode or re-renders
+        if (hasStarted.current) return;
+        hasStarted.current = true;
 
         const loadOrMonitor = async () => {
-            // ... existing logic ...
-            setIsLoading(true);
+            const { getAuditJob } = await import('../services/auditStorage');
+
             try {
+                // Support job from location.state for instant loading
                 // @ts-ignore
                 const isNewAudit = location.state?.newAudit;
-                let job = null;
+                // @ts-ignore
+                const jobFromState = location.state?.job;
+                let job = jobFromState || null;
 
-                if (!isNewAudit) {
-                    const { getAuditJob } = await import('../services/auditStorage');
+                if (!isNewAudit && !job) {
+                    setIsLoading(true); // Show loader while fetching
                     job = await getAuditJob(auditId);
-                } else {
-                    console.log('[useAudit] New audit detected, skipping persistence check.');
                 }
 
-                if (job && job.status === 'completed' && job.report_data) {
-                    console.log('[useAudit] Loaded Persisted Job:', job);
-                    setReport(job.report_data);
-                    if (job.report_data.screenshots?.length > 0) {
-                        setScreenshots(job.report_data.screenshots);
-                    }
-                    setScreenshotMimeType(job.report_data.screenshotMimeType || 'image/png');
-                    setUiAuditId(auditId);
-                    setSubmittedUrl(job.report_data.url);
+                if (job) {
+                    // Update state from job
+                    if (job.report_data) setReport(job.report_data);
+                    if (job.inputs) setReportInputs(job.inputs);
+                    if (job.screenshots) setScreenshots(job.screenshots);
+                    if (job.screenshotMimeType) setScreenshotMimeType(job.screenshotMimeType);
+                    setUiAuditId(job.id);
 
-                    // Restore inputs
-                    if (job.inputs && job.inputs.length > 0) {
-                        setReportInputs(job.inputs);
-                    } else if (user && auditId) {
-                        // FALLBACK: If missing in Storage JSON, fetch from DB directly
-                        // (Common for older audits or created via dashboard)
-                        getAuditInputs(auditId).then((inputData) => {
-                            if (inputData && inputData.inputs) {
-                                console.log('[useAudit] Fallback: Loaded inputs from DB', inputData.inputs);
-                                setReportInputs(inputData.inputs);
-                            }
-                        });
+                    if (job.status === 'completed' && job.report_data) {
+                        setIsLoading(false);
+                        if (location.pathname.includes('/analysis/')) {
+                            navigate(`/report/${auditId}`, { replace: true });
+                        }
+                        return;
                     }
-
-                    setTargetProgress(100);
-                    setIsLoading(false);
-
-                    // @ts-ignore
-                    if (location.pathname.includes('/analysis/')) {
-                        navigate(`/report/${auditId}`, { replace: true });
-                    }
-                    return;
                 }
 
-                if (job && job.status === 'failed') {
-                    setError(job.error_message || 'Audit failed');
-                    setIsLoading(false);
-                    return;
-                }
-
+                // If not found or not completed, THEN show loading screen for the stream/fetch
                 console.log(`[useAudit] Monitoring stream for ${auditId}`);
                 setLoadingMessage('Optimizing connection to audit stream...');
                 setUiAuditId(auditId);
+                const { monitorJobStream } = await import('../services/geminiService');
                 monitorJobStream(auditId, getStreamCallbacks(true));
+                setIsLoading(true);
 
             } catch (e) {
-                console.error("Error loading job:", e);
+                console.error('[useAudit] loadOrMonitor failed:', e);
+                // Try stream anyway as fallback
+                const { monitorJobStream } = await import('../services/geminiService');
                 monitorJobStream(auditId, getStreamCallbacks(true));
+                setIsLoading(true);
             }
         };
 
         loadOrMonitor();
-    }, [auditId, location.pathname, location.state, report, uiAuditId, getStreamCallbacks, navigate]);
+    }, [auditId, location.pathname]); // Keep dependencies minimal
 
 
     // --- ACTION HANDLERS ---
@@ -247,20 +237,8 @@ export const useAudit = () => {
         setTargetProgress(0);
 
         // Get auth token if user is logged in
-        let token: string | undefined;
-        if (user) {
-            try {
-                const { createClient } = await import('@supabase/supabase-js');
-                const supabase = createClient(
-                    import.meta.env.VITE_SUPABASE_URL,
-                    import.meta.env.VITE_SUPABASE_ANON_KEY
-                );
-                const { data: { session } } = await supabase.auth.getSession();
-                token = session?.access_token;
-            } catch (e) {
-                console.error('Failed to get auth token:', e);
-            }
-        }
+        // Legacy Auth Token Logic Removed - Using Session Cookies via Better-Auth
+        const token = undefined;
 
         analyzeWebsiteStream({ inputs, auditMode, token }, getStreamCallbacks(false));
     }, [getStreamCallbacks, user]);
