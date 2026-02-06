@@ -38,18 +38,29 @@ async function getCachedSession(req: Request) {
             const token = authHeader.split(' ')[1];
             console.log(`[Auth-Diagnostic] 🔑 Found Bearer token (Len: ${token?.length}). Validating...`);
 
-            // Validate by injecting the token as a cookie into the fake headers
-            session = await auth.api.getSession({
-                headers: {
-                    ...fromNodeHeaders(req.headers),
-                    cookie: `better-auth.session_token=${token}`
-                }
-            });
+            // Try Standard AND Secure cookie names (Better-Auth is picky)
+            const cookieNames = ['better-auth.session_token', '__Secure-better-auth.session_token'];
 
-            if (session) {
-                console.log(`[Auth-Diagnostic] ✅ SUCCESS: Session validated for ${session.user.email} via Bearer`);
-            } else {
-                console.warn(`[Auth-Diagnostic] ❌ FAILURE: Token sent but Better-Auth returned null.`);
+            for (const name of cookieNames) {
+                if (session) break;
+
+                try {
+                    session = await auth.api.getSession({
+                        headers: {
+                            ...fromNodeHeaders(req.headers),
+                            cookie: `${name}=${token}`
+                        }
+                    });
+                    if (session) {
+                        console.log(`[Auth-Diagnostic] ✅ SUCCESS: Validated via cookie name: ${name}`);
+                    }
+                } catch (e) {
+                    // Fail silently and try next name
+                }
+            }
+
+            if (!session) {
+                console.warn(`[Auth-Diagnostic] ❌ FAILURE: Token rejected by all prefix variations.`);
             }
         }
 
