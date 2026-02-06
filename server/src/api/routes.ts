@@ -79,7 +79,8 @@ router.get('/audit', async (req: express.Request, res: express.Response) => {
         };
 
         let lastStatus = '';
-        const maxTime = 300000; // 5 minutes timeout (Analysis often takes 2-3 mins)
+        const sentDataKeys = new Set<string>();
+        const maxTime = 300000; // 5 minutes timeout
         const startTime = Date.now();
 
         const checkStatus = async () => {
@@ -106,7 +107,27 @@ router.get('/audit', async (req: express.Request, res: express.Response) => {
                     return;
                 }
 
+                // DATA UPDATE LOGIC:
+                // If there is report_data, send any keys we haven't sent yet
+                if (job.report_data && typeof job.report_data === 'object') {
+                    const data = job.report_data as Record<string, any>;
+                    for (const [key, value] of Object.entries(data)) {
+                        // Skip 'logs' which we handle via status/progress
+                        if (key === 'logs') continue;
+
+                        if (!sentDataKeys.has(key)) {
+                            console.log(`[Stream] Sending new data key: ${key} for job ${jobId}`);
+                            sendChunk({
+                                type: 'data',
+                                payload: { key, data: value }
+                            });
+                            sentDataKeys.add(key);
+                        }
+                    }
+                }
+
                 if (job.status === 'completed') {
+                    console.log(`[Stream] Job ${jobId} completed. Sending final signal.`);
                     sendChunk({
                         type: 'complete',
                         payload: {
