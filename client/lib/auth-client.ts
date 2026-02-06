@@ -1,4 +1,5 @@
 import { createAuthClient } from "better-auth/react"
+import { emailOTPClient } from "better-auth/client/plugins"
 
 const getBaseURL = () => {
     if (import.meta.env.VITE_BACKEND_URL) return import.meta.env.VITE_BACKEND_URL;
@@ -11,5 +12,8 @@ export const authClient = createAuthClient({
     baseURL: getBaseURL(),
     fetchOptions: {
         credentials: 'include' // CRITICAL: Allow cross-origin cookies
-    }
+    },
+    plugins: [
+        emailOTPClient()
+    ]
 })
