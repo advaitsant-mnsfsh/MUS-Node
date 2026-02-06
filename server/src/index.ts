@@ -85,9 +85,9 @@ process.on('unhandledRejection', (reason, promise) => {
     console.error('[CRITICAL] Unhandled Rejection at:', promise, 'reason:', reason);
 });
 
-const HOST = '0.0.0.0';
-const server = app.listen(Number(port), HOST, () => {
-    console.log(`[System] Server running on ${HOST}:${port}`);
+const server = app.listen(port, () => {
+    console.log(`[System] Instance born at: ${new Date().toISOString()}`);
+    console.log(`[System] Server running on port: ${port}`);
     console.log(`[System] Memory Usage: ${Math.round(process.memoryUsage().heapUsed / 1024 / 1024)}MB`);
 
     // Non-blocking Pre-warm
