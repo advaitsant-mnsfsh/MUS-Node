@@ -30,13 +30,13 @@ export const auth = betterAuth({
         }),
     ],
 
-    // 🌐 Social Providers (Google)
-    socialProviders: {
+    // 🌐 Social Providers (Google) - Only enabled if keys are provided
+    socialProviders: (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) ? {
         google: {
-            clientId: process.env.GOOGLE_CLIENT_ID || "",
-            clientSecret: process.env.GOOGLE_CLIENT_SECRET || "",
+            clientId: process.env.GOOGLE_CLIENT_ID,
+            clientSecret: process.env.GOOGLE_CLIENT_SECRET,
         },
-    },
+    } : undefined,
 
     // 🔒 Security Config
     trustedOrigins: [

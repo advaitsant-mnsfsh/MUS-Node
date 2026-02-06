@@ -24,10 +24,12 @@ app.use(compression());
 // --- CRITICAL HEALTH CHECKS (Must be first) ---
 // MUST be before auth middleware and routes
 app.get("/", (req: any, res: any) => {
+    console.log('[Health] Root endpoint pinged');
     res.status(200).send("OK");
 });
 
 app.get("/health", (req: any, res: any) => {
+    console.log('[Health] Health endpoint pinged');
     res.status(200).json({ status: "healthy" });
 });
 
