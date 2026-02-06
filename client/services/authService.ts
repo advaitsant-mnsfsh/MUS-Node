@@ -2,11 +2,22 @@ import { authClient } from '../lib/auth-client';
 import { saveSession, clearSession } from '../lib/sessionStorage';
 
 /**
- * Update user profile (e.g. set password)
+ * Update user profile (e.g. set name)
  */
-export async function updateProfile(attributes: { password?: string; name?: string; image?: string }) {
-    // Better-auth profile update
+export async function updateProfile(attributes: { name?: string; image?: string }) {
     const { data, error } = await authClient.updateUser(attributes as any);
+    return { data, error: error ? { message: error.message } : null };
+}
+
+/**
+ * Change or Set user password
+ */
+export async function changePassword(newPassword: string, currentPassword: string) {
+    const { data, error } = await authClient.changePassword({
+        newPassword: newPassword,
+        currentPassword: currentPassword,
+        revokeOtherSessions: true
+    });
     return { data, error: error ? { message: error.message } : null };
 }
 
