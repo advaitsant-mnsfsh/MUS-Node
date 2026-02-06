@@ -1,3 +1,5 @@
+import { authenticatedFetch } from '../lib/authenticatedFetch';
+
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || import.meta.env.VITE_API_URL || (import.meta.env.PROD ? 'https://mus-node-production.up.railway.app' : 'http://localhost:3000');
 
 export interface APIKey {
@@ -15,13 +17,12 @@ export interface APIKey {
  */
 export async function generateAPIKey(name: string): Promise<{ success: boolean; apiKey?: APIKey; error?: string }> {
     try {
-        const response = await fetch(`${BACKEND_URL}/api/keys/generate`, {
+        const response = await authenticatedFetch(`${BACKEND_URL}/api/keys/generate`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
             },
-            body: JSON.stringify({ name }),
-            credentials: 'include' // Send Session Cookie
+            body: JSON.stringify({ name })
         });
 
         const data = await response.json();
@@ -48,12 +49,11 @@ export async function getUserAPIKeys(): Promise<{ success: boolean; apiKeys?: AP
 
     keysCache = (async () => {
         try {
-            const response = await fetch(`${BACKEND_URL}/api/keys`, {
+            const response = await authenticatedFetch(`${BACKEND_URL}/api/keys`, {
                 method: 'GET',
                 headers: {
                     'Content-Type': 'application/json'
-                },
-                credentials: 'include' // Send Session Cookie
+                }
             });
 
             const data = await response.json();
@@ -80,12 +80,11 @@ export async function getUserAPIKeys(): Promise<{ success: boolean; apiKeys?: AP
  */
 export async function deactivateAPIKey(keyId: string): Promise<{ success: boolean; error?: string }> {
     try {
-        const response = await fetch(`${BACKEND_URL}/api/keys/${keyId}`, {
+        const response = await authenticatedFetch(`${BACKEND_URL}/api/keys/${keyId}`, {
             method: 'DELETE',
             headers: {
                 'Content-Type': 'application/json'
-            },
-            credentials: 'include' // Send Session Cookie
+            }
         });
 
         const data = await response.json();

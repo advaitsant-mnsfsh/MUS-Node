@@ -2,6 +2,8 @@ import express from 'express';
 import cors from 'cors';
 import compression from 'compression';
 import dotenv from 'dotenv';
+import path from 'path';
+import fs from 'fs';
 import { optionalUserAuth, AuthenticatedRequest } from './middleware/apiAuth';
 import { db, preWarmDatabase } from './lib/db';
 import { auditJobs } from './db/schema';
@@ -17,7 +19,8 @@ app.use((req, res, next) => {
     const start = Date.now();
     res.on('finish', () => {
         const duration = Date.now() - start;
-        console.log(`[HTTP] ${req.method} ${req.url} ${res.statusCode} (${duration}ms)`);
+        // Use originalUrl to see /api/v1 even inside sub-routers
+        console.log(`[HTTP] ${req.method} ${req.originalUrl} ${res.statusCode} (${duration}ms)`);
     });
     next();
 });
@@ -34,16 +37,25 @@ app.get("/health", (req: any, res: any) => {
 app.use(compression());
 app.use(cors({
     origin: function (origin, callback) {
-        return callback(null, true); // Permissive for health probes
+        if (!origin) return callback(null, true);
+        // In Production, ensure we only allow trusted domains. 
+        // For now, mirroring origin for reliability with credentials.
+        return callback(null, origin);
     },
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS', 'HEAD'],
-    allowedHeaders: ['Content-Type', 'Authorization', 'x-api-key', 'Cache-Control', 'Pragma', 'Accept']
+    allowedHeaders: ['Content-Type', 'Authorization', 'x-api-key', 'Cache-Control', 'Pragma', 'Accept', 'Cookie']
 }));
 app.use(express.json({ limit: '150mb' }));
 app.use(express.urlencoded({ limit: '150mb', extended: true }));
 
 // --- 3. BUSINESS ROUTES ---
+const uploadsDir = path.join(process.cwd(), 'uploads');
+if (!fs.existsSync(uploadsDir)) {
+    fs.mkdirSync(uploadsDir, { recursive: true });
+}
+app.use('/uploads', express.static(uploadsDir));
+
 import apiRoutes from './api/routes';
 import externalRoutes from './api/external';
 import publicRoutes from './api/public';
@@ -58,10 +70,16 @@ app.use('/api/external', externalRoutes);
 app.use('/api/public', publicRoutes);
 app.use('/api/keys', apiKeysRoutes);
 
+// Legacy Claim Route (for backward compatibility during deployment)
 app.post('/api/audit/claim', optionalUserAuth, async (req: any, res: any) => {
     const user = (req as AuthenticatedRequest).user;
     const { auditId } = req.body;
-    if (!user) return res.status(401).json({ success: false, error: 'Unauthorized' });
+    console.log(`[Claim-Legacy] Request for Audit: ${auditId}, User: ${user?.email || 'UNDEFINED'}`);
+
+    if (!user) {
+        return res.status(401).json({ success: false, error: 'Unauthorized: No active session found.' });
+    }
+
     if (!auditId) return res.status(400).json({ success: false, error: 'Missing auditId' });
 
     try {
@@ -71,11 +89,17 @@ app.post('/api/audit/claim', optionalUserAuth, async (req: any, res: any) => {
             .returning({ id: auditJobs.id });
 
         if (!updated) return res.status(404).json({ success: false, error: 'Audit not found or already claimed.' });
+
+        console.log(`[Claim-Legacy] ✅ Successfully assigned audit ${auditId} to user ${user.email}`);
         return res.json({ success: true });
     } catch (e: any) {
+        console.error(`[Claim-Legacy] 💥 Error:`, e);
         return res.status(500).json({ success: false, error: e.message });
     }
 });
+
+
+// --- 4. SYSTEM INITIALIZATION ---
 
 // --- 4. SYSTEM INITIALIZATION ---
 process.on('uncaughtException', (err) => {
@@ -115,5 +139,5 @@ process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
 process.on('SIGINT', () => gracefulShutdown('SIGINT'));
 
 setInterval(() => {
-    console.log(`[Keepalive] Memory: ${Math.round(process.memoryUsage().heapUsed / 1024 / 1024)}MB`);
+    console.log(`[Health Monitor] Memory: ${Math.round(process.memoryUsage().heapUsed / 1024 / 1024)}MB`);
 }, 60000);

@@ -2,13 +2,24 @@ import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { db } from "./db"; // Our Drizzle Client
 import { google } from "better-auth/social-providers";
-import { emailOTP } from "better-auth/plugins";
+import { emailOTP, bearer } from "better-auth/plugins";
 
 export const auth = betterAuth({
-    debug: true, // Enable detailed logging for debugging 500 errors
+    baseURL: process.env.BETTER_AUTH_URL, // e.g. https://mus-node-production.up.railway.app
+    secret: process.env.BETTER_AUTH_SECRET,
+    debug: true,
     database: drizzleAdapter(db, {
         provider: "pg", // PostgreSQL
     }),
+
+    session: {
+        expiresIn: 60 * 60 * 24 * 30, // 30 Days (Feel free to make it longer)
+        updateAge: 60 * 60 * 24, // Update session once a day if active
+        cookieCache: {
+            enabled: true,
+            maxAge: 5 * 60 // 5 min local cookie cache for speed
+        }
+    },
 
     emailAndPassword: {
         enabled: true,
@@ -17,6 +28,7 @@ export const auth = betterAuth({
 
     // 📧 Plugin: Email OTP (One-Time Password)
     plugins: [
+        bearer(),
         emailOTP({
             async sendVerificationOTP({ email, otp, type }) {
                 const resendApiKey = process.env.RESEND_API_KEY;
@@ -30,8 +42,10 @@ export const auth = betterAuth({
                     const { Resend } = await import("resend");
                     const resend = new Resend(resendApiKey);
 
-                    const { error } = await resend.emails.send({
-                        from: 'MUS <onboarding@resend.dev>', // Update this to your verified domain later
+                    console.log(`[AUTH] 📤 Attempting to send OTP to ${email} via Resend...`);
+
+                    const { data, error } = await resend.emails.send({
+                        from: 'onboarding@resend.dev',
                         to: [email],
                         subject: 'Your Verification Code',
                         html: `
@@ -45,12 +59,15 @@ export const auth = betterAuth({
                     });
 
                     if (error) {
-                        console.error("[AUTH] Resend Error:", error);
+                        console.error("[AUTH] ❌ Resend Error Detail:", JSON.stringify(error, null, 2));
+                        console.log(`[AUTH] 💡 Quick Tip: If you are in Resend Sandbox, you can ONLY send to yourself unless you verify your domain.`);
+                        console.log(`[AUTH] FALLBACK OTP for ${email}: ${otp}`);
                     } else {
-                        console.log(`[AUTH] OTP sent successfully to ${email}`);
+                        console.log(`[AUTH] ✅ OTP sent successfully to ${email}. ID: ${data?.id}`);
                     }
                 } catch (err) {
                     console.error("[AUTH] Failed to send OTP via Resend:", err);
+                    console.log(`[AUTH] FALLBACK OTP for ${email}: ${otp} (Because code crashed)`);
                 }
             },
             sendVerificationOnSignUp: true,
@@ -65,11 +82,25 @@ export const auth = betterAuth({
         },
     } : undefined,
 
-    // 🔒 Security Config
+    // 🔒 Security & Cookie Config
     trustedOrigins: [
         process.env.CLIENT_URL || "http://localhost:5173",
-        "https://mus-node.vercel.app"
+        "https://mus-node.vercel.app",
+        "https://mus-node-client-ui.vercel.app", // Common Vercel pattern
+        "https://mus-node-client-ui-advait-sants-projects.vercel.app" // Full Vercel URL
     ],
+    cookies: {
+        sessionToken: {
+            name: 'better-auth.session_token', // Explicit cookie name
+            attributes: {
+                sameSite: 'none', // Required for cross-origin
+                secure: true, // Required for sameSite: none
+                httpOnly: true, // Security best practice
+                path: '/', // Available on all paths
+                maxAge: 60 * 60 * 24 * 30 // 30 days in seconds
+            }
+        }
+    }
 
     // Rate Limiting (Disabled for dev/performance testing)
     // rateLimit: {

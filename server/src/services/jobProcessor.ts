@@ -24,6 +24,13 @@ export class JobProcessor {
             const apiKeyBup = appSecrets['GEMINI_API_KEY_BUP'] || appSecrets['API_KEY_BUP'] || process.env.GEMINI_API_KEY_BUP || process.env.API_KEY_BUP;
             const browserEndpoint = appSecrets['PUPPETEER_BROWSER_ENDPOINT'] || process.env.PUPPETEER_BROWSER_ENDPOINT;
 
+            // LOUD LOG for Browser Endpoint
+            if (browserEndpoint) {
+                console.log(`[JobProcessor] [${jobId}] Browser Endpoint found! (Length: ${browserEndpoint.length}, Source: ${appSecrets['PUPPETEER_BROWSER_ENDPOINT'] ? 'DB' : 'ENV'})`);
+            } else {
+                console.warn(`[JobProcessor] [${jobId}] CRITICAL: No browser endpoint found in DB or ENV.`);
+            }
+
             if (!apiKeyRaw) throw new Error('Missing GEMINI_API_KEY in app_secrets or Env Vars');
 
             // Construct Key Array: [Main, Backup]
@@ -108,10 +115,18 @@ export class JobProcessor {
                     await JobService.updateProgress(jobId, 'Scraping Mobile view...');
                     const scrapeResultMobile = await performScrape(finalUrl, true, true, browserEndpoint);
 
-                    finalScreenshots = [{ ...scrapeResult.screenshot }, { ...scrapeResultMobile.screenshot }];
+                    // A3. Save Images to Filesystem (SPEED BOOST)
+                    const { ImageService } = await import('./imageService');
+                    const desktopUrl = await ImageService.saveImage(jobId, 'desktop.jpg', scrapeResult.screenshot.data);
+                    const mobileUrl = await ImageService.saveImage(jobId, 'mobile.jpg', scrapeResultMobile.screenshot.data);
+
+                    finalScreenshots = [
+                        { url: desktopUrl, isMobile: false, data: '' }, // We clear the heavy data field
+                        { url: mobileUrl, isMobile: true, data: '' }
+                    ];
 
                     await JobService.updateProgress(jobId, '✓ Scrape complete. Analyzing content...', {
-                        screenshots: finalScreenshots, // Base64 screenshots staying in DB for now
+                        screenshots: finalScreenshots,
                         screenshotMimeType: 'image/jpeg'
                     });
 
@@ -122,7 +137,7 @@ export class JobProcessor {
 
                     analysisContext = {
                         url: finalUrl,
-                        screenshotBase64: scrapeResult.screenshot.data,
+                        screenshotBase64: scrapeResult.screenshot.data, // Gemini still needs the base64 for analysis
                         screenshotMimeType: 'image/jpeg',
                         liveText: scrapeResult.liveText,
                         animationData: scrapeResult.animationData,
@@ -148,7 +163,12 @@ export class JobProcessor {
                     }
 
                     if (!base64) throw new Error("No file data provided");
-                    finalScreenshots = [{ data: base64, isMobile: false }];
+
+                    // Save Uploaded Image to Filesystem
+                    const { ImageService } = await import('./imageService');
+                    const uploadUrl = await ImageService.saveImage(jobId, 'upload.png', base64);
+
+                    finalScreenshots = [{ url: uploadUrl, isMobile: false, data: '' }];
                     finalMimeType = 'image/png';
 
                     analysisContext = {

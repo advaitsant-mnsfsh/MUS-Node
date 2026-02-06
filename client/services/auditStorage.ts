@@ -126,21 +126,22 @@ export async function transferAuditOwnership(auditId: string, userId: string): P
     console.log(`[auditStorage] Request received: Transfer Audit ${auditId} -> User ${userId}`);
 
     try {
-        // Call Backend API
-        const response = await fetch(`${backendUrl}/api/audit/claim`, {
+        const { authenticatedFetch } = await import('../lib/authenticatedFetch');
+
+        // Use authenticatedFetch to ensure session token is sent
+        const response = await authenticatedFetch(`${backendUrl}/api/v1/audit/claim`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
             },
-            body: JSON.stringify({ auditId }),
-            credentials: 'include' // Send Better-Auth Session Cookie
+            body: JSON.stringify({ auditId })
         });
 
         const result = await response.json();
 
         if (!response.ok || !result.success) {
             console.error('[auditStorage] ❌ API Error transferring ownership:', result.error);
-            return { success: false, error: result.error || 'API Failed' };
+            return { success: false, error: result.error || 'Transfer failed' };
         }
 
         console.log(`[auditStorage] ✅ Successfully transferred audit ${auditId} to user ${userId} (via Admin API)`);

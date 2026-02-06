@@ -25,6 +25,24 @@ router.get('/debug', async (req, res) => {
     }
 });
 
+// DEBUG: List uploads (to verify filesystem)
+router.get('/debug/uploads', async (req, res) => {
+    try {
+        const fs = await import('fs');
+        const path = await import('path');
+        const uploadsDir = path.join(process.cwd(), 'uploads');
+
+        if (!fs.existsSync(uploadsDir)) {
+            return res.json({ message: 'Uploads directory does not exist' });
+        }
+
+        const items = fs.readdirSync(uploadsDir, { recursive: true });
+        res.json({ uploadsDir, items });
+    } catch (err: any) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
 // GET /api/public/jobs/:jobId
 // Public endpoint to fetch completed job report data for sharing
 router.get('/jobs/:jobId', async (req, res) => {

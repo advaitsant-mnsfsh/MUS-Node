@@ -15,49 +15,37 @@ const SESSION_CACHE = new Map<string, { session: any; expires: number }>();
 const PENDING_PROMISES = new Map<string, Promise<any>>();
 const CACHE_TTL = 120 * 1000; // 2 minutes
 
-/**
- * Helper to get session with local memory caching & request collapsing
- */
 async function getCachedSession(req: Request) {
-    const authCookie = req.headers.cookie?.split(';').find(c => {
-        const name = c.trim().split('=')[0];
-        return name.endsWith('better-auth.session_token');
-    });
+    const cookies = req.headers.cookie || "";
+    // Check for Authorization in both casings (common in some environments)
+    const authHeader = (req.headers.authorization || req.headers.Authorization) as string;
+    const path = req.originalUrl || req.url;
 
-    if (!authCookie) return null;
+    const hasSessionCookie = cookies.includes('session_token');
+    const hasBearerToken = authHeader?.startsWith('Bearer ');
 
-    // 1. Check Memory Cache (Instant)
-    const cached = SESSION_CACHE.get(authCookie);
-    if (cached && Date.now() < cached.expires) {
-        return cached.session;
-    }
+    console.log(`[Auth-Diagnostic] 🛡️ Checking Auth for ${path}`);
+    console.log(`[Auth-Diagnostic] Cookie found: ${!!cookies}, Auth Header found: ${!!authHeader}`);
 
-    // 2. Request Collapsing: If a request for this token is already in flight, wait for it
-    if (PENDING_PROMISES.has(authCookie)) {
-        return PENDING_PROMISES.get(authCookie);
-    }
+    try {
+        // 1. Fetch Session
+        // With 'bearer' plugin enabled, Better-Auth will automatically check
+        // both Cookies AND the 'Authorization: Bearer <token>' header.
+        const session = await auth.api.getSession({
+            headers: fromNodeHeaders(req.headers)
+        });
 
-    // 3. Cache miss: hit the DB and track the promise
-    const sessionPromise = (async () => {
-        try {
-            const session = await auth.api.getSession({
-                headers: fromNodeHeaders(req.headers)
-            });
-
-            if (session) {
-                SESSION_CACHE.set(authCookie, {
-                    session,
-                    expires: Date.now() + CACHE_TTL
-                });
-            }
-            return session;
-        } finally {
-            PENDING_PROMISES.delete(authCookie);
+        if (session) {
+            console.log(`[Auth-Diagnostic] ✅ SUCCESS: Session found for ${session.user.email}`);
+        } else if (hasBearerToken) {
+            console.warn(`[Auth-Diagnostic] ❌ FAILURE: Bearer token present but rejected by Better-Auth.`);
         }
-    })();
 
-    PENDING_PROMISES.set(authCookie, sessionPromise);
-    return sessionPromise;
+        return session;
+    } catch (e) {
+        console.error("[Auth-Diagnostic] 💥 Critical Auth Error:", e);
+        return null;
+    }
 }
 
 /**
@@ -119,7 +107,7 @@ export const validateAccess = async (req: Request, res: Response, next: NextFunc
             });
 
             if (keyRecord) {
-                console.log(`[Auth] validateAccess: API Key Verified (took ${Date.now() - start}ms)`);
+                console.log(`[Auth] validateAccess: API Key Verified for ${keyRecord.owner_name}`);
                 (req as AuthenticatedRequest).apiKey = {
                     id: keyRecord.id,
                     owner_name: keyRecord.owner_name
@@ -131,6 +119,9 @@ export const validateAccess = async (req: Request, res: Response, next: NextFunc
         }
     }
 
+    // Diagnostic log for 401
+    const cookies = req.headers.cookie ? req.headers.cookie.split(';').length : 0;
+    console.warn(`[Auth] validateAccess: 401 Unauthorized for ${req.originalUrl || req.url}. Cookies: ${cookies}, Has API Key: ${!!apiKeyHeader}`);
     return res.status(401).json({ error: 'Unauthorized' });
 };
 
@@ -141,13 +132,22 @@ export const validateApiKey = validateAccess;
  */
 export const optionalUserAuth = async (req: Request, res: Response, next: NextFunction) => {
     const start = Date.now();
+    const path = req.originalUrl || req.url;
+    const cookies = req.headers.cookie || '';
+    const hasCookies = cookies.length > 0;
+
+    console.log(`[Auth] optionalUserAuth START for ${path}`);
+    console.log(`[Auth] Has Cookies: ${hasCookies}, Cookie Count: ${cookies.split(';').length}`);
+
     try {
         const session = await getCachedSession(req);
 
         if (session) {
             const isCached = Date.now() - start < 10;
-            console.log(`[Auth] optionalUserAuth: Found User ${session.user.id} (took ${Date.now() - start}ms${isCached ? ' [CACHED]' : ''})`);
+            console.log(`[Auth] optionalUserAuth: ✅ Found User ${session.user.email} (${session.user.id}) (took ${Date.now() - start}ms${isCached ? ' [CACHED]' : ''})`);
             (req as AuthenticatedRequest).user = session.user;
+        } else {
+            console.log(`[Auth] optionalUserAuth: ⚠️ No session found (took ${Date.now() - start}ms). Cookies present: ${hasCookies}`);
         }
     } catch (error) {
         console.error('[Auth] optionalUserAuth Error:', error);

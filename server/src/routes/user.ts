@@ -12,7 +12,6 @@ router.get('/audits', requireUserAuth, async (req, res) => {
         const user = (req as AuthenticatedRequest).user;
 
         // Use Drizzle Query to fetch audits for this user.
-        // We only show COMPLETED audits in the dashboard.
         const audits = await db
             .select({
                 id: auditJobs.id,
@@ -23,14 +22,9 @@ router.get('/audits', requireUserAuth, async (req, res) => {
                 api_key_id: auditJobs.api_key_id,
             })
             .from(auditJobs)
-            .where(
-                and(
-                    eq(auditJobs.user_id, user.id),
-                    eq(auditJobs.status, 'completed')
-                )
-            )
+            .where(eq(auditJobs.user_id, user.id))
             .orderBy(desc(auditJobs.created_at))
-            .limit(50);
+            .limit(100);
 
         res.json(audits);
     } catch (e: any) {

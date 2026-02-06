@@ -187,13 +187,22 @@ export const useAudit = () => {
 
                 if (job) {
                     // Update state from job
-                    if (job.report_data) setReport(job.report_data);
+                    const reportData = job.report_data;
+                    if (reportData) {
+                        setReport(reportData);
+                        // Extract screenshots from report_data if not directly on job
+                        if (reportData.screenshots) setScreenshots(reportData.screenshots);
+                        if (reportData.screenshotMimeType) setScreenshotMimeType(reportData.screenshotMimeType);
+                    }
+
                     if (job.inputs) setReportInputs(job.inputs);
-                    if (job.screenshots) setScreenshots(job.screenshots);
-                    if (job.screenshotMimeType) setScreenshotMimeType(job.screenshotMimeType);
+                    // Legacy checks
+                    if ((job as any).screenshots) setScreenshots((job as any).screenshots);
+                    if ((job as any).screenshotMimeType) setScreenshotMimeType((job as any).screenshotMimeType);
+
                     setUiAuditId(job.id);
 
-                    if (job.status === 'completed' && job.report_data) {
+                    if (job.status === 'completed' && reportData) {
                         setIsLoading(false);
                         if (location.pathname.includes('/analysis/')) {
                             navigate(`/report/${auditId}`, { replace: true });

@@ -40,7 +40,14 @@ export const ScanningPreview: React.FC<ScanningPreviewProps> = ({ screenshot, pr
                 <div className="relative bg-white border-2 border-border-main rounded-b-xl overflow-hidden aspect-[16/10] shadow-neo hover:shadow-neo-hover transition-shadow">
                     {screenshot ? (
                         <img
-                            src={screenshot.startsWith('data:') ? screenshot : `data:image/png;base64,${screenshot}`}
+                            src={(() => {
+                                if (screenshot.startsWith('data:')) return screenshot;
+                                if (screenshot.startsWith('/uploads')) {
+                                    const backendUrl = import.meta.env.VITE_BACKEND_URL || import.meta.env.VITE_API_URL || (import.meta.env.PROD ? 'https://mus-node-production.up.railway.app' : 'http://localhost:3000');
+                                    return `${backendUrl}${screenshot}`;
+                                }
+                                return `data:image/png;base64,${screenshot}`;
+                            })()}
                             alt="Scanning preview"
                             className="w-full h-full object-cover object-top"
                         />

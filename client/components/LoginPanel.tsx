@@ -11,14 +11,16 @@ interface LoginPanelProps {
 
 export const LoginPanel: React.FC<LoginPanelProps> = ({ auditId }) => {
     const [isLoginMode, setIsLoginMode] = useState(false); // Toggle between Sign Up and Login
-    const [step, setStep] = useState<'info' | 'otp'>('info'); // For Signup flow
+    const [step, setStep] = useState<'email' | 'otp' | 'password'>('email'); // For Signup flow
+    const [tempPassword] = useState(() => Math.random().toString(36).slice(-12) + 'A1!'); // Bridge password
 
     // Form State
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
+    const [confirmPassword, setConfirmPassword] = useState('');
+    const [otp, setOtp] = useState('');
     const [name, setName] = useState('');
     const [orgType, setOrgType] = useState('');
-    const [otp, setOtp] = useState('');
 
     const [isLoading, setIsLoading] = useState(false);
     const [emailError, setEmailError] = useState<string | null>(null);
@@ -63,8 +65,8 @@ export const LoginPanel: React.FC<LoginPanelProps> = ({ auditId }) => {
         e.preventDefault();
         setEmailError(null);
 
-        if (!email || !password || !name) {
-            toast.error("Please fill in all required fields.");
+        if (!email) {
+            toast.error("Please enter your business email.");
             return;
         }
 
@@ -81,16 +83,17 @@ export const LoginPanel: React.FC<LoginPanelProps> = ({ auditId }) => {
         }
 
         setIsLoading(true);
-
-        // BETTER-AUTH MIGRATION: 
-        // Use standard signUp (which sends OTP because of sendVerificationOnSignUp: true)
-        // This sets the password immediately.
-        const { error } = await signUp(email, password, { name, org_type: orgType });
-
+        // Start Signup with Bridge Password
+        const { error } = await signUp(email, tempPassword, { name: email.split('@')[0] });
         setIsLoading(false);
 
         if (error) {
-            toast.error("Error creating account: " + error);
+            if (error.includes("already exist")) {
+                toast.error("Email already registered. Please login.");
+                setIsLoginMode(true);
+            } else {
+                toast.error("Error: " + error);
+            }
         } else {
             toast.success('Verification code sent to ' + email);
             setStep('otp');
@@ -102,50 +105,57 @@ export const LoginPanel: React.FC<LoginPanelProps> = ({ auditId }) => {
         if (!otp) return;
 
         setIsLoading(true);
-        // 1. Verify OTP (which logs in)
         const { session, error } = await verifyOtp(email, otp);
+        setIsLoading(false);
 
         if (error || !session) {
-            setIsLoading(false);
             toast.error(error || "Verification failed");
             return;
         }
 
-        // 2. Password is already set during signUp, skipping updateProfile.
+        // OTP Verified, move to Password setup
+        setStep('password');
+    };
 
-        // 3. Create Lead (Safe now as we are authenticated)
-        const { error: leadError } = await createLead({
-            email,
-            name,
-            organization_type: orgType,
-            audit_url: window.location.href
-        });
-
-        if (leadError) {
-            console.warn("Failed to capture lead data:", leadError);
+    const handleSignupStep3 = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!password || !confirmPassword) {
+            toast.error("Please enter and confirm your password.");
+            return;
+        }
+        if (password !== confirmPassword) {
+            toast.error("Passwords do not match.");
+            return;
+        }
+        if (password.length < 8) {
+            toast.error("Password must be at least 8 characters.");
+            return;
         }
 
-        // 4. Mark Verified
+        setIsLoading(true);
+        const { changePassword } = await import('../services/authService');
+        // Update to REAL password using our bridge password as currentPassword
+        const { error } = await changePassword(password, tempPassword);
+
+        if (error) {
+            setIsLoading(false);
+            toast.error("Error setting password: " + error.message);
+            return;
+        }
+
+        // Create Lead
+        await createLead({ email, name: email.split('@')[0], audit_url: window.location.href });
         await verifyLead(email);
 
-        // 5. Transfer audit ownership if auditId exists
-        if (auditId && session && session.user) {
-            console.log(`[LoginPanel] ✨ User Signed Up: ${session.user.id} (${session.user.email})`);
-            console.log(`[LoginPanel] 🔄 Transferring Audit ${auditId} to New User ${session.user.id}...`);
-
-            const { success, error } = await transferAuditOwnership(auditId, session.user.id);
-
-            if (success) {
-                console.log(`[LoginPanel] ✅ Audit ${auditId} ownership transferred successfully!`);
-            } else {
-                console.error(`[LoginPanel] ❌ Failed to transfer audit ownership:`, error);
-            }
-        } else if (session?.user) {
-            console.log(`[LoginPanel] ✨ User Signed Up: ${session.user.id}. No Audit ID to transfer.`);
+        // Transfer audit ownership
+        const authService = await import('../services/authService');
+        const session = await authService.getCurrentSession();
+        if (auditId && session?.user?.id) {
+            await transferAuditOwnership(auditId, session.user.id);
         }
 
         setIsLoading(false);
-        toast.success('Account created successfully!');
+        toast.success('Welcome! Your account is ready.');
     };
 
     return (
@@ -217,7 +227,7 @@ export const LoginPanel: React.FC<LoginPanelProps> = ({ auditId }) => {
                             Don't have an account?
                             <button
                                 type="button"
-                                onClick={() => { setIsLoginMode(false); setStep('info'); }}
+                                onClick={() => { setIsLoginMode(false); setStep('email'); }}
                                 className="text-black font-bold hover:underline decoration-2 underline-offset-2 ml-1"
                             >
                                 Sign Up
@@ -227,23 +237,9 @@ export const LoginPanel: React.FC<LoginPanelProps> = ({ auditId }) => {
                 </form>
             ) : (
                 // SIGNUP FORM
-                step === 'info' ? (
+                step === 'email' ? (
                     <form onSubmit={handleSignupStep1} className="flex-grow flex flex-col">
-                        <div className="space-y-4 flex-grow">
-                            <div>
-                                <label htmlFor="name" className="block text-sm font-semibold text-slate-900 mb-2 text-left">
-                                    Full Name <span className="text-red-600">*</span>
-                                </label>
-                                <input
-                                    type="text"
-                                    id="name"
-                                    required
-                                    className="w-full h-12 px-4 bg-white border-2 border-black rounded-none shadow-neo focus:outline-none focus:shadow-neo-hover transition-all text-base placeholder-slate-400"
-                                    placeholder="John Doe"
-                                    value={name}
-                                    onChange={(e) => setName(e.target.value)}
-                                />
-                            </div>
+                        <div className="space-y-6 flex-grow">
                             <div>
                                 <label htmlFor="email" className="block text-sm font-semibold text-slate-900 mb-2 text-left">
                                     Business Email <span className="text-red-600">*</span>
@@ -262,63 +258,24 @@ export const LoginPanel: React.FC<LoginPanelProps> = ({ auditId }) => {
                                 />
                                 {emailError && <p className="text-red-600 text-xs mt-1 font-bold">{emailError}</p>}
                             </div>
-                            <div>
-                                <label htmlFor="orgType" className="block text-sm font-semibold text-slate-900 mb-2 text-left">
-                                    Organization Type <span className="text-slate-400 font-normal">(Optional)</span>
-                                </label>
-                                <div className="relative">
-                                    <select
-                                        id="orgType"
-                                        className="w-full h-12 px-4 bg-white border-2 border-black rounded-none shadow-neo focus:outline-none focus:shadow-neo-hover transition-all text-base appearance-none cursor-pointer"
-                                        value={orgType}
-                                        onChange={(e) => setOrgType(e.target.value)}
-                                    >
-                                        <option value="">Select type...</option>
-                                        <option value="agency">Agency / Consultancy</option>
-                                        <option value="startup">Startup</option>
-                                        <option value="enterprise">Enterprise</option>
-                                        <option value="ecommerce">E-commerce</option>
-                                        <option value="saas">SaaS</option>
-                                        <option value="other">Other</option>
-                                    </select>
-                                    <div className="absolute inset-y-0 right-0 flex items-center px-4 pointer-events-none text-slate-900">
-                                        <svg className="w-4 h-4 fill-current" viewBox="0 0 20 20"><path d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" /></svg>
-                                    </div>
-                                </div>
-                            </div>
-                            <div>
-                                <label htmlFor="password" className="block text-sm font-semibold text-slate-900 mb-2 text-left">
-                                    Create Password <span className="text-red-600">*</span>
-                                </label>
-                                <input
-                                    type="password"
-                                    id="password"
-                                    required
-                                    className="w-full h-12 px-4 bg-white border-2 border-black rounded-none shadow-neo focus:outline-none focus:shadow-neo-hover transition-all text-base placeholder-slate-400"
-                                    placeholder="••••••••"
-                                    value={password}
-                                    onChange={(e) => setPassword(e.target.value)}
-                                    minLength={6}
-                                />
-                            </div>
                         </div>
 
                         <button
                             type="submit"
                             disabled={isLoading}
-                            className="w-full h-14 mt-4 bg-black hover:bg-slate-800 text-white border-2 border-black rounded-none shadow-neo hover:shadow-neo-hover active:translate-x-[1px] active:translate-y-[1px] active:shadow-none text-base font-bold transition-all disabled:opacity-70 disabled:cursor-not-allowed flex justify-center items-center gap-2"
+                            className="w-full h-14 mt-8 bg-black hover:bg-slate-800 text-white border-2 border-black rounded-none shadow-neo hover:shadow-neo-hover active:translate-x-[1px] active:translate-y-[1px] active:shadow-none text-base font-bold transition-all disabled:opacity-70 disabled:cursor-not-allowed flex justify-center items-center gap-2"
                         >
                             {isLoading ? (
                                 <>
                                     <Loader2 className="w-5 h-5 animate-spin" />
-                                    Processing...
+                                    Checking...
                                 </>
                             ) : (
-                                'Create Account'
+                                'Continue to Signup'
                             )}
                         </button>
-                        <p className="text-center text-xs text-slate-500 mt-4 mb-2">
-                            We'll send a one-time verification code to your email.
+                        <p className="text-center text-xs text-slate-500 mt-6 font-medium">
+                            Step 1 of 3: Verification
                         </p>
 
                         <div className="mt-auto pt-6 border-t-2 border-slate-100 text-center">
@@ -334,7 +291,7 @@ export const LoginPanel: React.FC<LoginPanelProps> = ({ auditId }) => {
                             </p>
                         </div>
                     </form>
-                ) : (
+                ) : step === 'otp' ? (
                     // OTP VERIFICATION STEP
                     <form onSubmit={handleSignupStep2} className="flex-grow flex flex-col">
                         <div className="flex-grow flex flex-col justify-center">
@@ -370,16 +327,77 @@ export const LoginPanel: React.FC<LoginPanelProps> = ({ auditId }) => {
                                     Verifying...
                                 </>
                             ) : (
-                                'Verify & Create Account'
+                                'Verify Code'
                             )}
                         </button>
+                        <p className="text-center text-xs text-slate-500 mt-4 font-medium">
+                            Step 2 of 3: Security Check
+                        </p>
                         <button
                             type="button"
-                            onClick={() => setStep('info')}
+                            onClick={() => setStep('email')}
                             className="w-full mt-4 text-sm text-slate-500 hover:text-black font-semibold underline decoration-2 underline-offset-4 mb-6"
                         >
-                            Change Details
+                            Change Email
                         </button>
+                    </form>
+                ) : (
+                    // STEP 3: PASSWORD SETUP
+                    <form onSubmit={handleSignupStep3} className="flex-grow flex flex-col">
+                        <div className="space-y-6 flex-grow">
+                            <div className="p-4 bg-slate-50 border-l-4 border-brand mb-4">
+                                <p className="text-sm font-bold text-slate-800">Welcome to MUS!</p>
+                                <p className="text-xs text-slate-600">Final step: Secure your account with a password.</p>
+                            </div>
+                            <div>
+                                <label htmlFor="pass" className="block text-sm font-semibold text-slate-900 mb-2 text-left">
+                                    Create Password <span className="text-red-600">*</span>
+                                </label>
+                                <input
+                                    type="password"
+                                    id="pass"
+                                    required
+                                    className="w-full h-12 px-4 bg-white border-2 border-black rounded-none shadow-neo focus:outline-none focus:shadow-neo-hover transition-all text-base placeholder-slate-400"
+                                    placeholder="••••••••"
+                                    value={password}
+                                    onChange={(e) => setPassword(e.target.value)}
+                                    minLength={8}
+                                />
+                            </div>
+                            <div>
+                                <label htmlFor="confirm" className="block text-sm font-semibold text-slate-900 mb-2 text-left">
+                                    Confirm Password <span className="text-red-600">*</span>
+                                </label>
+                                <input
+                                    type="password"
+                                    id="confirm"
+                                    required
+                                    className="w-full h-12 px-4 bg-white border-2 border-black rounded-none shadow-neo focus:outline-none focus:shadow-neo-hover transition-all text-base placeholder-slate-400"
+                                    placeholder="••••••••"
+                                    value={confirmPassword}
+                                    onChange={(e) => setConfirmPassword(e.target.value)}
+                                    minLength={8}
+                                />
+                            </div>
+                        </div>
+
+                        <button
+                            type="submit"
+                            disabled={isLoading}
+                            className="w-full h-14 mt-8 bg-black hover:bg-slate-800 text-white border-2 border-black rounded-none shadow-neo hover:shadow-neo-hover active:translate-x-[1px] active:translate-y-[1px] active:shadow-none text-base font-bold transition-all disabled:opacity-70 disabled:cursor-not-allowed flex justify-center items-center gap-2"
+                        >
+                            {isLoading ? (
+                                <>
+                                    <Loader2 className="w-5 h-5 animate-spin" />
+                                    Setting up...
+                                </>
+                            ) : (
+                                'Complete Registration'
+                            )}
+                        </button>
+                        <p className="text-center text-xs text-slate-500 mt-6 font-medium">
+                            Step 3 of 3: Finalize
+                        </p>
                     </form>
                 )
             )}

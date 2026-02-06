@@ -15,15 +15,15 @@ if (!connectionString) {
     }
 }
 
-// Use a connection pool for better performance handling multiple requests
+// Use a connection pool with more robust settings for production
 const pool = new Pool({
     connectionString: connectionString,
     ssl: { rejectUnauthorized: false },
-    max: 5,
-    idleTimeoutMillis: 30000, // Close idle connections after 30 seconds to stay fresh
-    connectionTimeoutMillis: 5000,
+    max: 20, // Increase pool size
+    idleTimeoutMillis: 30000,
+    connectionTimeoutMillis: 20000, // Wait longer for connection (important for cold starts)
     keepAlive: true,
-    keepAliveInitialDelayMillis: 10000,
+    keepAliveInitialDelayMillis: 1000, // Faster keep-alive probe
 });
 
 // Error handling for the pool to prevent crashes
