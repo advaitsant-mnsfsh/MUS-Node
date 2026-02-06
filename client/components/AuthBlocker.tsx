@@ -3,16 +3,19 @@ import toast from 'react-hot-toast';
 import { signUp, signIn, sendOtp, verifyOtp, updateProfile } from '../services/authService';
 import { createLead, verifyLead } from '../services/leadService';
 import { transferAuditOwnership } from '../services/auditStorage';
+import { X } from 'lucide-react';
 
 interface AuthBlockerProps {
     onUnlock: () => void;
     isUnlocked: boolean;
     auditUrl: string;
     auditId?: string | null; // Optional audit ID to transfer ownership
+    onClose?: () => void;
 }
 
 export const AuthBlocker: React.FC<AuthBlockerProps> = ({ onUnlock, isUnlocked, auditUrl, auditId }) => {
     const [isLoginMode, setIsLoginMode] = useState(false); // Toggle between Sign Up and Login
+    const [isHidden, setIsHidden] = useState(false); // Local state to close the modal
     const [step, setStep] = useState<'email' | 'otp' | 'password'>('email'); // For Signup flow
     const [tempPassword] = useState(() => Math.random().toString(36).slice(-12) + 'A1!'); // Bridge password
 
@@ -25,8 +28,8 @@ export const AuthBlocker: React.FC<AuthBlockerProps> = ({ onUnlock, isUnlocked, 
     const [isLoading, setIsLoading] = useState(false);
     const [emailError, setEmailError] = useState<string | null>(null);
 
-    // If unlocked, don't render anything
-    if (isUnlocked) return null;
+    // If unlocked or hidden, don't render anything
+    if (isUnlocked || isHidden) return null;
 
     const handleLogin = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -159,7 +162,7 @@ export const AuthBlocker: React.FC<AuthBlockerProps> = ({ onUnlock, isUnlocked, 
     };
 
     return (
-        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 font-['DM_Sans']">
+        <div className="fixed inset-0 z-9999 flex items-center justify-center p-4 font-['DM_Sans']">
             {/* Backdrop with stronger blur and dark overlay */}
             <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-md"></div>
 
@@ -167,9 +170,10 @@ export const AuthBlocker: React.FC<AuthBlockerProps> = ({ onUnlock, isUnlocked, 
             <div className="relative z-10 w-full max-w-md bg-white border-2 border-black shadow-neo p-6 md:p-8">
 
                 {/* Close Button (Optional, but good for modals) */}
-                {/* <button onClick={onUnlock} className="absolute top-4 right-4 text-black hover:text-slate-600">
+                {/* Close Button - Always visible now */}
+                <button onClick={() => setIsHidden(true)} className="absolute top-4 right-4 p-2 rounded-full border-2 border-transparent hover:border-black hover:bg-black/5 transition-colors text-black">
                     <X size={24} />
-                </button> */}
+                </button>
 
                 <div className="text-center mb-8">
                     <h2 className="text-2xl font-bold text-slate-900">
@@ -216,7 +220,7 @@ export const AuthBlocker: React.FC<AuthBlockerProps> = ({ onUnlock, isUnlocked, 
                         <button
                             type="submit"
                             disabled={isLoading}
-                            className="w-full h-14 mt-4 bg-black hover:bg-slate-800 text-white border-2 border-black rounded-none shadow-neo hover:shadow-neo-hover active:translate-x-[1px] active:translate-y-[1px] active:shadow-none text-base font-bold transition-all disabled:opacity-70 disabled:cursor-not-allowed flex justify-center items-center gap-2"
+                            className="w-full h-14 mt-4 bg-black hover:bg-slate-800 text-white border-2 border-black rounded-none shadow-neo hover:shadow-neo-hover active:translate-x-px active:translate-y-px active:shadow-none text-base font-bold transition-all disabled:opacity-70 disabled:cursor-not-allowed flex justify-center items-center gap-2"
                         >
                             {isLoading ? (
                                 <>
@@ -233,6 +237,7 @@ export const AuthBlocker: React.FC<AuthBlockerProps> = ({ onUnlock, isUnlocked, 
                     </form>
                 ) : step === 'email' ? (
                     // SIGNUP FORM (Hybrid)
+
                     <form onSubmit={handleSignupStep1} className="space-y-4">
                         <div>
                             <label htmlFor="email" className="block text-sm font-semibold text-slate-900 mb-2">
@@ -255,7 +260,7 @@ export const AuthBlocker: React.FC<AuthBlockerProps> = ({ onUnlock, isUnlocked, 
                         <button
                             type="submit"
                             disabled={isLoading}
-                            className="w-full h-14 mt-4 bg-black hover:bg-slate-800 text-white border-2 border-black rounded-none shadow-neo hover:shadow-neo-hover active:translate-x-[1px] active:translate-y-[1px] active:shadow-none text-base font-bold transition-all disabled:opacity-70 disabled:cursor-not-allowed flex justify-center items-center gap-2"
+                            className="w-full h-14 mt-4 bg-black hover:bg-slate-800 text-white border-2 border-black rounded-none shadow-neo hover:shadow-neo-hover active:translate-x-px active:translate-y-px active:shadow-none text-base font-bold transition-all disabled:opacity-70 disabled:cursor-not-allowed flex justify-center items-center gap-2"
                         >
                             {isLoading ? (
                                 <>
@@ -298,7 +303,7 @@ export const AuthBlocker: React.FC<AuthBlockerProps> = ({ onUnlock, isUnlocked, 
                         <button
                             type="submit"
                             disabled={isLoading}
-                            className="w-full h-14 bg-black hover:bg-slate-800 text-white border-2 border-black rounded-none shadow-neo hover:shadow-neo-hover active:translate-x-[1px] active:translate-y-[1px] active:shadow-none text-base font-bold transition-all disabled:opacity-70 disabled:cursor-not-allowed flex justify-center items-center gap-2"
+                            className="w-full h-14 bg-black hover:bg-slate-800 text-white border-2 border-black rounded-none shadow-neo hover:shadow-neo-hover active:translate-x-px active:translate-y-px active:shadow-none text-base font-bold transition-all disabled:opacity-70 disabled:cursor-not-allowed flex justify-center items-center gap-2"
                         >
                             {isLoading ? (
                                 <>
@@ -364,7 +369,7 @@ export const AuthBlocker: React.FC<AuthBlockerProps> = ({ onUnlock, isUnlocked, 
                         <button
                             type="submit"
                             disabled={isLoading}
-                            className="w-full h-14 mt-4 bg-black hover:bg-slate-800 text-white border-2 border-black rounded-none shadow-neo hover:shadow-neo-hover active:translate-x-[1px] active:translate-y-[1px] active:shadow-none text-base font-bold transition-all disabled:opacity-70 disabled:cursor-not-allowed flex justify-center items-center gap-2"
+                            className="w-full h-14 mt-4 bg-black hover:bg-slate-800 text-white border-2 border-black rounded-none shadow-neo hover:shadow-neo-hover active:translate-x-px active:translate-y-px active:shadow-none text-base font-bold transition-all disabled:opacity-70 disabled:cursor-not-allowed flex justify-center items-center gap-2"
                         >
                             {isLoading ? (
                                 <>

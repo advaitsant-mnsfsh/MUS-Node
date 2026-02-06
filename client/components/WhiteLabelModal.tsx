@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import ReactCrop, { Crop, PixelCrop, centerCrop, makeAspectCrop } from 'react-image-crop';
 import 'react-image-crop/dist/ReactCrop.css';
+import { Image, X, Upload, Trash2, Check, Crop as CropIcon } from 'lucide-react';
 
 interface WhiteLabelModalProps {
   isOpen: boolean;
@@ -148,71 +149,91 @@ export const WhiteLabelModal: React.FC<WhiteLabelModalProps> = ({ isOpen, onClos
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black bg-opacity-80 backdrop-blur-sm p-4">
-      <div className="bg-white rounded-xl shadow-2xl w-full max-w-4xl flex flex-col max-h-[90vh]">
-        <div className="p-6 border-b border-gray-100 flex justify-between items-center">
+    <div className="fixed inset-0 z-9999 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-in fade-in duration-200">
+      <div className="bg-white rounded-lg shadow-neo border-2 border-border-main w-full max-w-4xl flex flex-col max-h-[90vh] overflow-hidden animate-in zoom-in-95 duration-200">
+
+        {/* Header */}
+        <div className="p-6 border-b-2 border-border-main flex justify-between items-center bg-accent-yellow/10">
           <div>
-            <h2 className="text-xl font-bold text-slate-800">Add Custom Logo (White Label)</h2>
-            <p className="text-sm text-slate-500 mt-1">
-              Upload and crop your logo. Use "Free" mode to drag handles freely.
+            <h2 className="text-xl font-bold text-text-primary flex items-center gap-2">
+              <Image className="w-5 h-5" />
+              Add Custom Branding
+            </h2>
+            <p className="text-sm text-text-secondary mt-1 font-medium">
+              Your logo will appear on all audit reports.
             </p>
           </div>
-          <button onClick={onClose} className="text-slate-400 hover:text-slate-600 transition-colors">
-            <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-            </svg>
+          <button
+            onClick={onClose}
+            className="p-2 hover:bg-black/5 rounded-full transition-colors text-text-primary border-2 border-transparent hover:border-black"
+          >
+            <X className="w-6 h-6" />
           </button>
         </div>
 
+        {/* Content */}
         <div className="flex-1 overflow-y-auto p-6 bg-slate-50">
           {!imageSrc ? (
             <div className="flex items-center justify-center w-full min-h-[300px]">
-              <label className="flex flex-col items-center justify-center w-full h-64 border-2 border-slate-300 border-dashed rounded-lg cursor-pointer bg-white hover:bg-indigo-50 hover:border-indigo-200 transition-colors group">
-                <div className="flex flex-col items-center justify-center pt-5 pb-6">
-                  <div className="p-3 bg-slate-100 rounded-full group-hover:bg-indigo-100 mb-3 transition-colors">
-                    <svg className="w-8 h-8 text-slate-400 group-hover:text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
-                    </svg>
+              <label className="flex flex-col items-center justify-center w-full h-80 border-2 border-dashed border-border-main rounded-lg cursor-pointer bg-white hover:bg-accent-cyan/5 hover:border-accent-cyan transition-colors group relative overflow-hidden">
+                <div className="flex flex-col items-center justify-center pt-5 pb-6 z-10">
+                  <div className="p-4 bg-accent-cyan rounded-full border-2 border-border-main shadow-neo-sm group-hover:shadow-neo group-hover:-translate-y-1 transition-all mb-4">
+                    <Upload className="w-8 h-8 text-black" />
                   </div>
-                  <p className="mb-2 text-sm text-slate-500"><span className="font-semibold text-indigo-600">Click to upload</span> or drag and drop</p>
-                  <p className="text-xs text-slate-400">PNG, JPG (MAX. 5MB)</p>
+                  <p className="mb-2 text-lg font-bold text-text-primary">Click to upload logo</p>
+                  <p className="text-sm text-text-secondary">or drag and drop here</p>
+                  <p className="text-xs text-slate-400 mt-4 font-mono bg-slate-100 px-2 py-1 rounded">PNG, JPG (MAX. 5MB)</p>
                 </div>
+                {/* Decorative background pattern */}
+                <div className="absolute inset-0 opacity-[0.03] bg-[radial-gradient(#000_1px,transparent_1px)] bg-[size:16px_16px]"></div>
+
                 <input type="file" className="hidden" accept="image/*" onChange={onFileChange} />
               </label>
             </div>
           ) : (
             <div className="space-y-6">
               {/* Cropper Container */}
-              <div className="flex justify-center bg-slate-900 rounded-lg overflow-hidden min-h-[300px] items-center">
+              <div className="flex justify-center bg-slate-900 border-2 border-border-main rounded-lg overflow-hidden min-h-[300px] items-center relative shadow-inner">
+                <div className="absolute inset-0 opacity-20 bg-[radial-gradient(#fff_1px,transparent_1px)] bg-[size:16px_16px]"></div>
                 <ReactCrop
                   crop={crop}
                   onChange={(_, percentCrop) => setCrop(percentCrop)}
                   onComplete={(c) => setCompletedCrop(c)}
                   aspect={aspect}
-                  className="max-h-[50vh]"
+                  className="max-h-[350px] z-10"
                 >
                   <img
                     ref={imgRef}
                     alt="Crop me"
                     src={imageSrc}
                     onLoad={onImageLoad}
-                    style={{ maxHeight: '50vh', maxWidth: '100%', objectFit: 'contain' }}
+                    style={{ maxHeight: '350px', maxWidth: '100%', objectFit: 'contain' }}
                   />
                 </ReactCrop>
               </div>
 
               {/* Controls Bar */}
-              <div className="space-y-4">
-                <div className="flex flex-col space-y-2">
-                  <span className="text-sm font-medium text-slate-700">Aspect Ratio</span>
+              <div className="bg-white p-4 rounded-lg border-2 border-border-main shadow-neo-sm">
+                <div className="flex flex-col space-y-3">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-bold text-text-primary flex items-center gap-2">
+                      <CropIcon className="w-4 h-4" />
+                      Crop Aspect Ratio:
+                    </span>
+                    <label className="cursor-pointer text-xs font-bold text-brand hover:text-brand-hover underline decoration-dotted underline-offset-2 flex items-center gap-1">
+                      Change Image
+                      <input type="file" className="hidden" accept="image/*" onChange={onFileChange} />
+                    </label>
+                  </div>
+
                   <div className="flex flex-wrap gap-2">
                     {ASPECT_RATIOS.map((ratio) => (
                       <button
                         key={ratio.label}
                         onClick={() => handleAspectChange(ratio.value)}
-                        className={`px-3 py-1.5 text-xs font-medium rounded-full transition-colors ${aspect === ratio.value
-                            ? 'bg-indigo-600 text-white shadow-md'
-                            : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                        className={`px-4 py-2 text-xs font-bold rounded border-2 transition-all ${aspect === ratio.value
+                          ? 'bg-text-primary text-white border-text-primary shadow-[2px_2px_0px_0px_rgba(0,0,0,0.3)]'
+                          : 'bg-white text-text-secondary border-border-main hover:bg-slate-50'
                           }`}
                       >
                         {ratio.label}
@@ -220,38 +241,36 @@ export const WhiteLabelModal: React.FC<WhiteLabelModalProps> = ({ isOpen, onClos
                     ))}
                   </div>
                 </div>
-                <label className="cursor-pointer px-3 py-1.5 text-xs font-medium text-indigo-600 hover:text-indigo-700 bg-indigo-50 hover:bg-indigo-100 rounded-md transition-colors flex items-center gap-2 w-fit">
-                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4"><path d="M9.25 13.25a.75.75 0 001.5 0V4.636l2.955 3.129a.75.75 0 001.09-1.03l-4.25-4.5a.75.75 0 00-1.09 0l-4.25 4.5a.75.75 0 101.09 1.03L9.25 4.636v8.614z" /><path d="M3.5 12.75a.75.75 0 00-1.5 0v2.5A2.75 2.75 0 004.75 18h10.5A2.75 2.75 0 0018 15.25v-2.5a.75.75 0 00-1.5 0v2.5c0 .69-.56 1.25-1.25 1.25H4.75c-.69 0-1.25-.56-1.25-1.25v-2.5z" /></svg>
-                  Change Image
-                  <input type="file" className="hidden" accept="image/*" onChange={onFileChange} />
-                </label>
               </div>
             </div>
           )}
         </div>
 
-        <div className="p-6 border-t border-gray-100 bg-gray-50 rounded-b-xl flex justify-between items-center">
+        {/* Footer */}
+        <div className="p-6 border-t-2 border-border-main bg-white flex justify-between items-center">
           {imageSrc ? (
             <button
               onClick={handleRemove}
-              className="text-red-600 hover:text-red-700 text-sm font-medium"
+              className="text-red-500 hover:text-red-600 text-sm font-bold flex items-center gap-2 px-3 py-2 rounded hover:bg-red-50 transition-colors"
             >
-              Remove Logo
+              <Trash2 className="w-4 h-4" />
+              Remove
             </button>
           ) : <div></div>}
 
-          <div className="flex space-x-3">
+          <div className="flex gap-3">
             <button
               onClick={onClose}
-              className="px-5 py-2.5 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-slate-500 transition-all font-semibold"
+              className="px-6 py-2.5 text-sm font-bold text-text-primary bg-white border-2 border-border-main shadow-neo-sm hover:translate-x-px hover:translate-y-px hover:shadow-none transition-all rounded"
             >
               Cancel
             </button>
             <button
               onClick={handleSave}
               disabled={!imageSrc}
-              className="px-6 py-2.5 text-sm font-bold text-white bg-indigo-600 rounded-lg hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:bg-indigo-300 disabled:cursor-not-allowed shadow-md hover:shadow-lg transition-all transform hover:-translate-y-0.5"
+              className="px-6 py-2.5 text-sm font-bold text-white bg-brand border-2 border-border-main shadow-neo hover:translate-x-px hover:translate-y-px hover:shadow-none disabled:bg-slate-300 disabled:shadow-none disabled:cursor-not-allowed transition-all rounded flex items-center gap-2"
             >
+              <Check className="w-4 h-4" />
               Save Logo
             </button>
           </div>
