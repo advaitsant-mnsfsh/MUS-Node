@@ -130,9 +130,17 @@ export async function transferAuditOwnership(auditId: string, userId: string): P
 
         // Use authClient's own fetcher to ensure all CSRF and session headers are handled correctly for cross-site
         try {
+            // Get current session to use its token as a fallback header
+            const { data: session } = await authClient.getSession();
+            const sessionToken = (session as any)?.session?.token;
+
             const response: any = await authClient.$fetch(`${backendUrl}/api/v1/audit/claim`, {
                 method: 'POST',
-                body: { auditId }
+                body: { auditId },
+                credentials: 'include', // CRITICAL for cross-site cookies
+                headers: sessionToken ? {
+                    'Authorization': `Bearer ${sessionToken}`
+                } : {}
             });
 
             if (!response?.success) {

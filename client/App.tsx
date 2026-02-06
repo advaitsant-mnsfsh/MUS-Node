@@ -145,7 +145,8 @@ const App: React.FC = () => {
     }
 
 
-    // 3. LANDING STATE (Initial Form)
+    // 4. LANDING STATE (Initial Form)
+    // Only shown when no audit is being viewed/processed
     return (
         <LandingView
             onAnalyze={handleAnalyze}
