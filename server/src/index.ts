@@ -65,7 +65,15 @@ app.use('/api/keys', apiKeysRoutes);
 app.post('/api/audit/claim', optionalUserAuth, async (req: any, res: any) => {
     const user = (req as AuthenticatedRequest).user;
     const { auditId } = req.body;
-    if (!user) return res.status(401).json({ success: false, error: 'Unauthorized' });
+
+    console.log(`[Claim] Request for Audit: ${auditId}, User: ${user?.email || 'UNDEFINED'}`);
+
+    if (!user) {
+        const cookies = req.headers.cookie ? req.headers.cookie.split(';').map((c: string) => c.split('=')[0].trim()) : [];
+        console.warn(`[Claim] ❌ 401 Unauthorized. User not found in request context. Cookies present: ${cookies.join(', ')}`);
+        return res.status(401).json({ success: false, error: 'Unauthorized: No active session found.' });
+    }
+
     if (!auditId) return res.status(400).json({ success: false, error: 'Missing auditId' });
 
     try {
@@ -74,9 +82,15 @@ app.post('/api/audit/claim', optionalUserAuth, async (req: any, res: any) => {
             .where(and(eq(auditJobs.id, auditId), isNull(auditJobs.user_id)))
             .returning({ id: auditJobs.id });
 
-        if (!updated) return res.status(404).json({ success: false, error: 'Audit not found or already claimed.' });
+        if (!updated) {
+            console.warn(`[Claim] ⚠️ No audit updated for ID ${auditId}. Either not found or already claimed.`);
+            return res.status(404).json({ success: false, error: 'Audit not found or already claimed.' });
+        }
+
+        console.log(`[Claim] ✅ Successfully assigned audit ${auditId} to user ${user.email}`);
         return res.json({ success: true });
     } catch (e: any) {
+        console.error(`[Claim] 💥 Database Error:`, e);
         return res.status(500).json({ success: false, error: e.message });
     }
 });

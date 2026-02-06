@@ -17,8 +17,8 @@ const CACHE_TTL = 120 * 1000; // 2 minutes
 
 async function getCachedSession(req: Request) {
     const cookies = req.headers.cookie || "";
-    // masking actual session token for safety
-    const hasAuditCookie = cookies.includes('.session_token');
+    // Better-Auth typically uses 'better-auth.session_token' or '__Secure-better-auth.session_token'
+    const hasSessionCookie = cookies.includes('session_token');
 
     try {
         const session = await auth.api.getSession({
@@ -27,8 +27,10 @@ async function getCachedSession(req: Request) {
 
         if (session) {
             console.log(`[Auth] Session active for ${session.user.email}`);
-        } else if (hasAuditCookie) {
-            console.warn(`[Auth] Session cookie present but library found NO session.`);
+        } else {
+            if (hasSessionCookie) {
+                console.warn(`[Auth] Session cookie detected but getSession returned null. Cookies: ${cookies.split(';').map(c => c.split('=')[0].trim()).join(', ')}`);
+            }
         }
 
         return session;
