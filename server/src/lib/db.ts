@@ -9,9 +9,9 @@ const connectionString = process.env.DATABASE_URL;
 
 if (!connectionString) {
     if (process.env.NODE_ENV === 'production') {
-        throw new Error('DATABASE_URL is missing in production environment');
+        throw new Error('❌ [CRITICAL] DATABASE_URL is missing from environment variables. You MUST add this in the Railway/Platform "Variables" dashboard.');
     } else {
-        console.warn('⚠️ DATABASE_URL is missing. Database Connection will fail.');
+        console.warn('⚠️ DATABASE_URL is missing (Check your .env file). Database Connection will fail.');
     }
 }
 
