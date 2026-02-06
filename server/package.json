@@ -6,7 +6,8 @@
   "scripts": {
     "start": "node dist/index.js",
     "dev": "ts-node-dev --respawn src/index.ts",
-    "build": "esbuild src/index.ts --bundle --platform=node --target=node18 --outfile=dist/index.js --external:pg-native --external:puppeteer --external:puppeteer-extra --external:puppeteer-extra-plugin-stealth --external:@axe-core/puppeteer"
+    "build": "npx drizzle-kit push && esbuild src/index.ts --bundle --platform=node --target=node18 --outfile=dist/index.js --external:pg-native --external:puppeteer --external:puppeteer-extra --external:puppeteer-extra-plugin-stealth --external:@axe-core/puppeteer",
+    "db:push": "drizzle-kit push"
   },
   "dependencies": {
     "@axe-core/puppeteer": "^4.11.0",
@@ -21,7 +22,8 @@
     "pg": "^8.18.0",
     "puppeteer": "^21.5.2",
     "puppeteer-extra": "^3.3.6",
-    "puppeteer-extra-plugin-stealth": "^2.11.2"
+    "puppeteer-extra-plugin-stealth": "^2.11.2",
+    "resend": "^3.5.0"
   },
   "devDependencies": {
     "@types/compression": "^1.8.1",

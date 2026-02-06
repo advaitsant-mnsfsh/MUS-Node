@@ -16,16 +16,42 @@ export const auth = betterAuth({
     },
 
     // 📧 Plugin: Email OTP (One-Time Password)
-    // This replaces Supabase Magic Links
     plugins: [
         emailOTP({
             async sendVerificationOTP({ email, otp, type }) {
-                // Here we integrate with RESEND to send the email
-                // We will implement the actual email sending logic separately
-                console.log(`[AUTH] Sending OTP to ${email}: ${otp}`);
+                const resendApiKey = process.env.RESEND_API_KEY;
+                if (!resendApiKey) {
+                    console.error("[AUTH] RESEND_API_KEY is missing. OTP cannot be sent.");
+                    console.log(`[AUTH] FALLBACK OTP for ${email}: ${otp}`);
+                    return;
+                }
 
-                // Example Resend call:
-                // await resend.emails.send({ ... })
+                try {
+                    const { Resend } = await import("resend");
+                    const resend = new Resend(resendApiKey);
+
+                    const { error } = await resend.emails.send({
+                        from: 'MUS <onboarding@resend.dev>', // Update this to your verified domain later
+                        to: [email],
+                        subject: 'Your Verification Code',
+                        html: `
+                            <div style="font-family: sans-serif; padding: 20px; border: 1px solid #eee; border-radius: 10px; max-width: 500px; margin: auto;">
+                                <h1 style="color: #333;">Verification Code</h1>
+                                <p style="font-size: 16px; color: #666;">Use the following code to sign in to MUS:</p>
+                                <div style="font-size: 32px; font-weight: bold; color: #000; letter-spacing: 5px; margin: 20px 0;">${otp}</div>
+                                <p style="font-size: 14px; color: #999;">This code will expire in 10 minutes.</p>
+                            </div>
+                        `,
+                    });
+
+                    if (error) {
+                        console.error("[AUTH] Resend Error:", error);
+                    } else {
+                        console.log(`[AUTH] OTP sent successfully to ${email}`);
+                    }
+                } catch (err) {
+                    console.error("[AUTH] Failed to send OTP via Resend:", err);
+                }
             },
             sendVerificationOnSignUp: true,
         }),
