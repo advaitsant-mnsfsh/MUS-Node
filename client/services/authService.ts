@@ -15,20 +15,36 @@ export async function updateProfile(attributes: { password?: string; data?: any 
  */
 export async function signUp(email: string, password: string, data?: any): Promise<{ session: any; error: string | null }> {
     try {
+        console.log('[AuthService] 🚀 Attempting Sign Up for:', email);
         const { data: authData, error } = await authClient.signUp.email({
             email,
             password,
             name: data?.name || email.split('@')[0],
-            // Better-auth stores extra data in 'metadata' if configured or root fields
         });
 
-        if (authData?.token) {
-            saveSession(authData.token, authData.user);
+        console.log('[AuthService] Sign Up Response:', { data: authData, error });
+
+        // TRY ALL COMMON TOKEN PATHS
+        const token = (authData as any)?.token || (authData as any)?.session?.token;
+        const user = authData?.user;
+
+        if (token && user) {
+            console.log('[AuthService] ✅ Token found, saving session...');
+            saveSession(token, user);
+        } else {
+            console.warn('[AuthService] ⚠️ No token or user found in response. Token path check:', {
+                'data.token': !!(authData as any)?.token,
+                'data.session.token': !!(authData as any)?.session?.token
+            });
+        }
+
+        if (error) {
+            return { session: null, error: error.message || 'Failed to sign up' };
         }
 
         return { session: authData, error: null };
     } catch (err: any) {
-        console.error('Unexpected error signing up:', err);
+        console.error('[AuthService] 💥 Unexpected error signing up:', err);
         return { session: null, error: err.message || 'Failed to sign up' };
     }
 }
@@ -38,18 +54,35 @@ export async function signUp(email: string, password: string, data?: any): Promi
  */
 export async function signIn(email: string, password: string): Promise<{ session: any; error: string | null }> {
     try {
+        console.log('[AuthService] 🚀 Attempting Sign In for:', email);
         const { data, error } = await authClient.signIn.email({
             email,
             password,
         });
 
-        if (data?.token) {
-            saveSession(data.token, data.user);
+        console.log('[AuthService] Sign In Response:', { data, error });
+
+        // TRY ALL COMMON TOKEN PATHS
+        const token = (data as any)?.token || (data as any)?.session?.token;
+        const user = data?.user;
+
+        if (token && user) {
+            console.log('[AuthService] ✅ Token found, saving session...');
+            saveSession(token, user);
+        } else {
+            console.warn('[AuthService] ⚠️ No token or user found in response. Token path check:', {
+                'data.token': !!(data as any)?.token,
+                'data.session.token': !!(data as any)?.session?.token
+            });
+        }
+
+        if (error) {
+            return { session: null, error: error.message || 'Failed to sign in' };
         }
 
         return { session: data, error: null };
     } catch (err: any) {
-        console.error('Unexpected error signing in:', err);
+        console.error('[AuthService] 💥 Unexpected error signing in:', err);
         return { session: null, error: err.message || 'Failed to sign in' };
     }
 }
