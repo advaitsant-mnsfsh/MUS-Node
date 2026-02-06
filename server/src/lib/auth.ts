@@ -2,7 +2,7 @@ import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { db } from "./db"; // Our Drizzle Client
 import { google } from "better-auth/social-providers";
-import { emailOTP } from "better-auth/plugins";
+import { emailOTP, bearer } from "better-auth/plugins";
 
 export const auth = betterAuth({
     baseURL: process.env.BETTER_AUTH_URL, // e.g. https://mus-node-production.up.railway.app
@@ -28,6 +28,7 @@ export const auth = betterAuth({
 
     // 📧 Plugin: Email OTP (One-Time Password)
     plugins: [
+        bearer(),
         emailOTP({
             async sendVerificationOTP({ email, otp, type }) {
                 const resendApiKey = process.env.RESEND_API_KEY;

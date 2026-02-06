@@ -28,40 +28,17 @@ async function getCachedSession(req: Request) {
     console.log(`[Auth-Diagnostic] Cookie found: ${!!cookies}, Auth Header found: ${!!authHeader}`);
 
     try {
-        // 1. Try standard session check (Cookie-based)
-        let session = await auth.api.getSession({
+        // 1. Fetch Session
+        // With 'bearer' plugin enabled, Better-Auth will automatically check
+        // both Cookies AND the 'Authorization: Bearer <token>' header.
+        const session = await auth.api.getSession({
             headers: fromNodeHeaders(req.headers)
         });
 
-        // 2. If cookie failed but we have a Bearer token, try manual validation
-        if (!session && hasBearerToken) {
-            const token = authHeader.split(' ')[1];
-            console.log(`[Auth-Diagnostic] 🔑 Found Bearer token (Len: ${token?.length}). Validating...`);
-
-            // Try Standard AND Secure cookie names (Better-Auth is picky)
-            const cookieNames = ['better-auth.session_token', '__Secure-better-auth.session_token'];
-
-            for (const name of cookieNames) {
-                if (session) break;
-
-                try {
-                    session = await auth.api.getSession({
-                        headers: {
-                            ...fromNodeHeaders(req.headers),
-                            cookie: `${name}=${token}`
-                        }
-                    });
-                    if (session) {
-                        console.log(`[Auth-Diagnostic] ✅ SUCCESS: Validated via cookie name: ${name}`);
-                    }
-                } catch (e) {
-                    // Fail silently and try next name
-                }
-            }
-
-            if (!session) {
-                console.warn(`[Auth-Diagnostic] ❌ FAILURE: Token rejected by all prefix variations.`);
-            }
+        if (session) {
+            console.log(`[Auth-Diagnostic] ✅ SUCCESS: Session found for ${session.user.email}`);
+        } else if (hasBearerToken) {
+            console.warn(`[Auth-Diagnostic] ❌ FAILURE: Bearer token present but rejected by Better-Auth.`);
         }
 
         return session;
