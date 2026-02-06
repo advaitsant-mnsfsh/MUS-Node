@@ -1,17 +1,16 @@
-import { authClient } from '../lib/auth-client';
+import { getSession } from './sessionStorage';
 
 /**
  * Enhanced fetch that automatically includes session authentication
- * Works around cross-origin cookie limitations by using Authorization header
+ * Uses localStorage-based session instead of cookies to avoid cross-origin issues
  */
 export async function authenticatedFetch(url: string, options: RequestInit = {}): Promise<Response> {
     console.log(`[authenticatedFetch] 🔵 Starting request to: ${url}`);
 
-    // Get current session
-    const { data: session } = await authClient.getSession();
-    console.log(`[authenticatedFetch] Session data:`, session);
+    // Get session from localStorage
+    const session = getSession();
+    const sessionToken = session?.token;
 
-    const sessionToken = (session as any)?.session?.token;
     console.log(`[authenticatedFetch] Session token exists: ${!!sessionToken}, Length: ${sessionToken?.length || 0}`);
 
     if (sessionToken) {

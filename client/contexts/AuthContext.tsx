@@ -1,9 +1,7 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { authClient } from '../lib/auth-client';
+import { getSession as getStoredSession, clearSession as clearStoredSession } from '../lib/sessionStorage';
 
-// Adapting types for compatibility. 
-// Ideally, you'd replace 'Session' / 'User' usage across the app with Better-Auth types eventually.
-// For now, we define loose types that match the "Shape" expected by consumers.
 export interface User {
     id: string;
     email?: string;
@@ -33,33 +31,42 @@ const AuthContext = createContext<AuthContextType>({
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     // using the builtin hook from better-auth
-    const { data: sessionData, isPending, error } = authClient.useSession();
+    const { data: sessionData, isPending } = authClient.useSession();
 
-    // PERSISTENCE HINT: Try to get a hint from localStorage to avoid initial flicker
-    const [userHint, setUserHint] = useState<User | null>(() => {
-        const saved = localStorage.getItem('mus_user_hint');
-        return saved ? JSON.parse(saved) : null;
-    });
+    // Secondary source of truth: our manual localStorage session
+    const [manualSession, setManualSession] = useState(getStoredSession());
 
     useEffect(() => {
+        // Sync manual session with better-auth session if found
         if (sessionData?.user) {
+            // We don't have the token here (it's in the cookie), 
+            // but we at least update the user info in our manual store hint
             localStorage.setItem('mus_user_hint', JSON.stringify(sessionData.user));
-            setUserHint(sessionData.user as unknown as User);
+            setManualSession(prev => ({
+                token: prev?.token || '', // Keep existing token if we have it
+                user: sessionData.user as unknown as User,
+                expiresAt: prev?.expiresAt || (Date.now() + 30 * 24 * 60 * 60 * 1000)
+            }));
         } else if (!isPending && !sessionData) {
-            localStorage.removeItem('mus_user_hint');
-            setUserHint(null);
+            // If better-auth explicitly says no session, check if we have a manual one
+            // We keep it because the Bearer token will still work even if cookies fail!
+            const stored = getStoredSession();
+            if (stored) {
+                setManualSession(stored);
+            }
         }
     }, [sessionData, isPending]);
 
-    // Derived state - Use hint if pending to avoid "loading" flash
-    const session = sessionData ? (sessionData as unknown as Session) : null;
-    const user = (sessionData?.user as unknown as User) || (isPending ? userHint : null);
-    const isLoading = isPending && !userHint; // Only "loading" if we don't even have a hint
-
+    // Derived state
+    const user = (sessionData?.user as unknown as User) || (manualSession?.user as unknown as User) || null;
+    const session = sessionData ? (sessionData as unknown as Session) : (manualSession ? { user: manualSession.user } as unknown as Session : null);
+    const isLoading = isPending && !user;
 
     const signOut = async () => {
+        clearStoredSession();
+        setManualSession(null);
+        localStorage.removeItem('mus_user_hint');
         await authClient.signOut();
-        // The hook will automatically update the state
     };
 
     return (

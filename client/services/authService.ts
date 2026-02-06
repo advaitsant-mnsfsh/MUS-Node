@@ -1,4 +1,5 @@
 import { authClient } from '../lib/auth-client';
+import { saveSession, clearSession } from '../lib/sessionStorage';
 
 /**
  * Update user profile (e.g. set password)
@@ -21,9 +22,8 @@ export async function signUp(email: string, password: string, data?: any): Promi
             // Better-auth stores extra data in 'metadata' if configured or root fields
         });
 
-        if (error) {
-            console.error('Error signing up:', error);
-            return { session: null, error: error.message || 'Failed to sign up' };
+        if (authData?.token) {
+            saveSession(authData.token, authData.user);
         }
 
         return { session: authData, error: null };
@@ -43,9 +43,8 @@ export async function signIn(email: string, password: string): Promise<{ session
             password,
         });
 
-        if (error) {
-            console.error('Error signing in:', error);
-            return { session: null, error: error.message || 'Failed to sign in' };
+        if (data?.token) {
+            saveSession(data.token, data.user);
         }
 
         return { session: data, error: null };
@@ -134,5 +133,6 @@ export async function getCurrentSession() {
  * Sign out
  */
 export async function signOut() {
+    clearSession();
     await authClient.signOut();
 }
