@@ -1,4 +1,15 @@
 node_modules
+dist
+dist-ssr
+build
 .env
+.npm
 .DS_Store
 .vscode
+*.log
+npm-debug.log*
+server/dist
+client/dist
+.vercel
+.cache
+.turbo
