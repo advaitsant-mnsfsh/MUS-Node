@@ -2,6 +2,8 @@ import express from 'express';
 import cors from 'cors';
 import compression from 'compression';
 import dotenv from 'dotenv';
+import path from 'path';
+import fs from 'fs';
 import { optionalUserAuth, AuthenticatedRequest } from './middleware/apiAuth';
 import { db, preWarmDatabase } from './lib/db';
 import { auditJobs } from './db/schema';
@@ -48,6 +50,12 @@ app.use(express.json({ limit: '150mb' }));
 app.use(express.urlencoded({ limit: '150mb', extended: true }));
 
 // --- 3. BUSINESS ROUTES ---
+const uploadsDir = path.join(process.cwd(), 'uploads');
+if (!fs.existsSync(uploadsDir)) {
+    fs.mkdirSync(uploadsDir, { recursive: true });
+}
+app.use('/uploads', express.static(uploadsDir));
+
 import apiRoutes from './api/routes';
 import externalRoutes from './api/external';
 import publicRoutes from './api/public';

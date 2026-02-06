@@ -79,11 +79,22 @@ export const ReportContainer: React.FC<ReportContainerProps> = ({
 
     // --- DATA PREP ---
     const desktopScreenshots = screenshots.filter(s => !s.isMobile);
-    const primaryScreenshot = desktopScreenshots[0] || screenshots[0]; // Fallback to first if no desktop
-    const competitorScreenshot = desktopScreenshots[1] || screenshots[1]; // Fallback to second if no desktop
+    const primaryScreenshot = desktopScreenshots[0] || screenshots[0];
+    const competitorScreenshot = desktopScreenshots[1] || screenshots[1];
 
-    const primaryScreenshotSrc = primaryScreenshot?.url || (primaryScreenshot?.data ? `data:image/jpeg;base64,${primaryScreenshot.data}` : undefined);
-    const competitorScreenshotSrc = competitorScreenshot?.url || (competitorScreenshot?.data ? `data:image/jpeg;base64,${competitorScreenshot.data}` : undefined);
+    const getScreenshotSrc = (s: Screenshot | undefined) => {
+        if (!s) return undefined;
+        if (s.url && s.url.startsWith('/uploads')) {
+            const backendUrl = import.meta.env.VITE_BACKEND_URL || import.meta.env.VITE_API_URL || (import.meta.env.PROD ? 'https://mus-node-production.up.railway.app' : 'http://localhost:3000');
+            return `${backendUrl}${s.url}`;
+        }
+        if (s.url) return s.url;
+        if (s.data) return `data:image/jpeg;base64,${s.data}`;
+        return undefined;
+    };
+
+    const primaryScreenshotSrc = getScreenshotSrc(primaryScreenshot);
+    const competitorScreenshotSrc = getScreenshotSrc(competitorScreenshot);
 
     // Determine Mode
     const isCompetitorReport = !!report?.["Competitor Analysis expert"];
