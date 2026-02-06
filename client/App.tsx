@@ -103,24 +103,10 @@ const App: React.FC = () => {
         );
     };
 
-    // 1. LOADING STATE
-    if (isLoading) {
-        return (
-            <AnalysisView
-                progress={progress}
-                loadingMessage={loadingMessage}
-                microcopy={currentMicrocopy}
-                animationData={qrCodeAnimationData}
-                screenshot={screenshots.length > 0 ? screenshots[0].data : null}
-                url={submittedUrl}
-                fullWidth={!!user}
-                auditId={auditId}
-            />
-        );
-    }
-
     // 2. REPORT STATE (Locked or Full)
-    if (!isLoading && auditId && report) {
+    // We only show Results if we have an auditId AND the report data is actually present.
+    // If auditId exists but report is missing, we stick to the Loading state (triggered by useAudit useEffect)
+    if (auditId && report && !isLoading) {
         return (
             <ReportResultView
                 report={report}
@@ -137,6 +123,23 @@ const App: React.FC = () => {
                 whiteLabelLogo={whiteLabelLogo}
                 animationData={qrCodeAnimationData}
                 handleRunNewAudit={handleRunNewAudit}
+            />
+        );
+    }
+
+    // 3. ANALYSIS / LOADING STATE
+    // Show this if specifically loading OR if we have an ID but data isn't here yet.
+    if (isLoading || (auditId && !report)) {
+        return (
+            <AnalysisView
+                progress={progress}
+                loadingMessage={loadingMessage}
+                microcopy={currentMicrocopy}
+                animationData={qrCodeAnimationData}
+                screenshot={screenshots.length > 0 ? screenshots[0].data : null}
+                url={submittedUrl}
+                fullWidth={!!user}
+                auditId={auditId}
             />
         );
     }

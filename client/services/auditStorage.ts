@@ -126,21 +126,24 @@ export async function transferAuditOwnership(auditId: string, userId: string): P
     console.log(`[auditStorage] Request received: Transfer Audit ${auditId} -> User ${userId}`);
 
     try {
-        // Call Backend API
-        const response = await fetch(`${backendUrl}/api/audit/claim`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ auditId }),
-            credentials: 'include' // Send Better-Auth Session Cookie
-        });
+        const { authClient } = await import('../lib/auth-client');
 
-        const result = await response.json();
+        // Use authClient's own fetcher to ensure all CSRF and session headers are handled correctly for cross-site
+        try {
+            const response: any = await authClient.$fetch(`${backendUrl}/api/v1/audit/claim`, {
+                method: 'POST',
+                body: { auditId }
+            });
 
-        if (!response.ok || !result.success) {
-            console.error('[auditStorage] ❌ API Error transferring ownership:', result.error);
-            return { success: false, error: result.error || 'API Failed' };
+            if (!response?.success) {
+                console.error('[auditStorage] ❌ API Error transferring ownership:', response?.error);
+                return { success: false, error: response?.error || 'API Failed' };
+            }
+        } catch (fetchErr: any) {
+            // Handle cases where the response might not be JSON (e.g. 404 HTML page)
+            console.error('[auditStorage] 💥 Fetch Error in transferAuditOwnership:', fetchErr);
+            const errorMessage = (fetchErr.response?._data?.error) || fetchErr.message || 'Network error';
+            return { success: false, error: errorMessage };
         }
 
         console.log(`[auditStorage] ✅ Successfully transferred audit ${auditId} to user ${userId} (via Admin API)`);

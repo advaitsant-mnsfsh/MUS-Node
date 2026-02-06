@@ -62,6 +62,34 @@ app.use('/api/external', externalRoutes);
 app.use('/api/public', publicRoutes);
 app.use('/api/keys', apiKeysRoutes);
 
+// Legacy Claim Route (for backward compatibility during deployment)
+app.post('/api/audit/claim', optionalUserAuth, async (req: any, res: any) => {
+    const user = (req as AuthenticatedRequest).user;
+    const { auditId } = req.body;
+    console.log(`[Claim-Legacy] Request for Audit: ${auditId}, User: ${user?.email || 'UNDEFINED'}`);
+
+    if (!user) {
+        return res.status(401).json({ success: false, error: 'Unauthorized: No active session found.' });
+    }
+
+    if (!auditId) return res.status(400).json({ success: false, error: 'Missing auditId' });
+
+    try {
+        const [updated] = await db.update(auditJobs)
+            .set({ user_id: user.id })
+            .where(and(eq(auditJobs.id, auditId), isNull(auditJobs.user_id)))
+            .returning({ id: auditJobs.id });
+
+        if (!updated) return res.status(404).json({ success: false, error: 'Audit not found or already claimed.' });
+
+        console.log(`[Claim-Legacy] ✅ Successfully assigned audit ${auditId} to user ${user.email}`);
+        return res.json({ success: true });
+    } catch (e: any) {
+        console.error(`[Claim-Legacy] 💥 Error:`, e);
+        return res.status(500).json({ success: false, error: e.message });
+    }
+});
+
 
 // --- 4. SYSTEM INITIALIZATION ---
 
@@ -103,5 +131,5 @@ process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
 process.on('SIGINT', () => gracefulShutdown('SIGINT'));
 
 setInterval(() => {
-    console.log(`[Keepalive] Memory: ${Math.round(process.memoryUsage().heapUsed / 1024 / 1024)}MB`);
+    console.log(`[Health Monitor] Memory: ${Math.round(process.memoryUsage().heapUsed / 1024 / 1024)}MB`);
 }, 60000);

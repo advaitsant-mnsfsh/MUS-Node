@@ -12,6 +12,15 @@ export const auth = betterAuth({
         provider: "pg", // PostgreSQL
     }),
 
+    session: {
+        expiresIn: 60 * 60 * 24 * 30, // 30 Days (Feel free to make it longer)
+        updateAge: 60 * 60 * 24, // Update session once a day if active
+        cookieCache: {
+            enabled: true,
+            maxAge: 5 * 60 // 5 min local cookie cache for speed
+        }
+    },
+
     emailAndPassword: {
         enabled: true,
         // autoSignIn: false // We verify email first!

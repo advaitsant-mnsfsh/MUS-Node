@@ -70,6 +70,10 @@ router.get('/audit', async (req: express.Request, res: express.Response) => {
         res.setHeader('Cache-Control', 'no-cache');
         res.setHeader('Connection', 'keep-alive');
 
+        // Ensure the platform / express doesn't timeout the connection
+        req.setTimeout(600000); // 10 minutes (overkill but safe)
+        res.setTimeout(600000);
+
         const sendChunk = (data: any) => {
             res.write(JSON.stringify(data) + '\n');
         };
