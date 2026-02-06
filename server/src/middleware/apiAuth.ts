@@ -17,43 +17,45 @@ const CACHE_TTL = 120 * 1000; // 2 minutes
 
 async function getCachedSession(req: Request) {
     const cookies = req.headers.cookie || "";
-    const authHeader = req.headers.authorization;
+    // Check for Authorization in both casings (common in some environments)
+    const authHeader = (req.headers.authorization || req.headers.Authorization) as string;
+    const path = req.originalUrl || req.url;
 
-    // Better-Auth typically uses 'better-auth.session_token' or '__Secure-better-auth.session_token'
     const hasSessionCookie = cookies.includes('session_token');
     const hasBearerToken = authHeader?.startsWith('Bearer ');
 
+    console.log(`[Auth-Diagnostic] 🛡️ Checking Auth for ${path}`);
+    console.log(`[Auth-Diagnostic] Cookie found: ${!!cookies}, Auth Header found: ${!!authHeader}`);
+
     try {
-        // Try cookie-based session first
+        // 1. Try standard session check (Cookie-based)
         let session = await auth.api.getSession({
             headers: fromNodeHeaders(req.headers)
         });
 
-        // If no session from cookies, try Bearer token
+        // 2. If cookie failed but we have a Bearer token, try manual validation
         if (!session && hasBearerToken) {
-            const token = authHeader!.replace('Bearer ', '');
-            console.log(`[Auth] Attempting Bearer token auth (token length: ${token.length})`);
+            const token = authHeader.split(' ')[1];
+            console.log(`[Auth-Diagnostic] 🔑 Found Bearer token (Len: ${token?.length}). Validating...`);
 
-            // Verify the token with Better-Auth
+            // Validate by injecting the token as a cookie into the fake headers
             session = await auth.api.getSession({
                 headers: {
                     ...fromNodeHeaders(req.headers),
                     cookie: `better-auth.session_token=${token}`
                 }
             });
-        }
 
-        if (session) {
-            console.log(`[Auth] ✅ Session active for ${session.user.email} (via ${hasBearerToken && !hasSessionCookie ? 'Bearer token' : 'cookie'})`);
-        } else {
-            if (hasSessionCookie || hasBearerToken) {
-                console.warn(`[Auth] ⚠️ Auth credentials present but no session found. Cookie: ${hasSessionCookie}, Bearer: ${hasBearerToken}`);
+            if (session) {
+                console.log(`[Auth-Diagnostic] ✅ SUCCESS: Session validated for ${session.user.email} via Bearer`);
+            } else {
+                console.warn(`[Auth-Diagnostic] ❌ FAILURE: Token sent but Better-Auth returned null.`);
             }
         }
 
         return session;
     } catch (e) {
-        console.error("[Auth] Session check failed:", e);
+        console.error("[Auth-Diagnostic] 💥 Critical Auth Error:", e);
         return null;
     }
 }
