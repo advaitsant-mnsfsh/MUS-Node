@@ -17,7 +17,8 @@ app.use((req, res, next) => {
     const start = Date.now();
     res.on('finish', () => {
         const duration = Date.now() - start;
-        console.log(`[HTTP] ${req.method} ${req.url} ${res.statusCode} (${duration}ms)`);
+        // Use originalUrl to see /api/v1 even inside sub-routers
+        console.log(`[HTTP] ${req.method} ${req.originalUrl} ${res.statusCode} (${duration}ms)`);
     });
     next();
 });

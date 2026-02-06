@@ -97,7 +97,7 @@ export const validateAccess = async (req: Request, res: Response, next: NextFunc
             });
 
             if (keyRecord) {
-                console.log(`[Auth] validateAccess: API Key Verified (took ${Date.now() - start}ms)`);
+                console.log(`[Auth] validateAccess: API Key Verified for ${keyRecord.owner_name}`);
                 (req as AuthenticatedRequest).apiKey = {
                     id: keyRecord.id,
                     owner_name: keyRecord.owner_name
@@ -109,6 +109,9 @@ export const validateAccess = async (req: Request, res: Response, next: NextFunc
         }
     }
 
+    // Diagnostic log for 401
+    const cookies = req.headers.cookie ? req.headers.cookie.split(';').length : 0;
+    console.warn(`[Auth] validateAccess: 401 Unauthorized for ${req.originalUrl || req.url}. Cookies: ${cookies}, Has API Key: ${!!apiKeyHeader}`);
     return res.status(401).json({ error: 'Unauthorized' });
 };
 
