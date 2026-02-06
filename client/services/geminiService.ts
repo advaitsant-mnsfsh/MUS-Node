@@ -44,18 +44,19 @@ const fileToBase64 = (file: File): Promise<string> => {
 
 export const monitorJobStream = async (jobId: string, callbacks: StreamCallbacks): Promise<void> => {
   const { onStatus, onData, onComplete, onError, onClose } = callbacks;
-  const finalReport: AnalysisReport = {}; // Local aggregation for this stream session
+  const finalReport: AnalysisReport = {};
 
   try {
     const streamUrl = `${functionUrl}?mode=stream-job&jobId=${jobId}`;
     console.log('[Stream] Connecting to:', streamUrl);
 
-    const response = await fetch(streamUrl, {
+    // Use authenticatedFetch to ensure session token is sent
+    const { authenticatedFetch } = await import('../lib/authenticatedFetch');
+    const response = await authenticatedFetch(streamUrl, {
       headers: {
         'Cache-Control': 'no-cache',
         'Connection': 'keep-alive'
-      },
-      credentials: 'include'
+      }
     });
 
     if (!response.ok) {
@@ -84,13 +85,13 @@ export const monitorJobStream = async (jobId: string, callbacks: StreamCallbacks
             onStatus(chunk.message);
           } else if (chunk.type === 'data') {
             const { key, data } = chunk.payload;
-            console.log(`[Stream] Data Chunk Key: ${key}`, key === 'screenshots' ? `(Count: ${data?.length})` : '');
+            console.log(`[Stream] Data Chunk Key: ${key}`);
             finalReport[key] = data;
             onData(chunk.payload);
           } else if (chunk.type === 'complete') {
             console.log("[Stream] Job Complete Payload:", chunk.payload);
             onComplete(chunk.payload);
-            return; // Stop monitoring
+            return;
           } else if (chunk.type === 'error') {
             onError(chunk.message);
             return;
@@ -110,11 +111,10 @@ export const monitorJobStream = async (jobId: string, callbacks: StreamCallbacks
 };
 
 export const analyzeWebsiteStream = async (
-  { inputs, auditMode = 'standard', token }: AnalyzeParams,
+  { inputs, auditMode = 'standard' }: AnalyzeParams,
   callbacks: StreamCallbacks
 ): Promise<void> => {
   const { onScrapeComplete, onStatus, onData, onJobCreated, onComplete, onError, onClose, onPerformanceError } = callbacks;
-  const finalReport: AnalysisReport = {};
 
   try {
     // 1. Prepare Inputs
@@ -128,7 +128,7 @@ export const analyzeWebsiteStream = async (
         for (const f of files) {
           if (f) filesData.push(await fileToBase64(f));
         }
-        processedInputs.push({ ...input, filesData, file: undefined, files: undefined }); // Remove blobs
+        processedInputs.push({ ...input, filesData, file: undefined, files: undefined });
       } else {
         processedInputs.push(input);
       }
@@ -137,16 +137,11 @@ export const analyzeWebsiteStream = async (
     // 2. Create Job
     onStatus('Starting audit job...');
 
-    const headers: any = { ...commonHeaders };
-    if (token) {
-      headers['Authorization'] = `Bearer ${token}`;
-    }
-
-    const startResponse = await fetch(functionUrl, {
+    const { authenticatedFetch } = await import('../lib/authenticatedFetch');
+    const startResponse = await authenticatedFetch(functionUrl, {
       method: 'POST',
-      headers: headers,
-      body: JSON.stringify({ mode: 'start-audit', inputs: processedInputs, auditMode }),
-      credentials: 'include'
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ mode: 'start-audit', inputs: processedInputs, auditMode })
     });
 
     if (!startResponse.ok) {

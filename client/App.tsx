@@ -103,10 +103,13 @@ const App: React.FC = () => {
         );
     };
 
+    // --- DIAGNOSTIC LOGGING ---
+    console.log(`[App] Current State: auditId=${auditId}, hasReport=${!!report}, isLoading=${isLoading}`);
+
     // 2. REPORT STATE (Locked or Full)
     // We only show Results if we have an auditId AND the report data is actually present.
-    // If auditId exists but report is missing, we stick to the Loading state (triggered by useAudit useEffect)
     if (auditId && report && !isLoading) {
+        console.log('[App] Rendering: ReportResultView');
         return (
             <ReportResultView
                 report={report}
