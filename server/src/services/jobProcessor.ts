@@ -24,8 +24,12 @@ export class JobProcessor {
             const apiKeyBup = appSecrets['GEMINI_API_KEY_BUP'] || appSecrets['API_KEY_BUP'] || process.env.GEMINI_API_KEY_BUP || process.env.API_KEY_BUP;
             const browserEndpoint = appSecrets['PUPPETEER_BROWSER_ENDPOINT'] || process.env.PUPPETEER_BROWSER_ENDPOINT;
 
-            // Log secret discovery (masked)
-            console.log(`[JobProcessor] [${jobId}] Secrets Found: GEMINI=${!!apiKeyRaw}, BROWSER=${!!browserEndpoint} (${browserEndpoint ? 'using remote' : 'missing'})`);
+            // LOUD LOG for Browser Endpoint
+            if (browserEndpoint) {
+                console.log(`[JobProcessor] [${jobId}] Browser Endpoint found! (Length: ${browserEndpoint.length}, Source: ${appSecrets['PUPPETEER_BROWSER_ENDPOINT'] ? 'DB' : 'ENV'})`);
+            } else {
+                console.warn(`[JobProcessor] [${jobId}] CRITICAL: No browser endpoint found in DB or ENV.`);
+            }
 
             if (!apiKeyRaw) throw new Error('Missing GEMINI_API_KEY in app_secrets or Env Vars');
 
