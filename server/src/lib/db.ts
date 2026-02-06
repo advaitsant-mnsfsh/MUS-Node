@@ -32,7 +32,7 @@ pool.on('error', (err) => {
 });
 
 // Pre-warm the pool to avoid cold-start latency on first request
-const preWarm = async (retries = 3) => {
+export const preWarmDatabase = async (retries = 3) => {
     for (let i = 0; i < retries; i++) {
         try {
             await pool.query('SELECT 1');
@@ -45,9 +45,5 @@ const preWarm = async (retries = 3) => {
         }
     }
 };
-
-preWarm().catch(err => {
-    console.error('❌ Database pre-warm failed after retries:', err.message);
-});
 
 export const db = drizzle(pool, { schema });
