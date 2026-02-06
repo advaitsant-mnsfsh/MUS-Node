@@ -19,7 +19,10 @@ const CACHE_TTL = 120 * 1000; // 2 minutes
  * Helper to get session with local memory caching & request collapsing
  */
 async function getCachedSession(req: Request) {
-    const authCookie = req.headers.cookie?.split(';').find(c => c.trim().startsWith('better-auth.session_token'));
+    const authCookie = req.headers.cookie?.split(';').find(c => {
+        const name = c.trim().split('=')[0];
+        return name.endsWith('better-auth.session_token');
+    });
 
     if (!authCookie) return null;
 
