@@ -124,13 +124,22 @@ export const validateApiKey = validateAccess;
  */
 export const optionalUserAuth = async (req: Request, res: Response, next: NextFunction) => {
     const start = Date.now();
+    const path = req.originalUrl || req.url;
+    const cookies = req.headers.cookie || '';
+    const hasCookies = cookies.length > 0;
+
+    console.log(`[Auth] optionalUserAuth START for ${path}`);
+    console.log(`[Auth] Has Cookies: ${hasCookies}, Cookie Count: ${cookies.split(';').length}`);
+
     try {
         const session = await getCachedSession(req);
 
         if (session) {
             const isCached = Date.now() - start < 10;
-            console.log(`[Auth] optionalUserAuth: Found User ${session.user.id} (took ${Date.now() - start}ms${isCached ? ' [CACHED]' : ''})`);
+            console.log(`[Auth] optionalUserAuth: ✅ Found User ${session.user.email} (${session.user.id}) (took ${Date.now() - start}ms${isCached ? ' [CACHED]' : ''})`);
             (req as AuthenticatedRequest).user = session.user;
+        } else {
+            console.log(`[Auth] optionalUserAuth: ⚠️ No session found (took ${Date.now() - start}ms). Cookies present: ${hasCookies}`);
         }
     } catch (error) {
         console.error('[Auth] optionalUserAuth Error:', error);

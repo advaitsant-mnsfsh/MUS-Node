@@ -126,32 +126,21 @@ export async function transferAuditOwnership(auditId: string, userId: string): P
     console.log(`[auditStorage] Request received: Transfer Audit ${auditId} -> User ${userId}`);
 
     try {
-        const { authClient } = await import('../lib/auth-client');
+        // Use standard fetch with credentials to ensure session cookies are sent
+        const response = await fetch(`${backendUrl}/api/v1/audit/claim`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ auditId }),
+            credentials: 'include' // CRITICAL: Send session cookies cross-origin
+        });
 
-        // Use authClient's own fetcher to ensure all CSRF and session headers are handled correctly for cross-site
-        try {
-            // Get current session to use its token as a fallback header
-            const { data: session } = await authClient.getSession();
-            const sessionToken = (session as any)?.session?.token;
+        const result = await response.json();
 
-            const response: any = await authClient.$fetch(`${backendUrl}/api/v1/audit/claim`, {
-                method: 'POST',
-                body: { auditId },
-                credentials: 'include', // CRITICAL for cross-site cookies
-                headers: sessionToken ? {
-                    'Authorization': `Bearer ${sessionToken}`
-                } : {}
-            });
-
-            if (!response?.success) {
-                console.error('[auditStorage] ❌ API Error transferring ownership:', response?.error);
-                return { success: false, error: response?.error || 'API Failed' };
-            }
-        } catch (fetchErr: any) {
-            // Handle cases where the response might not be JSON (e.g. 404 HTML page)
-            console.error('[auditStorage] 💥 Fetch Error in transferAuditOwnership:', fetchErr);
-            const errorMessage = (fetchErr.response?._data?.error) || fetchErr.message || 'Network error';
-            return { success: false, error: errorMessage };
+        if (!response.ok || !result.success) {
+            console.error('[auditStorage] ❌ API Error transferring ownership:', result.error);
+            return { success: false, error: result.error || 'Transfer failed' };
         }
 
         console.log(`[auditStorage] ✅ Successfully transferred audit ${auditId} to user ${userId} (via Admin API)`);

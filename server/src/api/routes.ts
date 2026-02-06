@@ -230,13 +230,23 @@ router.post('/audit/claim', optionalUserAuth, async (req: express.Request, res: 
     const user = authReq.user;
     const { auditId } = req.body;
 
-    // HEAVY DIAGNOSTICS
+    // COMPREHENSIVE DIAGNOSTICS
     const cookies = req.headers.cookie ? req.headers.cookie.split(';').map(c => c.split('=')[0].trim()) : [];
     const authHeader = req.headers.authorization ? 'Present' : 'Missing';
-    console.log(`[Claim] Request for Audit: ${auditId}`);
-    console.log(`[Claim] Stats -> UserFound: ${!!user}, Cookies: [${cookies.join(', ')}], AuthHeader: ${authHeader}`);
+    const origin = req.headers.origin || req.headers.referer || 'Unknown';
+    const fullCookieHeader = req.headers.cookie || 'NONE';
+
+    console.log(`[Claim] ========== AUDIT CLAIM REQUEST ==========`);
+    console.log(`[Claim] Audit ID: ${auditId}`);
+    console.log(`[Claim] Origin: ${origin}`);
+    console.log(`[Claim] User Found: ${!!user ? `YES (${user.email})` : 'NO'}`);
+    console.log(`[Claim] Cookie Names: [${cookies.join(', ')}]`);
+    console.log(`[Claim] Full Cookie Header: ${fullCookieHeader.substring(0, 200)}...`);
+    console.log(`[Claim] Auth Header: ${authHeader}`);
+    console.log(`[Claim] ==========================================`);
 
     if (!user) {
+        console.error(`[Claim] ❌ REJECTION: No user in request context despite optionalUserAuth middleware`);
         return res.status(401).json({ success: false, error: 'Unauthorized: No active session found.' });
     }
 
