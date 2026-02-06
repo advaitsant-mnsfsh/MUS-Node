@@ -17,19 +17,37 @@ const CACHE_TTL = 120 * 1000; // 2 minutes
 
 async function getCachedSession(req: Request) {
     const cookies = req.headers.cookie || "";
+    const authHeader = req.headers.authorization;
+
     // Better-Auth typically uses 'better-auth.session_token' or '__Secure-better-auth.session_token'
     const hasSessionCookie = cookies.includes('session_token');
+    const hasBearerToken = authHeader?.startsWith('Bearer ');
 
     try {
-        const session = await auth.api.getSession({
+        // Try cookie-based session first
+        let session = await auth.api.getSession({
             headers: fromNodeHeaders(req.headers)
         });
 
+        // If no session from cookies, try Bearer token
+        if (!session && hasBearerToken) {
+            const token = authHeader!.replace('Bearer ', '');
+            console.log(`[Auth] Attempting Bearer token auth (token length: ${token.length})`);
+
+            // Verify the token with Better-Auth
+            session = await auth.api.getSession({
+                headers: {
+                    ...fromNodeHeaders(req.headers),
+                    cookie: `better-auth.session_token=${token}`
+                }
+            });
+        }
+
         if (session) {
-            console.log(`[Auth] Session active for ${session.user.email}`);
+            console.log(`[Auth] ✅ Session active for ${session.user.email} (via ${hasBearerToken && !hasSessionCookie ? 'Bearer token' : 'cookie'})`);
         } else {
-            if (hasSessionCookie) {
-                console.warn(`[Auth] Session cookie detected but getSession returned null. Cookies: ${cookies.split(';').map(c => c.split('=')[0].trim()).join(', ')}`);
+            if (hasSessionCookie || hasBearerToken) {
+                console.warn(`[Auth] ⚠️ Auth credentials present but no session found. Cookie: ${hasSessionCookie}, Bearer: ${hasBearerToken}`);
             }
         }
 

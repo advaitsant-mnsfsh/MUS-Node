@@ -126,14 +126,15 @@ export async function transferAuditOwnership(auditId: string, userId: string): P
     console.log(`[auditStorage] Request received: Transfer Audit ${auditId} -> User ${userId}`);
 
     try {
-        // Use standard fetch with credentials to ensure session cookies are sent
-        const response = await fetch(`${backendUrl}/api/v1/audit/claim`, {
+        const { authenticatedFetch } = await import('../lib/authenticatedFetch');
+
+        // Use authenticatedFetch to ensure session token is sent
+        const response = await authenticatedFetch(`${backendUrl}/api/v1/audit/claim`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
             },
-            body: JSON.stringify({ auditId }),
-            credentials: 'include' // CRITICAL: Send session cookies cross-origin
+            body: JSON.stringify({ auditId })
         });
 
         const result = await response.json();

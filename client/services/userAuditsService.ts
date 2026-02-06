@@ -1,4 +1,5 @@
 import { authClient } from '../lib/auth-client';
+import { authenticatedFetch } from '../lib/authenticatedFetch';
 
 export interface UserAudit {
     id: string;
@@ -23,13 +24,12 @@ export async function getUserAudits(): Promise<UserAudit[]> {
 
     auditsCache = (async () => {
         try {
-            // Fetch using Backend API
-            const response = await fetch(`${API_URL}/api/user/audits`, {
+            // Use authenticatedFetch to ensure session token is sent
+            const response = await authenticatedFetch(`${API_URL}/api/user/audits`, {
                 method: 'GET',
                 headers: {
                     'Content-Type': 'application/json'
-                },
-                credentials: 'include' // Send Session Cookie
+                }
             });
 
             if (!response.ok) {
