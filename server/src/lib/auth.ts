@@ -31,7 +31,7 @@ export const auth = betterAuth({
                     const resend = new Resend(resendApiKey);
 
                     const { error } = await resend.emails.send({
-                        from: 'MUS <onboarding@resend.dev>', // Update this to your verified domain later
+                        from: 'MUS <onboarding@resend.dev>',
                         to: [email],
                         subject: 'Your Verification Code',
                         html: `
@@ -40,17 +40,22 @@ export const auth = betterAuth({
                                 <p style="font-size: 16px; color: #666;">Use the following code to sign in to MUS:</p>
                                 <div style="font-size: 32px; font-weight: bold; color: #000; letter-spacing: 5px; margin: 20px 0;">${otp}</div>
                                 <p style="font-size: 14px; color: #999;">This code will expire in 10 minutes.</p>
+                                <p style="font-size: 12px; color: #bbb; border-top: 1px solid #f0f0f0; padding-top: 10px; margin-top: 20px;">
+                                    Debugging: In case of Resend testing limits, check server logs for OTP.
+                                </p>
                             </div>
                         `,
                     });
 
                     if (error) {
                         console.error("[AUTH] Resend Error:", error);
+                        console.log(`[AUTH] FALLBACK OTP for ${email}: ${otp} (Because Resend reported an error)`);
                     } else {
                         console.log(`[AUTH] OTP sent successfully to ${email}`);
                     }
                 } catch (err) {
                     console.error("[AUTH] Failed to send OTP via Resend:", err);
+                    console.log(`[AUTH] FALLBACK OTP for ${email}: ${otp} (Because code crashed)`);
                 }
             },
             sendVerificationOnSignUp: true,
@@ -65,11 +70,20 @@ export const auth = betterAuth({
         },
     } : undefined,
 
-    // 🔒 Security Config
+    // 🔒 Security & Cookie Config
     trustedOrigins: [
         process.env.CLIENT_URL || "http://localhost:5173",
-        "https://mus-node.vercel.app"
+        "https://mus-node.vercel.app",
+        "https://mus-node-client-ui.vercel.app" // Common Vercel pattern
     ],
+    cookies: {
+        sessionToken: {
+            attributes: {
+                sameSite: 'none',
+                secure: true
+            }
+        }
+    }
 
     // Rate Limiting (Disabled for dev/performance testing)
     // rateLimit: {

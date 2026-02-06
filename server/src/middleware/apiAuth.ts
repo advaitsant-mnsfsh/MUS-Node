@@ -15,49 +15,27 @@ const SESSION_CACHE = new Map<string, { session: any; expires: number }>();
 const PENDING_PROMISES = new Map<string, Promise<any>>();
 const CACHE_TTL = 120 * 1000; // 2 minutes
 
-/**
- * Helper to get session with local memory caching & request collapsing
- */
 async function getCachedSession(req: Request) {
-    const authCookie = req.headers.cookie?.split(';').find(c => {
-        const name = c.trim().split('=')[0];
-        return name.endsWith('better-auth.session_token');
-    });
+    const cookies = req.headers.cookie || "";
+    // masking actual session token for safety
+    const hasAuditCookie = cookies.includes('.session_token');
 
-    if (!authCookie) return null;
+    try {
+        const session = await auth.api.getSession({
+            headers: fromNodeHeaders(req.headers)
+        });
 
-    // 1. Check Memory Cache (Instant)
-    const cached = SESSION_CACHE.get(authCookie);
-    if (cached && Date.now() < cached.expires) {
-        return cached.session;
-    }
-
-    // 2. Request Collapsing: If a request for this token is already in flight, wait for it
-    if (PENDING_PROMISES.has(authCookie)) {
-        return PENDING_PROMISES.get(authCookie);
-    }
-
-    // 3. Cache miss: hit the DB and track the promise
-    const sessionPromise = (async () => {
-        try {
-            const session = await auth.api.getSession({
-                headers: fromNodeHeaders(req.headers)
-            });
-
-            if (session) {
-                SESSION_CACHE.set(authCookie, {
-                    session,
-                    expires: Date.now() + CACHE_TTL
-                });
-            }
-            return session;
-        } finally {
-            PENDING_PROMISES.delete(authCookie);
+        if (session) {
+            console.log(`[Auth] Session active for ${session.user.email}`);
+        } else if (hasAuditCookie) {
+            console.warn(`[Auth] Session cookie present but library found NO session.`);
         }
-    })();
 
-    PENDING_PROMISES.set(authCookie, sessionPromise);
-    return sessionPromise;
+        return session;
+    } catch (e) {
+        console.error("[Auth] Session check failed:", e);
+        return null;
+    }
 }
 
 /**

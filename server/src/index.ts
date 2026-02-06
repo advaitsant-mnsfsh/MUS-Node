@@ -34,11 +34,14 @@ app.get("/health", (req: any, res: any) => {
 app.use(compression());
 app.use(cors({
     origin: function (origin, callback) {
-        return callback(null, true); // Permissive for health probes
+        if (!origin) return callback(null, true);
+        // In Production, ensure we only allow trusted domains. 
+        // For now, mirroring origin for reliability with credentials.
+        return callback(null, origin);
     },
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS', 'HEAD'],
-    allowedHeaders: ['Content-Type', 'Authorization', 'x-api-key', 'Cache-Control', 'Pragma', 'Accept']
+    allowedHeaders: ['Content-Type', 'Authorization', 'x-api-key', 'Cache-Control', 'Pragma', 'Accept', 'Cookie']
 }));
 app.use(express.json({ limit: '150mb' }));
 app.use(express.urlencoded({ limit: '150mb', extended: true }));
