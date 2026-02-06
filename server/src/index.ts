@@ -53,12 +53,12 @@ app.use(express.json({ limit: '150mb' }));
 app.use(express.urlencoded({ limit: '150mb', extended: true }));
 
 // Mount Routes
-const apiRoutes = require('./api/routes').default;
-const externalRoutes = require('./api/external').default;
-const publicRoutes = require('./api/public').default;
-const apiKeysRoutes = require('./routes/apiKeys').default;
-const authRoutes = require('./routes/auth').default;
-const userRoutes = require('./routes/user').default;
+import apiRoutes from './api/routes';
+import externalRoutes from './api/external';
+import publicRoutes from './api/public';
+import apiKeysRoutes from './routes/apiKeys';
+import authRoutes from './routes/auth';
+import userRoutes from './routes/user';
 
 app.use('/api', authRoutes); // mounts at /api/auth/*
 app.use('/api/user', userRoutes); // mounts at /api/user/*
