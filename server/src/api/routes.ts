@@ -3,7 +3,7 @@ import { db } from '../lib/db';
 import { auditJobs, leads } from '../db/schema';
 import { validateApiKey, optionalUserAuth, AuthenticatedRequest } from '../middleware/apiAuth';
 import { JobProcessor } from '../services/jobProcessor';
-import { eq } from 'drizzle-orm';
+import { eq, and, isNull } from 'drizzle-orm';
 import crypto from 'crypto';
 
 const router = express.Router();
@@ -75,7 +75,7 @@ router.get('/audit', async (req: express.Request, res: express.Response) => {
         };
 
         let lastStatus = '';
-        const maxTime = 120000; // 2 minutes timeout
+        const maxTime = 300000; // 5 minutes timeout (Analysis often takes 2-3 mins)
         const startTime = Date.now();
 
         const checkStatus = async () => {
@@ -217,6 +217,43 @@ router.patch('/leads/verify', async (req, res) => {
     } catch (error: any) {
         console.error("[Leads] Verification Error:", error);
         res.status(500).json({ error: error.message });
+    }
+});
+
+// POST /api/v1/audit/claim
+router.post('/audit/claim', optionalUserAuth, async (req: express.Request, res: express.Response) => {
+    const authReq = req as AuthenticatedRequest;
+    const user = authReq.user;
+    const { auditId } = req.body;
+
+    // HEAVY DIAGNOSTICS
+    const cookies = req.headers.cookie ? req.headers.cookie.split(';').map(c => c.split('=')[0].trim()) : [];
+    const authHeader = req.headers.authorization ? 'Present' : 'Missing';
+    console.log(`[Claim] Request for Audit: ${auditId}`);
+    console.log(`[Claim] Stats -> UserFound: ${!!user}, Cookies: [${cookies.join(', ')}], AuthHeader: ${authHeader}`);
+
+    if (!user) {
+        return res.status(401).json({ success: false, error: 'Unauthorized: No active session found.' });
+    }
+
+    if (!auditId) return res.status(400).json({ success: false, error: 'Missing auditId' });
+
+    try {
+        const [updated] = await db.update(auditJobs)
+            .set({ user_id: user.id })
+            .where(and(eq(auditJobs.id, auditId), isNull(auditJobs.user_id)))
+            .returning({ id: auditJobs.id });
+
+        if (!updated) {
+            console.warn(`[Claim] ⚠️ No audit updated for ID ${auditId}. Either not found or already claimed.`);
+            return res.status(404).json({ success: false, error: 'Audit not found or already claimed.' });
+        }
+
+        console.log(`[Claim] ✅ Successfully assigned audit ${auditId} to user ${user.email}`);
+        return res.json({ success: true });
+    } catch (e: any) {
+        console.error(`[Claim] 💥 Database Error:`, e);
+        return res.status(500).json({ success: false, error: e.message });
     }
 });
 
