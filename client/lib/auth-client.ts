@@ -8,5 +8,8 @@ const getBaseURL = () => {
 }
 
 export const authClient = createAuthClient({
-    baseURL: getBaseURL()
+    baseURL: getBaseURL(),
+    fetchOptions: {
+        credentials: 'include' // CRITICAL: Allow cross-origin cookies
+    }
 })
