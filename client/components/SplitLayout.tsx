@@ -38,8 +38,8 @@ export const SplitLayout: React.FC<SplitLayoutProps> = ({
     // If fullWidth (user is logged in during analysis), show only the preview
     if (fullWidth) {
         return (
-            <div className="min-h-screen bg-page-bg flex items-center justify-center p-4">
-                <div className="w-full max-w-5xl">
+            <div className="h-[calc(100vh-5rem)] bg-page-bg flex items-center justify-center p-4">
+                <div className="w-full max-w-5xl h-full">
                     <ScanningPreview
                         screenshot={screenshot || null}
                         progress={progress}
@@ -52,8 +52,8 @@ export const SplitLayout: React.FC<SplitLayoutProps> = ({
 
     // Split layout: Preview on left, content (login/report preview) on right
     return (
-        <div className="min-h-screen bg-page-bg">
-            <div className="grid lg:grid-cols-2 gap-0 min-h-screen">
+        <div className="h-[calc(100vh-5rem)] bg-page-bg overflow-hidden">
+            <div className="grid lg:grid-cols-2 gap-0 h-full">
                 {/* Left Side: Scanning Preview */}
                 <div className="bg-page-bg flex items-center justify-center p-4 lg:p-8 border-r-2 border-border-main">
                     <ScanningPreview

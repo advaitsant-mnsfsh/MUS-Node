@@ -21,19 +21,21 @@ export const LandingView: React.FC<LandingViewProps> = ({
     renderError
 }) => {
     return (
-        <div className="h-[calc(100vh-5rem)] bg-page-bg text-slate-800 font-sans flex flex-col items-center justify-center p-4 gap-4">
-            <div className="w-full">
-                <LandingHero />
-            </div>
+        <div className="h-[calc(100vh-5rem)] bg-page-bg text-slate-800 font-sans flex flex-col items-center justify-start pt-layout-top p-container gap-section-sm overflow-y-auto">
+            <main className="w-full flex flex-col items-center gap-section-sm">
+                <section className="w-full" aria-label="Hero Section">
+                    <LandingHero />
+                </section>
 
-            <main className="w-full max-w-4xl px-4">
-                <URLInputForm
-                    onAnalyze={onAnalyze}
-                    isLoading={isLoading}
-                    whiteLabelLogo={whiteLabelLogo}
-                    onWhiteLabelLogoChange={onWhiteLabelLogoChange}
-                />
-                {error && renderError()}
+                <section className="w-full max-w-4xl px-4" aria-label="Audit Input Form">
+                    <URLInputForm
+                        onAnalyze={onAnalyze}
+                        isLoading={isLoading}
+                        whiteLabelLogo={whiteLabelLogo}
+                        onWhiteLabelLogoChange={onWhiteLabelLogoChange}
+                    />
+                    {error && renderError()}
+                </section>
             </main>
         </div>
     );

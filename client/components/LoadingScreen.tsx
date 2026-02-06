@@ -32,7 +32,7 @@ export const LoadingScreen: React.FC<LoadingScreenProps> = ({ progress, message 
     }, []);
 
     return (
-        <div className="min-h-screen bg-slate-50 text-slate-800 font-sans flex flex-col items-center justify-start pt-16 sm:pt-24">
+        <div className="h-[calc(100vh-5rem)] bg-slate-50 text-slate-800 font-sans flex flex-col items-center justify-center">
             <Logo className="mx-auto mb-12" />
             <header className="w-full text-center px-4 mb-12">
                 <h1 className="text-3xl sm:text-5xl font-extrabold text-slate-900">

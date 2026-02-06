@@ -5,7 +5,8 @@ import {
   Globe,
   Loader2,
   Swords,
-  X
+  X,
+  Sparkles
 } from 'lucide-react';
 import { StandardInputControl } from './inputs/StandardInputControl';
 import { CompetitorMultiInput } from './inputs/CompetitorMultiInput';
@@ -120,13 +121,13 @@ export const URLInputForm: React.FC<URLInputFormProps> = ({
 
   return (
     <>
-      <div className="bg-white rounded-lg border-2 border-border-main shadow-neo overflow-hidden font-sans">
+      <section aria-label="Start Audit" className="bg-white rounded-lg border-2 border-border-main shadow-neo overflow-hidden font-sans">
         <div className="p-6 md:p-8 space-y-8">
 
           {/* Header & Mode Switch */}
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 pb-6 border-b border-slate-300">
             <div>
-              <h2 className="text-2xl font-bold text-text-primary">
+              <h2 className="text-h3 font-bold text-text-primary">
                 {competitorMode ? "Competitor Analysis" : "ADD CONTEXT"}
               </h2>
               <p className="text-text-secondary text-sm mt-1">
@@ -229,6 +230,7 @@ export const URLInputForm: React.FC<URLInputFormProps> = ({
 
             {/* Footer Section: Brand Stamp + Actions */}
             <div className="pt-6 border-t border-slate-300">
+
               {/* Action Container */}
               <div className="flex flex-col gap-3">
 
@@ -243,9 +245,20 @@ export const URLInputForm: React.FC<URLInputFormProps> = ({
                     {whiteLabelLogo ? 'Change it' : 'Upload one'}
                   </button>
                   {whiteLabelLogo && (
-                    <span className="ml-2 inline-flex items-center gap-1.5 px-2 py-0.5 bg-white border border-slate-200 rounded text-[10px] font-medium text-text-primary">
-                      <img src={whiteLabelLogo} alt="Logo" className="h-3 w-auto object-contain max-w-[40px]" />
-                      <span>Added</span>
+                    <span className="ml-2 inline-flex items-center gap-1.5 px-2 py-0.5 bg-accent-cyan/10 border border-accent-cyan rounded text-[10px] font-bold text-text-primary">
+                      <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></span>
+                      <span>Logo Added</span>
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onWhiteLabelLogoChange(null);
+                        }}
+                        className="ml-1 hover:text-red-500"
+                        title="Remove logo"
+                      >
+                        <X className="w-3 h-3" />
+                      </button>
                     </span>
                   )}
                 </div>
@@ -254,7 +267,7 @@ export const URLInputForm: React.FC<URLInputFormProps> = ({
                 <button
                   type="submit"
                   disabled={isLoading}
-                  className="w-full px-6 py-4 bg-text-primary text-white font-bold text-base rounded-lg border-2 border-border-main shadow-neo hover:shadow-neo-hover hover:translate-x-[-1px] hover:translate-y-[-1px] active:shadow-none active:translate-x-0 active:translate-y-0 disabled:bg-slate-300 disabled:text-slate-500 disabled:shadow-none disabled:cursor-not-allowed transition-all duration-200 flex items-center justify-center gap-3"
+                  className="w-full px-6 py-4 bg-text-primary text-white font-bold text-body rounded-lg border-2 border-border-main shadow-neo hover:shadow-neo-hover hover:-translate-x-px hover:-translate-y-px active:shadow-none active:translate-x-0 active:translate-y-0 disabled:bg-slate-300 disabled:text-slate-500 disabled:shadow-none disabled:cursor-not-allowed transition-all duration-200 flex items-center justify-center gap-3"
                 >
                   {isLoading ? (
                     <>
@@ -273,7 +286,7 @@ export const URLInputForm: React.FC<URLInputFormProps> = ({
 
           </form>
         </div>
-      </div>
+      </section>
 
       <WhiteLabelModal
         isOpen={isModalOpen}
