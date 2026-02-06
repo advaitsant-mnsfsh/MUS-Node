@@ -85,13 +85,18 @@ export const auth = betterAuth({
     trustedOrigins: [
         process.env.CLIENT_URL || "http://localhost:5173",
         "https://mus-node.vercel.app",
-        "https://mus-node-client-ui.vercel.app" // Common Vercel pattern
+        "https://mus-node-client-ui.vercel.app", // Common Vercel pattern
+        "https://mus-node-client-ui-advait-sants-projects.vercel.app" // Full Vercel URL
     ],
     cookies: {
         sessionToken: {
+            name: 'better-auth.session_token', // Explicit cookie name
             attributes: {
-                sameSite: 'none',
-                secure: true
+                sameSite: 'none', // Required for cross-origin
+                secure: true, // Required for sameSite: none
+                httpOnly: true, // Security best practice
+                path: '/', // Available on all paths
+                maxAge: 60 * 60 * 24 * 30 // 30 days in seconds
             }
         }
     }
