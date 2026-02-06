@@ -235,31 +235,50 @@ export const URLInputForm: React.FC<URLInputFormProps> = ({
               <div className="flex flex-col gap-3">
 
                 {/* Compact Logo Option - Single Line */}
-                <div className="text-center text-xs text-text-secondary">
-                  Want a custom logo on your report?{' '}
-                  <button
-                    type="button"
-                    onClick={() => setIsModalOpen(true)}
-                    className="text-brand hover:text-brand-hover font-semibold underline decoration-dotted underline-offset-2 transition-colors"
-                  >
-                    {whiteLabelLogo ? 'Change it' : 'Upload one'}
-                  </button>
-                  {whiteLabelLogo && (
-                    <span className="ml-2 inline-flex items-center gap-1.5 px-2 py-0.5 bg-accent-cyan/10 border border-accent-cyan rounded text-[10px] font-bold text-text-primary">
-                      <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></span>
-                      <span>Logo Added</span>
+                <div className="text-center text-xs text-text-secondary min-h-[40px] flex items-center justify-center">
+                  {!whiteLabelLogo ? (
+                    <>
+                      Want a custom logo on your report?{' '}
                       <button
                         type="button"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          onWhiteLabelLogoChange(null);
-                        }}
-                        className="ml-1 hover:text-red-500"
-                        title="Remove logo"
+                        onClick={() => setIsModalOpen(true)}
+                        className="text-brand hover:text-brand-hover font-bold underline decoration-dotted underline-offset-2 transition-colors ml-1"
                       >
-                        <X className="w-3 h-3" />
+                        Upload one
                       </button>
-                    </span>
+                    </>
+                  ) : (
+                    <div className="flex items-center gap-4 animate-in fade-in zoom-in-95 duration-200">
+                      <div className="flex items-center gap-2">
+                        <span className="font-bold text-text-primary">Logo added</span>
+                        <button
+                          type="button"
+                          onClick={() => setIsModalOpen(true)}
+                          className="text-brand hover:text-brand-hover font-bold underline decoration-dotted underline-offset-2 transition-colors"
+                        >
+                          Change it
+                        </button>
+                      </div>
+
+                      <div className="flex items-center gap-2">
+                        <img
+                          src={whiteLabelLogo}
+                          alt="Custom Logo"
+                          className="h-6 max-w-[100px] object-contain border-2 border-border-main rounded bg-white shadow-sm"
+                        />
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onWhiteLabelLogoChange(null);
+                          }}
+                          className="flex items-center justify-center w-5 h-5 rounded-full text-slate-400 hover:bg-slate-200 hover:text-red-500 transition-all"
+                          title="Remove logo"
+                        >
+                          <X className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    </div>
                   )}
                 </div>
 

@@ -32,6 +32,7 @@ interface StandardInputControlProps {
     setCurrentUrl: (url: string) => void;
     errorMsg: string | null;
     setErrorMsg: (msg: string | null) => void;
+    placeholder?: string;
 }
 
 export const StandardInputControl: React.FC<StandardInputControlProps> = ({
@@ -40,7 +41,8 @@ export const StandardInputControl: React.FC<StandardInputControlProps> = ({
     currentUrl,
     setCurrentUrl,
     errorMsg,
-    setErrorMsg
+    setErrorMsg,
+    placeholder
 }) => {
     const fileInputRef = useRef<HTMLInputElement>(null);
     const MAX_INPUTS = 5;
@@ -111,14 +113,14 @@ export const StandardInputControl: React.FC<StandardInputControlProps> = ({
 
     return (
         <div className="space-y-2">
-            <div className={`group relative flex items-center bg-white border-2 rounded-lg shadow-sm transition-all duration-200 focus-within:shadow-neo-hover hover:shadow-neo-hover focus-within:border-brand ${remainingSlots === 0 ? 'border-[#DDDDDD] bg-slate-50 opacity-70 cursor-not-allowed' : 'border-border-main hover:border-brand'}`}>
+            <div className={`group relative flex items-center bg-white border-2 rounded-lg shadow-sm transition-all duration-200 focus-within:shadow-neo-hover hover:shadow-neo-hover focus-within:border-accent-cyan ${remainingSlots === 0 ? 'border-[#DDDDDD] bg-slate-50 opacity-70 cursor-not-allowed' : 'border-border-main hover:border-accent-cyan hover:bg-accent-cyan/5'}`}>
                 <input
                     type="url"
                     value={currentUrl}
                     onChange={(e) => { setCurrentUrl(e.target.value); setErrorMsg(null); }}
                     onKeyDown={handleKeyDown}
                     disabled={remainingSlots === 0}
-                    placeholder={remainingSlots === 0 ? "Limit reached" : "https://yourwebsite.com"}
+                    placeholder={remainingSlots === 0 ? "Limit reached" : (placeholder || "https://yourwebsite.com")}
                     className="flex-1 py-3 pl-4 pr-24 bg-transparent border-none outline-none text-text-primary placeholder:text-[#94A3B8] text-sm disabled:cursor-not-allowed font-medium"
                 />
                 <div className="absolute right-2 flex items-center gap-1 h-full py-1.5">

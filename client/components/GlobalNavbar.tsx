@@ -113,6 +113,7 @@ export const GlobalNavbar: React.FC = () => {
                     onUnlock={handleAuthSuccess}
                     isUnlocked={false}
                     auditUrl=""
+                    onClose={() => setShowAuthModal(false)}
                 />
             )}
         </nav>

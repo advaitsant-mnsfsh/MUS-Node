@@ -30,6 +30,7 @@ export const CompetitorMultiInput: React.FC<CompetitorMultiInputProps> = ({
             setCurrentUrl={setCurrentUrl}
             errorMsg={errorMsg}
             setErrorMsg={setErrorMsg}
+            placeholder={placeholder}
         />
     );
 };
