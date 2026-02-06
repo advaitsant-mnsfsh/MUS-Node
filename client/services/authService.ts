@@ -1,18 +1,12 @@
-import { createClient } from '@supabase/supabase-js';
-
-// Supabase client (reusing existing credentials)
-// Supabase client (using environment variables)
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
-
-export const supabase = createClient(supabaseUrl, supabaseAnonKey);
+import { authClient } from '../lib/auth-client';
 
 /**
  * Update user profile (e.g. set password)
  */
 export async function updateProfile(attributes: { password?: string; data?: any }) {
-    const { data, error } = await supabase.auth.updateUser(attributes);
-    return { data, error };
+    // Better-auth profile update
+    const { data, error } = await authClient.updateUser(attributes);
+    return { data, error: error ? { message: error.message } : null };
 }
 
 /**
@@ -20,20 +14,19 @@ export async function updateProfile(attributes: { password?: string; data?: any 
  */
 export async function signUp(email: string, password: string, data?: any): Promise<{ session: any; error: string | null }> {
     try {
-        const { data: authData, error } = await supabase.auth.signUp({
+        const { data: authData, error } = await authClient.signUp.email({
             email,
             password,
-            options: {
-                data: data, // Save metadata like name, orgType
-            },
+            name: data?.name || email.split('@')[0],
+            // Better-auth stores extra data in 'metadata' if configured or root fields
         });
 
         if (error) {
             console.error('Error signing up:', error);
-            return { session: null, error: error.message };
+            return { session: null, error: error.message || 'Failed to sign up' };
         }
 
-        return { session: authData.session, error: null };
+        return { session: authData, error: null };
     } catch (err: any) {
         console.error('Unexpected error signing up:', err);
         return { session: null, error: err.message || 'Failed to sign up' };
@@ -45,17 +38,17 @@ export async function signUp(email: string, password: string, data?: any): Promi
  */
 export async function signIn(email: string, password: string): Promise<{ session: any; error: string | null }> {
     try {
-        const { data, error } = await supabase.auth.signInWithPassword({
+        const { data, error } = await authClient.signIn.email({
             email,
             password,
         });
 
         if (error) {
             console.error('Error signing in:', error);
-            return { session: null, error: error.message };
+            return { session: null, error: error.message || 'Failed to sign in' };
         }
 
-        return { session: data.session, error: null };
+        return { session: data, error: null };
     } catch (err: any) {
         console.error('Unexpected error signing in:', err);
         return { session: null, error: err.message || 'Failed to sign in' };
@@ -67,11 +60,10 @@ export async function signIn(email: string, password: string): Promise<{ session
  */
 export async function sendOtp(email: string): Promise<{ error: string | null }> {
     try {
-        const { error } = await supabase.auth.signInWithOtp({
+        // Better Auth Email OTP Request
+        const { error } = await authClient.signIn.emailOtp({
             email,
-            options: {
-                shouldCreateUser: true, // Auto-register new users
-            },
+            type: "sign-in" // or "email-verification"
         });
 
         if (error) {
@@ -89,12 +81,14 @@ export async function sendOtp(email: string): Promise<{ error: string | null }> 
 /**
  * Verify OTP
  */
-export async function verifyOtp(email: string, token: string): Promise<{ session: any; error: string | null }> {
+export async function verifyOtp(email: string, token: string, password?: string): Promise<{ session: any; error: string | null }> {
     try {
-        const { data, error } = await supabase.auth.verifyOtp({
+        // 1. Verify Verification OTP
+        // Note: Casting authClient to any to access plugin methods if inference fails
+        const client = authClient as any;
+        const { data, error } = await client.emailOtp.verifyEmail({
             email,
-            token,
-            type: 'email',
+            otp: token
         });
 
         if (error) {
@@ -102,10 +96,29 @@ export async function verifyOtp(email: string, token: string): Promise<{ session
             return { session: null, error: error.message };
         }
 
-        return { session: data.session, error: null };
+        // 2. If password provided, Log In immediately to get session
+        if (password) {
+            return await signIn(email, password);
+        }
+
+        // If no password, return success but no session (user needs to login manually)
+        return { session: null, error: null };
+
     } catch (err: any) {
-        console.error('Unexpected error verifying OTP:', err);
-        return { session: null, error: err.message || 'Failed to verify OTP' };
+        // Fallback: Try Login OTP (classic flow) just in case
+        console.warn('Verification failed, trying Login OTP flow...', err);
+        try {
+            const { data, error } = await authClient.signIn.emailOtp({
+                email,
+                otp: token,
+                type: "sign-in"
+            });
+            if (error) throw error;
+            return { session: data, error: null };
+        } catch (loginErr: any) {
+            console.error('Unexpected error verifying OTP:', loginErr);
+            return { session: null, error: loginErr.message || 'Failed to verify OTP' };
+        }
     }
 }
 
@@ -113,7 +126,7 @@ export async function verifyOtp(email: string, token: string): Promise<{ session
  * Check if user is currently authenticated
  */
 export async function getCurrentSession() {
-    const { data: { session } } = await supabase.auth.getSession();
+    const { data: session } = await authClient.getSession();
     return session;
 }
 
@@ -121,5 +134,5 @@ export async function getCurrentSession() {
  * Sign out
  */
 export async function signOut() {
-    await supabase.auth.signOut();
+    await authClient.signOut();
 }

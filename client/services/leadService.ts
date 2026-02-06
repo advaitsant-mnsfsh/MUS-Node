@@ -1,12 +1,4 @@
 
-import { createClient } from '@supabase/supabase-js';
-
-// Supabase client (reusing credentials - ideally these should be in a shared config file)
-const supabaseUrl = 'https://sobtfbplbpvfqeubjxex.supabase.co';
-const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNvYnRmYnBsYnB2ZnFldWJqeGV4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTkxNDgzMDYsImV4cCI6MjA3NDcyNDMwNn0.ewfxDwlapmRpfyvYD3ALb-WyL12ty1eP8nzKyrc66ho';
-
-const supabase = createClient(supabaseUrl, supabaseAnonKey);
-
 export interface LeadData {
     email: string;
     name: string;
@@ -14,26 +6,25 @@ export interface LeadData {
     audit_url: string;
 }
 
+// Backend URL logic
+const backendUrl = import.meta.env.VITE_BACKEND_URL || import.meta.env.VITE_API_URL || (import.meta.env.PROD ? 'https://mus-node-production.up.railway.app' : 'http://localhost:3000');
+
 /**
- * Creates a new lead record in the 'leads' table.
+ * Creates a new lead record via the backend API.
  */
 export async function createLead(data: LeadData): Promise<{ error: string | null }> {
     try {
-        const { error } = await supabase
-            .from('leads')
-            .insert([
-                {
-                    email: data.email,
-                    name: data.name,
-                    organization_type: data.organization_type,
-                    audit_url: data.audit_url,
-                    is_verified: false
-                }
-            ]);
+        const response = await fetch(`${backendUrl}/api/v1/leads`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(data)
+        });
 
-        if (error) {
-            console.error('Error creating lead:', error);
-            return { error: error.message };
+        if (!response.ok) {
+            const errorData = await response.json();
+            return { error: errorData.error || 'Failed to create lead' };
         }
 
         return { error: null };
@@ -44,23 +35,26 @@ export async function createLead(data: LeadData): Promise<{ error: string | null
 }
 
 /**
- * Updates a lead status to verified (optional, can be called after OTP success)
+ * Updates a lead status to verified via the backend API.
  */
 export async function verifyLead(email: string): Promise<{ error: string | null }> {
     try {
-        // We update based on email since we might not have the ID easily in the flow without storing state
-        const { error } = await supabase
-            .from('leads')
-            .update({ is_verified: true })
-            .eq('email', email)
-        // Safety: only update recent unverified leads? For now simple is better.
+        const response = await fetch(`${backendUrl}/api/v1/leads/verify`, {
+            method: 'PATCH',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ email })
+        });
 
-        if (error) {
-            console.error('Error verifying lead:', error);
-            return { error: error.message };
+        if (!response.ok) {
+            const errorData = await response.json();
+            return { error: errorData.error || 'Failed to verify lead' };
         }
+
         return { error: null };
     } catch (err: any) {
+        console.error('Error verifying lead:', err);
         return { error: err.message };
     }
 }

@@ -1,11 +1,16 @@
 import express from 'express';
 import cors from 'cors';
+import compression from 'compression';
 import dotenv from 'dotenv';
-import { handleAuditRequest } from './audit';
 import { optionalUserAuth, AuthenticatedRequest } from './middleware/apiAuth';
-import { supabase } from './lib/supabase';
+import { db } from './lib/db';
+import { auditJobs } from './db/schema';
+import { eq, isNull, and } from 'drizzle-orm';
 
-dotenv.config();
+dotenv.config({ path: './.env' });
+
+console.log('[DEBUG] CWD:', process.cwd());
+console.log('[DEBUG] PORT from Env:', process.env.PORT);
 
 // CHECK MODE
 if (process.env.RUN_WORKER === 'true') {
@@ -20,6 +25,8 @@ if (process.env.RUN_WORKER === 'true') {
 
     const app = express();
     const port = process.env.PORT || 3000;
+
+    app.use(compression());
 
     // --- CRITICAL HEALTH CHECKS (Must be first) ---
     // MUST be before auth middleware and routes
@@ -38,21 +45,16 @@ if (process.env.RUN_WORKER === 'true') {
             const allowedOrigins = [
                 'https://mus-node.vercel.app',
                 'http://localhost:5173',
-                'http://localhost:3000',
+                'http://localhost:8080',
                 process.env.CLIENT_URL,
-                'https://sobtfbplbpvfqeubjxex.supabase.co'
             ].filter(Boolean);
 
             if (!origin) return callback(null, true);
-
-            if (allowedOrigins.indexOf(origin) === -1 && !allowedOrigins.includes('*')) {
-                console.log('[CORS] Origin:', origin);
-            }
             return callback(null, true);
         },
         credentials: true,
-        methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'HEAD'],
-        allowedHeaders: ['Content-Type', 'Authorization', 'x-api-key']
+        methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS', 'HEAD'],
+        allowedHeaders: ['Content-Type', 'Authorization', 'x-api-key', 'Cache-Control', 'Pragma', 'Accept']
     }));
     app.use(express.json({ limit: '150mb' }));
     app.use(express.urlencoded({ limit: '150mb', extended: true }));
@@ -62,28 +64,17 @@ if (process.env.RUN_WORKER === 'true') {
     const externalRoutes = require('./api/external').default;
     const publicRoutes = require('./api/public').default;
     const apiKeysRoutes = require('./routes/apiKeys').default;
+    const authRoutes = require('./routes/auth').default;
+    const userRoutes = require('./routes/user').default;
 
+    app.use('/api', authRoutes); // mounts at /api/auth/*
+    app.use('/api/user', userRoutes); // mounts at /api/user/*
     app.use('/api/v1', apiRoutes);
     app.use('/api/external', externalRoutes);
     app.use('/api/public', publicRoutes);
     app.use('/api/keys', apiKeysRoutes);
 
     console.log('✓ API routes mounted: /api/v1, /api/external, /api/public, /api/keys');
-
-    // Direct Audit Handling
-    const auditHandler = async (req: any, res: any) => {
-        try {
-            await handleAuditRequest(req, res);
-        } catch (error: any) {
-            console.error('Unhandled server error:', error);
-            if (!res.headersSent) {
-                res.status(500).json({ message: error.message || 'Internal Server Error' });
-            }
-        }
-    };
-
-    app.post('/api/audit', optionalUserAuth, auditHandler);
-    app.get('/api/audit', auditHandler);
 
     app.post('/api/audit/claim', optionalUserAuth, async (req: any, res: any) => {
         const user = (req as AuthenticatedRequest).user;
@@ -99,20 +90,21 @@ if (process.env.RUN_WORKER === 'true') {
         console.log(`[Admin] Claim Request: Audit ${auditId} -> User ${user.id}`);
 
         try {
-            const { data, error } = await supabase
-                .from('audit_jobs')
-                .update({ user_id: user.id })
-                .eq('id', auditId)
-                .is('user_id', null)
-                .select('id');
+            // Updated to Drizzle
+            const [updated] = await db.update(auditJobs)
+                .set({ user_id: user.id })
+                .where(and(
+                    eq(auditJobs.id, auditId),
+                    isNull(auditJobs.user_id)
+                ))
+                .returning({ id: auditJobs.id });
 
-            if (error) {
-                console.error('[Admin] DB Error:', error);
-                return res.status(500).json({ success: false, error: error.message });
+            if (!updated) {
+                return res.status(404).json({ success: false, error: 'Audit not found or already claimed.' });
             }
 
-            if (!data || data.length === 0) {
-                return res.status(404).json({ success: false, error: 'Audit not found or already claimed.' });
+            if (process.env.NODE_ENV === 'production' && process.env.ALLOW_LOCAL_CHROME !== 'true') {
+                throw new Error("Misconfigured Scraper: Local Puppeteer launch blocked in Production to prevent crash. Please ensure 'PUPPETEER_BROWSER_ENDPOINT' secret is set correctly in ENV.");
             }
 
             console.log(`[Admin] Successfully claimed audit ${auditId}`);

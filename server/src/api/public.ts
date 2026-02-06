@@ -11,15 +11,17 @@ router.get('/test', (req, res) => {
 // DEBUG: List recent jobs (to verify DB access)
 router.get('/debug', async (req, res) => {
     try {
-        const { data, error } = await import('../lib/supabase').then(m => m.supabase
-            .from('audit_jobs')
-            .select('id, status, created_at')
-            .order('created_at', { ascending: false })
-            .limit(5)
-        );
-        res.json({ data, error });
+        const { db } = await import('../lib/db');
+        const { auditJobs } = await import('../db/schema');
+        const { desc } = await import('drizzle-orm');
+
+        const recentJobs = await db.query.auditJobs.findMany({
+            orderBy: [desc(auditJobs.created_at)],
+            limit: 5
+        });
+        res.json({ data: recentJobs });
     } catch (err: any) {
-        res.json({ error: err.message });
+        res.status(500).json({ error: err.message });
     }
 });
 
@@ -50,6 +52,7 @@ router.get('/jobs/:jobId', async (req, res) => {
             id: job.id,
             status: job.status,
             report_data: job.report_data,
+            inputs: (job.input_data as any)?.inputs || job.input_data, // Compatibility
             created_at: job.created_at,
             updated_at: job.updated_at
         });

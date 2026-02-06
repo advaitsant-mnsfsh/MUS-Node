@@ -1,4 +1,4 @@
-import { supabase } from '../lib/supabase';
+import { authClient } from '../lib/auth-client';
 
 export interface UserAudit {
     id: string;
@@ -10,39 +10,45 @@ export interface UserAudit {
     api_key_id?: string | null; // API key used for this audit (null = direct website audit)
 }
 
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080';
+
+let auditsCache: Promise<UserAudit[]> | null = null;
+
 /**
- * Fetch all audits for the currently logged-in user
+ * Fetch all audits owned by the current user
+ * Uses deduplication to prevent double-firing in StrictMode
  */
 export async function getUserAudits(): Promise<UserAudit[]> {
-    try {
-        // Use getSession instead of getUser (faster - uses cached session)
-        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+    if (auditsCache) return auditsCache;
 
-        if (sessionError || !session?.user) {
-            console.error('[getUserAudits] Not authenticated:', sessionError);
+    auditsCache = (async () => {
+        try {
+            // Fetch using Backend API
+            const response = await fetch(`${API_URL}/api/user/audits`, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                credentials: 'include' // Send Session Cookie
+            });
+
+            if (!response.ok) {
+                const error = await response.json();
+                console.error('[getUserAudits] Error:', error);
+                return [];
+            }
+
+            return await response.json();
+        } catch (error) {
+            console.error('[getUserAudits] Unexpected Error:', error);
             return [];
+        } finally {
+            // Clear cache after a short delay to allow fresh fetches later
+            setTimeout(() => { auditsCache = null; }, 5000);
         }
+    })();
 
-        // Fetch audits WITHOUT report_data (massive performance improvement)
-        // Dashboard only needs: id, status, dates, input URLs
-        // Score and screenshots are nice-to-have but not worth 30+ second load times
-        const { data, error } = await supabase
-            .from('audit_jobs')
-            .select('id, created_at, status, input_data, error_message, api_key_id')
-            .eq('user_id', session.user.id)
-            .order('created_at', { ascending: false })
-            .limit(50); // Limit to 50 most recent audits
-
-        if (error) {
-            console.error('[getUserAudits] Fetch error:', error);
-            return [];
-        }
-
-        return data || [];
-    } catch (err) {
-        console.error('[getUserAudits] Unexpected error:', err);
-        return [];
-    }
+    return auditsCache;
 }
 
 
@@ -51,14 +57,18 @@ export async function getUserAudits(): Promise<UserAudit[]> {
  */
 export async function getAuditInputs(auditId: string): Promise<any | null> {
     try {
-        const { data, error } = await supabase
-            .from('audit_jobs')
-            .select('input_data')
-            .eq('id', auditId)
-            .single();
+        const response = await fetch(`${API_URL}/api/v1/audit/${auditId}`, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            credentials: 'include'
+        });
 
-        if (error || !data) return null;
-        return data.input_data; // Returns { inputs: [...], auditMode: ... }
+        if (!response.ok) return null;
+
+        const data = await response.json();
+        return data.input_data; // The API returns { ..., input_data: ... }
     } catch (err) {
         return null;
     }
@@ -101,7 +111,10 @@ export function calculateOverallScore(reportData: any): number | null {
 export function extractUrl(inputData: any): string {
     if (!inputData) return 'Unknown';
 
-    const { inputs, auditMode } = inputData;
+    // Handle both { inputs: [...] } and direct [...] array
+    const inputs = Array.isArray(inputData) ? inputData : inputData.inputs;
+    const auditMode = Array.isArray(inputData) ? 'standard' : inputData.auditMode;
+
     if (!inputs || !Array.isArray(inputs) || inputs.length === 0) {
         return 'Unknown';
     }
@@ -122,7 +135,9 @@ export function extractUrl(inputData: any): string {
 export function extractCompetitorUrl(inputData: any): string | null {
     if (!inputData) return null;
 
-    const { inputs, auditMode } = inputData;
+    const inputs = Array.isArray(inputData) ? inputData : inputData.inputs;
+    const auditMode = Array.isArray(inputData) ? 'standard' : inputData.auditMode;
+
     if (auditMode !== 'competitor' || !inputs || !Array.isArray(inputs)) {
         return null;
     }
@@ -130,6 +145,7 @@ export function extractCompetitorUrl(inputData: any): string | null {
     const competitor = inputs.find((i: any) => i.role === 'competitor') || inputs[1];
     return competitor?.url || null;
 }
+
 
 /**
  * Get screenshot URL from report data
