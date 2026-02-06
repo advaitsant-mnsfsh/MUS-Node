@@ -1,7 +1,7 @@
 import express from 'express';
 import { db } from '../lib/db';
 import { auditJobs, leads } from '../db/schema';
-import { validateApiKey, AuthenticatedRequest } from '../middleware/apiAuth';
+import { validateApiKey, optionalUserAuth, AuthenticatedRequest } from '../middleware/apiAuth';
 import { JobProcessor } from '../services/jobProcessor';
 import { eq } from 'drizzle-orm';
 import crypto from 'crypto';
@@ -9,7 +9,7 @@ import crypto from 'crypto';
 const router = express.Router();
 
 // POST /api/v1/audit
-router.post('/audit', validateApiKey, async (req: express.Request, res: express.Response) => {
+router.post('/audit', optionalUserAuth, async (req: express.Request, res: express.Response) => {
     try {
         const { inputs } = req.body;
         const auditInputs = inputs || req.body.inputs;

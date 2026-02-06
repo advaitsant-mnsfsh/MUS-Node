@@ -5,7 +5,9 @@ import { google } from "better-auth/social-providers";
 import { emailOTP } from "better-auth/plugins";
 
 export const auth = betterAuth({
-    debug: true, // Enable detailed logging for debugging 500 errors
+    baseURL: process.env.BETTER_AUTH_URL, // e.g. https://mus-node-production.up.railway.app
+    secret: process.env.BETTER_AUTH_SECRET,
+    debug: true,
     database: drizzleAdapter(db, {
         provider: "pg", // PostgreSQL
     }),
