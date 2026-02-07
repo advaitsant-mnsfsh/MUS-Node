@@ -207,19 +207,19 @@ export function LinearScoreDisplay({ score, label, isLarge = false }: { score?: 
     return (
         <div className={`w-full flex flex-col ${isLarge ? 'gap-3 mb-6' : 'gap-2 mb-4'}`}>
             <div className="flex justify-between items-end">
-                <span className={`font-bold text-slate-900 ${isLarge ? 'text-2xl' : 'text-lg text-slate-500'}`}>
+                <span className={`font-black uppercase tracking-tight text-slate-900 ${isLarge ? 'text-2xl' : 'text-sm'}`}>
                     {label}
                 </span>
-                <span className={`font-bold ${isLarge ? 'text-4xl' : 'text-xl text-slate-700'}`}>
+                <span className={`font-black ${isLarge ? 'text-5xl' : 'text-xl text-slate-900'}`}>
                     {Math.round(score * 10)}/100
                 </span>
             </div>
 
             {/* Progress Bar Container */}
-            <div className={`w-full bg-slate-200 ${isLarge ? 'h-3' : 'h-2'} rounded-none overflow-hidden`}>
+            <div className={`w-full bg-slate-100 ${isLarge ? 'h-4' : 'h-3'} rounded-full overflow-hidden`}>
                 {/* Fill */}
                 <div
-                    className="h-full bg-slate-500 rounded-none transition-all duration-1000 ease-out"
+                    className="h-full rounded-full transition-all duration-1000 ease-out"
                     style={{
                         width: `${Math.min(100, Math.max(0, score * 10))}%`,
                         backgroundColor: theme.solid
