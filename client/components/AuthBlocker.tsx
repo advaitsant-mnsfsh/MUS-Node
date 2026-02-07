@@ -20,6 +20,11 @@ export const AuthBlocker: React.FC<AuthBlockerProps> = ({ onUnlock, isUnlocked, 
     const [step, setStep] = useState<'email' | 'otp' | 'password'>('email'); // For Signup flow
     const [tempPassword] = useState(() => Math.random().toString(36).slice(-12) + 'A1!'); // Bridge password
 
+    // Sync isLoginMode with prop when it changes (e.g. navbar clicks)
+    React.useEffect(() => {
+        setIsLoginMode(!!initialLoginMode);
+    }, [initialLoginMode]);
+
     // Form State
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
@@ -172,7 +177,16 @@ export const AuthBlocker: React.FC<AuthBlockerProps> = ({ onUnlock, isUnlocked, 
 
                 {/* Close Button (Optional, but good for modals) */}
                 {/* Close Button - Always visible now */}
-                <button onClick={() => setIsHidden(true)} className="absolute top-4 right-4 p-2 rounded-full border-2 border-transparent hover:border-black hover:bg-black/5 transition-colors text-black">
+                <button
+                    onClick={() => {
+                        if (onClose) {
+                            onClose();
+                        } else {
+                            setIsHidden(true);
+                        }
+                    }}
+                    className="absolute top-4 right-4 p-2 rounded-full border-2 border-transparent hover:border-black hover:bg-black/5 transition-colors text-black"
+                >
                     <X size={24} />
                 </button>
 
