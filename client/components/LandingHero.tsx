@@ -23,7 +23,7 @@ export const LandingHero: React.FC = () => {
 
                 {/* Main Heading */}
                 <h1 className="text-h3 sm:text-h2 md:text-h1 lg:text-display font-extrabold text-text-primary mb-6 tracking-tight">
-                    Let’s Assess your{' '}
+                    Let’s Assess Your{' '}
                     <span className="relative inline-block px-2">
                         <span className="relative z-10">Website’s UX.</span>
                         <span className="absolute bottom-2 left-0 right-0 h-2 md:h-3 lg:h-4 bg-[#DBEAFE] -z-10 rotate-1"></span>
@@ -32,7 +32,7 @@ export const LandingHero: React.FC = () => {
 
                 {/* Subtitle */}
                 <p className="text-body md:text-body-lg text-text-secondary font-medium max-w-2xl mx-auto leading-relaxed">
-                   UX Friction Assessments. Quick Actionable Recommendations.
+                    UX Friction Assessments. Quick Actionable Recommendations.
                 </p>
             </div>
         </header>
