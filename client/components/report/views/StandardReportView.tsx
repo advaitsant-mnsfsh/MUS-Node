@@ -12,6 +12,7 @@ import {
     Box,
     Accessibility
 } from 'lucide-react';
+import { ExecutiveSummaryDisplay } from '../ExecutiveSummaryDisplay';
 
 interface StandardReportViewProps {
     report: AnalysisReport;
@@ -83,15 +84,9 @@ export const StandardReportView: React.FC<StandardReportViewProps> = ({ report, 
                             </div>
 
                             {/* Executive Summary Text */}
-                            <div className="mt-2">
-                                <h3 className="text-2xl font-black text-black mb-6 uppercase tracking-tight">Executive Summary</h3>
-
+                            <div className="mt-2 text-left">
                                 {strategy?.ExecutiveSummary ? (
-                                    <div className="prose prose-slate max-w-none border-l-4 border-black pl-6 py-2">
-                                        <div className="text-slate-900 leading-relaxed text-base font-semibold whitespace-pre-line">
-                                            {strategy.ExecutiveSummary}
-                                        </div>
-                                    </div>
+                                    <ExecutiveSummaryDisplay summaryText={strategy.ExecutiveSummary} />
                                 ) : (
                                     <div className="p-6 bg-page-bg border-2 border-black border-dashed">
                                         <SkeletonLoader className="h-4 w-3/4 mb-2" />
@@ -100,38 +95,26 @@ export const StandardReportView: React.FC<StandardReportViewProps> = ({ report, 
                                     </div>
                                 )}
                             </div>
-
                         </div>
 
                         {/* RIGHT COLUMN: Website Preview (50%) */}
-                        <div className="w-full lg:w-1/2 relative bg-page-bg min-h-[500px] lg:min-h-0 border-t-2 lg:border-t-0 border-black">
+                        <div className="w-full lg:w-1/2 relative bg-slate-100 min-h-[500px] lg:min-h-0 border-t-2 lg:border-t-0 border-black">
                             {/* Absolute container to fill the available height (Left Col Height on Desktop, Fixed on Mobile) */}
-                            <div className="absolute inset-0 flex flex-col p-8 lg:p-12">
-                                <div className="relative w-full h-full border-2 border-black shadow-neo bg-white p-2">
-                                    {primaryScreenshotSrc ? (
-                                        <div className="w-full h-full flex flex-col overflow-hidden relative group">
-                                            {/* Image - Cover Fit */}
-                                            <div className="flex-1 relative w-full bg-slate-100 overflow-hidden">
-                                                <img
-                                                    src={primaryScreenshotSrc}
-                                                    className="absolute inset-0 w-full h-full object-cover object-top transition-transform duration-700 group-hover:scale-105"
-                                                    alt="Analyzed Page Preview"
-                                                    onError={(e) => console.error('[ReportDisplay] Image Load Failed:', e.currentTarget.src)}
-                                                />
-                                            </div>
-                                            {/* Overlay Badge */}
-                                            <div className="absolute bottom-4 right-4 bg-white border-2 border-black px-3 py-1 shadow-neo z-10">
-                                                <span className="text-xs font-black uppercase tracking-wider text-black">Live Preview</span>
-                                            </div>
+                            <div className="absolute inset-0 flex flex-col">
+                                {primaryScreenshotSrc ? (
+                                    <img
+                                        src={primaryScreenshotSrc}
+                                        className="w-full h-full object-cover object-top transition-transform duration-700 hover:scale-105"
+                                        alt="Analyzed Page Preview"
+                                        onError={(e) => console.error('[ReportDisplay] Image Load Failed:', e.currentTarget.src)}
+                                    />
+                                ) : (
+                                    <div className="w-full h-full flex items-center justify-center p-12 bg-slate-50">
+                                        <div className="bg-white px-4 py-2 border-2 border-black shadow-neo">
+                                            <span className="font-bold text-black">Analyzing Interface...</span>
                                         </div>
-                                    ) : (
-                                        <div className="w-full h-full flex items-center justify-center p-12 bg-slate-50">
-                                            <div className="bg-white px-4 py-2 border-2 border-black shadow-neo">
-                                                <span className="font-bold text-black">Analyzing Interface...</span>
-                                            </div>
-                                        </div>
-                                    )}
-                                </div>
+                                    </div>
+                                )}
                             </div>
                         </div>
                     </div>
