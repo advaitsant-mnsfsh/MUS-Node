@@ -36,45 +36,7 @@ export const AccessibilityAuditView: React.FC<Props> = ({ data, isPdf = false })
     return (
         <div className={`flex flex-col self-stretch font-['DM_Sans'] ${isPdf ? 'text-slate-900' : ''}`}>
 
-            {/* Header with Risk & Compliance (Unbreakable Unit with first section) */}
-            <div className={`break-inside-avoid pdf-item flex flex-col gap-4 mb-6 bg-slate-50 p-6 rounded-xl border border-slate-200`}>
-                <div className="flex justify-between items-start">
-                    <div>
-                        <h2 className="text-2xl font-bold text-slate-800 mb-2">
-                            Detailed Accessibility Audit
-                        </h2>
-                        <p className="text-slate-500 max-w-lg text-sm">
-                            Evaluation of WCAG 2.1 AA compliance using automated Axe-Core testing and visual analysis.
-                        </p>
-                    </div>
-                    {data.RiskLevel && (
-                        <div className={`px-4 py-2 rounded-lg border flex flex-col items-center min-w-[100px] ${data.RiskLevel === 'Critical' ? 'bg-red-50 border-red-200 text-red-700' :
-                            data.RiskLevel === 'High' ? 'bg-orange-50 border-orange-200 text-orange-700' :
-                                'bg-green-50 border-green-200 text-green-700'
-                            }`}>
-                            <span className="text-[10px] font-semibold uppercase tracking-wider">Legal Risk</span>
-                            <span className="text-lg font-bold">{data.RiskLevel}</span>
-                        </div>
-                    )}
-                </div>
 
-                <div className="flex items-center gap-6 mt-2 pt-4 border-t border-slate-200">
-                    <div className="flex flex-col">
-                        <span className="text-3xl font-black text-slate-800">{complianceScore}%</span>
-                        <span className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">Compliance</span>
-                    </div>
-                    <div className="h-10 w-px bg-slate-200 mx-2"></div>
-                    <div className="flex flex-col">
-                        <span className="text-3xl font-black text-red-600">{uniqueViolations}</span>
-                        <span className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">Violations</span>
-                    </div>
-                    <div className="h-10 w-px bg-slate-200 mx-2"></div>
-                    <div className="flex flex-col">
-                        <span className="text-3xl font-black text-emerald-600">{passedCount}</span>
-                        <span className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">Passed</span>
-                    </div>
-                </div>
-            </div>
 
             {/* Critical Issues Section */}
             {data.Top5CriticalAccessibilityIssues?.length > 0 && (
