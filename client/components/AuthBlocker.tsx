@@ -11,10 +11,11 @@ interface AuthBlockerProps {
     auditUrl: string;
     auditId?: string | null; // Optional audit ID to transfer ownership
     onClose?: () => void;
+    initialLoginMode?: boolean; // New prop to control initial state
 }
 
-export const AuthBlocker: React.FC<AuthBlockerProps> = ({ onUnlock, isUnlocked, auditUrl, auditId }) => {
-    const [isLoginMode, setIsLoginMode] = useState(false); // Toggle between Sign Up and Login
+export const AuthBlocker: React.FC<AuthBlockerProps> = ({ onUnlock, isUnlocked, auditUrl, auditId, onClose, initialLoginMode = false }) => {
+    const [isLoginMode, setIsLoginMode] = useState(initialLoginMode); // Toggle between Sign Up and Login
     const [isHidden, setIsHidden] = useState(false); // Local state to close the modal
     const [step, setStep] = useState<'email' | 'otp' | 'password'>('email'); // For Signup flow
     const [tempPassword] = useState(() => Math.random().toString(36).slice(-12) + 'A1!'); // Bridge password

@@ -10,6 +10,7 @@ export const GlobalNavbar: React.FC = () => {
     const location = useLocation();
     const navigate = useNavigate();
     const [showAuthModal, setShowAuthModal] = useState(false);
+    const [authInitialMode, setAuthInitialMode] = useState(false); // false = signup, true = login
 
     const isActive = (path: string) => location.pathname === path;
 
@@ -32,6 +33,30 @@ export const GlobalNavbar: React.FC = () => {
 
                     {/* Center: Absolute Stable Navigation */}
                     <div className="absolute left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 hidden md:flex items-center gap-8">
+                        {/* Assess Now - Always visible */}
+                        <Link
+                            to="/"
+                            className={`text-sm font-bold transition-colors ${isActive('/')
+                                ? 'text-brand'
+                                : 'text-text-secondary hover:text-text-primary'
+                                }`}
+                        >
+                            Assess Now
+                        </Link>
+
+                        {/* My Reports (was Dashboard) - Visible only when logged in */}
+                        {user && (
+                            <Link
+                                to="/dashboard"
+                                className={`text-sm font-semibold transition-colors ${isActive('/dashboard')
+                                    ? 'text-brand'
+                                    : 'text-text-secondary hover:text-text-primary'
+                                    }`}
+                            >
+                                My Reports
+                            </Link>
+                        )}
+
                         {/* About - Always visible & Stable */}
                         <Link
                             to="/about"
@@ -64,44 +89,36 @@ export const GlobalNavbar: React.FC = () => {
                         >
                             Pricing
                         </Link>
-
-                        {/* Dashboard - Visible only when logged in */}
-                        {user && (
-                            <Link
-                                to="/dashboard"
-                                className={`text-sm font-semibold transition-colors ${isActive('/dashboard')
-                                    ? 'text-brand'
-                                    : 'text-text-secondary hover:text-text-primary'
-                                    }`}
-                            >
-                                Dashboard
-                            </Link>
-                        )}
                     </div>
 
                     {/* Right: Auth Section & Dynamic Links */}
-                    <div className="flex items-center gap-4 z-10">
+                    <div className="flex items-center gap-6 z-10">
                         {user ? (
                             <>
-                                {/* Start Assessment Button - Hide on landing page and dashboard */}
-                                {!isActive('/') && !isActive('/dashboard') && (
-                                    <Link
-                                        to="/"
-                                        className="px-6 py-2 bg-text-primary text-white font-semibold text-sm rounded-lg hover:bg-[#374151] transition-colors"
-                                    >
-                                        Start Assessment
-                                    </Link>
-                                )}
                                 {/* User Dropdown */}
                                 <UserBadge />
                             </>
                         ) : (
-                            <button
-                                onClick={() => setShowAuthModal(true)}
-                                className="px-7 py-2 bg-white text-text-primary border-2 border-border-main font-semibold text-sm hover:bg-slate-50 transition-all shadow-neo hover:shadow-neo-hover active:shadow-none active:translate-x-px active:translate-y-px"
-                            >
-                                Login
-                            </button>
+                            <>
+                                <button
+                                    onClick={() => {
+                                        setAuthInitialMode(false); // Signup mode
+                                        setShowAuthModal(true);
+                                    }}
+                                    className="text-sm font-bold text-text-primary hover:text-brand transition-colors"
+                                >
+                                    Sign Up
+                                </button>
+                                <button
+                                    onClick={() => {
+                                        setAuthInitialMode(true); // Login mode
+                                        setShowAuthModal(true);
+                                    }}
+                                    className="px-7 py-2 bg-white text-text-primary border-2 border-border-main font-semibold text-sm hover:bg-slate-50 transition-all shadow-neo hover:shadow-neo-hover active:shadow-none active:translate-x-px active:translate-y-px"
+                                >
+                                    Login
+                                </button>
+                            </>
                         )}
                     </div>
                 </div>
@@ -114,6 +131,7 @@ export const GlobalNavbar: React.FC = () => {
                     isUnlocked={false}
                     auditUrl=""
                     onClose={() => setShowAuthModal(false)}
+                    initialLoginMode={authInitialMode}
                 />
             )}
         </nav>
