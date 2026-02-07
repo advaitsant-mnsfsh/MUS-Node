@@ -160,7 +160,7 @@ export const WhiteLabelModal: React.FC<WhiteLabelModalProps> = ({ isOpen, onClos
               Upload your Organization’s Logo
             </h2>
             <p className="text-sm text-text-secondary mt-1 font-medium">
-             This logo will be used to whitelabel the report to make it shareable.
+              This logo will be used to whitelabel the report to make it shareable.
             </p>
           </div>
           <button
@@ -185,7 +185,7 @@ export const WhiteLabelModal: React.FC<WhiteLabelModalProps> = ({ isOpen, onClos
                   <p className="text-xs text-slate-400 mt-4 font-mono bg-slate-100 px-2 py-1 rounded">PNG, JPG (MAX. 5MB)</p>
                 </div>
                 {/* Decorative background pattern */}
-                <div className="absolute inset-0 opacity-[0.03] bg-[radial-gradient(#000_1px,transparent_1px)] bg-[size:16px_16px]"></div>
+                <div className="absolute inset-0 opacity-[0.03] bg-[radial-gradient(#000_1px,transparent_1px)] bg-size-[16px_16px]"></div>
 
                 <input type="file" className="hidden" accept="image/*" onChange={onFileChange} />
               </label>
@@ -194,7 +194,7 @@ export const WhiteLabelModal: React.FC<WhiteLabelModalProps> = ({ isOpen, onClos
             <div className="space-y-6">
               {/* Cropper Container */}
               <div className="flex justify-center bg-slate-900 border-2 border-border-main rounded-lg overflow-hidden min-h-[300px] items-center relative shadow-inner">
-                <div className="absolute inset-0 opacity-20 bg-[radial-gradient(#fff_1px,transparent_1px)] bg-[size:16px_16px]"></div>
+                <div className="absolute inset-0 opacity-20 bg-[radial-gradient(#fff_1px,transparent_1px)] bg-size-[16px_16px]"></div>
                 <ReactCrop
                   crop={crop}
                   onChange={(_, percentCrop) => setCrop(percentCrop)}

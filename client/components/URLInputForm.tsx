@@ -229,7 +229,7 @@ export const URLInputForm: React.FC<URLInputFormProps> = ({
             )}
 
             {/* Footer Section: Brand Stamp + Actions */}
-            <div className={`pt-4 border-t border-slate-300 ${!competitorMode ? '!mt-3' : ''}`}>
+            <div className={`pt-4 border-t border-slate-300 ${!competitorMode ? 'mt-3!' : ''}`}>
 
               {/* Action Container */}
               <div className="flex flex-col gap-3">

@@ -63,67 +63,68 @@ export const ReportLayout: React.FC<ReportLayoutProps> = ({
             <div className="bg-white overflow-hidden">
                 {pdfError && <div className="m-4 p-4 bg-red-100 border border-red-400 text-red-700 rounded-lg">{pdfError}</div>}
 
-                {!isReportReady && <div className="p-8"><SkeletonLoader className="h-[100vh] w-full" /></div>}
+                {!isReportReady && <div className="p-8"><SkeletonLoader className="h-screen w-full" /></div>}
 
                 {isReportReady && report && (
                     <>
-                        {/* ACTION BAR (Wireframe Match) */}
-                        <div className="px-6 py-4 border-b border-slate-200 bg-white flex flex-col md:flex-row justify-between items-center gap-4">
+                        {/* ACTION BAR (Neo-Brutalist Refinement) */}
+                        <div className="px-6 py-4 border-b-2 border-black bg-white flex flex-col md:flex-row justify-between items-center gap-4 sticky top-0 z-30">
 
                             {/* LEFT: Branding & Inputs */}
                             <div className="flex items-center gap-4 w-full md:w-auto">
-                                {/* Back Button */}
+                                {/* Back Button (Square Neo Style) */}
                                 <button
                                     onClick={onRunNewAudit}
-                                    className="p-1.5 text-slate-400 hover:text-slate-700 transition-colors hover:bg-slate-50 rounded-lg"
+                                    className="w-10 h-10 flex items-center justify-center bg-white border-2 border-black text-black shadow-neo hover:shadow-neo-hover hover:-translate-x-px hover:-translate-y-px transition-all active:shadow-none active:translate-x-0 active:translate-y-0"
                                     aria-label="Back"
                                 >
-                                    <ChevronLeft className="w-5 h-5" />
+                                    <ChevronLeft className="w-5 h-5 stroke-[3px]" />
                                 </button>
 
-                                <div className="h-6 w-px bg-slate-200 mx-1 hidden sm:block"></div>
+                                {/* Divider */}
+                                <div className="h-8 w-0.5 bg-black mx-2 hidden sm:block"></div>
 
                                 <div className="flex flex-wrap items-center gap-3">
-                                    <span className="text-slate-500 font-medium text-sm hidden sm:inline">Audit Report for</span>
+                                    <span className="text-black font-black text-xs uppercase tracking-wider hidden sm:inline">Audit Report for</span>
 
                                     {inputs && inputs.length > 0 ? (
                                         <>
-                                            {/* Primary Pill */}
-                                            <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-md text-sm font-semibold text-slate-700">
-                                                <LinkIcon className="w-3.5 h-3.5 text-slate-400" />
-                                                <span className="truncate max-w-[250px] font-mono text-xs">
+                                            {/* Primary Pill (Box Style) */}
+                                            <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-white border-2 border-black shadow-neo-sm text-sm font-bold text-black">
+                                                <LinkIcon className="w-3.5 h-3.5 text-black stroke-[3px]" />
+                                                <span className="truncate max-w-[250px] font-mono text-xs tracking-tight">
                                                     {inputs[0].url?.replace(/^https?:\/\//, '').replace(/\/$/, '') || (inputs[0].file ? inputs[0].file.name : 'Uploaded File')}
                                                 </span>
                                             </div>
 
                                             {/* Count Pill */}
                                             {inputs.length > 1 && (
-                                                <div className="inline-flex items-center gap-1 px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-md text-xs font-medium text-slate-500">
-                                                    <span>+ {inputs.length - 1} View More</span>
+                                                <div className="inline-flex items-center gap-1 px-3 py-1.5 bg-white border-2 border-black shadow-neo-sm text-xs font-black text-black uppercase">
+                                                    <span>+ {inputs.length - 1} MORE</span>
                                                 </div>
                                             )}
                                         </>
                                     ) : (
                                         // Fallback if inputs not ready
-                                        <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-md text-sm font-semibold text-slate-700">
-                                            <LinkIcon className="w-3.5 h-3.5 text-slate-400" />
-                                            <span className="truncate max-w-[250px] font-mono text-xs">{url.replace(/^https?:\/\//, '').replace(/\/$/, '')}</span>
+                                        <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-white border-2 border-black shadow-neo-sm text-sm font-bold text-black">
+                                            <LinkIcon className="w-3.5 h-3.5 text-black stroke-[3px]" />
+                                            <span className="truncate max-w-[250px] font-mono text-xs tracking-tight">{url.replace(/^https?:\/\//, '').replace(/\/$/, '')}</span>
                                         </div>
                                     )}
                                 </div>
                             </div>
 
                             {/* RIGHT: Actions */}
-                            <div className="flex items-center gap-2 w-full md:w-auto justify-end">
+                            <div className="flex items-center gap-3 w-full md:w-auto justify-end">
                                 {/* Share Button (Icon Only) */}
                                 {!isSharedView && (
                                     <button
                                         onClick={onShareAudit}
                                         disabled={isSharing}
-                                        className="w-10 h-10 flex items-center justify-center bg-white border-2 border-slate-900 text-slate-900 rounded-none shadow-neo hover:shadow-neo-hover hover:translate-x-[-1px] hover:translate-y-[-1px] transition-all active:shadow-none active:translate-x-0 active:translate-y-0 font-bold"
+                                        className="w-10 h-10 flex items-center justify-center bg-white border-2 border-black text-black rounded-none shadow-neo hover:shadow-neo-hover hover:-translate-x-px hover:-translate-y-px transition-all active:shadow-none active:translate-x-0 active:translate-y-0 disabled:opacity-50"
                                         title="Share Report"
                                     >
-                                        <Share2 className="w-4 h-4" />
+                                        <Share2 className="w-4 h-4 stroke-[3px]" />
                                     </button>
                                 )}
 
@@ -131,20 +132,20 @@ export const ReportLayout: React.FC<ReportLayoutProps> = ({
                                 <button
                                     onClick={onGeneratePdf}
                                     disabled={isPdfGenerating}
-                                    className="w-10 h-10 flex items-center justify-center bg-white border-2 border-slate-900 text-slate-900 rounded-none shadow-neo hover:shadow-neo-hover hover:translate-x-[-1px] hover:translate-y-[-1px] transition-all active:shadow-none active:translate-x-0 active:translate-y-0 font-bold"
+                                    className="w-10 h-10 flex items-center justify-center bg-white border-2 border-black text-black rounded-none shadow-neo hover:shadow-neo-hover hover:-translate-x-px hover:-translate-y-px transition-all active:shadow-none active:translate-x-0 active:translate-y-0 disabled:opacity-50"
                                     title="Download PDF"
                                 >
-                                    <Download className="w-4 h-4" />
+                                    <Download className="w-4 h-4 stroke-[3px]" />
                                 </button>
 
                                 {/* New Audit Button (Text + Icon) */}
                                 {!isSharedView && onRunNewAudit && (
                                     <button
                                         onClick={onRunNewAudit}
-                                        className="h-10 px-4 flex items-center gap-2 bg-white border-2 border-slate-900 text-slate-900 rounded-none shadow-neo hover:shadow-neo-hover hover:translate-x-[-1px] hover:translate-y-[-1px] transition-all active:shadow-none active:translate-x-0 active:translate-y-0 font-bold"
+                                        className="h-10 px-6 flex items-center gap-2 bg-black border-2 border-black text-white rounded-none shadow-neo hover:shadow-neo-hover hover:-translate-x-px hover:-translate-y-px transition-all active:shadow-none active:translate-x-0 active:translate-y-0"
                                     >
-                                        <span>New Audit</span>
-                                        <Plus className="w-4 h-4" />
+                                        <span className="text-xs font-black uppercase tracking-wider">New Audit</span>
+                                        <Plus className="w-4 h-4 stroke-[3px]" />
                                     </button>
                                 )}
                             </div>

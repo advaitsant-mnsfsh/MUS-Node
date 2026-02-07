@@ -98,7 +98,7 @@ export const ExecutiveSummaryDisplay: React.FC<ExecutiveSummaryDisplayProps> = (
         <div className={`flex flex-col gap-2 break-inside-avoid pdf-item ${!isPdf ? 'animate-in fade-in slide-in-from-bottom-2' : ''}`}>
             {/* Main Header with Blue Box */}
             <div className="flex items-center gap-4 mb-8">
-                <div className="w-6 h-10 bg-[#6366F1] border-2 border-black shadow-neo"></div>
+                <div className="w-6 h-10 bg-brand border-2 border-black shadow-neo"></div>
                 <h3 className="text-3xl font-black text-black uppercase tracking-tight">Executive Summary</h3>
             </div>
 
