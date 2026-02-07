@@ -222,7 +222,7 @@ export function LinearScoreDisplay({ score, label, isLarge = false }: { score?: 
                     className="h-full bg-slate-500 rounded-none transition-all duration-1000 ease-out"
                     style={{
                         width: `${Math.min(100, Math.max(0, score * 10))}%`,
-                        backgroundColor: '#64748B' // slate-500 for a neutral wireframe look
+                        backgroundColor: theme.solid
                     }}
                 />
             </div>
