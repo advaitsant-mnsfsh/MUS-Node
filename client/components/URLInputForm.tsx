@@ -128,12 +128,12 @@ export const URLInputForm: React.FC<URLInputFormProps> = ({
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 pb-6 border-b border-slate-300">
             <div>
               <h2 className="text-h3 font-bold text-text-primary">
-                {competitorMode ? "Enter websites to compare" : "Enter Website Url"}
+                {competitorMode ? "Enter Websites to Compare" : "Enter Website URL"}
               </h2>
               <p className="text-text-secondary text-sm mt-1">
                 {competitorMode
-                  ? "You can enter upto 5 urls or screenshots of the each website."
-                  : "You can enter upto 5 urls of the same website"}
+                  ? "You can enter up to 5 URLs or screenshots of each website."
+                  : "You can enter up to 5 URLs of the same website"}
               </p>
             </div>
 
@@ -171,8 +171,8 @@ export const URLInputForm: React.FC<URLInputFormProps> = ({
 
                 {/* PRIMARY QUEUE */}
                 <div className="bg-white p-5 rounded-lg border-2 border-border-main hover:shadow-neo">
-                  <h3 className="text-xs font-bold text-text-primary mb-4 uppercase tracking-wider flex items-center gap-2">
-                    <Globe className="w-4 h-4 text-brand" /> YOUR WEBSITE
+                  <h3 className="text-xs font-bold text-text-primary mb-4 flex items-center gap-2">
+                    <Globe className="w-4 h-4 text-brand" /> Your Website
                   </h3>
                   <CompetitorMultiInput
                     queue={primaryQueue}
@@ -188,8 +188,8 @@ export const URLInputForm: React.FC<URLInputFormProps> = ({
 
                 {/* COMPETITOR QUEUE */}
                 <div className="bg-white p-5 rounded-lg border-2 border-border-main hover:shadow-neo">
-                  <h3 className="text-xs font-bold text-text-primary mb-4 uppercase tracking-wider flex items-center gap-2">
-                    <Swords className="w-4 h-4 text-[#EF4444]" /> COMPETITOR WEBSITE
+                  <h3 className="text-xs font-bold text-text-primary mb-4 flex items-center gap-2">
+                    <Swords className="w-4 h-4 text-[#EF4444]" /> Competitor Website
                   </h3>
                   <CompetitorMultiInput
                     queue={competitorQueue}
@@ -256,7 +256,7 @@ export const URLInputForm: React.FC<URLInputFormProps> = ({
                           onClick={() => setIsModalOpen(true)}
                           className="text-brand hover:text-brand-hover font-bold underline decoration-dotted underline-offset-2 transition-colors"
                         >
-                          Change it
+                          Change It
                         </button>
                       </div>
 
@@ -295,7 +295,7 @@ export const URLInputForm: React.FC<URLInputFormProps> = ({
                     </>
                   ) : (
                     <>
-                      <span>{competitorMode ? "START COMPARISON" : "START ASSESSING"}</span>
+                      <span>{competitorMode ? "Start Comparison" : "Start Assessing"}</span>
                       <span className="text-xl">→</span>
                     </>
                   )}
