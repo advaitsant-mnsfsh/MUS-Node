@@ -59,36 +59,25 @@ export const ExecutiveSummaryDisplay: React.FC<ExecutiveSummaryDisplayProps> = (
     const { working, notWorking, raw } = parseSummary(summaryText);
 
     // --- RENDER HELPERS ---
-    const Card = ({ title, items, type }: { title: string, items: string[], type: 'working' | 'notWorking' }) => {
+    // Neo-Brutalist Style: Simple list with bold headers
+    const Section = ({ title, items, type }: { title: string, items: string[], type: 'working' | 'notWorking' }) => {
+        if (items.length === 0) return null;
+
         const isWorking = type === 'working';
-        const bgClass = isWorking ? 'bg-emerald-50 border-emerald-100' : 'bg-rose-50 border-rose-100';
-        const titleClass = isWorking ? 'text-emerald-900' : 'text-rose-900';
-        const iconBg = isWorking ? 'bg-emerald-100 text-emerald-600' : 'bg-rose-100 text-rose-600';
-        const Icon = isWorking ? ThumbsUp : ThumbsDown;
-        const BulletIcon = isWorking ? CheckCircle2 : XCircle;
-        const bulletClass = isWorking ? 'text-emerald-600' : 'text-rose-600';
+        const badgeClass = isWorking ? 'bg-[#FEF08A]' : 'bg-[#FECACA]'; // Yellow-200 or Red-200
 
         return (
-            <div className={`p-6 rounded-xl border ${bgClass} flex-1 min-w-[300px] break-inside-avoid pdf-item`}>
-                <div className="flex items-center gap-3 mb-4 border-b border-black/5 pb-4">
-                    <div className={`p-2 rounded-lg ${iconBg}`}>
-                        <Icon className="w-5 h-5" />
-                    </div>
-                    <h4 className={`font-bold text-lg ${titleClass}`}>{title}</h4>
+            <div className="mb-8 last:mb-0 break-inside-avoid pdf-item">
+                <div className={`inline-block border-2 border-black shadow-neo px-3 py-1 mb-4 ${badgeClass}`}>
+                    <h4 className="font-extrabold text-sm uppercase tracking-wide text-black">{title}</h4>
                 </div>
-                <div className="space-y-3">
+                <ul className="space-y-3 pl-1">
                     {items.map((item, i) => (
-                        <div key={i} className="flex gap-3 items-start">
-                            <BulletIcon className={`w-5 h-5 shrink-0 mt-0.5 ${bulletClass}`} />
-                            <p className="text-slate-700 text-sm leading-relaxed font-medium">
-                                {item.replace(/^\W+/, '')}
-                            </p>
-                        </div>
+                        <li key={i} className="text-slate-900 font-medium text-base leading-relaxed">
+                            {item.replace(/^\W+/, '')}
+                        </li>
                     ))}
-                    {items.length === 0 && (
-                        <p className="text-slate-400 italic text-sm">No specific points identified.</p>
-                    )}
-                </div>
+                </ul>
             </div>
         );
     };
@@ -96,17 +85,9 @@ export const ExecutiveSummaryDisplay: React.FC<ExecutiveSummaryDisplayProps> = (
     if (raw) {
         // Fallback layout if parsing failed
         return (
-            <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 md:p-8 break-inside-avoid pdf-item">
-                <div className="flex items-start gap-4 mb-4">
-                    <div className="p-3 bg-indigo-50 rounded-xl text-indigo-600">
-                        <Swords className="w-6 h-6" />
-                    </div>
-                    <div>
-                        <h3 className="text-xl font-bold text-slate-900">Executive Summary</h3>
-                        <p className="text-slate-500 text-sm mt-1">High-level strategic analysis.</p>
-                    </div>
-                </div>
-                <div className="prose prose-slate max-w-none text-slate-700 leading-relaxed bg-slate-50 p-6 rounded-xl border border-slate-100">
+            <div className="flex flex-col gap-6 pl-6 border-l-4 border-black break-inside-avoid pdf-item">
+                <h3 className="text-3xl font-black text-black uppercase tracking-tight">Executive Summary</h3>
+                <div className="prose prose-slate max-w-none text-slate-900 font-medium leading-relaxed">
                     {raw}
                 </div>
             </div>
@@ -114,27 +95,17 @@ export const ExecutiveSummaryDisplay: React.FC<ExecutiveSummaryDisplayProps> = (
     }
 
     return (
-        <div className={`bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden break-inside-avoid pdf-item ${!isPdf ? 'animate-in fade-in slide-in-from-bottom-2' : ''}`}>
-
-            <div className="p-6 md:p-8 border-b border-slate-100">
-                <div className="flex items-start gap-4">
-                    <div className="p-3 bg-indigo-50 rounded-xl text-indigo-600">
-                        <Swords className="w-6 h-6" />
-                    </div>
-                    <div>
-                        <h3 className="text-xl font-bold text-slate-900">Strategic Executive Summary</h3>
-                        <p className="text-slate-500 text-sm mt-1">
-                            Key strengths and critical weaknesses identified during the audit.
-                        </p>
-                    </div>
-                </div>
+        <div className={`flex flex-col gap-2 break-inside-avoid pdf-item ${!isPdf ? 'animate-in fade-in slide-in-from-bottom-2' : ''}`}>
+            {/* Main Header with Blue Box */}
+            <div className="flex items-center gap-4 mb-8">
+                <div className="w-6 h-10 bg-[#6366F1] border-2 border-black shadow-neo"></div>
+                <h3 className="text-3xl font-black text-black uppercase tracking-tight">Executive Summary</h3>
             </div>
 
-            <div className="p-6 md:p-8 bg-slate-50/50">
-                <div className="flex flex-col md:flex-row gap-6">
-                    <Card title="What is Working" items={working} type="working" />
-                    <Card title="What is Not Working" items={notWorking} type="notWorking" />
-                </div>
+            {/* Content with Thick Left Border */}
+            <div className="pl-8 border-l-4 border-[#475569]">
+                <Section title="What Is Working" items={working} type="working" />
+                <Section title="What Is Not Working" items={notWorking} type="notWorking" />
             </div>
         </div>
     );
