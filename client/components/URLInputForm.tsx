@@ -122,18 +122,18 @@ export const URLInputForm: React.FC<URLInputFormProps> = ({
   return (
     <>
       <section aria-label="Start Audit" className="bg-white rounded-lg border-2 border-border-main shadow-neo overflow-hidden font-sans">
-        <div className="p-6 md:p-8 space-y-8">
+        <div className="p-6 md:p-8 space-y-4">
 
           {/* Header & Mode Switch */}
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 pb-6 border-b border-slate-300">
             <div>
               <h2 className="text-h3 font-bold text-text-primary">
-                {competitorMode ? "Competitor Analysis" : "ADD CONTEXT"}
+                {competitorMode ? "Enter websites to compare" : "Enter Website Url"}
               </h2>
               <p className="text-text-secondary text-sm mt-1">
                 {competitorMode
-                  ? "Compare your site against a competitor to find gaps."
-                  : "Your website URL or screenshot to begin analysis"}
+                  ? "You can enter upto 5 urls or screenshots of the each website."
+                  : "You can enter upto 5 urls of the same website"}
               </p>
             </div>
 
@@ -147,7 +147,7 @@ export const URLInputForm: React.FC<URLInputFormProps> = ({
                   : 'bg-white text-text-secondary hover:bg-[#F5F5F5]'
                   }`}
               >
-                Standard<br></br>Audit
+                Deep<br></br>Assessment
               </button>
               <button
                 type="button"
@@ -158,7 +158,7 @@ export const URLInputForm: React.FC<URLInputFormProps> = ({
                   }`}
               >
                 {/* <Swords className="w-4 h-4" /> */}
-                Competitor Audit
+                Competitor<br></br>Assessment
               </button>
             </div>
           </div>
@@ -205,10 +205,7 @@ export const URLInputForm: React.FC<URLInputFormProps> = ({
               </div>
             ) : (
               // --- STANDARD MODE INPUTS (SINGLE QUEUE) ---
-              <>
-                <p className="text-xs text-text-secondary mb-3">
-                  You can add up to 5 URLs of the same website
-                </p>
+              <div className="flex flex-col gap-2">
                 <StandardInputControl
                   queue={queue}
                   setQueue={setQueue}
@@ -217,7 +214,10 @@ export const URLInputForm: React.FC<URLInputFormProps> = ({
                   errorMsg={errorMsg}
                   setErrorMsg={setErrorMsg}
                 />
-              </>
+                <p className="text-xs text-text-secondary">
+                  Alternatively, you can add screenshots of your website as well
+                </p>
+              </div>
             )}
 
             {/* Validation Error Message (Global) */}
@@ -229,7 +229,7 @@ export const URLInputForm: React.FC<URLInputFormProps> = ({
             )}
 
             {/* Footer Section: Brand Stamp + Actions */}
-            <div className="pt-6 border-t border-slate-300">
+            <div className={`pt-4 border-t border-slate-300 ${!competitorMode ? '!mt-3' : ''}`}>
 
               {/* Action Container */}
               <div className="flex flex-col gap-3">
@@ -238,13 +238,13 @@ export const URLInputForm: React.FC<URLInputFormProps> = ({
                 <div className="text-center text-xs text-text-secondary min-h-[40px] flex items-center justify-center">
                   {!whiteLabelLogo ? (
                     <>
-                      Want a custom logo on your report?{' '}
+                      Want a shareable report with custom branding? {' '}
                       <button
                         type="button"
                         onClick={() => setIsModalOpen(true)}
                         className="text-brand hover:text-brand-hover font-bold underline decoration-dotted underline-offset-2 transition-colors ml-1"
                       >
-                        Upload one
+                        Upload Logo
                       </button>
                     </>
                   ) : (
@@ -295,7 +295,7 @@ export const URLInputForm: React.FC<URLInputFormProps> = ({
                     </>
                   ) : (
                     <>
-                      <span>{competitorMode ? "START COMPARISON" : "START AUDIT"}</span>
+                      <span>{competitorMode ? "START COMPARISON" : "START ASSESSING"}</span>
                       <span className="text-xl">→</span>
                     </>
                   )}
