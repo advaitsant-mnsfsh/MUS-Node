@@ -120,7 +120,7 @@ export const StandardInputControl: React.FC<StandardInputControlProps> = ({
                     onChange={(e) => { setCurrentUrl(e.target.value); setErrorMsg(null); }}
                     onKeyDown={handleKeyDown}
                     disabled={remainingSlots === 0}
-                    placeholder={remainingSlots === 0 ? "Limit reached" : (placeholder || "https://yourwebsite.com")}
+                    placeholder={remainingSlots === 0 ? "Limit reached" : (placeholder || "yourwebsite.com")}
                     className="flex-1 py-3 pl-4 pr-24 bg-transparent border-none outline-none text-text-primary placeholder:text-[#94A3B8] text-sm disabled:cursor-not-allowed font-medium"
                 />
                 <div className="absolute right-2 flex items-center gap-1 h-full py-1.5">

@@ -157,10 +157,10 @@ export const WhiteLabelModal: React.FC<WhiteLabelModalProps> = ({ isOpen, onClos
           <div>
             <h2 className="text-xl font-bold text-text-primary flex items-center gap-2">
               <Image className="w-5 h-5" />
-              Add Custom Branding
+              Upload your Organization’s Logo
             </h2>
             <p className="text-sm text-text-secondary mt-1 font-medium">
-              Your logo will appear on all audit reports.
+             This logo will be used to whitelabel the report to make it shareable.
             </p>
           </div>
           <button

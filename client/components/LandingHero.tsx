@@ -17,23 +17,22 @@ export const LandingHero: React.FC = () => {
                 {/* AI Badge */}
                 <div className="inline-block mb-6">
                     <span className="inline-flex items-center gap-2 px-3 py-1.5 bg-accent-pink text-white text-[10px] sm:text-[length:--text-tiny] font-bold tracking-widest rounded-full border-2 border-border-main shadow-neo uppercase">
-                        ⚡ AI-POWERED ANALYSIS
+                        ⚡ Powered by AI and Humans
                     </span>
                 </div>
 
                 {/* Main Heading */}
                 <h1 className="text-h3 sm:text-h2 md:text-h1 lg:text-display font-extrabold text-text-primary mb-6 tracking-tight">
-                    Get your website a{' '}
+                    Let’s Assess your{' '}
                     <span className="relative inline-block px-2">
-                        <span className="relative z-10">UX Checkup.</span>
+                        <span className="relative z-10">Website’s UX.</span>
                         <span className="absolute bottom-2 left-0 right-0 h-2 md:h-3 lg:h-4 bg-[#DBEAFE] -z-10 rotate-1"></span>
                     </span>
                 </h1>
 
                 {/* Subtitle */}
                 <p className="text-body md:text-body-lg text-text-secondary font-medium max-w-2xl mx-auto leading-relaxed">
-                    Comprehensive UX analysis powered by AI. {' '}
-                    <span className="block sm:inline">Get actionable insights in minutes.</span>
+                   UX Friction Assessments. Quick Actionable Recommendations.
                 </p>
             </div>
         </header>
