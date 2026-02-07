@@ -72,21 +72,22 @@ const EditorialCard = ({
                     </h3>
                 </div>
 
+
                 {/* Right: Pills & Toggle */}
                 <div className="flex items-center gap-3 shrink-0">
-                    {/* Audit Type Pill */}
+                    {/* Audit Type Pill (Text Only) */}
                     {auditType && (
-                        <div className="hidden sm:flex items-center justify-center px-3 py-1.5 bg-white border-2 border-black shadow-neo-hover">
-                            <span className="text-xs font-bold text-black whitespace-nowrap uppercase tracking-wide">
+                        <div className="hidden sm:flex items-center justify-center">
+                            <span className="text-xs font-black text-black whitespace-nowrap uppercase tracking-wide">
                                 {auditType}
                             </span>
                         </div>
                     )}
 
-                    {/* Score Pill */}
-                    <div className="flex items-center justify-center px-3 py-1.5 bg-black text-white min-w-[70px] border-2 border-black shadow-[2px_2px_0px_0px_#fbbf24]">
+                    {/* Score Pill (White Background) */}
+                    <div className="flex items-center justify-center px-3 py-1.5 bg-white text-black min-w-[70px] border-2 border-black shadow-[2px_2px_0px_0px_#fbbf24]">
                         <span className="text-sm font-bold">
-                            {displayScore}<span className="text-gray-400 text-[10px] ml-0.5">/100</span>
+                            {displayScore}<span className="text-slate-500 text-[10px] ml-0.5">/100</span>
                         </span>
                     </div>
 
