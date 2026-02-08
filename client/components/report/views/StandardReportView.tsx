@@ -10,7 +10,8 @@ import {
     PenTool,
     Palette,
     Box,
-    Accessibility
+    Accessibility,
+    Target
 } from 'lucide-react';
 import { ExecutiveSummaryDisplay } from '../ExecutiveSummaryDisplay';
 
@@ -57,25 +58,24 @@ export const StandardReportView: React.FC<StandardReportViewProps> = ({ report, 
         <>
             <div className="font-['DM_Sans']">
 
-                {/* 1. TOP SECTION: Executive Summary & Preview (Always Visible) */}
-                <div className="flex flex-col animate-in fade-in slide-in-from-bottom-4">
-                    {/* 50/50 Split Section */}
-                    <div className="flex flex-col lg:flex-row border-b-2 border-black">
+                {/* 1. TOP SECTION: Executive Summary & Preview (Card Style) */}
+                <div className="flex flex-col animate-in fade-in slide-in-from-bottom-4 mb-12 mx-4 md:mx-8">
+                    <div className="flex flex-col lg:flex-row border-2 border-black shadow-neo bg-white">
 
                         {/* LEFT COLUMN: Scores & Text (50%) */}
-                        <div className="w-full lg:w-1/2 p-8 lg:p-12 border-r-2 border-black flex flex-col gap-10">
+                        <div className="w-full lg:w-1/2 p-6 md:p-8 border-r-2 border-black flex flex-col gap-8">
 
                             {/* Scores Section */}
                             <div className="w-full border-b-2 pb-6 border-black">
                                 {/* Overall Score (Large) */}
-                                <div className="mb-10">
-                                    <div className="pb-2 ">
+                                <div className="mb-8">
+                                    <div className="pb-2">
                                         <LinearScoreDisplay score={overallScore} label="Overall Score" isLarge={true} />
                                     </div>
                                 </div>
 
                                 {/* Sub Categories Grid */}
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-8">
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-6">
                                     {ux ? <LinearScoreDisplay score={ux.CategoryScore} label="UX Design" /> : <SkeletonLoader className="h-16" />}
                                     {visual ? <LinearScoreDisplay score={visual.CategoryScore} label="Visual Design" /> : <SkeletonLoader className="h-16" />}
                                     {product ? <LinearScoreDisplay score={product.CategoryScore} label="Product Design" /> : <SkeletonLoader className="h-16" />}
@@ -84,9 +84,17 @@ export const StandardReportView: React.FC<StandardReportViewProps> = ({ report, 
                             </div>
 
                             {/* Executive Summary Text */}
-                            <div className="mt-2 text-left">
+                            <div className="text-left">
+                                <div className="flex items-center gap-3 mb-4">
+                                    <div className="w-4 h-8 bg-brand border-2 border-black shadow-neo"></div>
+                                    <h2 className="text-2xl font-black text-black uppercase tracking-tight">Executive Summary</h2>
+                                </div>
                                 {strategy?.ExecutiveSummary ? (
-                                    <ExecutiveSummaryDisplay summaryText={strategy.ExecutiveSummary} />
+                                    <div className="prose prose-slate max-w-none border-l-4 border-black pl-5 py-1">
+                                        <div className="text-slate-900 leading-relaxed text-lg font-bold">
+                                            {strategy.ExecutiveSummary}
+                                        </div>
+                                    </div>
                                 ) : (
                                     <div className="p-6 bg-page-bg border-2 border-black border-dashed">
                                         <SkeletonLoader className="h-4 w-3/4 mb-2" />
@@ -98,9 +106,18 @@ export const StandardReportView: React.FC<StandardReportViewProps> = ({ report, 
                         </div>
 
                         {/* RIGHT COLUMN: Website Preview (50%) */}
-                        <div className="w-full lg:w-1/2 relative bg-slate-100 min-h-[500px] lg:min-h-0 border-t-2 lg:border-t-0 border-black">
-                            {/* Absolute container to fill the available height (Left Col Height on Desktop, Fixed on Mobile) */}
-                            <div className="absolute inset-0 flex flex-col">
+                        <div className="w-full lg:w-1/2 relative bg-page-bg min-h-[500px] lg:min-h-0 border-t-2 lg:border-t-0 border-black p-6 md:p-8 flex flex-col gap-4">
+                            <div className="flex items-center gap-3 mb-2 justify-end">
+                                <div className="flex flex-col items-end">
+                                    <span className="text-xs font-black text-black uppercase tracking-wider bg-emerald-200 px-2 py-0.5 w-fit border border-black mb-1">Analyzed Website</span>
+                                </div>
+                                <div className="p-2 bg-emerald-100 border-2 border-black shadow-neo">
+                                    <Box className="w-5 h-5 text-black" />
+                                </div>
+                            </div>
+
+                            {/* Screenshot Container */}
+                            <div className="w-full aspect-video bg-white border-2 border-black overflow-hidden relative group shadow-neo">
                                 {primaryScreenshotSrc ? (
                                     <img
                                         src={primaryScreenshotSrc}
@@ -120,16 +137,22 @@ export const StandardReportView: React.FC<StandardReportViewProps> = ({ report, 
                     </div>
 
                     {/* 2. MIDDLE SECTION: Context Capture (Full Width Below Split) */}
-                    <div className="w-full p-8 lg:p-12 bg-white border-b-2 border-black">
+                    <div className="mt-12 mx-4 md:mx-8">
+                        <div className="flex items-center gap-3 mb-6">
+                            <div className="p-2.5 bg-accent-yellow border-2 border-black text-black shadow-neo">
+                                <Target className="w-6 h-6" strokeWidth={2.5} />
+                            </div>
+                            <h3 className="text-2xl font-black text-black uppercase">Strategic Foundation</h3>
+                        </div>
                         <DetailedAuditView auditData={strategy} auditType={'Strategic Foundation'} />
                     </div>
                 </div>
 
                 {/* 3. BOTTOM SECTION: Score Breakdown & Detailed Cards */}
-                <div className="bg-page-bg min-h-screen pt-12">
+                <div className="pt-8">
 
                     {/* Header & Tabs */}
-                    <div className="sticky top-0 z-10 bg-white border-y-2 border-black py-4 shadow-sm px-8 lg:px-12 mb-12">
+                    <div className="sticky top-0 z-10 bg-white border-2 border-black py-4 shadow-neo px-6 lg:px-8 mb-12 mx-4 md:mx-8">
                         <div className="flex flex-col md:flex-row items-center justify-between gap-6">
                             <div>
                                 <h3 className="text-2xl font-black text-black uppercase">Score Breakdown</h3>
@@ -159,7 +182,7 @@ export const StandardReportView: React.FC<StandardReportViewProps> = ({ report, 
                     </div>
 
                     {/* Filtered Content Area */}
-                    <div className="mx-8 lg:mx-12 flex flex-col gap-12 animate-in nav-fade-in duration-300 pb-20">
+                    <div className="flex flex-col gap-12 animate-in nav-fade-in duration-300 pb-20 mx-4 md:mx-8">
 
                         {/* CASE 1: All Parameters (Stack Everything) */}
                         {activeTab === 'All Parameters' && (
