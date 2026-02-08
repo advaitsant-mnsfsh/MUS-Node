@@ -37,7 +37,7 @@ export const ScanningPreview: React.FC<ScanningPreviewProps> = ({ screenshot, pr
                 </div>
 
                 {/* Screenshot Container */}
-                <div className="relative bg-white border-2 border-border-main rounded-b-xl overflow-hidden aspect-[16/10] shadow-neo hover:shadow-neo-hover transition-shadow">
+                <div className="relative bg-white border-2 border-border-main rounded-b-xl overflow-hidden aspect-[16/10] shadow-neo">
                     {screenshot ? (
                         <img
                             src={(() => {

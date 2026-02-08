@@ -39,7 +39,7 @@ export const SplitLayout: React.FC<SplitLayoutProps> = ({
     if (fullWidth) {
         return (
             <div className="h-[calc(100vh-5rem)] bg-page-bg flex items-center justify-center p-4">
-                <div className="w-full max-w-5xl h-full">
+                <div className="w-full max-w-5xl">
                     <ScanningPreview
                         screenshot={screenshot || null}
                         progress={progress}
