@@ -41,7 +41,7 @@ export const CompetitorReportView: React.FC<CompetitorReportViewProps> = ({
     // --- Helper Components (Brutalism Styled) ---
 
     const StrengthCard = ({ title, description, impact }: { title: string, description: string, impact: string }) => (
-        <div className="bg-white p-5 border-2 border-black shadow-neo hover:shadow-neo-hover hover:-translate-x-[1px] hover:-translate-y-[1px] transition-all duration-200 group">
+        <div className="bg-white p-5 border-2 border-black shadow-neo hover:shadow-neo-hover hover:-translate-x-px hover:-translate-y-px transition-all duration-200 group">
             <div className="flex items-start gap-4 mb-3">
                 <div className="p-2 bg-emerald-100 text-black border-2 border-black">
                     <CheckCircle2 className="w-5 h-5" />
@@ -60,7 +60,7 @@ export const CompetitorReportView: React.FC<CompetitorReportViewProps> = ({
     );
 
     const CompetitorCard = ({ title, description, impact }: { title: string, description: string, impact: string }) => (
-        <div className="bg-white p-5 border-2 border-black shadow-neo hover:shadow-neo-hover hover:-translate-x-[1px] hover:-translate-y-[1px] transition-all duration-200 group">
+        <div className="bg-white p-5 border-2 border-black shadow-neo hover:shadow-neo-hover hover:-translate-x-px hover:-translate-y-px transition-all duration-200 group">
             <div className="flex items-start gap-4 mb-3">
                 <div className="p-2 bg-blue-100 text-black border-2 border-black">
                     <Target className="w-5 h-5" />
@@ -79,7 +79,7 @@ export const CompetitorReportView: React.FC<CompetitorReportViewProps> = ({
     );
 
     const OpportunityCard = ({ title, actionPlan, index }: { title: string, actionPlan: string, index: number }) => (
-        <div className="bg-[#FFF9F0] p-6 border-2 border-black shadow-neo hover:shadow-neo-hover hover:-translate-x-[1px] hover:-translate-y-[1px] transition-all duration-200 group relative">
+        <div className="bg-page-bg p-6 border-2 border-black shadow-neo hover:shadow-neo-hover hover:-translate-x-px hover:-translate-y-px transition-all duration-200 group relative">
             <div className="relative z-10">
                 <div className="flex items-center gap-4 mb-4">
                     <span className="flex items-center justify-center w-8 h-8 bg-brand text-white border-2 border-black font-bold text-sm">
@@ -130,7 +130,7 @@ export const CompetitorReportView: React.FC<CompetitorReportViewProps> = ({
                             {items.map((item, idx) => (
                                 <tr key={idx} className="hover:bg-yellow-50 transition-colors group">
                                     <td className="p-5 font-bold text-black text-sm">
-                                        {item.Parameter}
+                                        {item.Parameter.replace(/([A-Z])/g, ' $1').trim()}
                                     </td>
 
                                     {/* Primary Score */}
@@ -194,7 +194,7 @@ export const CompetitorReportView: React.FC<CompetitorReportViewProps> = ({
                         {primaryScreenshot ? (
                             <img src={primaryScreenshot} className="w-full h-full object-cover object-top transition-transform duration-700 group-hover:scale-105" alt="Primary Site" />
                         ) : (
-                            <div className="w-full h-full flex items-center justify-center text-slate-300 bg-[radial-gradient(#00000022_1px,transparent_1px)] [background-size:16px_16px]">
+                            <div className="w-full h-full flex items-center justify-center text-slate-300 bg-[radial-gradient(#00000022_1px,transparent_1px)] bg-size-[16px_16px]">
                                 <span className="text-sm font-bold text-black bg-white px-3 py-1 border-2 border-black shadow-neo">No Preview</span>
                             </div>
                         )}
@@ -202,7 +202,7 @@ export const CompetitorReportView: React.FC<CompetitorReportViewProps> = ({
                 </div>
 
                 {/* Right: THEM */}
-                <div className="bg-[#FFF9F0] p-6 md:p-8 flex flex-col gap-4">
+                <div className="bg-page-bg p-6 md:p-8 flex flex-col gap-4">
                     <div className="flex items-center gap-3 mb-2 justify-end">
                         <div className="flex flex-col items-end">
                             <span className="text-xs font-black text-black uppercase tracking-wider bg-blue-200 px-2 py-0.5 w-fit border border-black mb-1">Competitor Website</span>
@@ -217,7 +217,7 @@ export const CompetitorReportView: React.FC<CompetitorReportViewProps> = ({
                         {competitorScreenshot ? (
                             <img src={competitorScreenshot} className="w-full h-full object-cover object-top transition-transform duration-700 group-hover:scale-105" alt="Competitor Site" />
                         ) : (
-                            <div className="w-full h-full bg-slate-100 flex items-center justify-center relative overflow-hidden bg-[radial-gradient(#00000022_1px,transparent_1px)] [background-size:16px_16px]">
+                            <div className="w-full h-full bg-slate-100 flex items-center justify-center relative overflow-hidden bg-[radial-gradient(#00000022_1px,transparent_1px)] bg-size-[16px_16px]">
                                 {/* Simple Brutalist Placeholder */}
                                 <div className="flex flex-col items-center gap-2">
                                     <span className="px-4 py-2 bg-white font-black text-black border-2 border-black shadow-neo rotate-[-2deg]">
