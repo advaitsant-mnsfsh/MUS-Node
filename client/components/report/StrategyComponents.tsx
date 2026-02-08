@@ -117,14 +117,14 @@ function UserPersonasDisplay({ personas, isPdf = false }: { personas?: StrategyA
 // --- MAIN COMPONENT: STRATEGY AUDIT (Context Capture) ---
 export function StrategyAuditDisplay({ audit, isPdf = false, forcePageBreak = false }: { audit: StrategyAudit, isPdf?: boolean, forcePageBreak?: boolean }) {
     const { DomainAnalysis, PurposeAnalysis, TargetAudience, UserPersonas } = audit || {};
-    const [isOpen, setIsOpen] = useState(true);
+    const [isOpen, setIsOpen] = useState(false);
 
     // Collapsible Logic
     // If it's PDF, always open.
     const isExpanded = isPdf ? true : isOpen;
 
     return (
-        <div className={`w-full bg-white border-2 border-black font-['DM_Sans'] transition-all ${isPdf ? '' : 'shadow-neo'} overflow-hidden`}>
+        <div className={`w-full bg-white border-2 border-black font-['DM_Sans'] transition-all ${isPdf ? '' : 'shadow-neo hover:shadow-neo-hover'} overflow-hidden`}>
 
             {/* Header / Toggle */}
             <div
