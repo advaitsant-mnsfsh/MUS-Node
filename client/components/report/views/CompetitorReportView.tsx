@@ -92,9 +92,6 @@ export const CompetitorReportView: React.FC<CompetitorReportViewProps> = ({
                     <p className="text-slate-800 text-sm leading-relaxed font-medium">
                         {actionPlan}
                     </p>
-                    <div className="mt-4 flex items-center gap-2 text-black font-bold text-xs uppercase tracking-wider group-hover:gap-3 transition-all cursor-pointer border-b-2 border-black inline-block pb-0.5 hover:bg-yellow-200">
-                        Detailed Action Plan <ArrowRight className="w-3 h-3" />
-                    </div>
                 </div>
             </div>
         </div>
@@ -123,22 +120,21 @@ export const CompetitorReportView: React.FC<CompetitorReportViewProps> = ({
                     <table className="w-full text-left border-collapse">
                         <thead>
                             <tr className="bg-brand/10 border-b-2 border-black text-xs font-black text-black uppercase tracking-wider">
-                                <th className="p-5 w-1/4 border-r-2 border-black">Parameter</th>
-                                <th className="p-5 w-24 text-center border-r-2 border-black">You</th>
-                                <th className="p-5 w-24 text-center border-r-2 border-black">Them</th>
-                                <th className="p-5 w-24 text-center border-r-2 border-black">Winner</th>
+                                <th className="p-5 w-1/4">Parameter</th>
+                                <th className="p-5 w-24 text-center">You</th>
+                                <th className="p-5 w-24 text-center">Them</th>
                                 <th className="p-5 min-w-[300px]">Analysis</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y-2 divide-black">
                             {items.map((item, idx) => (
                                 <tr key={idx} className="hover:bg-yellow-50 transition-colors group">
-                                    <td className="p-5 font-bold text-black text-sm border-r-2 border-black">
+                                    <td className="p-5 font-bold text-black text-sm">
                                         {item.Parameter}
                                     </td>
 
-                                    {/* Scores */}
-                                    <td className="p-5 text-center border-r-2 border-black">
+                                    {/* Primary Score */}
+                                    <td className="p-5 text-center">
                                         <div className={`mx-auto w-10 h-10 flex items-center justify-center font-bold text-sm border-2 border-black ${Number(item.PrimaryScore) >= Number(item.CompetitorScore)
                                             ? 'bg-emerald-100 text-black shadow-neo'
                                             : 'bg-white text-slate-500'
@@ -146,32 +142,15 @@ export const CompetitorReportView: React.FC<CompetitorReportViewProps> = ({
                                             {item.PrimaryScore}
                                         </div>
                                     </td>
-                                    <td className="p-5 text-center border-r-2 border-black">
+
+                                    {/* Competitor Score */}
+                                    <td className="p-5 text-center">
                                         <div className={`mx-auto w-10 h-10 flex items-center justify-center font-bold text-sm border-2 border-black ${Number(item.CompetitorScore) > Number(item.PrimaryScore)
                                             ? 'bg-blue-100 text-black shadow-neo'
                                             : 'bg-white text-slate-500'
                                             }`}>
                                             {item.CompetitorScore}
                                         </div>
-                                    </td>
-
-                                    {/* Winner Badge */}
-                                    <td className="p-5 text-center border-r-2 border-black">
-                                        {item.Winner === 'Primary' && (
-                                            <span className="inline-flex items-center px-3 py-1 text-[10px] font-black bg-emerald-300 text-black uppercase tracking-wide border-2 border-black shadow-neo">
-                                                You Win
-                                            </span>
-                                        )}
-                                        {item.Winner === 'Competitor' && (
-                                            <span className="inline-flex items-center px-3 py-1 text-[10px] font-black bg-blue-300 text-black uppercase tracking-wide border-2 border-black shadow-neo">
-                                                Them
-                                            </span>
-                                        )}
-                                        {item.Winner === 'Tie' && (
-                                            <span className="inline-flex items-center px-3 py-1 text-[10px] font-black bg-slate-200 text-black uppercase tracking-wide border-2 border-black">
-                                                Tie
-                                            </span>
-                                        )}
                                     </td>
 
                                     <td className="p-5 text-sm text-slate-800 leading-relaxed font-bold">
@@ -181,8 +160,8 @@ export const CompetitorReportView: React.FC<CompetitorReportViewProps> = ({
                             ))}
                         </tbody>
                     </table>
-                </div>
-            </div>
+                </div >
+            </div >
         );
     };
 
@@ -318,7 +297,7 @@ export const CompetitorReportView: React.FC<CompetitorReportViewProps> = ({
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-8">
                     <div>
                         <h2 className="text-3xl font-black text-black uppercase mb-1">Detailed Face-off</h2>
-                        <p className="text-slate-600 font-bold px-1 bg-yellow-100 border border-black inline-block">Direct head-to-head parameter comparison.</p>
+                        <p className="text-slate-600 font-bold px-1 inline-block">Direct head-to-head parameter comparison.</p>
                     </div>
 
                     {/* Filter Navbar */}
