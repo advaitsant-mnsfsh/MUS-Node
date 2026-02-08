@@ -105,34 +105,30 @@ export const StandardReportView: React.FC<StandardReportViewProps> = ({ report, 
                             </div>
                         </div>
 
-                        {/* RIGHT COLUMN: Website Preview (50%) */}
-                        <div className="w-full lg:w-1/2 relative bg-page-bg min-h-[500px] lg:min-h-0 border-t-2 lg:border-t-0 border-black p-6 md:p-8 flex flex-col gap-4">
-                            <div className="flex items-center gap-3 mb-2 justify-end">
-                                <div className="flex flex-col items-end">
-                                    <span className="text-xs font-black text-black uppercase tracking-wider bg-emerald-200 px-2 py-0.5 w-fit border border-black mb-1">Analyzed Website</span>
-                                </div>
-                                <div className="p-2 bg-emerald-100 border-2 border-black shadow-neo">
-                                    <Box className="w-5 h-5 text-black" />
-                                </div>
+                        {/* RIGHT COLUMN: Website Preview (50% - Full Bleed) */}
+                        <div className="w-full lg:w-1/2 relative bg-slate-100 min-h-[500px] lg:min-h-0 border-t-2 lg:border-t-0 border-black group overflow-hidden">
+                            {/* Overlay Badge */}
+                            <div className="absolute top-4 right-4 z-10 flex flex-col items-end pointer-events-none">
+                                <span className="text-[10px] font-black text-black uppercase tracking-wider bg-white px-2 py-1 border-2 border-black shadow-neo mb-1">
+                                    Analyzed Website
+                                </span>
                             </div>
 
-                            {/* Screenshot Container */}
-                            <div className="w-full aspect-video bg-white border-2 border-black overflow-hidden relative group shadow-neo">
-                                {primaryScreenshotSrc ? (
-                                    <img
-                                        src={primaryScreenshotSrc}
-                                        className="w-full h-full object-cover object-top transition-transform duration-700 hover:scale-105"
-                                        alt="Analyzed Page Preview"
-                                        onError={(e) => console.error('[ReportDisplay] Image Load Failed:', e.currentTarget.src)}
-                                    />
-                                ) : (
-                                    <div className="w-full h-full flex items-center justify-center p-12 bg-slate-50">
-                                        <div className="bg-white px-4 py-2 border-2 border-black shadow-neo">
-                                            <span className="font-bold text-black">Analyzing Interface...</span>
-                                        </div>
+                            {/* Full Bleed Image */}
+                            {primaryScreenshotSrc ? (
+                                <img
+                                    src={primaryScreenshotSrc}
+                                    className="w-full h-full object-cover object-top transition-transform duration-700 hover:scale-105"
+                                    alt="Analyzed Page Preview"
+                                    onError={(e) => console.error('[ReportDisplay] Image Load Failed:', e.currentTarget.src)}
+                                />
+                            ) : (
+                                <div className="w-full h-full flex items-center justify-center bg-slate-50">
+                                    <div className="bg-white px-4 py-2 border-2 border-black shadow-neo">
+                                        <span className="font-bold text-black">Analyzing Interface...</span>
                                     </div>
-                                )}
-                            </div>
+                                </div>
+                            )}
                         </div>
                     </div>
 
