@@ -4,6 +4,11 @@ import compression from 'compression';
 import dotenv from 'dotenv';
 import path from 'path';
 import fs from 'fs';
+import { fileURLToPath } from 'url';
+import { dirname } from 'path';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 import { optionalUserAuth, AuthenticatedRequest } from './middleware/apiAuth.js';
 import { db, preWarmDatabase } from './lib/db.js';
 import { auditJobs } from './db/schema.js';
