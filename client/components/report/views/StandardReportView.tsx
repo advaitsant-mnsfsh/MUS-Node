@@ -76,10 +76,10 @@ export const StandardReportView: React.FC<StandardReportViewProps> = ({ report, 
 
                                 {/* Sub Categories Grid (2x2) */}
                                 <div className="grid grid-cols-2 gap-4">
-                                    {ux ? <ScoreDisplayCard score={ux.CategoryScore} label="UX Audit" /> : <SkeletonLoader className="h-32" />}
-                                    {visual ? <ScoreDisplayCard score={visual.CategoryScore} label="Visual Design" /> : <SkeletonLoader className="h-32" />}
-                                    {product ? <ScoreDisplayCard score={product.CategoryScore} label="Product Audit" /> : <SkeletonLoader className="h-32" />}
-                                    {accessibility ? <ScoreDisplayCard score={accessibility.CategoryScore} label="Accessibility" /> : <SkeletonLoader className="h-32" />}
+                                    {ux ? <ScoreDisplayCard score={ux.CategoryScore} label="UX Audit" /> : <SkeletonLoader className="h-32 border-2 border-black shadow-neo rounded-none" />}
+                                    {visual ? <ScoreDisplayCard score={visual.CategoryScore} label="Visual Design" /> : <SkeletonLoader className="h-32 border-2 border-black shadow-neo rounded-none" />}
+                                    {product ? <ScoreDisplayCard score={product.CategoryScore} label="Product Audit" /> : <SkeletonLoader className="h-32 border-2 border-black shadow-neo rounded-none" />}
+                                    {accessibility ? <ScoreDisplayCard score={accessibility.CategoryScore} label="Accessibility" /> : <SkeletonLoader className="h-32 border-2 border-black shadow-neo rounded-none" />}
                                 </div>
                             </div>
 
@@ -131,7 +131,7 @@ export const StandardReportView: React.FC<StandardReportViewProps> = ({ report, 
                     </div>
 
                     {/* 2. MIDDLE SECTION: Context Capture (Full Width Below Split) */}
-                    <div className="mt-12 mx-4 md:mx-8">
+                    <div className="mt-12 mx-4 md:mx-0">
                         <div className="flex items-center gap-3 mb-6">
                             <div className="p-2.5 bg-accent-yellow border-2 border-black text-black shadow-neo">
                                 <Target className="w-6 h-6" strokeWidth={2.5} />
@@ -143,7 +143,7 @@ export const StandardReportView: React.FC<StandardReportViewProps> = ({ report, 
                 </div>
 
                 {/* 3. BOTTOM SECTION: Score Breakdown & Detailed Cards */}
-                <div className="pt-8">
+                <div className="pt-2">
 
                     {/* Header & Tabs */}
                     <div className="sticky top-0 z-10 bg-white border-2 border-black py-4 shadow-neo px-6 lg:px-8 mb-12 mx-4 md:mx-8">

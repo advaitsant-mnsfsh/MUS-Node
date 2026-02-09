@@ -46,7 +46,7 @@ export const getScoreIndicatorData = (score: number) => {
 };
 
 // --- GAUGE COMPONENT (SVG Ring) ---
-export function ScoreGauge({ score, size = 74, strokeWidth = 8, isHero = false }: { score: number; size?: number; strokeWidth?: number; isHero?: boolean }) {
+export function ScoreGauge({ score, size = 74, strokeWidth = 14, isHero = false }: { score: number; size?: number; strokeWidth?: number; isHero?: boolean }) {
     const radius = (size - strokeWidth) / 2;
     const circumference = radius * Math.PI; // Half circle
     const cappedScore = Math.max(0, Math.min(10, score));
@@ -65,9 +65,10 @@ export function ScoreGauge({ score, size = 74, strokeWidth = 8, isHero = false }
             <path
                 d={`M ${strokeWidth / 2} ${size / 2} A ${radius} ${radius} 0 0 1 ${size - strokeWidth / 2} ${size / 2}`}
                 fill="none"
-                stroke={isHero ? "#F1F5F9" : "#E2E8F0"} // Lighter track for Hero
+                stroke="#000000" // Black Track for Brutalist
+                strokeOpacity="0.1"
                 strokeWidth={strokeWidth}
-                strokeLinecap="round"
+                strokeLinecap="butt" // Sharp Ends
             />
             {/* Progress Arc */}
             <path
@@ -77,7 +78,7 @@ export function ScoreGauge({ score, size = 74, strokeWidth = 8, isHero = false }
                 strokeWidth={strokeWidth}
                 strokeDasharray={circumference}
                 strokeDashoffset={offset}
-                strokeLinecap="round"
+                strokeLinecap="butt" // Sharp Ends
                 style={{
                     transition: 'stroke-dashoffset 0.8s cubic-bezier(0.4, 0, 0.2, 1)',
                 }}
@@ -93,18 +94,17 @@ export function ScoreIndicator({ score }: { score: number }) {
 
     return (
         <div
-            className="flex flex-col shrink-0 items-center py-3 px-6 gap-2 rounded-xl"
-            style={{ backgroundColor: theme.soft }}
+            className="flex flex-col shrink-0 items-center py-2 px-4 gap-1 border-2 border-black shadow-neo bg-white"
         >
-            <div className="relative w-[74px] h-[41px]">
+            <div className="relative w-[60px] h-[34px]">
                 <div className="absolute top-0 left-0">
-                    <ScoreGauge score={score} />
+                    <ScoreGauge score={score} size={60} strokeWidth={8} />
                 </div>
-                <span className="text-slate-900 text-[13px] font-bold absolute bottom-[5px] inset-x-0 text-center leading-none">
-                    {scoreText}<span className="text-[10px] text-slate-500 font-normal">/10</span>
+                <span className="text-black text-[11px] font-black absolute bottom-[2px] inset-x-0 text-center leading-none">
+                    {scoreText}<span className="text-[9px] text-slate-500 font-bold">/10</span>
                 </span>
             </div>
-            <span className="text-[10px] font-bold tracking-widest uppercase" style={{ color: theme.solid }}>
+            <span className="text-[9px] font-black tracking-widest uppercase text-black">
                 {theme.label}
             </span>
         </div>
@@ -112,50 +112,49 @@ export function ScoreIndicator({ score }: { score: number }) {
 }
 
 // --- MAIN CARD COMPONENT (Hero & Mini) ---
-// --- MAIN CARD COMPONENT (Hero & Mini) ---
-export function ScoreDisplayCard({ score, label, isHero = false, isPdf = false }: { score?: number; label: string, isHero?: boolean, isPdf?: boolean }) {
-    if (score === undefined) return <SkeletonLoader className="h-32 flex-1 rounded-lg" />;
+export type ScoreCardVariant = 'hero' | 'colored-shadow' | 'solid-neo' | 'black-outlined' | 'thick-border';
+
+export function ScoreDisplayCard({ score, label, variant = 'hero', isHero = false, isPdf = false }: { score?: number; label: string, variant?: ScoreCardVariant, isHero?: boolean, isPdf?: boolean }) {
+    if (score === undefined) return <SkeletonLoader className="h-32 flex-1 border-2 border-black" />;
 
     const theme = getThemeStyles(score);
 
     // --- SIZING LOGIC ---
-    const gaugeSize = isHero ? 200 : 90;
-    const gaugeStroke = isHero ? 18 : 9;
-    const fontSize = isHero ? "text-[56px]" : "text-[22px]";
-    const labelSize = isHero ? "text-[16px]" : "text-[12px]";
-    const badgeSize = isHero ? "text-[14px] px-6 py-2" : "text-[10px] px-2 py-1";
+    const gaugeSize = isHero ? 220 : 110;
+    const gaugeStroke = isHero ? 22 : 14;
+    const fontSize = isHero ? "text-[64px]" : "text-[28px]";
+    const labelSize = isHero ? "text-lg" : "text-xs";
+    const badgeSize = isHero ? "text-sm px-6 py-2" : "text-[10px] px-3 py-1";
 
-    // Hero Specific Styles (Dark Text, Dark Badge)
-    const heroTextColor = "#24312D";
-    const heroPillBg = "#24312D";
-    const heroPillText = "#FFFFFF";
-
-    // Container Style
+    // Container Style - Brutalist Box
+    // Container Style - Brutalist Box
     const containerClasses = isHero
-        ? `flex flex-col items-center justify-center ${isPdf ? 'pt-0 pb-1' : 'py-6'} w-full h-full`
-        : "flex flex-1 flex-col items-center justify-center py-5 px-2 rounded-xl h-full";
+        ? `flex flex-col items-center justify-center ${isPdf ? 'pt-0 pb-1' : 'py-8'} w-full h-full`
+        : "flex flex-1 flex-col items-center justify-center py-5 px-2 h-full"; // Removed hover and transition
 
-    const containerStyle = isHero
-        ? { backgroundColor: 'transparent' }
-        : { backgroundColor: theme.soft };
+    // --- VARIANT STYLING LOGIC ---
+    // User selected: White Box + Black Border + Colored Shadow (Clean Neo-Brutalist)
+    // Refined: Minimal shadow (1px) as per feedback
+    let badgeClasses = `font-black uppercase tracking-widest ${badgeSize} rounded-none border-2 border-black bg-white text-black`;
+    let badgeStyle: React.CSSProperties = {
+        boxShadow: `2px 2px 0 ${theme.solid}` // Reduced to 1px
+    };
+
 
     return (
-        <div className={containerClasses} style={containerStyle}>
+        <div className={containerClasses}>
 
             {/* 1. Gauge & Score Number */}
-            {/* PDF Fix: Added 'mb-4' for Hero to push text down safely */}
-            <div className={`flex flex-col items-center relative ${isHero ? (isPdf ? 'mb-2' : 'mb-4') : 'mb-1'}`}>
+            <div className={`flex flex-col items-center relative ${isHero ? (isPdf ? 'mb-2' : 'mb-6') : 'mb-3'}`}>
                 <div style={{ width: `${gaugeSize}px`, height: `${gaugeSize / 2}px`, position: 'relative' }}>
                     <div style={{ position: 'absolute', top: 0, left: 0 }}>
                         <ScoreGauge score={score} size={gaugeSize} strokeWidth={gaugeStroke} isHero={isHero} />
                     </div>
                     {/* Centered Number */}
-                    {/* PDF Fix: Removed 'transform' which causes overlap. Used 'bottom' positioning. */}
                     <span
-                        className={`absolute inset-x-0 text-center font-extrabold leading-none ${fontSize}`}
+                        className={`absolute inset-x-0 text-center font-black leading-none text-black ${fontSize}`}
                         style={{
-                            bottom: isHero ? (isPdf ? '5px' : '-5px') : '0px',
-                            color: isHero ? heroTextColor : '#0F172A'
+                            bottom: isHero ? (isPdf ? '5px' : '-8px') : '-4px',
                         }}
                     >
                         {score.toFixed(1)}
@@ -164,27 +163,20 @@ export function ScoreDisplayCard({ score, label, isHero = false, isPdf = false }
             </div>
 
             {/* 2. Label */}
-            {/* PDF Fix: Added 'mt-2' for Hero */}
             <span
-                className={`font-bold text-center uppercase tracking-wide mb-3 ${labelSize} ${isHero ? (isPdf ? 'mt-1' : 'mt-2') : ''}`}
-                style={{
-                    color: isHero ? heroTextColor : '#475569'
-                }}
+                className={`font-black text-center uppercase tracking-tight text-black mb-4 ${labelSize} ${isHero ? (isPdf ? 'mt-1' : 'mt-2') : ''}`}
             >
                 {label}
             </span>
 
-            {/* 3. Rating Pill */}
-            <div className={`rounded-full font-bold uppercase tracking-widest ${badgeSize} shadow-sm`}
+            {/* 3. Rating Pill (Variant Based) */}
+            <div className={badgeClasses}
                 style={{
-                    backgroundColor: isHero ? heroPillBg : theme.pill,
-                    color: isHero ? heroPillText : theme.solid,
-                    // ✅ PDF FIX: These styles ensure the pill text is centered vertically in PDF generation
+                    ...badgeStyle,
                     display: isPdf ? 'inline-block' : 'block',
                     lineHeight: isPdf ? '1' : undefined,
                     paddingTop: isPdf ? '8px' : undefined
                 }}>
-                {/* ✅ PDF FIX: Relative positioning to nudge text up slightly if needed in PDF mode */}
                 {isPdf ? (
                     <span style={{ position: 'relative', top: '-7px', display: 'inline-block' }}>
                         {theme.label}

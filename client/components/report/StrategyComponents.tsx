@@ -124,7 +124,7 @@ export function StrategyAuditDisplay({ audit, isPdf = false, forcePageBreak = fa
     const isExpanded = isPdf ? true : isOpen;
 
     return (
-        <div className={`w-full bg-white border-2 border-black font-['DM_Sans'] transition-all ${isPdf ? '' : 'shadow-neo hover:shadow-neo-hover'} overflow-hidden`}>
+        <div className={`w-full bg-white border-2 border-b-0 border-black font-['DM_Sans'] transition-all ${isPdf ? '' : 'shadow-neo hover:shadow-neo-hover'} overflow-hidden`}>
 
             {/* Header / Toggle */}
             <div
