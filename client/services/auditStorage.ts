@@ -12,8 +12,6 @@ export interface SharedAuditData {
 
 // Backend URL logic
 import { getBackendUrl } from './config';
-// Backend URL logic
-const backendUrl = getBackendUrl();
 
 /**
  * Save audit data (Unified Flow)
@@ -88,7 +86,7 @@ export async function getAuditJob(jobId: string): Promise<AuditJobData | null> {
         try {
             // Prioritize API over Storage (since we stopped using Storage)
             // Try API endpoint
-            const response = await fetch(`${backendUrl}/api/public/jobs/${jobId}`);
+            const response = await fetch(`${getBackendUrl()}/api/public/jobs/${jobId}`);
             if (response.ok) {
                 const apiData = await response.json();
                 return {
@@ -131,7 +129,7 @@ export async function transferAuditOwnership(auditId: string, userId: string): P
         const { authenticatedFetch } = await import('../lib/authenticatedFetch');
 
         // Use authenticatedFetch to ensure session token is sent
-        const response = await authenticatedFetch(`${backendUrl}/api/v1/audit/claim`, {
+        const response = await authenticatedFetch(`${getBackendUrl()}/api/v1/audit/claim`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'

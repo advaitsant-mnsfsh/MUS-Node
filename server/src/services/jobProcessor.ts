@@ -8,7 +8,8 @@ import { getSchemas } from '../prompts.js';
 
 export class JobProcessor {
     static async processJob(jobId: string) {
-        console.log(`[JobProcessor] Starting job ${jobId}`);
+        const envName = process.env.RAILWAY_ENVIRONMENT_NAME || process.env.NODE_ENV || 'development';
+        console.log(`[JobProcessor] [${envName}] Starting job ${jobId}`);
         try {
             // 1. Update Status
             await JobService.updateJobStatus(jobId, 'processing');

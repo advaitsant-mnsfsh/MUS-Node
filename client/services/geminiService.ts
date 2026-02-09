@@ -1,7 +1,6 @@
 import { StreamChunk, AnalysisReport, ExpertKey, Screenshot, AuditInput } from '../types';
 
 import { getBackendUrl } from './config';
-const apiUrl = getBackendUrl();
 
 interface StreamCallbacks {
   onScrapeComplete: (screenshots: Screenshot[], screenshotMimeType: string) => void;
@@ -23,7 +22,7 @@ interface AnalyzeParams {
 const commonHeaders = {
   'Content-Type': 'application/json',
 };
-const functionUrl = `${apiUrl}/api/v1/audit`;
+// functionUrl will be constructed inside functions
 
 
 // Helper to convert File to Base64
@@ -50,7 +49,7 @@ export const monitorJobPoll = async (jobId: string, callbacks: StreamCallbacks):
 
   try {
     const { authenticatedFetch } = await import('../lib/authenticatedFetch');
-    const statusUrl = `${functionUrl}/${jobId}`;
+    const statusUrl = `${getBackendUrl()}/api/v1/audit/${jobId}`;
 
     const checkStatus = async () => {
       if (!isPolling) return;
@@ -166,7 +165,7 @@ export const analyzeWebsiteStream = async (
     onStatus('Starting audit job...');
 
     const { authenticatedFetch } = await import('../lib/authenticatedFetch');
-    const startResponse = await authenticatedFetch(functionUrl, {
+    const startResponse = await authenticatedFetch(`${getBackendUrl()}/api/v1/audit`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ mode: 'start-audit', inputs: processedInputs, auditMode })

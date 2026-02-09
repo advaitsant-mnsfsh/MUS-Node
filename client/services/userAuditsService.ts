@@ -12,7 +12,6 @@ export interface UserAudit {
 }
 
 import { getBackendUrl } from './config';
-const API_URL = getBackendUrl();
 
 let auditsCache: Promise<UserAudit[]> | null = null;
 
@@ -26,7 +25,7 @@ export async function getUserAudits(): Promise<UserAudit[]> {
     auditsCache = (async () => {
         try {
             // Use authenticatedFetch to ensure session token is sent
-            const response = await authenticatedFetch(`${API_URL}/api/user/audits`, {
+            const response = await authenticatedFetch(`${getBackendUrl()}/api/user/audits`, {
                 method: 'GET',
                 headers: {
                     'Content-Type': 'application/json'
@@ -58,7 +57,7 @@ export async function getUserAudits(): Promise<UserAudit[]> {
  */
 export async function getAuditInputs(auditId: string): Promise<any | null> {
     try {
-        const response = await fetch(`${API_URL}/api/v1/audit/${auditId}`, {
+        const response = await fetch(`${getBackendUrl()}/api/v1/audit/${auditId}`, {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json'
