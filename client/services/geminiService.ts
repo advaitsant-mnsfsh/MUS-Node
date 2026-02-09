@@ -79,8 +79,9 @@ export const monitorJobPoll = async (jobId: string, callbacks: StreamCallbacks):
           });
 
           // 2b. Check for new Logs/Status messages
-          if (job.report_data.logs && Array.isArray(job.report_data.logs)) {
-            const logs = job.report_data.logs;
+          const reportData = job.report_data as any;
+          if (reportData?.logs && Array.isArray(reportData.logs)) {
+            const logs = reportData.logs;
             if (logs.length > 0) {
               const latestLog = logs[logs.length - 1];
               // Use a local ref or closure variable to track last log sent

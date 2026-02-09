@@ -145,8 +145,9 @@ router.get('/audit', async (req: express.Request, res: express.Response) => {
                 }
 
                 // Fine-grained Log Updates
-                if (job.report_data?.logs && Array.isArray(job.report_data.logs)) {
-                    const logs = job.report_data.logs;
+                const reportData = job.report_data as any;
+                if (reportData?.logs && Array.isArray(reportData.logs)) {
+                    const logs = reportData.logs;
                     if (logs.length > 0) {
                         const latestLog = logs[logs.length - 1];
                         if (latestLog.message && latestLog.message !== (req as any)._lastLogMsg) {
