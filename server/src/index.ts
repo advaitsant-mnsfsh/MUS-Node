@@ -8,6 +8,7 @@ import { optionalUserAuth, AuthenticatedRequest } from './middleware/apiAuth';
 import { db, preWarmDatabase } from './lib/db';
 import { auditJobs } from './db/schema';
 import { eq, isNull, and } from 'drizzle-orm';
+import './lib/queue'; // Start BullMQ worker
 
 dotenv.config({ path: './.env' });
 
@@ -146,7 +147,7 @@ process.on('unhandledRejection', (reason, promise) => {
     console.error('[CRITICAL] Unhandled Rejection at:', promise, 'reason:', reason);
 });
 
-const server = app.listen(port, () => {
+const server = app.listen(port, "0.0.0.0", () => {
     console.log(`[System] Instance born at: ${new Date().toISOString()}`);
     console.log(`[System] Server running on port: ${port}`);
     console.log(`[System] Memory Usage: ${Math.round(process.memoryUsage().heapUsed / 1024 / 1024)}MB`);

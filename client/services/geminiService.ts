@@ -43,70 +43,82 @@ const fileToBase64 = (file: File): Promise<string> => {
   });
 };
 
-export const monitorJobStream = async (jobId: string, callbacks: StreamCallbacks): Promise<void> => {
+export const monitorJobPoll = async (jobId: string, callbacks: StreamCallbacks): Promise<void> => {
   const { onStatus, onData, onComplete, onError, onClose } = callbacks;
-  const finalReport: AnalysisReport = {};
+  const sentKeys = new Set<string>();
+  let isPolling = true;
 
   try {
-    const streamUrl = `${functionUrl}?mode=stream-job&jobId=${jobId}`;
-    console.log('[Stream] Connecting to:', streamUrl);
-
-    // Use authenticatedFetch to ensure session token is sent
     const { authenticatedFetch } = await import('../lib/authenticatedFetch');
-    const response = await authenticatedFetch(streamUrl, {
-      headers: {
-        'Cache-Control': 'no-cache',
-        'Connection': 'keep-alive'
-      }
-    });
+    const statusUrl = `${functionUrl}/${jobId}`;
 
-    if (!response.ok) {
-      throw new Error(`Stream connection failed: ${response.status} ${response.statusText}`);
-    }
+    const checkStatus = async () => {
+      if (!isPolling) return;
 
-    if (!response.body) throw new Error("No response body from stream");
-    const reader = response.body.getReader();
-    const decoder = new TextDecoder();
-    let buffer = '';
-
-    while (true) {
-      const { done, value } = await reader.read();
-      if (done) break;
-
-      buffer += decoder.decode(value, { stream: true });
-      const lines = buffer.split('\n');
-      buffer = lines.pop() || '';
-
-      for (const line of lines) {
-        if (line.trim() === '') continue;
-        try {
-          const chunk = JSON.parse(line);
-
-          if (chunk.type === 'status') {
-            onStatus(chunk.message);
-          } else if (chunk.type === 'data') {
-            const { key, data } = chunk.payload;
-            console.log(`[Stream] Data Chunk Key: ${key}`);
-            finalReport[key] = data;
-            onData(chunk.payload);
-          } else if (chunk.type === 'complete') {
-            console.log("[Stream] Job Complete Payload:", chunk.payload);
-            onComplete(chunk.payload);
-            return;
-          } else if (chunk.type === 'error') {
-            onError(chunk.message);
-            return;
-          }
-        } catch (e) {
-          console.warn("Failed to parse chunk:", line);
+      try {
+        const response = await authenticatedFetch(statusUrl);
+        if (!response.ok) {
+          if (response.status === 404) throw new Error("Job not found");
+          throw new Error(`Status check failed: ${response.status}`);
         }
+
+        const job = await response.json();
+
+        // 1. Update Status Message
+        if (job.status === 'pending') onStatus('Job is pending in queue...');
+        else if (job.status === 'processing') onStatus('Audit is in progress...');
+
+        // 2. Check for new Data
+        if (job.report_data) {
+          Object.entries(job.report_data).forEach(([key, value]) => {
+            if (key !== 'logs' && !sentKeys.has(key)) {
+              console.log(`[Poll] New Data: ${key}`);
+              onData({ key, data: value });
+              sentKeys.add(key);
+            }
+          });
+        }
+
+        // 3. Handle Completion
+        if (job.status === 'completed') {
+          onStatus('Audit completed!');
+          onComplete({
+            auditId: job.jobId,
+            resultUrl: job.resultUrl
+          });
+          isPolling = false;
+          onClose();
+          return;
+        }
+
+        // 4. Handle Failure
+        if (job.status === 'failed') {
+          const msg = job.errorMessage || 'Audit failed';
+          onError(msg);
+          isPolling = false;
+          onClose();
+          return;
+        }
+
+        // Poll again in 2 seconds
+        if (isPolling) {
+          setTimeout(checkStatus, 2000);
+        }
+
+      } catch (e: any) {
+        console.error("Poll Error:", e);
+        onError(e.message || "Polling failed");
+        isPolling = false;
+        onClose();
       }
-    }
+    };
+
+    // Start Polling
+    checkStatus();
+
   } catch (e) {
-    console.error('Monitor stream failed:', e);
-    const errorMessage = e instanceof Error ? e.message : 'An unknown error occurred.';
-    onError(errorMessage);
-  } finally {
+    console.error('Monitor poll setup failed:', e);
+    onError(e instanceof Error ? e.message : 'Setup failed');
     onClose();
   }
 };
@@ -153,8 +165,8 @@ export const analyzeWebsiteStream = async (
     if (onJobCreated) onJobCreated(jobId);
     onStatus('Audit job created. Waiting for worker...');
 
-    // 3. Monitor Job Stream
-    await monitorJobStream(jobId, callbacks);
+    // 3. Monitor Job via Polling
+    await monitorJobPoll(jobId, callbacks);
 
   } catch (e) {
     console.error('Audit process failed:', e);

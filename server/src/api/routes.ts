@@ -2,6 +2,7 @@ import express from 'express';
 import { db } from '../lib/db';
 import { auditJobs, leads } from '../db/schema';
 import { validateApiKey, optionalUserAuth, AuthenticatedRequest } from '../middleware/apiAuth';
+import { auditQueue } from '../lib/queue';
 import { JobProcessor } from '../services/jobProcessor';
 import { eq, and, isNull } from 'drizzle-orm';
 import crypto from 'crypto';
@@ -42,17 +43,14 @@ router.post('/audit', optionalUserAuth, async (req: express.Request, res: expres
         }
 
         // Trigger processing (Fire and Forget)
-        // Trigger processing (Fire and Forget)
-        // JobProcessor.processJob reads everything it needs from the DB record
-        JobProcessor.processJob(job.id).catch(err => console.error(`Background Job Error for ${job.id}:`, err));
+        // OFFLOAD TO QUEUE: Immediate return 
+        await auditQueue.add('audit-job', { auditJobId: job.id });
+        console.log(`[API] Job ${job.id} pushed to queue.`);
 
-
-        // Return immediately
         res.status(202).json({
-            message: 'Audit job submitted successfully',
+            success: true,
             jobId: job.id,
-            status: 'pending',
-            statusUrl: `/api/v1/audit/${job.id}`
+            message: 'Audit started in background'
         });
 
     } catch (error: any) {
