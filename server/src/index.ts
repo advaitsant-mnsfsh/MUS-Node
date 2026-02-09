@@ -151,10 +151,14 @@ process.on('unhandledRejection', (reason, promise) => {
     console.error('[CRITICAL] Unhandled Rejection at:', promise, 'reason:', reason);
 });
 
+const ENV_NAME = process.env.RAILWAY_ENVIRONMENT_NAME || process.env.NODE_ENV || 'development';
+
 const server = app.listen(port, () => {
     console.log(`[System] Instance born at: ${new Date().toISOString()}`);
+    console.log(`[System] Environment: ${ENV_NAME}`);
     console.log(`[System] Server running on port: ${port}`);
     console.log(`[System] Memory Usage: ${Math.round(process.memoryUsage().heapUsed / 1024 / 1024)}MB`);
+    console.log(`[System] 🚀 Post-Deploy sequence complete. Ready for requests in ${ENV_NAME}.`);
 });
 
 let isShuttingDown = false;

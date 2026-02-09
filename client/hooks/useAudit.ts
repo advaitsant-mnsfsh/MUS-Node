@@ -1,7 +1,7 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { AnalysisReport, Screenshot, AuditInput } from '../types';
-import { monitorJobStream, analyzeWebsiteStream } from '../services/geminiService';
+import { monitorJobPoll, analyzeWebsiteStream } from '../services/geminiService';
 import { useAuth } from '../contexts/AuthContext';
 import { getAuditInputs } from '../services/userAuditsService';
 
@@ -227,15 +227,15 @@ export const useAudit = () => {
                 console.log(`[useAudit] Monitoring stream for ${auditId}`);
                 setLoadingMessage('Optimizing connection to audit stream...');
                 setUiAuditId(auditId);
-                const { monitorJobStream } = await import('../services/geminiService');
-                monitorJobStream(auditId, getStreamCallbacks(true));
+                const { monitorJobPoll } = await import('../services/geminiService');
+                monitorJobPoll(auditId, getStreamCallbacks(true));
                 setIsLoading(true);
 
             } catch (e) {
                 console.error('[useAudit] loadOrMonitor failed:', e);
                 // Try stream anyway as fallback
-                const { monitorJobStream } = await import('../services/geminiService');
-                monitorJobStream(auditId, getStreamCallbacks(true));
+                const { monitorJobPoll } = await import('../services/geminiService');
+                monitorJobPoll(auditId, getStreamCallbacks(true));
                 setIsLoading(true);
             }
         };

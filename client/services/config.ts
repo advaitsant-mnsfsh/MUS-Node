@@ -2,10 +2,16 @@ export const getBackendUrl = () => {
     // Priority: 
     // 1. Environment variable VITE_BACKEND_URL
     // 2. Environment variable VITE_API_URL
-    // 3. Static Production URL (as hardcoded fallback for reliability)
+    // 3. Auto-detected Railway Origin
+    // 4. Static Production URL (as final fallback)
     const envUrl = import.meta.env.VITE_BACKEND_URL || import.meta.env.VITE_API_URL;
 
     if (envUrl) return envUrl;
+
+    // Support dynamic Railway environments (e.g., stage-1) by default
+    if (typeof window !== 'undefined' && window.location.hostname.endsWith('.railway.app')) {
+        return window.location.origin;
+    }
 
     // Hardcoded production fallback per user request to ensure audits go to Railway
     return 'https://mus-node-production.up.railway.app';
