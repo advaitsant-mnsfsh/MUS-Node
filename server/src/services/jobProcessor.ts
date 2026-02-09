@@ -287,6 +287,7 @@ ${JSON.stringify(allIssues, null, 2)}`;
 
         } catch (error: any) {
             console.error(`[JobProcessor] Job ${jobId} failed:`, error);
+            await JobService.updateProgress(jobId, `🚨 Job Failed: ${error.message}`);
             await JobService.updateJobStatus(jobId, 'failed', undefined, error.message);
         }
     }

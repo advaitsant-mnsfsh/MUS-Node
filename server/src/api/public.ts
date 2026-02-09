@@ -70,6 +70,7 @@ router.get('/jobs/:jobId', async (req, res) => {
             id: job.id,
             status: job.status,
             report_data: job.report_data,
+            errorMessage: job.error_message, // Add this
             inputs: (job.input_data as any)?.inputs || job.input_data, // Compatibility
             created_at: job.created_at,
             updated_at: job.updated_at
