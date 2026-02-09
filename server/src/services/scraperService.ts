@@ -1,9 +1,10 @@
-import puppeteer from 'puppeteer-extra';
+import _puppeteerExtra from 'puppeteer-extra';
+const puppeteer = (_puppeteerExtra as any).default || _puppeteerExtra;
 import StealthPlugin from 'puppeteer-extra-plugin-stealth';
 import { AxePuppeteer } from '@axe-core/puppeteer';
 import { retryWithBackoff } from '../utils/retry.js';
 
-puppeteer.use(StealthPlugin());
+(puppeteer as any).use(StealthPlugin());
 
 export const performScrape = async (url: string, isMobile: boolean, isFirstPage: boolean, browserEndpoint?: string) => {
     let browser;
@@ -31,7 +32,7 @@ export const performScrape = async (url: string, isMobile: boolean, isFirstPage:
             }
 
             console.log('[SCRAPE] Launching local browser...');
-            browser = await puppeteer.launch({
+            browser = await (puppeteer as any).launch({
                 headless: "new",
                 args: [
                     '--no-sandbox',

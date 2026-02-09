@@ -1,5 +1,5 @@
-import { db } from '../lib/db';
-import { apiKeys } from '../db/schema';
+import { db } from '../lib/db.js';
+import { apiKeys } from '../db/schema.js';
 import { eq, and } from 'drizzle-orm';
 
 export interface ApiKeyDetails {

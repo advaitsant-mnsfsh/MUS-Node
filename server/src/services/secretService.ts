@@ -1,5 +1,5 @@
-import { db } from '../lib/db';
-import { appSecrets } from '../db/schema';
+import { db } from '../lib/db.js';
+import { appSecrets } from '../db/schema.js';
 
 export class SecretService {
     static async getSecrets() {
