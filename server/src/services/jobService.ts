@@ -1,5 +1,5 @@
-import { db } from '../lib/db';
-import { auditJobs } from '../db/schema';
+import { db } from '../lib/db.js';
+import { auditJobs } from '../db/schema.js';
 import { eq, sql } from 'drizzle-orm';
 import crypto from 'crypto';
 

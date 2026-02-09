@@ -1,7 +1,7 @@
 import puppeteer from 'puppeteer-extra';
 import StealthPlugin from 'puppeteer-extra-plugin-stealth';
 import { AxePuppeteer } from '@axe-core/puppeteer';
-import { retryWithBackoff } from '../utils/retry';
+import { retryWithBackoff } from '../utils/retry.js';
 
 puppeteer.use(StealthPlugin());
 

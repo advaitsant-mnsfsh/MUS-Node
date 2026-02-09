@@ -1,9 +1,9 @@
 import express from 'express';
-import { db } from '../lib/db';
-import { auditJobs, leads } from '../db/schema';
-import { validateApiKey, optionalUserAuth, AuthenticatedRequest } from '../middleware/apiAuth';
-import { auditQueue } from '../lib/queue';
-import { JobProcessor } from '../services/jobProcessor';
+import { db } from '../lib/db.js';
+import { auditJobs, leads } from '../db/schema.js';
+import { validateApiKey, optionalUserAuth, AuthenticatedRequest } from '../middleware/apiAuth.js';
+import { auditQueue } from '../lib/queue.js';
+import { JobProcessor } from '../services/jobProcessor.js';
 import { eq, and, isNull } from 'drizzle-orm';
 import crypto from 'crypto';
 

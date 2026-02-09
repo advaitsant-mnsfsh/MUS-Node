@@ -4,16 +4,16 @@ import compression from 'compression';
 import dotenv from 'dotenv';
 import path from 'path';
 import fs from 'fs';
-import { optionalUserAuth, AuthenticatedRequest } from './middleware/apiAuth';
-import { db, preWarmDatabase } from './lib/db';
-import { auditJobs } from './db/schema';
+import { optionalUserAuth, AuthenticatedRequest } from './middleware/apiAuth.js';
+import { db, preWarmDatabase } from './lib/db.js';
+import { auditJobs } from './db/schema.js';
 import { eq, isNull, and } from 'drizzle-orm';
-import './lib/queue'; // Start BullMQ worker
+import './lib/queue.js'; // Start BullMQ worker
 
 dotenv.config({ path: './.env' });
 
 const app = express();
-const port = process.env.PORT || 3000;
+const port = Number(process.env.PORT) || 3000;
 
 // --- 1. VERBOSE LOGGING (Must be absolute first) ---
 app.use((req, res, next) => {
@@ -80,12 +80,12 @@ app.use('/uploads', (req, res, next) => {
     }
 }));
 
-import apiRoutes from './api/routes';
-import externalRoutes from './api/external';
-import publicRoutes from './api/public';
-import apiKeysRoutes from './routes/apiKeys';
-import authRoutes from './routes/auth';
-import userRoutes from './routes/user';
+import apiRoutes from './api/routes.js';
+import externalRoutes from './api/external.js';
+import publicRoutes from './api/public.js';
+import apiKeysRoutes from './routes/apiKeys.js';
+import authRoutes from './routes/auth.js';
+import userRoutes from './routes/user.js';
 
 app.use('/api', authRoutes);
 app.use('/api/user', userRoutes);
@@ -147,7 +147,7 @@ process.on('unhandledRejection', (reason, promise) => {
     console.error('[CRITICAL] Unhandled Rejection at:', promise, 'reason:', reason);
 });
 
-const server = app.listen(port, "0.0.0.0", () => {
+const server = app.listen(port, () => {
     console.log(`[System] Instance born at: ${new Date().toISOString()}`);
     console.log(`[System] Server running on port: ${port}`);
     console.log(`[System] Memory Usage: ${Math.round(process.memoryUsage().heapUsed / 1024 / 1024)}MB`);

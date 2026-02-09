@@ -1,7 +1,7 @@
 import { Router, Request, Response } from 'express';
-import { db } from '../lib/db';
-import { apiKeys } from '../db/schema';
-import { requireUserAuth, AuthenticatedRequest } from '../middleware/apiAuth';
+import { db } from '../lib/db.js';
+import { apiKeys } from '../db/schema.js';
+import { requireUserAuth, AuthenticatedRequest } from '../middleware/apiAuth.js';
 import { eq, and, desc } from 'drizzle-orm';
 import crypto from 'crypto';
 

@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { JobService } from '../services/jobService';
+import { JobService } from '../services/jobService.js';
 
 const router = Router();
 
@@ -11,8 +11,8 @@ router.get('/test', (req, res) => {
 // DEBUG: List recent jobs (to verify DB access)
 router.get('/debug', async (req, res) => {
     try {
-        const { db } = await import('../lib/db');
-        const { auditJobs } = await import('../db/schema');
+        const { db } = await import('../lib/db.js');
+        const { auditJobs } = await import('../db/schema.js');
         const { desc } = await import('drizzle-orm');
 
         const recentJobs = await db.query.auditJobs.findMany({

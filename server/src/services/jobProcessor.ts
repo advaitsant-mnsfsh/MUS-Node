@@ -1,10 +1,10 @@
-import { db } from '../lib/db';
-import { SecretService } from './secretService';
-import { JobService } from './jobService';
+import { db } from '../lib/db.js';
+import { SecretService } from './secretService.js';
+import { JobService } from './jobService.js';
 import { Type } from '@google/genai';
-import { performScrape, performPerformanceCheck } from './scraperService';
-import { performAnalysis, callApi } from './aiService';
-import { getSchemas } from '../prompts';
+import { performScrape, performPerformanceCheck } from './scraperService.js';
+import { performAnalysis, callApi } from './aiService.js';
+import { getSchemas } from '../prompts.js';
 
 export class JobProcessor {
     static async processJob(jobId: string) {
@@ -116,7 +116,7 @@ export class JobProcessor {
                     const scrapeResultMobile = await performScrape(finalUrl, true, true, browserEndpoint);
 
                     // A3. Save Images to Filesystem (SPEED BOOST)
-                    const { ImageService } = await import('./imageService');
+                    const { ImageService } = await import('./imageService.js');
                     const desktopUrl = await ImageService.saveImage(jobId, 'desktop.jpg', scrapeResult.screenshot.data);
                     const mobileUrl = await ImageService.saveImage(jobId, 'mobile.jpg', scrapeResultMobile.screenshot.data);
 
@@ -165,7 +165,7 @@ export class JobProcessor {
                     if (!base64) throw new Error("No file data provided");
 
                     // Save Uploaded Image to Filesystem
-                    const { ImageService } = await import('./imageService');
+                    const { ImageService } = await import('./imageService.js');
                     const uploadUrl = await ImageService.saveImage(jobId, 'upload.png', base64);
 
                     finalScreenshots = [{ url: uploadUrl, isMobile: false, data: '' }];

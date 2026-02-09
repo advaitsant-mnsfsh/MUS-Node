@@ -1,8 +1,8 @@
 import { Router } from "express";
 import { toNodeHandler } from "better-auth/node";
-import { auth } from "../lib/auth";
-import { db } from "../lib/db";
-import { verification } from "../db/schema";
+import { auth } from "../lib/auth.js";
+import { db } from "../lib/db.js";
+import { verification } from "../db/schema.js";
 import { eq, desc } from "drizzle-orm";
 
 const router = Router();

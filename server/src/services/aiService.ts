@@ -1,6 +1,6 @@
 import { GoogleGenAI, HarmCategory, HarmBlockThreshold } from '@google/genai';
 import { jsonrepair } from 'jsonrepair';
-import { retryWithBackoff } from '../utils/retry';
+import { retryWithBackoff } from '../utils/retry.js';
 import {
     getWebsiteContextPrompt,
     getStrategySystemInstruction,
@@ -10,7 +10,7 @@ import {
     getAccessibilitySystemInstruction,
     getCompetitorSystemInstruction,
     getSchemas
-} from '../prompts';
+} from '../prompts.js';
 
 export const callApi = async (apiKeys: string[], systemInstruction: string, contents: string, schema: any, images: string[] = [], mimeType = 'image/png') => {
     const parts: any[] = [];

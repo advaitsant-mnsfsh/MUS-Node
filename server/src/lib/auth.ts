@@ -1,6 +1,6 @@
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
-import { db } from "./db"; // Our Drizzle Client
+import { db } from "./db.js"; // Our Drizzle Client
 import { google } from "better-auth/social-providers";
 import { emailOTP, bearer } from "better-auth/plugins";
 

@@ -1,9 +1,9 @@
 
 import { Queue, Worker, Job } from 'bullmq';
-import { JobProcessor } from '../services/jobProcessor';
-import { JobService } from '../services/jobService';
-import { db } from './db'; // Ensure db is initialized if needed inside worker context
-import { auditJobs } from '../db/schema';
+import { JobProcessor } from '../services/jobProcessor.js';
+import { JobService } from '../services/jobService.js';
+import { db } from './db.js'; // Ensure db is initialized if needed inside worker context
+import { auditJobs } from '../db/schema.js';
 import { eq } from 'drizzle-orm';
 
 // Redis connection options

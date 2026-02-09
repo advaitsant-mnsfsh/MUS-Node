@@ -1,8 +1,8 @@
 import express from 'express';
-import { ApiKeyService } from '../services/apiKeyService';
-import { JobService } from '../services/jobService';
-// import { auditQueue } from '../lib/queue'; // Queue Disabled
-import { JobProcessor } from '../services/jobProcessor';
+import { ApiKeyService } from '../services/apiKeyService.js';
+import { JobService } from '../services/jobService.js';
+// import { auditQueue } from '../lib/queue.js'; // Queue Disabled
+import { JobProcessor } from '../services/jobProcessor.js';
 
 const router = express.Router();
 
