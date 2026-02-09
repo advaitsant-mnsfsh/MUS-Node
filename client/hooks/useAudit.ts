@@ -196,6 +196,7 @@ export const useAudit = () => {
                 }
 
                 if (job) {
+                    console.log(`[useAudit] Initial job load: status=${job.status}, hasReport=${!!job.report_data}`);
                     // Update state from job
                     const reportData = job.report_data;
                     if (reportData) setReport(reportData);
@@ -215,10 +216,17 @@ export const useAudit = () => {
                     setUiAuditId(job.id);
 
                     if (job.status === 'completed' && reportData) {
+                        console.log('[useAudit] Job is already completed. Navigating to report.');
                         setIsLoading(false);
                         if (location.pathname.includes('/analysis/')) {
                             navigate(`/report/${auditId}`, { replace: true });
                         }
+                        return;
+                    }
+                    if (job.status === 'failed') {
+                        console.error('[useAudit] Job failed:', job.error_message);
+                        setError(job.error_message || 'Audit failed');
+                        setIsLoading(false);
                         return;
                     }
                 }

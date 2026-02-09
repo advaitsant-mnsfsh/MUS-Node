@@ -49,17 +49,22 @@ export const monitorJobPoll = async (jobId: string, callbacks: StreamCallbacks):
 
   try {
     const { authenticatedFetch } = await import('../lib/authenticatedFetch');
-    const statusUrl = `${getBackendUrl()}/api/v1/audit/${jobId}`;
+    const statusUrl = `${getBackendUrl()}/api/public/jobs/${jobId}`;
 
     const checkStatus = async () => {
       if (!isPolling) return;
 
       try {
         const response = await authenticatedFetch(statusUrl);
-        console.log(`[Poll] ${jobId} Status: ${response.status}`);
+        console.log(`[Poll] ${jobId} Status: ${response.status} (${response.statusText})`);
+
         if (!response.ok) {
+          const errorText = await response.text();
+          console.error(`[Poll] Error Response Body:`, errorText);
+
+          if (response.status === 401) throw new Error("Unauthorized: Please refresh and login again.");
           if (response.status === 404) throw new Error("Job not found");
-          throw new Error(`Status check failed: ${response.status}`);
+          throw new Error(`Status check failed: ${response.status} ${response.statusText}`);
         }
 
         const job = await response.json();
