@@ -6,7 +6,7 @@
   "scripts": {
     "start": "node dist/index.js",
     "dev": "ts-node-dev --respawn src/index.ts",
-    "build": "esbuild src/index.ts --bundle --platform=node --target=node20 --outfile=dist/index.js --external:pg-native --external:puppeteer --external:puppeteer-extra --external:puppeteer-extra-plugin-stealth --external:@axe-core/puppeteer",
+    "build": "tsc",
     "db:push": "drizzle-kit push"
   },
   "dependencies": {
