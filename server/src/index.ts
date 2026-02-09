@@ -93,6 +93,20 @@ app.use('/api/external', externalRoutes);
 app.use('/api/public', publicRoutes);
 app.use('/api/keys', apiKeysRoutes);
 
+// --- SERVE FRONTEND (Production) ---
+const clientBuildPath = path.join(__dirname, '../../client/dist');
+if (fs.existsSync(clientBuildPath)) {
+    console.log(`[System] Serving Frontend from: ${clientBuildPath}`);
+    app.use(express.static(clientBuildPath));
+    app.get('*', (req, res) => {
+        if (req.path.startsWith('/api')) return res.status(404).json({ error: 'Not Found' });
+        res.sendFile(path.join(clientBuildPath, 'index.html'));
+    });
+} else {
+    console.log(`[System] Frontend build not found at: ${clientBuildPath}`);
+}
+
+
 // Legacy Claim Route (for backward compatibility during deployment)
 app.post('/api/audit/claim', optionalUserAuth, async (req: any, res: any) => {
     const user = (req as AuthenticatedRequest).user;
