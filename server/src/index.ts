@@ -151,9 +151,6 @@ const server = app.listen(port, "0.0.0.0", () => {
     console.log(`[System] Instance born at: ${new Date().toISOString()}`);
     console.log(`[System] Server running on port: ${port}`);
     console.log(`[System] Memory Usage: ${Math.round(process.memoryUsage().heapUsed / 1024 / 1024)}MB`);
-
-    // Non-blocking Pre-warm
-    preWarmDatabase().catch(err => console.error('[DB] Pre-warm failed:', err.message));
 });
 
 let isShuttingDown = false;
