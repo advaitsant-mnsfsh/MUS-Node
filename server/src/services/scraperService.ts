@@ -114,6 +114,15 @@ export const performScrape = async (url: string, isMobile: boolean, isFirstPage:
             console.warn('[SCRAPE] Fix positions failed, continuing...', fixError);
         }
 
+        // Check page dimensions to prevent OOM on massive pages (like Wikipedia)
+        const metrics = await page.evaluate(() => ({
+            height: document.documentElement.scrollHeight,
+            width: document.documentElement.scrollWidth,
+            innerHeight: window.innerHeight
+        }));
+
+        console.log(`[SCRAPE] Page Dimensions: ${metrics.width}x${metrics.height} (Viewport: ${metrics.innerHeight})`);
+
         // Check if page is still alive before taking screenshot
         if (page.isClosed()) {
             throw new Error('Page crashed during scraping operations');
@@ -122,7 +131,18 @@ export const performScrape = async (url: string, isMobile: boolean, isFirstPage:
         console.log(`[SCRAPE] Taking Screenshot...`);
         let screenshotBuffer;
         try {
-            screenshotBuffer = await page.screenshot({ type: 'jpeg', quality: 50, fullPage: true });
+            // SAFEGUARD: If page is taller than 15,000px, it's a "scrolling infinity" or massive wiki.
+            // Full page screenshot on these will kill the container (OOM).
+            const isTooTall = metrics.height > 15000;
+            if (isTooTall) {
+                console.warn(`[SCRAPE] Page too tall (${metrics.height}px). Capturing viewport only to prevent crash.`);
+            }
+
+            screenshotBuffer = await page.screenshot({
+                type: 'jpeg',
+                quality: 50,
+                fullPage: !isTooTall
+            });
         } catch (screenshotError: any) {
             console.error('[SCRAPE] Screenshot failed:', screenshotError.message);
             throw new Error(`Screenshot failed: ${screenshotError.message}`);

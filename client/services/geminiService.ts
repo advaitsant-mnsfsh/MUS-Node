@@ -56,6 +56,7 @@ export const monitorJobPoll = async (jobId: string, callbacks: StreamCallbacks):
 
       try {
         const response = await authenticatedFetch(statusUrl);
+        console.log(`[Poll] ${jobId} Status: ${response.status}`);
         if (!response.ok) {
           if (response.status === 404) throw new Error("Job not found");
           throw new Error(`Status check failed: ${response.status}`);
@@ -86,6 +87,7 @@ export const monitorJobPoll = async (jobId: string, callbacks: StreamCallbacks):
               // Use a local ref or closure variable to track last log sent
               // For simplicity in this poll loop, we check against a closure variable
               if (latestLog.message && (latestLog.message !== (callbacks as any)._lastStatus)) {
+                console.log(`[Poll] 📝 LOG: ${latestLog.message}`);
                 onStatus(latestLog.message);
                 (callbacks as any)._lastStatus = latestLog.message;
               }
