@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Widget Test</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            background-color: #f0f0f0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 50px;
+        }
+        .container {
+            width: 100%;
+            max-width: 600px;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+        }
+        h1 { margin-bottom: 20px; }
+    </style>
+</head>
+<body>
+
+    <h1>Client Website Integration</h1>
+    <div class="container">
+        <h3>Use our Audit Tool</h3>
+        <!-- Widget Container -->
+        <div id="audit-widget-root" style="height: 400px;"></div>
+    </div>
+
+    <!-- 1. Include the Script -->
+    <script src="http://localhost:5173/widget.js"></script>
+    
+    <!-- 2. Initialize -->
+    <script>
+        // Wait for script to load usually, or place at bottom
+        setTimeout(() => {
+            if (window.AuditWidget) {
+                AuditWidget.mount({
+                    container: '#audit-widget-root',
+                    apiKey: 'test-key-123', // Ensure this key exists in your DB!
+                    styles: {
+                        primaryColor: '#000000', // Black button
+                        borderRadius: '0px',     // Sharp corners
+                        backgroundColor: '#ffffff',
+                        fontFamily: 'Courier New',
+                        logoPosition: 'top-center'
+                    }
+                });
+            }
+        }, 500);
+    </script>
+</body>
+</html>
