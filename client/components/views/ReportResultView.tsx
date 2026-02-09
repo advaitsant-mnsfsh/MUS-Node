@@ -3,6 +3,7 @@ import { SplitLayout } from '../SplitLayout';
 import { LoginPanel } from '../LoginPanel';
 import { ReportContainer } from '../report/ReportContainer';
 import { AnalysisReport, Screenshot, AuditInput } from '../../types';
+import { getBaseUrlForStatic } from '../../services/config';
 
 interface ReportResultViewProps {
     report: AnalysisReport;
@@ -40,6 +41,18 @@ export const ReportResultView: React.FC<ReportResultViewProps> = ({
     animationData,
     handleRunNewAudit
 }) => {
+    // Helper to resolve screenshot for preview
+    const resolvePreviewSrc = () => {
+        if (screenshots.length === 0) return null;
+        const img = screenshots[0];
+        if (img.data) return `data:image/jpeg;base64,${img.data}`;
+        if (img.url) {
+            if (img.url.startsWith('http')) return img.url;
+            const baseUrl = getBaseUrlForStatic();
+            return `${baseUrl}${img.url.startsWith('/') ? img.url : `/${img.url}`}`;
+        }
+        return null;
+    };
 
     // 2. LOCKED REPORT STATE (Unauthenticated)
     if (!user) {
@@ -50,7 +63,7 @@ export const ReportResultView: React.FC<ReportResultViewProps> = ({
                 microcopy="Unlock to view full report"
                 isAnalysisComplete={true}
                 animationData={animationData}
-                screenshot={screenshots.length > 0 ? screenshots[0].data : null}
+                screenshot={resolvePreviewSrc()}
                 url={submittedUrl}
                 fullWidth={false}
                 report={report}

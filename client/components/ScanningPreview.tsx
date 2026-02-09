@@ -43,6 +43,7 @@ export const ScanningPreview: React.FC<ScanningPreviewProps> = ({ screenshot, pr
                         <img
                             src={(() => {
                                 if (screenshot.startsWith('data:')) return screenshot;
+                                if (screenshot.startsWith('http')) return screenshot;
                                 if (screenshot.startsWith('/uploads')) {
                                     const baseUrl = getBaseUrlForStatic();
                                     return `${baseUrl}${screenshot}`;

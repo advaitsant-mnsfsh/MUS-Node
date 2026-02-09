@@ -2,6 +2,7 @@ import React from 'react';
 import { SplitLayout } from '../SplitLayout';
 import { LoginPanel } from '../LoginPanel';
 import { Screenshot } from '../../types';
+import { getBaseUrlForStatic } from '../../services/config';
 
 interface AnalysisViewProps {
     progress: number;
@@ -32,8 +33,7 @@ export const AnalysisView: React.FC<AnalysisViewProps> = ({
 
         if (img.url.startsWith('http')) return img.url;
 
-        const backendUrl = import.meta.env.VITE_BACKEND_URL || import.meta.env.VITE_API_URL || '';
-        const baseUrl = backendUrl.endsWith('/') ? backendUrl.slice(0, -1) : backendUrl;
+        const baseUrl = getBaseUrlForStatic();
         const subPath = img.url.startsWith('/') ? img.url : `/${img.url}`;
 
         return `${baseUrl}${subPath}`;
