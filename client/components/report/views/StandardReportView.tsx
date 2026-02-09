@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { AnalysisReport, Screenshot } from '../../../types';
 import { SkeletonLoader } from '../../SkeletonLoader';
-import { ScoreDisplayCard, LinearScoreDisplay } from '../ScoreComponents';
+import { ScoreDisplayCard } from '../ScoreComponents';
 import { CriticalIssueCard } from '../AuditCards';
 import { DetailedAuditView, DetailedAuditType } from '../DetailedAuditView';
 import AccessibilityAuditView from '../AccessibilityAuditView';
@@ -67,19 +67,19 @@ export const StandardReportView: React.FC<StandardReportViewProps> = ({ report, 
 
                             {/* Scores Section */}
                             <div className="w-full border-b-2 pb-6 border-black">
-                                {/* Overall Score (Large) */}
-                                <div className="mb-8">
-                                    <div className="pb-2">
-                                        <LinearScoreDisplay score={overallScore} label="Overall Score" isLarge={true} />
+                                {/* Overall Score (Large Hero Gauge) */}
+                                <div className="mb-8 flex justify-center">
+                                    <div className="w-full max-w-[280px]">
+                                        <ScoreDisplayCard score={overallScore} label="Overall Score" isHero={true} />
                                     </div>
                                 </div>
 
-                                {/* Sub Categories Grid */}
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-6">
-                                    {ux ? <LinearScoreDisplay score={ux.CategoryScore} label="UX Design" /> : <SkeletonLoader className="h-16" />}
-                                    {visual ? <LinearScoreDisplay score={visual.CategoryScore} label="Visual Design" /> : <SkeletonLoader className="h-16" />}
-                                    {product ? <LinearScoreDisplay score={product.CategoryScore} label="Product Design" /> : <SkeletonLoader className="h-16" />}
-                                    {accessibility ? <LinearScoreDisplay score={accessibility.CategoryScore} label="Accessibility" /> : <SkeletonLoader className="h-16" />}
+                                {/* Sub Categories Grid (2x2) */}
+                                <div className="grid grid-cols-2 gap-4">
+                                    {ux ? <ScoreDisplayCard score={ux.CategoryScore} label="UX Audit" /> : <SkeletonLoader className="h-32" />}
+                                    {visual ? <ScoreDisplayCard score={visual.CategoryScore} label="Visual Design" /> : <SkeletonLoader className="h-32" />}
+                                    {product ? <ScoreDisplayCard score={product.CategoryScore} label="Product Audit" /> : <SkeletonLoader className="h-32" />}
+                                    {accessibility ? <ScoreDisplayCard score={accessibility.CategoryScore} label="Accessibility" /> : <SkeletonLoader className="h-32" />}
                                 </div>
                             </div>
 
