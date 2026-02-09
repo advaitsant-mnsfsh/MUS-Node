@@ -225,8 +225,8 @@ export const useAudit = () => {
 
                 // If not found or not completed, THEN show loading screen for the stream/fetch
                 const { getBackendUrl } = await import('../services/config');
-                console.log(`[useAudit] Monitoring stream for ${auditId}`);
-                console.log(`[useAudit] 🛠️ DEBUG LINK: ${getBackendUrl()}/api/v1/audit/${auditId}`);
+                console.log(`[useAudit] Monitoring stream for ${auditId} on ${getBackendUrl()}`);
+                console.log(`[useAudit] 🛠️ DEBUG LINK (Public API): ${getBackendUrl()}/api/public/jobs/${auditId}`);
                 setLoadingMessage('Optimizing connection to audit stream...');
                 setUiAuditId(auditId);
                 const { monitorJobPoll } = await import('../services/geminiService');
