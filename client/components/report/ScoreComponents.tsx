@@ -207,10 +207,10 @@ export function LinearScoreDisplay({ score, label, isLarge = false }: { score?: 
     return (
         <div className={`w-full flex flex-col ${isLarge ? 'gap-3 mb-6' : 'gap-2 mb-4'}`}>
             <div className="flex justify-between items-end">
-                <span className={`font-black uppercase tracking-tight text-slate-900 ${isLarge ? 'text-2xl' : 'text-sm'}`}>
+                <span className={`font-black uppercase tracking-tight text-slate-900 ${isLarge ? 'text-xl' : 'text-sm'}`}>
                     {label}
                 </span>
-                <span className={`font-black ${isLarge ? 'text-5xl' : 'text-xl text-slate-900'}`}>
+                <span className={`font-black ${isLarge ? 'text-2xl' : 'text-xl text-slate-900'}`}>
                     {Math.round(score * 10)}/100
                 </span>
             </div>

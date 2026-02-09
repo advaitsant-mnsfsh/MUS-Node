@@ -60,7 +60,7 @@ export const StandardReportView: React.FC<StandardReportViewProps> = ({ report, 
 
                 {/* 1. TOP SECTION: Executive Summary & Preview (Card Style) */}
                 <div className="flex flex-col animate-in fade-in slide-in-from-bottom-4 mb-12 mx-4 md:mx-8">
-                    <div className="flex flex-col lg:flex-row border-2 border-black shadow-neo bg-white">
+                    <div className="flex flex-col lg:flex-row border-x-2 border-b-2 border-black shadow-neo bg-white">
 
                         {/* LEFT COLUMN: Scores & Text (50%) */}
                         <div className="w-full lg:w-1/2 p-6 md:p-8 border-r-2 border-black flex flex-col gap-8">
@@ -90,11 +90,7 @@ export const StandardReportView: React.FC<StandardReportViewProps> = ({ report, 
                                     <h2 className="text-2xl font-black text-black uppercase tracking-tight">Executive Summary</h2>
                                 </div>
                                 {strategy?.ExecutiveSummary ? (
-                                    <div className="prose prose-slate max-w-none border-l-4 border-black pl-5 py-1">
-                                        <div className="text-slate-900 leading-relaxed text-lg font-bold">
-                                            {strategy.ExecutiveSummary}
-                                        </div>
-                                    </div>
+                                    <ExecutiveSummaryDisplay summaryText={strategy.ExecutiveSummary} />
                                 ) : (
                                     <div className="p-6 bg-page-bg border-2 border-black border-dashed">
                                         <SkeletonLoader className="h-4 w-3/4 mb-2" />
@@ -106,7 +102,7 @@ export const StandardReportView: React.FC<StandardReportViewProps> = ({ report, 
                         </div>
 
                         {/* RIGHT COLUMN: Website Preview (50% - Full Bleed) */}
-                        <div className="w-full lg:w-1/2 relative bg-slate-100 min-h-[500px] lg:min-h-0 border-t-2 lg:border-t-0 border-black group overflow-hidden">
+                        <div className="w-full lg:w-1/2 relative bg-slate-100 h-96 lg:h-auto border-t-2 lg:border-t-0 border-black group overflow-hidden">
                             {/* Overlay Badge */}
                             <div className="absolute top-4 right-4 z-10 flex flex-col items-end pointer-events-none">
                                 <span className="text-[10px] font-black text-black uppercase tracking-wider bg-white px-2 py-1 border-2 border-black shadow-neo mb-1">
@@ -114,21 +110,23 @@ export const StandardReportView: React.FC<StandardReportViewProps> = ({ report, 
                                 </span>
                             </div>
 
-                            {/* Full Bleed Image */}
-                            {primaryScreenshotSrc ? (
-                                <img
-                                    src={primaryScreenshotSrc}
-                                    className="w-full h-full object-cover object-top transition-transform duration-700 hover:scale-105"
-                                    alt="Analyzed Page Preview"
-                                    onError={(e) => console.error('[ReportDisplay] Image Load Failed:', e.currentTarget.src)}
-                                />
-                            ) : (
-                                <div className="w-full h-full flex items-center justify-center bg-slate-50">
-                                    <div className="bg-white px-4 py-2 border-2 border-black shadow-neo">
-                                        <span className="font-bold text-black">Analyzing Interface...</span>
+                            {/* Full Bleed Image - Absolute on Desktop to match height of left col */}
+                            <div className="absolute inset-0 w-full h-full">
+                                {primaryScreenshotSrc ? (
+                                    <img
+                                        src={primaryScreenshotSrc}
+                                        className="w-full h-full object-cover object-top transition-transform duration-700 hover:scale-105"
+                                        alt="Analyzed Page Preview"
+                                        onError={(e) => console.error('[ReportDisplay] Image Load Failed:', e.currentTarget.src)}
+                                    />
+                                ) : (
+                                    <div className="w-full h-full flex items-center justify-center bg-slate-50">
+                                        <div className="bg-white px-4 py-2 border-2 border-black shadow-neo">
+                                            <span className="font-bold text-black">Analyzing Interface...</span>
+                                        </div>
                                     </div>
-                                </div>
-                            )}
+                                )}
+                            </div>
                         </div>
                     </div>
 
