@@ -144,6 +144,28 @@ router.get('/audit', async (req: express.Request, res: express.Response) => {
                     lastStatus = job.status;
                 }
 
+                // Fine-grained Log Updates
+                if (job.report_data?.logs && Array.isArray(job.report_data.logs)) {
+                    const logs = job.report_data.logs;
+                    if (logs.length > 0) {
+                        const latestLog = logs[logs.length - 1];
+                        if (latestLog.message && latestLog.message !== (req as any)._lastLogMsg) {
+                            sendChunk({ type: 'status', message: latestLog.message });
+                            (req as any)._lastLogMsg = latestLog.message;
+                        }
+                    }
+                }
+
+                // Check if server is shutting down (Rolling deploy)
+                // @ignore
+                const { getIsShuttingDown } = await import('../index.js');
+                if (getIsShuttingDown()) {
+                    console.log(`[Stream] Server is shutting down. Ending stream for ${jobId} early.`);
+                    sendChunk({ type: 'status', message: 'Deployment in progress. Please refresh in a moment.' });
+                    res.end();
+                    return;
+                }
+
                 // Poll again
                 setTimeout(checkStatus, 2000);
 

@@ -77,6 +77,20 @@ export const monitorJobPoll = async (jobId: string, callbacks: StreamCallbacks):
               sentKeys.add(key);
             }
           });
+
+          // 2b. Check for new Logs/Status messages
+          if (job.report_data.logs && Array.isArray(job.report_data.logs)) {
+            const logs = job.report_data.logs;
+            if (logs.length > 0) {
+              const latestLog = logs[logs.length - 1];
+              // Use a local ref or closure variable to track last log sent
+              // For simplicity in this poll loop, we check against a closure variable
+              if (latestLog.message && (latestLog.message !== (callbacks as any)._lastStatus)) {
+                onStatus(latestLog.message);
+                (callbacks as any)._lastStatus = latestLog.message;
+              }
+            }
+          }
         }
 
         // 3. Handle Completion
