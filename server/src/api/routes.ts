@@ -2,7 +2,6 @@ import express from 'express';
 import { db } from '../lib/db.js';
 import { auditJobs, leads } from '../db/schema.js';
 import { validateApiKey, optionalUserAuth, AuthenticatedRequest } from '../middleware/apiAuth.js';
-import { auditQueue } from '../lib/queue.js';
 import { JobProcessor } from '../services/jobProcessor.js';
 import { eq, and, isNull } from 'drizzle-orm';
 import crypto from 'crypto';
@@ -43,9 +42,9 @@ router.post('/audit', optionalUserAuth, async (req: express.Request, res: expres
         }
 
         // Trigger processing (Fire and Forget)
-        // OFFLOAD TO QUEUE: Immediate return 
-        await auditQueue.add('audit-job', { auditJobId: job.id });
-        console.log(`[API] Job ${job.id} pushed to queue.`);
+        // Direct processing without Redis/Queue to prevent timeouts
+        console.log(`[API] [${new Date().toISOString()}] Job ${job.id} starting directly...`);
+        JobProcessor.processJob(job.id).catch(err => console.error(`[API] Background Job Error ${job.id}:`, err));
 
         res.status(202).json({
             success: true,

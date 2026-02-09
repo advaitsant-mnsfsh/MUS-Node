@@ -13,7 +13,6 @@ import { optionalUserAuth, AuthenticatedRequest } from './middleware/apiAuth.js'
 import { db, preWarmDatabase } from './lib/db.js';
 import { auditJobs } from './db/schema.js';
 import { eq, isNull, and } from 'drizzle-orm';
-import './lib/queue.js'; // Start BullMQ worker
 
 dotenv.config({ path: './.env' });
 
