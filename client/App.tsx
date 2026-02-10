@@ -143,6 +143,7 @@ const App: React.FC = () => {
                 url={submittedUrl}
                 fullWidth={!!user}
                 auditId={auditId}
+                inputs={reportInputs}
             />
         );
     }

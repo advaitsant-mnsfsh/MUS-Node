@@ -1,7 +1,7 @@
 import React from 'react';
 import { ScanningPreview } from './ScanningPreview';
 import { ReportContainer } from './report/ReportContainer';
-import { AnalysisReport, Screenshot } from '../types';
+import { AnalysisReport, Screenshot, AuditInput } from '../types';
 
 interface SplitLayoutProps {
     progress: number;
@@ -12,6 +12,7 @@ interface SplitLayoutProps {
     screenshot: string | undefined | null;
     url: string;
     fullWidth: boolean;
+    inputs: AuditInput[];
     children?: React.ReactNode;
     // Optional props for completed report preview
     report?: AnalysisReport;
@@ -29,6 +30,7 @@ export const SplitLayout: React.FC<SplitLayoutProps> = ({
     screenshot,
     url,
     fullWidth,
+    inputs,
     children,
     report,
     reportUrl,
@@ -45,6 +47,7 @@ export const SplitLayout: React.FC<SplitLayoutProps> = ({
                         progress={progress}
                         url={url}
                         loadingMessage={loadingMessage}
+                        inputs={inputs}
                     />
                 </div>
             </div>
@@ -62,6 +65,7 @@ export const SplitLayout: React.FC<SplitLayoutProps> = ({
                         progress={progress}
                         url={url}
                         loadingMessage={loadingMessage}
+                        inputs={inputs}
                     />
                 </div>
 

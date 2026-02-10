@@ -1,14 +1,56 @@
 import React from 'react';
 import { getBaseUrlForStatic } from '../services/config';
+import { AuditInput } from '../types';
 
 interface ScanningPreviewProps {
     screenshot: string | null;
     progress: number;
     url?: string;
     loadingMessage?: string;
+    inputs?: AuditInput[];
 }
 
-export const ScanningPreview: React.FC<ScanningPreviewProps> = ({ screenshot, progress, url, loadingMessage }) => {
+export const ScanningPreview: React.FC<ScanningPreviewProps> = ({ screenshot, progress, url, loadingMessage, inputs }) => {
+    const [displayUrl, setDisplayUrl] = React.useState(url || 'Scanning...');
+
+    // URL Rotation Logic
+    React.useEffect(() => {
+        if (!inputs || inputs.length <= 1) {
+            setDisplayUrl(url || 'Scanning...');
+            return;
+        }
+
+        const urls = inputs
+            .filter(i => i.type === 'url')
+            .map(i => i.url)
+            .filter(Boolean) as string[];
+
+        if (urls.length <= 1) {
+            setDisplayUrl(url || 'Scanning...');
+            return;
+        }
+
+        // Determine if it's a competitor audit (any competitor role present)
+        const isCompetitor = inputs.some(i => i.role === 'competitor');
+        const intervalTime = isCompetitor ? 2300 : 2500;
+
+        // Custom sort order for competitor mode: Primary first, then Competitor
+        const sortedUrls = isCompetitor
+            ? [
+                ...inputs.filter(i => i.role === 'primary' && i.url).map(i => i.url!),
+                ...inputs.filter(i => i.role === 'competitor' && i.url).map(i => i.url!)
+            ]
+            : urls;
+
+        let currentIndex = 0;
+        const interval = setInterval(() => {
+            currentIndex = (currentIndex + 1) % sortedUrls.length;
+            setDisplayUrl(sortedUrls[currentIndex]);
+        }, intervalTime);
+
+        return () => clearInterval(interval);
+    }, [inputs, url]);
+
     return (
         <div className="relative w-full max-w-4xl mx-auto pl-0 md:pl-8">
             {/* Browser Frame Container */}
@@ -27,7 +69,7 @@ export const ScanningPreview: React.FC<ScanningPreviewProps> = ({ screenshot, pr
                         <svg className="w-4 h-4 text-[#94A3B8] flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
                         </svg>
-                        <span className="truncate">{url || 'Scanning...'}</span>
+                        <span className="truncate">{displayUrl}</span>
                     </div>
 
                     {/* Close Button (decorative) */}

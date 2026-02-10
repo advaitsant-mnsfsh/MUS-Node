@@ -1,7 +1,7 @@
 import React from 'react';
 import { SplitLayout } from '../SplitLayout';
 import { LoginPanel } from '../LoginPanel';
-import { Screenshot } from '../../types';
+import { Screenshot, AuditInput } from '../../types';
 import { getBaseUrlForStatic } from '../../services/config';
 
 interface AnalysisViewProps {
@@ -13,6 +13,7 @@ interface AnalysisViewProps {
     url: string;
     fullWidth: boolean;
     auditId?: string | null;
+    inputs: AuditInput[];
 }
 
 export const AnalysisView: React.FC<AnalysisViewProps> = ({
@@ -23,7 +24,8 @@ export const AnalysisView: React.FC<AnalysisViewProps> = ({
     screenshot,
     url,
     fullWidth,
-    auditId
+    auditId,
+    inputs
 }) => {
     // Resolve Backend URL for relative paths
     const resolveImageSrc = (img: Screenshot | undefined | null) => {
@@ -51,6 +53,7 @@ export const AnalysisView: React.FC<AnalysisViewProps> = ({
             screenshot={previewSrc}
             url={url}
             fullWidth={fullWidth}
+            inputs={inputs}
         >
             <div className="flex flex-col items-center justify-center w-full h-full animate-in fade-in duration-500">
                 <LoginPanel auditId={auditId} />
