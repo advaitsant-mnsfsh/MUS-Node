@@ -83,36 +83,11 @@ router.get('/jobs/:jobId', async (req, res) => {
             return res.status(404).json({ message: 'Job not found' });
         }
 
-        // Fetch latest log for real-time status display (Fallback for UI)
-        let latestLogMessage = null;
-        try {
-            const { db } = await import('../lib/db.js');
-            const { auditJobLogs } = await import('../db/schema.js');
-            const { eq, desc } = await import('drizzle-orm');
-            const [lastLog] = await db.select({ message: auditJobLogs.message })
-                .from(auditJobLogs)
-                .where(eq(auditJobLogs.job_id, jobId))
-                .orderBy(desc(auditJobLogs.created_at))
-                .limit(1);
-            latestLogMessage = lastLog?.message;
-        } catch (e) {
-            console.warn(`[Public API] Could not fetch latest log for ${jobId}`);
-        }
-
-        // Inject latest log into report_data for compatibility with existing UI
-        const reportData = job.report_data || {};
-        if (latestLogMessage) {
-            // @ts-ignore
-            if (!reportData.logs) reportData.logs = [];
-            // @ts-ignore
-            reportData.logs.push({ message: latestLogMessage });
-        }
-
         // Return basic status and report_data (including logs) even during processing
         res.json({
             id: job.id,
             status: job.status,
-            report_data: reportData,
+            report_data: job.report_data,
             errorMessage: job.error_message,
             inputs: (job.input_data as any)?.inputs || job.input_data,
             created_at: job.created_at,

@@ -43,7 +43,7 @@ export class JobService {
         console.log(`[JobService] [${jobId}] ${message}`);
 
         try {
-            // 1. Insert into dedicated logs table
+            // 1. Insert into dedicated logs table (New performance-ready way)
             await db.insert(auditJobLogs).values({
                 id: crypto.randomUUID(),
                 job_id: jobId,
@@ -51,18 +51,31 @@ export class JobService {
                 level: 'info'
             });
 
-            // 2. If there's partial data (like screenshots), update audit_jobs
+            // 2. ALSO update the legacy JSONB column in audit_jobs (Keep as it was)
+            const logEntry = {
+                timestamp: new Date().toISOString(),
+                message
+            };
+
+            const jsonbUpdate = sql`jsonb_set(
+                COALESCE(report_data, '{}'::jsonb),
+                '{logs}',
+                (COALESCE(report_data->'logs', '[]'::jsonb) || ${JSON.stringify(logEntry)}::jsonb)
+            )`;
+
             if (partialData) {
                 await db.update(auditJobs)
                     .set({
-                        report_data: sql`COALESCE(report_data, '{}'::jsonb) || ${JSON.stringify(partialData)}::jsonb`,
+                        report_data: sql`${jsonbUpdate} || ${JSON.stringify(partialData)}::jsonb`,
                         updated_at: sql`NOW()`
                     })
                     .where(eq(auditJobs.id, jobId));
             } else {
-                // Still update timestamp to show activity
                 await db.update(auditJobs)
-                    .set({ updated_at: sql`NOW()` })
+                    .set({
+                        report_data: jsonbUpdate,
+                        updated_at: sql`NOW()`
+                    })
                     .where(eq(auditJobs.id, jobId));
             }
         } catch (e) {
