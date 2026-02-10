@@ -91,6 +91,7 @@ export const auth = betterAuth({
                 }
             },
             sendVerificationOnSignUp: true,
+            otpLength: 6
         }),
     ],
 

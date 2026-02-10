@@ -116,7 +116,7 @@ export async function sendOtp(email: string, type: 'email-verification' | 'forge
  */
 export async function resetPasswordWithOtp(email: string, otp: string, newPassword: string): Promise<{ success: boolean; error: string | null }> {
     try {
-        const baseUrl = (authClient as any).baseURL;
+        const baseUrl = import.meta.env.VITE_BACKEND_URL || import.meta.env.VITE_API_URL || (import.meta.env.PROD ? 'https://mus-node-production.up.railway.app' : 'http://localhost:8080');
         const response = await fetch(`${baseUrl}/api/auth/reset-password-with-otp`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },

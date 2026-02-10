@@ -32,12 +32,12 @@ async function getCachedSession(req: Request) {
             headers: fromNodeHeaders(req.headers)
         });
 
-        if (session) {
-            // Silenced
-        } else if (hasBearerToken) {
-            console.warn(`[Auth] ❌ Bearer token present but rejected.`);
+        if (!session) {
+            console.warn(`[Auth] ❌ Session fetch failed.`);
+            return null;
         }
 
+        // session.session is the actual session object, session.user is the user object
         return session;
     } catch (e) {
         console.error("[Auth-Diagnostic] 💥 Critical Auth Error:", e);
@@ -51,17 +51,14 @@ async function getCachedSession(req: Request) {
 export const requireUserAuth = async (req: Request, res: Response, next: NextFunction) => {
     const start = Date.now();
     try {
-        const session = await getCachedSession(req);
+        const sessionData = await getCachedSession(req);
 
-        if (!session) {
+        if (!sessionData) {
             console.warn(`[Auth] requireUserAuth: No session (took ${Date.now() - start}ms)`);
             return res.status(401).json({ error: 'Unauthorized: Session required' });
         }
 
-        const isCached = Date.now() - start < 10; // If it took < 10ms, it was definitely from cache
-        (req as AuthenticatedRequest).user = session.user;
-
-        (req as AuthenticatedRequest).user = session.user;
+        (req as AuthenticatedRequest).user = sessionData.user;
         next();
 
     } catch (error) {
@@ -76,12 +73,13 @@ export const requireUserAuth = async (req: Request, res: Response, next: NextFun
 export const validateAccess = async (req: Request, res: Response, next: NextFunction) => {
     const start = Date.now();
     // 1. Check Session
+    // 1. Check Session
     try {
-        const session = await getCachedSession(req);
-        if (session) {
+        const sessionData = await getCachedSession(req);
+        if (sessionData) {
             const isCached = Date.now() - start < 10;
-            console.log(`[Auth] validateAccess: Found Session (took ${Date.now() - start}ms${isCached ? ' [CACHED]' : ''})`);
-            (req as AuthenticatedRequest).user = session.user;
+            // console.log(`[Auth] validateAccess: Found Session (took ${Date.now() - start}ms${isCached ? ' [CACHED]' : ''})`);
+            (req as AuthenticatedRequest).user = sessionData.user;
             return next();
         }
     } catch (e) {

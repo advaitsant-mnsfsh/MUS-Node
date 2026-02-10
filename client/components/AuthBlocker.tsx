@@ -284,7 +284,10 @@ export const AuthBlocker: React.FC<AuthBlockerProps> = ({ onUnlock, isUnlocked, 
                                 </label>
                                 <button
                                     type="button"
-                                    onClick={() => setStep('forgot-email')}
+                                    onClick={() => {
+                                        setIsLoginMode(false);
+                                        setStep('forgot-email');
+                                    }}
                                     className="text-xs font-bold text-slate-500 hover:text-black hover:underline"
                                 >
                                     Forgot Password?
