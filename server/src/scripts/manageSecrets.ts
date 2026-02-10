@@ -1,5 +1,5 @@
-import { db } from '../lib/db';
-import { appSecrets } from '../db/schema';
+import { db } from '../lib/db.js';
+import { appSecrets } from '../db/schema.js';
 import { eq } from 'drizzle-orm';
 import crypto from 'crypto';
 import dotenv from 'dotenv';

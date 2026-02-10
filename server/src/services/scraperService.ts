@@ -1,9 +1,10 @@
-import puppeteer from 'puppeteer-extra';
+import _puppeteerExtra from 'puppeteer-extra';
+const puppeteer = (_puppeteerExtra as any).default || _puppeteerExtra;
 import StealthPlugin from 'puppeteer-extra-plugin-stealth';
 import { AxePuppeteer } from '@axe-core/puppeteer';
-import { retryWithBackoff } from '../utils/retry';
+import { retryWithBackoff } from '../utils/retry.js';
 
-puppeteer.use(StealthPlugin());
+(puppeteer as any).use(StealthPlugin());
 
 export const performScrape = async (url: string, isMobile: boolean, isFirstPage: boolean, browserEndpoint?: string) => {
     let browser;
@@ -31,7 +32,7 @@ export const performScrape = async (url: string, isMobile: boolean, isFirstPage:
             }
 
             console.log('[SCRAPE] Launching local browser...');
-            browser = await puppeteer.launch({
+            browser = await (puppeteer as any).launch({
                 headless: "new",
                 args: [
                     '--no-sandbox',
@@ -113,6 +114,15 @@ export const performScrape = async (url: string, isMobile: boolean, isFirstPage:
             console.warn('[SCRAPE] Fix positions failed, continuing...', fixError);
         }
 
+        // Check page dimensions to prevent OOM on massive pages (like Wikipedia)
+        const metrics = await page.evaluate(() => ({
+            height: document.documentElement.scrollHeight,
+            width: document.documentElement.scrollWidth,
+            innerHeight: window.innerHeight
+        }));
+
+        console.log(`[SCRAPE] Page Dimensions: ${metrics.width}x${metrics.height} (Viewport: ${metrics.innerHeight})`);
+
         // Check if page is still alive before taking screenshot
         if (page.isClosed()) {
             throw new Error('Page crashed during scraping operations');
@@ -121,7 +131,18 @@ export const performScrape = async (url: string, isMobile: boolean, isFirstPage:
         console.log(`[SCRAPE] Taking Screenshot...`);
         let screenshotBuffer;
         try {
-            screenshotBuffer = await page.screenshot({ type: 'jpeg', quality: 50, fullPage: true });
+            // SAFEGUARD: If page is taller than 15,000px, it's a "scrolling infinity" or massive wiki.
+            // Full page screenshot on these will kill the container (OOM).
+            const isTooTall = metrics.height > 15000;
+            if (isTooTall) {
+                console.warn(`[SCRAPE] Page too tall (${metrics.height}px). Capturing viewport only to prevent crash.`);
+            }
+
+            screenshotBuffer = await page.screenshot({
+                type: 'jpeg',
+                quality: 50,
+                fullPage: !isTooTall
+            });
         } catch (screenshotError: any) {
             console.error('[SCRAPE] Screenshot failed:', screenshotError.message);
             throw new Error(`Screenshot failed: ${screenshotError.message}`);

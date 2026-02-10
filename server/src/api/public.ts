@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { JobService } from '../services/jobService';
+import { JobService } from '../services/jobService.js';
 
 const router = Router();
 
@@ -11,8 +11,8 @@ router.get('/test', (req, res) => {
 // DEBUG: List recent jobs (to verify DB access)
 router.get('/debug', async (req, res) => {
     try {
-        const { db } = await import('../lib/db');
-        const { auditJobs } = await import('../db/schema');
+        const { db } = await import('../lib/db.js');
+        const { auditJobs } = await import('../db/schema.js');
         const { desc } = await import('drizzle-orm');
 
         const recentJobs = await db.query.auditJobs.findMany({
@@ -43,6 +43,33 @@ router.get('/debug/uploads', async (req, res) => {
     }
 });
 
+// GET /api/public/jobs/:jobId/logs
+// Dedicated endpoint for lightweight log polling
+router.get('/jobs/:jobId/logs', async (req, res) => {
+    try {
+        const { jobId } = req.params;
+        const { db } = await import('../lib/db.js');
+        const { auditJobLogs } = await import('../db/schema.js');
+        const { eq, desc } = await import('drizzle-orm');
+
+        console.log(`[Public API] Fetching logs for job: ${jobId}`);
+
+        const logs = await db.select({
+            id: auditJobLogs.id,
+            message: auditJobLogs.message,
+            timestamp: auditJobLogs.created_at
+        })
+            .from(auditJobLogs)
+            .where(eq(auditJobLogs.job_id, jobId))
+            .orderBy(desc(auditJobLogs.created_at), desc(auditJobLogs.id));
+
+        res.json({ logs });
+    } catch (error: any) {
+        console.error('Public Log Fetch Error:', error);
+        res.status(500).json({ message: 'Internal Server Error' });
+    }
+});
+
 // GET /api/public/jobs/:jobId
 // Public endpoint to fetch completed job report data for sharing
 router.get('/jobs/:jobId', async (req, res) => {
@@ -57,23 +84,18 @@ router.get('/jobs/:jobId', async (req, res) => {
             return res.status(404).json({ message: 'Job not found' });
         }
 
-        // If job is running, return status cleanly (prevents 403 console errors)
-        if (job.status !== 'completed' && job.status !== 'failed') {
-            return res.json({
-                id: job.id,
-                status: job.status
-            });
-        }
-
-        // Return the report data (no authentication required for sharing)
+        // Return basic status and report_data (including logs) even during processing
         res.json({
             id: job.id,
             status: job.status,
             report_data: job.report_data,
-            inputs: (job.input_data as any)?.inputs || job.input_data, // Compatibility
+            errorMessage: job.error_message,
+            inputs: (job.input_data as any)?.inputs || job.input_data,
             created_at: job.created_at,
             updated_at: job.updated_at
         });
+
+        return;
 
     } catch (error: any) {
         console.error('Public Job Fetch Error:', error);

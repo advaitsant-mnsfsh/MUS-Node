@@ -63,6 +63,18 @@ export const auditJobs = pgTable("audit_jobs", {
     }
 });
 
+export const auditJobLogs = pgTable("audit_job_logs", {
+    id: text("id").primaryKey(),
+    job_id: text("job_id").notNull().references(() => auditJobs.id),
+    message: text("message").notNull(),
+    level: text("level").default("info").notNull(),
+    created_at: timestamp("created_at", { withTimezone: true }).defaultNow().notNull()
+}, (table) => {
+    return {
+        job_id_idx: index("job_id_idx").on(table.job_id)
+    }
+});
+
 export const leads = pgTable("leads", {
     id: text("id").primaryKey(), // We'll generate UUIDs manually or let DB handle it if set up
     email: text("email").notNull().unique(),
@@ -93,4 +105,3 @@ export const appSecrets = pgTable("app_secrets", {
     created_at: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
     updated_at: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull()
 });
-

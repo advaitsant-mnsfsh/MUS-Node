@@ -1,14 +1,15 @@
-import { db } from '../lib/db';
-import { SecretService } from './secretService';
-import { JobService } from './jobService';
+import { db } from '../lib/db.js';
+import { SecretService } from './secretService.js';
+import { JobService } from './jobService.js';
 import { Type } from '@google/genai';
-import { performScrape, performPerformanceCheck } from './scraperService';
-import { performAnalysis, callApi } from './aiService';
-import { getSchemas } from '../prompts';
+import { performScrape, performPerformanceCheck } from './scraperService.js';
+import { performAnalysis, callApi } from './aiService.js';
+import { getSchemas } from '../prompts.js';
 
 export class JobProcessor {
     static async processJob(jobId: string) {
-        console.log(`[JobProcessor] Starting job ${jobId}`);
+        const envName = process.env.RAILWAY_ENVIRONMENT_NAME || process.env.NODE_ENV || 'development';
+        console.log(`[JobProcessor] [${envName}] Starting job ${jobId}`);
         try {
             // 1. Update Status
             await JobService.updateJobStatus(jobId, 'processing');
@@ -116,7 +117,7 @@ export class JobProcessor {
                     const scrapeResultMobile = await performScrape(finalUrl, true, true, browserEndpoint);
 
                     // A3. Save Images to Filesystem (SPEED BOOST)
-                    const { ImageService } = await import('./imageService');
+                    const { ImageService } = await import('./imageService.js');
                     const desktopUrl = await ImageService.saveImage(jobId, 'desktop.jpg', scrapeResult.screenshot.data);
                     const mobileUrl = await ImageService.saveImage(jobId, 'mobile.jpg', scrapeResultMobile.screenshot.data);
 
@@ -165,7 +166,7 @@ export class JobProcessor {
                     if (!base64) throw new Error("No file data provided");
 
                     // Save Uploaded Image to Filesystem
-                    const { ImageService } = await import('./imageService');
+                    const { ImageService } = await import('./imageService.js');
                     const uploadUrl = await ImageService.saveImage(jobId, 'upload.png', base64);
 
                     finalScreenshots = [{ url: uploadUrl, isMobile: false, data: '' }];
@@ -186,7 +187,7 @@ export class JobProcessor {
                 const modes = ['analyze-ux', 'analyze-product', 'analyze-visual', 'analyze-strategy', 'analyze-accessibility'];
 
                 const runExpertWithTimeout = async (mode: string) => {
-                    const expertName = mode.replace('analyze-', ' ').toUpperCase();
+                    const expertName = mode.replace('analyze-', '').toUpperCase();
                     console.log(`[JobProcessor] Starting ${mode}...`);
                     await JobService.updateProgress(jobId, `Running ${expertName}...`);
 
@@ -286,6 +287,7 @@ ${JSON.stringify(allIssues, null, 2)}`;
 
         } catch (error: any) {
             console.error(`[JobProcessor] Job ${jobId} failed:`, error);
+            await JobService.updateProgress(jobId, `🚨 Job Failed: ${error.message}`);
             await JobService.updateJobStatus(jobId, 'failed', undefined, error.message);
         }
     }

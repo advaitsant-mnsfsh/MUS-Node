@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
-import { auth } from '../lib/auth';
+import { auth } from '../lib/auth.js';
 import { fromNodeHeaders } from "better-auth/node";
 
 export interface AuthenticatedRequest extends Request {
@@ -95,8 +95,8 @@ export const validateAccess = async (req: Request, res: Response, next: NextFunc
     const apiKeyHeader = req.headers['x-api-key'] as string;
     if (apiKeyHeader) {
         try {
-            const { db } = await import('../lib/db');
-            const { apiKeys } = await import('../db/schema');
+            const { db } = await import('../lib/db.js');
+            const { apiKeys } = await import('../db/schema.js');
             const { eq, and } = await import('drizzle-orm');
 
             const keyRecord = await db.query.apiKeys.findFirst({

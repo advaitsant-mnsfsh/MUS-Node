@@ -1,8 +1,8 @@
 import express from 'express';
-import { db } from '../lib/db';
-import { auditJobs, leads } from '../db/schema';
-import { validateApiKey, optionalUserAuth, AuthenticatedRequest } from '../middleware/apiAuth';
-import { JobProcessor } from '../services/jobProcessor';
+import { db } from '../lib/db.js';
+import { auditJobs, leads } from '../db/schema.js';
+import { validateApiKey, optionalUserAuth, AuthenticatedRequest } from '../middleware/apiAuth.js';
+import { JobProcessor } from '../services/jobProcessor.js';
 import { eq, and, isNull } from 'drizzle-orm';
 import crypto from 'crypto';
 
@@ -42,15 +42,14 @@ router.post('/audit', optionalUserAuth, async (req: express.Request, res: expres
         }
 
         // Trigger processing (Fire and Forget)
-        // JobProcessor.processJob reads everything it needs from the DB record
-        JobProcessor.processJob(job.id).catch(err => console.error(`Background Job Error for ${job.id}:`, err));
+        // Direct processing without Redis/Queue to prevent timeouts
+        console.log(`[API] [${new Date().toISOString()}] Job ${job.id} starting directly...`);
+        JobProcessor.processJob(job.id).catch(err => console.error(`[API] Background Job Error ${job.id}:`, err));
 
-        // Return immediately
         res.status(202).json({
-            message: 'Audit job submitted successfully',
+            success: true,
             jobId: job.id,
-            status: 'pending',
-            statusUrl: `/api/v1/audit/${job.id}`
+            message: 'Audit started in background'
         });
 
     } catch (error: any) {
@@ -143,6 +142,29 @@ router.get('/audit', async (req: express.Request, res: express.Response) => {
                 if (job.status !== lastStatus) {
                     sendChunk({ type: 'status', message: `Job Status: ${job.status}` });
                     lastStatus = job.status;
+                }
+
+                // Fine-grained Log Updates
+                const reportData = job.report_data as any;
+                if (reportData?.logs && Array.isArray(reportData.logs)) {
+                    const logs = reportData.logs;
+                    if (logs.length > 0) {
+                        const latestLog = logs[logs.length - 1];
+                        if (latestLog.message && latestLog.message !== (req as any)._lastLogMsg) {
+                            sendChunk({ type: 'status', message: latestLog.message });
+                            (req as any)._lastLogMsg = latestLog.message;
+                        }
+                    }
+                }
+
+                // Check if server is shutting down (Rolling deploy)
+                // @ignore
+                const { getIsShuttingDown } = await import('../index.js');
+                if (getIsShuttingDown()) {
+                    console.log(`[Stream] Server is shutting down. Ending stream for ${jobId} early.`);
+                    sendChunk({ type: 'status', message: 'Deployment in progress. Please refresh in a moment.' });
+                    res.end();
+                    return;
                 }
 
                 // Poll again

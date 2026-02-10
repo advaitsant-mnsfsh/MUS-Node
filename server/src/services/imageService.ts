@@ -23,11 +23,20 @@ export class ImageService {
 
             fs.writeFileSync(filePath, Buffer.from(cleanBase64, 'base64'));
 
-            console.log(`[ImageService] ✅ Saved image: ${filePath} (${Math.round(cleanBase64.length / 1024)} KB)`);
+            // CONSTRUCTION OF FULL PUBLIC URL FOR LOGGING
+            const envUrl = process.env.BACKEND_URL || process.env.BETTER_AUTH_URL || "";
+            let logBaseUrl = envUrl.endsWith('/') ? envUrl.slice(0, -1) : envUrl;
+            if (logBaseUrl.endsWith('/api')) {
+                logBaseUrl = logBaseUrl.slice(0, -4);
+            }
+            const publicUrl = `${logBaseUrl}/uploads/${jobId}/${filename}`;
 
-            // Return the public URL path
-            // Note: In production, you might want to prepend the full backend URL, 
-            // but for now, we'll keep it relative to the server root.
+            console.log(`[ImageService] ✅ Saved image: ${filePath}`);
+            console.log(`[ImageService] 🔗 PUBLIC URL: ${publicUrl}`);
+            console.log(`[ImageService] 📂 Resolved Uploads Path: ${uploadsDir}`);
+
+            // Return THE RELATIVE PATH ONLY. 
+            // The client is more capable of deciding how to prepend the base URL.
             return `/uploads/${jobId}/${filename}`;
         } catch (error) {
             console.error(`[ImageService] ❌ Failed to save image ${filename}:`, error);
