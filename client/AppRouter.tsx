@@ -14,6 +14,7 @@ import { Logo } from './components/Logo';
 import { getSharedAudit } from './services/auditStorage';
 import { AnalysisReport, Screenshot } from './types';
 import { AuthProvider } from './contexts/AuthContext';
+import { AuditProvider } from './contexts/AuditContext';
 import { Layout } from './components/Layout';
 
 // Wrapper for Layout to use with Outlet
@@ -172,27 +173,29 @@ function SharedAuditView() {
 function AppWithRouting() {
     return (
         <AuthProvider>
-            <BrowserRouter>
-                <Toaster position="top-center" />
-                <Routes>
-                    {/* Main Application with Global Layout */}
-                    <Route element={<LayoutWrapper />}>
-                        <Route path="/" element={<App />} />
-                        <Route path="/analysis/:auditId" element={<App />} />
-                        <Route path="/report/:auditId" element={<App />} />
-                        <Route path="/dashboard" element={<DashboardPage />} />
-                        <Route path="/api-keys" element={<APIKeysPage />} />
-                        <Route path="/login" element={<App />} />
-                        <Route path="/about" element={<AboutPage />} />
-                        <Route path="/pricing" element={<PricingPage />} />
-                        <Route path="/docs/widget" element={<DocsWidgetPage />} />
-                    </Route>
+            <AuditProvider>
+                <BrowserRouter>
+                    <Toaster position="top-center" />
+                    <Routes>
+                        {/* Main Application with Global Layout */}
+                        <Route element={<LayoutWrapper />}>
+                            <Route path="/" element={<App />} />
+                            <Route path="/analysis/:auditId" element={<App />} />
+                            <Route path="/report/:auditId" element={<App />} />
+                            <Route path="/dashboard" element={<DashboardPage />} />
+                            <Route path="/api-keys" element={<APIKeysPage />} />
+                            <Route path="/login" element={<App />} />
+                            <Route path="/about" element={<AboutPage />} />
+                            <Route path="/pricing" element={<PricingPage />} />
+                            <Route path="/docs/widget" element={<DocsWidgetPage />} />
+                        </Route>
 
-                    {/* Standalone Views (No Global Nav) */}
-                    <Route path="/shared/:auditId" element={<SharedAuditView />} />
-                    <Route path="/embed" element={<EmbedPage />} />
-                </Routes>
-            </BrowserRouter>
+                        {/* Standalone Views (No Global Nav) */}
+                        <Route path="/shared/:auditId" element={<SharedAuditView />} />
+                        <Route path="/embed" element={<EmbedPage />} />
+                    </Routes>
+                </BrowserRouter>
+            </AuditProvider>
         </AuthProvider>
     );
 }

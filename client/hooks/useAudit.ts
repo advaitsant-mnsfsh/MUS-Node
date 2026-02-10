@@ -3,6 +3,7 @@ import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { AnalysisReport, Screenshot, AuditInput } from '../types';
 import { monitorJobPoll, analyzeWebsiteStream } from '../services/geminiService';
 import { useAuth } from '../contexts/AuthContext';
+import { useGlobalAudit } from '../contexts/AuditContext';
 import { getAuditInputs } from '../services/userAuditsService';
 
 const loadingMicrocopy = [
@@ -18,6 +19,7 @@ export const useAudit = () => {
     const navigate = useNavigate();
     const location = useLocation();
     const { user } = useAuth(); // Restore useAuth hook
+    const { setActiveAudit, clearActiveAudit } = useGlobalAudit();
 
     // --- STATE ---
     const [submittedUrl, setSubmittedUrl] = useState<string>('');
@@ -92,6 +94,7 @@ export const useAudit = () => {
             setPerformanceError(errorMessage);
         },
         onJobCreated: (id: string) => {
+            setActiveAudit(id);
             navigate(`/analysis/${id}`, { state: { newAudit: true } });
         },
         onStatus: (message: string) => {
@@ -155,7 +158,7 @@ export const useAudit = () => {
             setProgress(0);
         },
         onClose: () => { }
-    }), [navigate, location.pathname, auditId]);
+    }), [navigate, location.pathname, auditId, setActiveAudit, clearActiveAudit]);
 
 
     const hasStarted = useRef<boolean>(false);
@@ -353,6 +356,7 @@ export const useAudit = () => {
     }, [startAnalysis]);
 
     const handleRunNewAudit = useCallback(() => {
+        clearActiveAudit();
         setReport(null);
         setError(null);
         setSubmittedUrl('');
@@ -364,7 +368,7 @@ export const useAudit = () => {
         setTargetProgress(0);
         setIsLoading(false);
         navigate('/');
-    }, [navigate]);
+    }, [navigate, clearActiveAudit]);
 
     return {
         // State
