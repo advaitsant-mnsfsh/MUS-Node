@@ -1,18 +1,19 @@
 import React from 'react';
 import { SplitLayout } from '../SplitLayout';
 import { LoginPanel } from '../LoginPanel';
-import { Screenshot } from '../../types';
-import { getBaseUrlForStatic } from '../../services/config';
+
+import { AuditInput } from '../../types';
 
 interface AnalysisViewProps {
     progress: number;
     loadingMessage: string;
     microcopy: string;
     animationData: any;
-    screenshot: Screenshot | undefined | null;
+    screenshot: string | undefined | null;
     url: string;
     fullWidth: boolean;
     auditId?: string | null;
+    inputs?: AuditInput[];
 }
 
 export const AnalysisView: React.FC<AnalysisViewProps> = ({
@@ -23,23 +24,28 @@ export const AnalysisView: React.FC<AnalysisViewProps> = ({
     screenshot,
     url,
     fullWidth,
-    auditId
+    auditId,
+    inputs
 }) => {
-    // Resolve Backend URL for relative paths
-    const resolveImageSrc = (img: Screenshot | undefined | null) => {
-        if (!img) return undefined;
-        if (img.data) return `data:image/jpeg;base64,${img.data}`;
-        if (!img.url) return undefined;
+    // URL Rotation Logic
+    const [currentUrlIndex, setCurrentUrlIndex] = React.useState(0);
 
-        if (img.url.startsWith('http')) return img.url;
+    const validUrls = React.useMemo(() => {
+        if (inputs && inputs.length > 0) {
+            return inputs.filter(i => i.url).map(i => i.url!)
+        }
+        return url ? [url] : [];
+    }, [inputs, url]);
 
-        const baseUrl = getBaseUrlForStatic();
-        const subPath = img.url.startsWith('/') ? img.url : `/${img.url}`;
+    React.useEffect(() => {
+        if (validUrls.length <= 1) return;
+        const interval = setInterval(() => {
+            setCurrentUrlIndex(prev => (prev + 1) % validUrls.length);
+        }, 2500); // Rotate every 2.5s
+        return () => clearInterval(interval);
+    }, [validUrls.length]);
 
-        return `${baseUrl}${subPath}`;
-    };
-
-    const previewSrc = resolveImageSrc(screenshot);
+    const displayUrl = validUrls.length > 0 ? validUrls[currentUrlIndex] : url;
 
     return (
         <SplitLayout
@@ -48,8 +54,8 @@ export const AnalysisView: React.FC<AnalysisViewProps> = ({
             microcopy={microcopy}
             isAnalysisComplete={false}
             animationData={animationData}
-            screenshot={previewSrc}
-            url={url}
+            screenshot={screenshot}
+            url={displayUrl}
             fullWidth={fullWidth}
         >
             <div className="flex flex-col items-center justify-center w-full h-full animate-in fade-in duration-500">
