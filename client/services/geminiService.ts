@@ -70,31 +70,39 @@ export const monitorJobPoll = async (jobId: string, callbacks: StreamCallbacks):
         const job = await response.json();
 
         // --- 1. Fetch High-Frequency Logs ---
+        let latestLogMessage = null;
         try {
           const logsResponse = await authenticatedFetch(`${getBackendUrl()}/api/public/jobs/${jobId}/logs`);
           if (logsResponse.ok) {
             const logsData = await logsResponse.json();
             const logs = logsData.logs || [];
 
-            // Logs are returned descending (latest first) due to API change, 
-            // so we reverse to process chronologically
-            const chronologicalLogs = [...logs].reverse();
+            if (logs.length > 0) {
+              latestLogMessage = logs[0].message; // Descending, so index 0 is latest
 
-            chronologicalLogs.forEach((log: any) => {
-              if (log.message && (log.message !== (callbacks as any)._lastStatus)) {
-                console.log(`[Poll] 📝 LOG: ${log.message}`);
+              // Process ALL logs chronologically for progress calculation (milestones)
+              const chronologicalLogs = [...logs].reverse();
+              chronologicalLogs.forEach((log: any) => {
                 onStatus(log.message);
-                (callbacks as any)._lastStatus = log.message;
+              });
+
+              // Ensure the very latest message is the final one displayed in this tick
+              if (latestLogMessage) {
+                onStatus(latestLogMessage);
+                (callbacks as any)._lastStatus = latestLogMessage;
               }
-            });
+            }
           }
         } catch (logErr) {
           console.warn(`[Poll] Could not fetch dedicated logs:`, logErr);
         }
 
-        // 2. Update Status Message (Fallback)
-        if (job.status === 'pending') onStatus('Job is pending in queue...');
-        else if (job.status === 'processing' && !(callbacks as any)._lastStatus) onStatus('Audit is in progress...');
+        // 2. Update Status Message (Fallback only if no logs yet)
+        if (job.status === 'pending') {
+          onStatus('Waiting in queue...');
+        } else if (job.status === 'processing' && !latestLogMessage) {
+          onStatus('Initializing audit agents...');
+        }
 
         // 3. Check for new Data
         if (job.report_data) {

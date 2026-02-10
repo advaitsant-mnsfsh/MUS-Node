@@ -24,7 +24,7 @@ export const useAudit = () => {
     const [report, setReport] = useState<AnalysisReport | null>(null);
     const [isLoading, setIsLoading] = useState<boolean>(!!auditId);
     const [error, setError] = useState<string | null>(null);
-    const [loadingMessage, setLoadingMessage] = useState<string>('Initiating multi-faceted audit...');
+    const [loadingMessage, setLoadingMessage] = useState<string>('Starting audit agents...');
     const [screenshots, setScreenshots] = useState<Screenshot[]>([]);
     const [screenshotMimeType, setScreenshotMimeType] = useState<string>('image/png');
     const [uiAuditId, setUiAuditId] = useState<string | null>(null);
@@ -266,7 +266,7 @@ export const useAudit = () => {
         setScreenshotMimeType('image/png');
         setUiAuditId(null);
         setPerformanceError(null);
-        setLoadingMessage('Initiating mixed-input audit...');
+        setLoadingMessage('Starting audit agents...');
         setProgress(0);
         setTargetProgress(0);
 
