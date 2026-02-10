@@ -53,16 +53,16 @@ export const useAudit = () => {
 
     // 1b. Automatic Incremental Progress (Confidence Builder)
     useEffect(() => {
-        if (!isLoading || targetProgress >= 90 || targetProgress === 0) return;
+        if (!isLoading || targetProgress >= 90) return;
 
         const interval = setInterval(() => {
             setTargetProgress(prev => {
                 if (prev >= 90) return prev;
-                // Slower increment as we get higher
-                const increment = prev > 70 ? 0.5 : 1;
+                // Faster increment at the start (0-30%), slower later
+                const increment = prev < 30 ? 2 : (prev > 70 ? 0.5 : 1);
                 return prev + increment;
             });
-        }, 12000); // Crawl forward every 12 seconds
+        }, 8000); // Crawl forward every 8 seconds instead of 12
 
         return () => clearInterval(interval);
     }, [isLoading, targetProgress]);
@@ -109,7 +109,8 @@ export const useAudit = () => {
                 let newProgress = prev;
                 const msg = message.toUpperCase();
 
-                // 1. Initial & Scrape Phase (10-35%)
+                // 0. Initial & Scrape Phase (5-35%)
+                if (msg.includes('AUDIT IS IN PROGRESS')) newProgress = 5;
                 if (msg.includes('STARTING STANDARD ANALYSIS')) newProgress = 10;
                 if (msg.includes('SCRAPING')) newProgress = 15;
                 if (msg.includes('SCRAPE SUCCESSFUL')) newProgress = 30;
