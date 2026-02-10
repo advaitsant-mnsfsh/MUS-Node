@@ -55,12 +55,13 @@ router.get('/jobs/:jobId/logs', async (req, res) => {
         console.log(`[Public API] Fetching logs for job: ${jobId}`);
 
         const logs = await db.select({
+            id: auditJobLogs.id,
             message: auditJobLogs.message,
             timestamp: auditJobLogs.created_at
         })
             .from(auditJobLogs)
             .where(eq(auditJobLogs.job_id, jobId))
-            .orderBy(desc(auditJobLogs.created_at));
+            .orderBy(desc(auditJobLogs.created_at), desc(auditJobLogs.id));
 
         res.json({ logs });
     } catch (error: any) {

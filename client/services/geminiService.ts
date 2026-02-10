@@ -51,45 +51,52 @@ export const monitorJobPoll = async (jobId: string, callbacks: StreamCallbacks):
     const { authenticatedFetch } = await import('../lib/authenticatedFetch');
     const statusUrl = `${getBackendUrl()}/api/public/jobs/${jobId}`;
 
+    const sentLogs = (callbacks as any)._sentLogs || new Set<string>();
+    (callbacks as any)._sentLogs = sentLogs;
+
     const checkStatus = async () => {
       if (!isPolling) return;
 
       try {
-        const response = await authenticatedFetch(statusUrl);
-        console.log(`[Poll] ${jobId} Status: ${response.status} (${response.statusText})`);
+        // Use cache-buster to ensure we get fresh status
+        const response = await authenticatedFetch(`${statusUrl}?t=${Date.now()}`);
+        console.log(`[Poll] ${jobId} Status: ${response.status}`);
 
         if (!response.ok) {
-          const errorText = await response.text();
-          console.error(`[Poll] Error Response Body:`, errorText);
-
-          if (response.status === 401) throw new Error("Unauthorized: Please refresh and login again.");
+          if (response.status === 401) throw new Error("Unauthorized");
           if (response.status === 404) throw new Error("Job not found");
-          throw new Error(`Status check failed: ${response.status} ${response.statusText}`);
+          throw new Error(`Status check failed: ${response.status}`);
         }
 
         const job = await response.json();
 
-        // --- 1. Fetch High-Frequency Logs ---
-        let latestLogMessage = null;
+        // --- 1. Fetch High-Frequency Logs with Cache Buster ---
         try {
-          const logsResponse = await authenticatedFetch(`${getBackendUrl()}/api/public/jobs/${jobId}/logs`);
+          const logsResponse = await authenticatedFetch(`${getBackendUrl()}/api/public/jobs/${jobId}/logs?t=${Date.now()}`);
           if (logsResponse.ok) {
             const logsData = await logsResponse.json();
             const logs = logsData.logs || [];
 
             if (logs.length > 0) {
-              latestLogMessage = logs[0].message; // Descending, so index 0 is latest
+              // Logs are descending, so index 0 is latest
+              const latestLog = logs[0];
 
-              // Process ALL logs chronologically for progress calculation (milestones)
+              // Process ONLY new logs chronologically for milestones
               const chronologicalLogs = [...logs].reverse();
+
               chronologicalLogs.forEach((log: any) => {
-                onStatus(log.message);
+                const logKey = log.id || `${log.timestamp}-${log.message}`;
+                if (!sentLogs.has(logKey)) {
+                  console.log(`[Poll] 📝 NEW LOG: ${log.message}`);
+                  onStatus(log.message);
+                  sentLogs.add(logKey);
+                }
               });
 
-              // Ensure the very latest message is the final one displayed in this tick
-              if (latestLogMessage) {
-                onStatus(latestLogMessage);
-                (callbacks as any)._lastStatus = latestLogMessage;
+              // Always ensure the UI reflects the absolute latest message in the table
+              if (latestLog.message && latestLog.message !== (callbacks as any)._lastStatusText) {
+                onStatus(latestLog.message);
+                (callbacks as any)._lastStatusText = latestLog.message;
               }
             }
           }
@@ -100,7 +107,7 @@ export const monitorJobPoll = async (jobId: string, callbacks: StreamCallbacks):
         // 2. Update Status Message (Fallback only if no logs yet)
         if (job.status === 'pending') {
           onStatus('Waiting in queue...');
-        } else if (job.status === 'processing' && !latestLogMessage) {
+        } else if (job.status === 'processing' && sentLogs.size === 0) {
           onStatus('Initializing audit agents...');
         }
 
@@ -108,7 +115,6 @@ export const monitorJobPoll = async (jobId: string, callbacks: StreamCallbacks):
         if (job.report_data) {
           Object.entries(job.report_data).forEach(([key, value]) => {
             if (key !== 'logs' && !sentKeys.has(key)) {
-              console.log(`[Poll] New Data: ${key}`);
               onData({ key, data: value });
               sentKeys.add(key);
             }
