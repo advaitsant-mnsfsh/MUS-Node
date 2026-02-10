@@ -69,11 +69,34 @@ export const monitorJobPoll = async (jobId: string, callbacks: StreamCallbacks):
 
         const job = await response.json();
 
-        // 1. Update Status Message
-        if (job.status === 'pending') onStatus('Job is pending in queue...');
-        else if (job.status === 'processing') onStatus('Audit is in progress...');
+        // --- 1. Fetch High-Frequency Logs ---
+        try {
+          const logsResponse = await authenticatedFetch(`${getBackendUrl()}/api/public/jobs/${jobId}/logs`);
+          if (logsResponse.ok) {
+            const logsData = await logsResponse.json();
+            const logs = logsData.logs || [];
 
-        // 2. Check for new Data
+            // Logs are returned descending (latest first) due to API change, 
+            // so we reverse to process chronologically
+            const chronologicalLogs = [...logs].reverse();
+
+            chronologicalLogs.forEach((log: any) => {
+              if (log.message && (log.message !== (callbacks as any)._lastStatus)) {
+                console.log(`[Poll] 📝 LOG: ${log.message}`);
+                onStatus(log.message);
+                (callbacks as any)._lastStatus = log.message;
+              }
+            });
+          }
+        } catch (logErr) {
+          console.warn(`[Poll] Could not fetch dedicated logs:`, logErr);
+        }
+
+        // 2. Update Status Message (Fallback)
+        if (job.status === 'pending') onStatus('Job is pending in queue...');
+        else if (job.status === 'processing' && !(callbacks as any)._lastStatus) onStatus('Audit is in progress...');
+
+        // 3. Check for new Data
         if (job.report_data) {
           Object.entries(job.report_data).forEach(([key, value]) => {
             if (key !== 'logs' && !sentKeys.has(key)) {
@@ -82,22 +105,6 @@ export const monitorJobPoll = async (jobId: string, callbacks: StreamCallbacks):
               sentKeys.add(key);
             }
           });
-
-          // 2b. Check for new Logs/Status messages
-          const reportData = job.report_data as any;
-          if (reportData?.logs && Array.isArray(reportData.logs)) {
-            const logs = reportData.logs;
-            if (logs.length > 0) {
-              const latestLog = logs[logs.length - 1];
-              // Use a local ref or closure variable to track last log sent
-              // For simplicity in this poll loop, we check against a closure variable
-              if (latestLog.message && (latestLog.message !== (callbacks as any)._lastStatus)) {
-                console.log(`[Poll] 📝 LOG: ${latestLog.message}`);
-                onStatus(latestLog.message);
-                (callbacks as any)._lastStatus = latestLog.message;
-              }
-            }
-          }
         }
 
         // 3. Handle Completion

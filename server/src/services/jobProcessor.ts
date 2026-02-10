@@ -187,7 +187,7 @@ export class JobProcessor {
                 const modes = ['analyze-ux', 'analyze-product', 'analyze-visual', 'analyze-strategy', 'analyze-accessibility'];
 
                 const runExpertWithTimeout = async (mode: string) => {
-                    const expertName = mode.replace('analyze-', ' ').toUpperCase();
+                    const expertName = mode.replace('analyze-', '').toUpperCase();
                     console.log(`[JobProcessor] Starting ${mode}...`);
                     await JobService.updateProgress(jobId, `Running ${expertName}...`);
 

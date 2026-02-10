@@ -107,45 +107,31 @@ export const useAudit = () => {
             // Progress Logic
             setTargetProgress(prev => {
                 let newProgress = prev;
-                const msg = message; // Case sensitive for prefixes but we'll use lowercase for safety in some checks
+                const msg = message.toUpperCase();
 
-                // 1. Initial Launch
-                if (msg.includes('[JobProcessor] Starting job')) newProgress = 5;
-                if (msg.includes('Mode: Standard Analysis')) newProgress = 8;
-                if (msg.includes('Mode: Competitor Analysis')) newProgress = 8;
+                // 1. Initial & Scrape Phase (10-35%)
+                if (msg.includes('STARTING STANDARD ANALYSIS')) newProgress = 10;
+                if (msg.includes('SCRAPING')) newProgress = 15;
+                if (msg.includes('SCRAPE SUCCESSFUL')) newProgress = 30;
+                if (msg.includes('SCRAPE COMPLETE')) newProgress = 35;
 
-                // 2. Scraping Phase (Standard)
-                if (msg.includes('[JobProcessor] Scraping http')) newProgress = 15;
-                if (msg.includes('[SCRAPE] [DESKTOP] Navigating')) newProgress = 20;
-                if (msg.includes('[AXE] Running analysis')) newProgress = 25;
-                if (msg.includes('[SCRAPE] Scrape successful')) newProgress = 35;
-                if (msg.includes('[JobProcessor] Scraping Mobile')) newProgress = 40;
-                if (msg.includes('[SCRAPE] [MOBILE] Navigating')) newProgress = 45;
-                if (msg.includes('Saved image')) newProgress = 48;
+                // 2. Competitor Specific (10-50%)
+                if (msg.includes('STARTING COMPETITOR ANALYSIS')) newProgress = 10;
+                if (msg.includes('SCRAPING PRIMARY')) newProgress = 20;
+                if (msg.includes('SCRAPING COMPETITOR')) newProgress = 40;
+                if (msg.includes('AI COMPARISON')) newProgress = 60;
 
-                // 2b. Scraping Phase (Competitor)
-                if (msg.includes('Scraping Primary')) newProgress = 25;
-                if (msg.includes('Scraping Competitor')) newProgress = 50;
-                if (msg.includes('Running Competitor Analysis')) newProgress = 85;
+                // 3. Experts Phase (40-90%) - Pro-rated jump per expert
+                if (msg.includes('UX COMPLETE')) newProgress = 42;
+                if (msg.includes('PRODUCT COMPLETE')) newProgress = 54;
+                if (msg.includes('VISUAL COMPLETE')) newProgress = 66;
+                if (msg.includes('STRATEGY COMPLETE')) newProgress = 78;
+                if (msg.includes('ACCESSIBILITY COMPLETE')) newProgress = 90;
 
-                // 3. Performance Phase
-                if (msg.includes('[JobProcessor] Checking performance')) newProgress = 52;
-                if (msg.includes('[Performance] Fetching PageSpeed')) newProgress = 55;
-
-                // 4. Experts Phase (Standard)
-                if (msg.includes('[JobProcessor] Running experts')) newProgress = 60;
-                if (msg.includes('Starting analyze-ux')) newProgress = 62;
-                if (msg.includes('✓ analyze-ux completed')) newProgress = 70;
-                if (msg.includes('✓ analyze-product completed')) newProgress = 75;
-                if (msg.includes('✓ analyze-visual completed')) newProgress = 80;
-                if (msg.includes('Starting analyze-strategy')) newProgress = 82;
-                if (msg.includes('✓ analyze-strategy completed')) newProgress = 85;
-                if (msg.includes('✓ analyze-accessibility completed')) newProgress = 88;
-
-                // 5. Finalizing Phase
-                if (msg.includes('Running Contextual Impact Analysis')) newProgress = 92;
-                if (msg.includes('completed. Finalizing')) newProgress = 98;
-                if (msg.includes('finished successfully') || msg.includes('final signal')) newProgress = 100;
+                // 4. Final Phase (90-100%)
+                if (msg.includes('STRATEGIC IMPACT')) newProgress = 92;
+                if (msg.includes('CONTEXTUAL ANALYSIS COMPLETE')) newProgress = 95;
+                if (msg.includes('FAILED')) newProgress = 0;
 
                 return Math.max(prev, newProgress);
             });
