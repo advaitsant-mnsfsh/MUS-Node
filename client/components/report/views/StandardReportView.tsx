@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { AnalysisReport, Screenshot } from '../../../types';
 import { SkeletonLoader } from '../../SkeletonLoader';
-import { ScoreDisplayCard, LinearScoreDisplay } from '../ScoreComponents';
+import { ScoreDisplayCard } from '../ScoreComponents';
 import { CriticalIssueCard } from '../AuditCards';
 import { DetailedAuditView, DetailedAuditType } from '../DetailedAuditView';
 import AccessibilityAuditView from '../AccessibilityAuditView';
@@ -18,10 +18,11 @@ import { ExecutiveSummaryDisplay } from '../ExecutiveSummaryDisplay';
 interface StandardReportViewProps {
     report: AnalysisReport;
     primaryScreenshotSrc?: string;
+    isSharedView?: boolean;
 }
 
 // ... imports
-export const StandardReportView: React.FC<StandardReportViewProps> = ({ report, primaryScreenshotSrc }) => {
+export const StandardReportView: React.FC<StandardReportViewProps> = ({ report, primaryScreenshotSrc, isSharedView }) => {
 
     // --- DATA EXTRACT ---
     const {
@@ -39,9 +40,9 @@ export const StandardReportView: React.FC<StandardReportViewProps> = ({ report, 
 
     const TABS = [
         { id: 'All Parameters', label: 'All Parameters', icon: LayoutGrid },
-        { id: 'UX Audit', label: 'UX Design', icon: PenTool },
+        { id: 'UX & Heuristics', label: 'UX & Heuristics', icon: PenTool },
         { id: 'Visual Design', label: 'Visual Design', icon: Palette },
-        { id: 'Product Audit', label: 'Product Design', icon: Box },
+        { id: 'Product Fit', label: 'Product Fit', icon: Box },
         { id: 'Accessibility Audit', label: 'Accessibility', icon: Accessibility },
     ];
 
@@ -54,32 +55,37 @@ export const StandardReportView: React.FC<StandardReportViewProps> = ({ report, 
         return Math.round((scores.reduce((a, b) => a + b, 0) / scores.length) * 10) / 10;
     }, [ux, product, visual, accessibility, report]);
 
+    // Sticky Top Offset Calculation
+    // Normal: 154px (80px Global Nav + 74px Action Bar)
+    // Shared: 74px -> Reduced to 66px to ensure overlap/no gap
+    const stickyTopClass = isSharedView ? 'top-[58px] md:top-[66px]' : 'top-[146px] md:top-[154px]';
+
     return (
         <>
             <div className="font-['DM_Sans']">
 
                 {/* 1. TOP SECTION: Executive Summary & Preview (Card Style) */}
                 <div className="flex flex-col animate-in fade-in slide-in-from-bottom-4 mb-12 mx-4 md:mx-8">
-                    <div className="flex flex-col lg:flex-row border-2 border-black shadow-neo bg-white">
+                    <div className="flex flex-col lg:flex-row border-x-2 border-b-2 border-black shadow-neo bg-white">
 
                         {/* LEFT COLUMN: Scores & Text (50%) */}
                         <div className="w-full lg:w-1/2 p-6 md:p-8 border-r-2 border-black flex flex-col gap-8">
 
                             {/* Scores Section */}
-                            <div className="w-full border-b-2 pb-6 border-black">
-                                {/* Overall Score (Large) */}
-                                <div className="mb-8">
-                                    <div className="pb-2">
-                                        <LinearScoreDisplay score={overallScore} label="Overall Score" isLarge={true} />
+                            <div className="w-full flex justify-between border-b-2 pb-6 border-black">
+                                {/* Overall Score (Large Hero Gauge) */}
+                                <div className="mb-0 flex justify-center">
+                                    <div className="w-full max-w-[280px]">
+                                        <ScoreDisplayCard score={overallScore} label="Overall Score" isHero={true} />
                                     </div>
                                 </div>
 
-                                {/* Sub Categories Grid */}
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-6">
-                                    {ux ? <LinearScoreDisplay score={ux.CategoryScore} label="UX Design" /> : <SkeletonLoader className="h-16" />}
-                                    {visual ? <LinearScoreDisplay score={visual.CategoryScore} label="Visual Design" /> : <SkeletonLoader className="h-16" />}
-                                    {product ? <LinearScoreDisplay score={product.CategoryScore} label="Product Design" /> : <SkeletonLoader className="h-16" />}
-                                    {accessibility ? <LinearScoreDisplay score={accessibility.CategoryScore} label="Accessibility" /> : <SkeletonLoader className="h-16" />}
+                                {/* Sub Categories Grid (2x2) */}
+                                <div className="grid grid-cols-2 gap-4">
+                                    {ux ? <ScoreDisplayCard score={ux.CategoryScore} label="UX Audit" /> : <SkeletonLoader className="h-32 border-2 border-black shadow-neo rounded-none" />}
+                                    {visual ? <ScoreDisplayCard score={visual.CategoryScore} label="Visual Design" /> : <SkeletonLoader className="h-32 border-2 border-black shadow-neo rounded-none" />}
+                                    {product ? <ScoreDisplayCard score={product.CategoryScore} label="Product Audit" /> : <SkeletonLoader className="h-32 border-2 border-black shadow-neo rounded-none" />}
+                                    {accessibility ? <ScoreDisplayCard score={accessibility.CategoryScore} label="Accessibility" /> : <SkeletonLoader className="h-32 border-2 border-black shadow-neo rounded-none" />}
                                 </div>
                             </div>
 
@@ -90,11 +96,7 @@ export const StandardReportView: React.FC<StandardReportViewProps> = ({ report, 
                                     <h2 className="text-2xl font-black text-black uppercase tracking-tight">Executive Summary</h2>
                                 </div>
                                 {strategy?.ExecutiveSummary ? (
-                                    <div className="prose prose-slate max-w-none border-l-4 border-black pl-5 py-1">
-                                        <div className="text-slate-900 leading-relaxed text-lg font-bold">
-                                            {strategy.ExecutiveSummary}
-                                        </div>
-                                    </div>
+                                    <ExecutiveSummaryDisplay summaryText={strategy.ExecutiveSummary} />
                                 ) : (
                                     <div className="p-6 bg-page-bg border-2 border-black border-dashed">
                                         <SkeletonLoader className="h-4 w-3/4 mb-2" />
@@ -105,19 +107,17 @@ export const StandardReportView: React.FC<StandardReportViewProps> = ({ report, 
                             </div>
                         </div>
 
-                        {/* RIGHT COLUMN: Website Preview (50%) */}
-                        <div className="w-full lg:w-1/2 relative bg-page-bg min-h-[500px] lg:min-h-0 border-t-2 lg:border-t-0 border-black p-6 md:p-8 flex flex-col gap-4">
-                            <div className="flex items-center gap-3 mb-2 justify-end">
-                                <div className="flex flex-col items-end">
-                                    <span className="text-xs font-black text-black uppercase tracking-wider bg-emerald-200 px-2 py-0.5 w-fit border border-black mb-1">Analyzed Website</span>
-                                </div>
-                                <div className="p-2 bg-emerald-100 border-2 border-black shadow-neo">
-                                    <Box className="w-5 h-5 text-black" />
-                                </div>
+                        {/* RIGHT COLUMN: Website Preview (50% - Full Bleed) */}
+                        <div className="w-full lg:w-1/2 relative bg-slate-100 h-96 lg:h-auto border-t-2 lg:border-t-0 border-black group overflow-hidden">
+                            {/* Overlay Badge */}
+                            <div className="absolute bottom-4 right-4 z-10 flex flex-col items-end pointer-events-none">
+                                <span className="text-[10px] font-black text-black uppercase tracking-wider bg-white px-2 py-1 border-2 border-black mb-1">
+                                    Analyzed Website
+                                </span>
                             </div>
 
-                            {/* Screenshot Container */}
-                            <div className="w-full aspect-video bg-white border-2 border-black overflow-hidden relative group shadow-neo">
+                            {/* Full Bleed Image - Absolute on Desktop to match height of left col */}
+                            <div className="absolute inset-0 w-full h-full">
                                 {primaryScreenshotSrc ? (
                                     <img
                                         src={primaryScreenshotSrc}
@@ -126,7 +126,7 @@ export const StandardReportView: React.FC<StandardReportViewProps> = ({ report, 
                                         onError={(e) => console.error('[ReportDisplay] Image Load Failed:', e.currentTarget.src)}
                                     />
                                 ) : (
-                                    <div className="w-full h-full flex items-center justify-center p-12 bg-slate-50">
+                                    <div className="w-full h-full flex items-center justify-center bg-slate-50">
                                         <div className="bg-white px-4 py-2 border-2 border-black shadow-neo">
                                             <span className="font-bold text-black">Analyzing Interface...</span>
                                         </div>
@@ -137,7 +137,7 @@ export const StandardReportView: React.FC<StandardReportViewProps> = ({ report, 
                     </div>
 
                     {/* 2. MIDDLE SECTION: Context Capture (Full Width Below Split) */}
-                    <div className="mt-12 mx-4 md:mx-8">
+                    <div className="mt-12 mx-4 md:mx-0">
                         <div className="flex items-center gap-3 mb-6">
                             <div className="p-2.5 bg-accent-yellow border-2 border-black text-black shadow-neo">
                                 <Target className="w-6 h-6" strokeWidth={2.5} />
@@ -149,17 +149,17 @@ export const StandardReportView: React.FC<StandardReportViewProps> = ({ report, 
                 </div>
 
                 {/* 3. BOTTOM SECTION: Score Breakdown & Detailed Cards */}
-                <div className="pt-8">
+                <div className="pt-2">
 
                     {/* Header & Tabs */}
-                    <div className="sticky top-0 z-10 bg-white border-2 border-black py-4 shadow-neo px-6 lg:px-8 mb-12 mx-4 md:mx-8">
+                    <div className={`sticky ${stickyTopClass} z-20 bg-page-bg border-2 border-black py-4 shadow-neo px-6 lg:px-8 mb-12 mx-4 md:mx-8 transition-all duration-300`}>
                         <div className="flex flex-col md:flex-row items-center justify-between gap-6">
                             <div>
                                 <h3 className="text-2xl font-black text-black uppercase">Score Breakdown</h3>
-                                <p className="text-slate-600 font-bold text-sm">Detailed parameter analysis.</p>
+                                {/* <p className="text-slate-600 font-bold text-sm">Detailed parameter analysis.</p> */}
                             </div>
 
-                            <nav className="flex space-x-2 bg-white overflow-x-auto no-scrollbar max-w-full p-1">
+                            <nav className="flex space-x-2 bg-page-bg overflow-x-auto no-scrollbar max-w-full p-1">
                                 {TABS.map((tab) => {
                                     const Icon = tab.icon;
                                     const isActive = activeTab === tab.id;
@@ -195,9 +195,9 @@ export const StandardReportView: React.FC<StandardReportViewProps> = ({ report, 
                         )}
 
                         {/* CASE 2: Specific Tabs */}
-                        {activeTab === 'UX Audit' && <DetailedAuditView auditData={ux} auditType={'UX Audit'} />}
+                        {activeTab === 'UX & Heuristics' && <DetailedAuditView auditData={ux} auditType={'UX Audit'} />}
                         {activeTab === 'Visual Design' && <DetailedAuditView auditData={visual} auditType={'Visual Design'} />}
-                        {activeTab === 'Product Audit' && <DetailedAuditView auditData={product} auditType={'Product Audit'} />}
+                        {activeTab === 'Product Fit' && <DetailedAuditView auditData={product} auditType={'Product Audit'} />}
                         {activeTab === 'Accessibility Audit' && accessibility && <AccessibilityAuditView data={accessibility} />}
                     </div>
                 </div>

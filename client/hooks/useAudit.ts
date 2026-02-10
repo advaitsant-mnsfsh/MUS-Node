@@ -1,9 +1,8 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { AnalysisReport, Screenshot, AuditInput } from '../types';
-import { monitorJobPoll, analyzeWebsiteStream } from '../services/geminiService';
+import { monitorJobStream, analyzeWebsiteStream } from '../services/geminiService';
 import { useAuth } from '../contexts/AuthContext';
-import { useGlobalAudit } from '../contexts/AuditContext';
 import { getAuditInputs } from '../services/userAuditsService';
 
 const loadingMicrocopy = [
@@ -19,14 +18,13 @@ export const useAudit = () => {
     const navigate = useNavigate();
     const location = useLocation();
     const { user } = useAuth(); // Restore useAuth hook
-    const { setActiveAudit, clearActiveAudit } = useGlobalAudit();
 
     // --- STATE ---
     const [submittedUrl, setSubmittedUrl] = useState<string>('');
     const [report, setReport] = useState<AnalysisReport | null>(null);
     const [isLoading, setIsLoading] = useState<boolean>(!!auditId);
     const [error, setError] = useState<string | null>(null);
-    const [loadingMessage, setLoadingMessage] = useState<string>('Starting audit agents...');
+    const [loadingMessage, setLoadingMessage] = useState<string>('Initiating multi-faceted audit...');
     const [screenshots, setScreenshots] = useState<Screenshot[]>([]);
     const [screenshotMimeType, setScreenshotMimeType] = useState<string>('image/png');
     const [uiAuditId, setUiAuditId] = useState<string | null>(null);
@@ -53,22 +51,6 @@ export const useAudit = () => {
         }
     }, [progress, targetProgress]);
 
-    // 1b. Automatic Incremental Progress (Confidence Builder)
-    useEffect(() => {
-        if (!isLoading || targetProgress >= 90) return;
-
-        const interval = setInterval(() => {
-            setTargetProgress(prev => {
-                if (prev >= 90) return prev;
-                // Faster increment at the start (0-30%), slower later
-                const increment = prev < 30 ? 2 : (prev > 70 ? 0.5 : 1);
-                return prev + increment;
-            });
-        }, 8000); // Crawl forward every 8 seconds instead of 12
-
-        return () => clearInterval(interval);
-    }, [isLoading, targetProgress]);
-
     // 2. Microcopy Rotation
     useEffect(() => {
         if (isLoading) {
@@ -94,7 +76,6 @@ export const useAudit = () => {
             setPerformanceError(errorMessage);
         },
         onJobCreated: (id: string) => {
-            setActiveAudit(id);
             navigate(`/analysis/${id}`, { state: { newAudit: true } });
         },
         onStatus: (message: string) => {
@@ -110,32 +91,35 @@ export const useAudit = () => {
             // Progress Logic
             setTargetProgress(prev => {
                 let newProgress = prev;
-                const msg = message.toUpperCase();
+                const msg = message.toLowerCase();
 
-                // 0. Initial & Scrape Phase (5-35%)
-                if (msg.includes('AUDIT IS IN PROGRESS')) newProgress = 5;
-                if (msg.includes('STARTING STANDARD ANALYSIS')) newProgress = 10;
-                if (msg.includes('SCRAPING')) newProgress = 15;
-                if (msg.includes('SCRAPE SUCCESSFUL')) newProgress = 30;
-                if (msg.includes('SCRAPE COMPLETE')) newProgress = 35;
+                if (msg.includes('initiating') || msg.includes('queued') || msg.includes('starting audit')) newProgress = 5;
+                if (msg.includes('scraping') || msg.includes('processing uploaded')) newProgress = 15;
+                if (msg.includes('scrape complete') || msg.includes('content acquired') || msg.includes('analyzing content')) newProgress = 30;
+                if (msg.includes('checking performance') || msg.includes('performance check')) newProgress = 32;
+                if (msg.includes('running experts') || msg.includes('starting batch')) newProgress = 35;
 
-                // 2. Competitor Specific (10-50%)
-                if (msg.includes('STARTING COMPETITOR ANALYSIS')) newProgress = 10;
-                if (msg.includes('SCRAPING PRIMARY')) newProgress = 20;
-                if (msg.includes('SCRAPING COMPETITOR')) newProgress = 40;
-                if (msg.includes('AI COMPARISON')) newProgress = 60;
+                // UX & Product
+                if (msg.includes('running ux') || msg.includes('starting analyze-ux')) newProgress = 40;
+                if (msg.includes('running product') || msg.includes('starting analyze-product')) newProgress = 40;
+                if (msg.includes('ux complete') || msg.includes('ux audit analysis complete')) newProgress = 50;
+                if (msg.includes('product complete') || msg.includes('product audit analysis complete')) newProgress = 50;
 
-                // 3. Experts Phase (40-90%) - Pro-rated jump per expert
-                if (msg.includes('UX COMPLETE')) newProgress = 42;
-                if (msg.includes('PRODUCT COMPLETE')) newProgress = 54;
-                if (msg.includes('VISUAL COMPLETE')) newProgress = 66;
-                if (msg.includes('STRATEGY COMPLETE')) newProgress = 78;
-                if (msg.includes('ACCESSIBILITY COMPLETE')) newProgress = 90;
+                // Visual & Strategy
+                if (msg.includes('running visual') || msg.includes('starting analyze-visual')) newProgress = 60;
+                if (msg.includes('running strategy') || msg.includes('starting analyze-strategy')) newProgress = 60;
+                if (msg.includes('visual complete') || msg.includes('visual audit analysis complete')) newProgress = 70;
+                if (msg.includes('strategy complete') || msg.includes('strategy audit completed')) newProgress = 70;
 
-                // 4. Final Phase (90-100%)
-                if (msg.includes('STRATEGIC IMPACT')) newProgress = 92;
-                if (msg.includes('CONTEXTUAL ANALYSIS COMPLETE')) newProgress = 95;
-                if (msg.includes('FAILED')) newProgress = 0;
+                // Accessibility
+                if (msg.includes('running accessibility') || msg.includes('starting analyze-accessibility')) newProgress = 80;
+                if (msg.includes('accessibility complete') || msg.includes('accessibility audit completed')) newProgress = 85;
+
+                // Contextual & Final
+                if (msg.includes('contextual') || msg.includes('strategic impact')) newProgress = 90;
+                if (msg.includes('contextual analysis complete')) newProgress = 95;
+                if (msg.includes('job completed') || msg.includes('saving') || msg.includes('finalizing')) newProgress = 98;
+                if (msg.includes('complete') && (msg.includes('job') || msg.includes('all'))) newProgress = 100;
 
                 return Math.max(prev, newProgress);
             });
@@ -158,7 +142,7 @@ export const useAudit = () => {
             setProgress(0);
         },
         onClose: () => { }
-    }), [navigate, location.pathname, auditId, setActiveAudit, clearActiveAudit]);
+    }), [navigate, location.pathname, auditId]);
 
 
     const hasStarted = useRef<boolean>(false);
@@ -202,56 +186,44 @@ export const useAudit = () => {
                 }
 
                 if (job) {
-                    console.log(`[useAudit] Initial job load: status=${job.status}, hasReport=${!!job.report_data}`);
                     // Update state from job
                     const reportData = job.report_data;
-                    if (reportData) setReport(reportData);
-                    if (job.inputs) setReportInputs(job.inputs);
-                    if (job.report_data?.screenshots && job.report_data.screenshots.length > 0) {
-                        setScreenshots(job.report_data.screenshots);
-                    } else if ((job as any).screenshots && (job as any).screenshots.length > 0) {
-                        setScreenshots((job as any).screenshots);
+                    if (reportData) {
+                        setReport(reportData);
+                        // Extract screenshots from report_data if not directly on job
+                        if (reportData.screenshots) setScreenshots(reportData.screenshots);
+                        if (reportData.screenshotMimeType) setScreenshotMimeType(reportData.screenshotMimeType);
                     }
 
-                    if (job.report_data?.screenshotMimeType) {
-                        setScreenshotMimeType(job.report_data.screenshotMimeType);
-                    } else if ((job as any).screenshotMimeType) {
-                        setScreenshotMimeType((job as any).screenshotMimeType);
-                    }
+                    if (job.inputs) setReportInputs(job.inputs);
+                    // Legacy checks
+                    if ((job as any).screenshots) setScreenshots((job as any).screenshots);
+                    if ((job as any).screenshotMimeType) setScreenshotMimeType((job as any).screenshotMimeType);
 
                     setUiAuditId(job.id);
 
                     if (job.status === 'completed' && reportData) {
-                        console.log('[useAudit] Job is already completed. Navigating to report.');
                         setIsLoading(false);
                         if (location.pathname.includes('/analysis/')) {
                             navigate(`/report/${auditId}`, { replace: true });
                         }
                         return;
                     }
-                    if (job.status === 'failed') {
-                        console.error('[useAudit] Job failed:', job.error_message);
-                        setError(job.error_message || 'Audit failed');
-                        setIsLoading(false);
-                        return;
-                    }
                 }
 
                 // If not found or not completed, THEN show loading screen for the stream/fetch
-                const { getBackendUrl } = await import('../services/config');
-                console.log(`[useAudit] Monitoring stream for ${auditId} on ${getBackendUrl()}`);
-                console.log(`[useAudit] 🛠️ DEBUG LINK (Public API): ${getBackendUrl()}/api/public/jobs/${auditId}`);
+                console.log(`[useAudit] Monitoring stream for ${auditId}`);
                 setLoadingMessage('Optimizing connection to audit stream...');
                 setUiAuditId(auditId);
-                const { monitorJobPoll } = await import('../services/geminiService');
-                monitorJobPoll(auditId, getStreamCallbacks(true));
+                const { monitorJobStream } = await import('../services/geminiService');
+                monitorJobStream(auditId, getStreamCallbacks(true));
                 setIsLoading(true);
 
             } catch (e) {
                 console.error('[useAudit] loadOrMonitor failed:', e);
                 // Try stream anyway as fallback
-                const { monitorJobPoll } = await import('../services/geminiService');
-                monitorJobPoll(auditId, getStreamCallbacks(true));
+                const { monitorJobStream } = await import('../services/geminiService');
+                monitorJobStream(auditId, getStreamCallbacks(true));
                 setIsLoading(true);
             }
         };
@@ -269,7 +241,7 @@ export const useAudit = () => {
         setScreenshotMimeType('image/png');
         setUiAuditId(null);
         setPerformanceError(null);
-        setLoadingMessage('Starting audit agents...');
+        setLoadingMessage('Initiating mixed-input audit...');
         setProgress(0);
         setTargetProgress(0);
 
@@ -356,7 +328,6 @@ export const useAudit = () => {
     }, [startAnalysis]);
 
     const handleRunNewAudit = useCallback(() => {
-        clearActiveAudit();
         setReport(null);
         setError(null);
         setSubmittedUrl('');
@@ -368,7 +339,7 @@ export const useAudit = () => {
         setTargetProgress(0);
         setIsLoading(false);
         navigate('/');
-    }, [navigate, clearActiveAudit]);
+    }, [navigate]);
 
     return {
         // State

@@ -62,27 +62,28 @@ const EditorialCard = ({
                 className="flex flex-col md:flex-row items-start md:items-center justify-between p-6 cursor-pointer hover:bg-yellow-50 transition-colors gap-4 select-none"
                 onClick={() => setIsOpen(!isOpen)}
             >
-                {/* Left: Title & Confidence */}
+                {/* Left: Title & Audit Type */}
                 <div className="flex flex-col gap-2 flex-1 min-w-0">
-                    <span className={`inline-block w-fit text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 border ${getConfidenceColor(confidence)} shadow-neo-hover`}>
-                        {confidence} Confidence
-                    </span>
+                    {/* Audit Type Pill (Text Only) - MOVED HERE */}
+                    {auditType && (
+                        <div className="flex items-center">
+                            <span className="text-xs font-black text-black whitespace-nowrap uppercase tracking-wide">
+                                {auditType}
+                            </span>
+                        </div>
+                    )}
                     <h3 className="text-lg font-black text-black leading-tight pr-4">
                         {title}
                     </h3>
                 </div>
 
 
-                {/* Right: Pills & Toggle */}
+                {/* Right: Confidence, Score & Toggle */}
                 <div className="flex items-center gap-3 shrink-0">
-                    {/* Audit Type Pill (Text Only) */}
-                    {auditType && (
-                        <div className="hidden sm:flex items-center justify-center">
-                            <span className="text-xs font-black text-black whitespace-nowrap uppercase tracking-wide">
-                                {auditType}
-                            </span>
-                        </div>
-                    )}
+                    {/* Confidence Badge - MOVED HERE */}
+                    <span className={`inline-block w-fit text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 border ${getConfidenceColor(confidence)} shadow-neo-hover`}>
+                        {confidence} Confidence
+                    </span>
 
                     {/* Score Pill (White Background) */}
                     <div className="flex items-center justify-center px-3 py-1.5 bg-white text-black min-w-[70px] border-2 border-black shadow-[2px_2px_0px_0px_#fbbf24]">

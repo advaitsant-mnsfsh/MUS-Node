@@ -73,7 +73,7 @@ export const ExecutiveSummaryDisplay: React.FC<ExecutiveSummaryDisplayProps> = (
                 </div>
                 <ul className="space-y-3 pl-1">
                     {items.map((item, i) => (
-                        <li key={i} className="text-slate-900 font-medium text-base leading-relaxed">
+                        <li key={i} className="text-slate-800 font-normal text-base leading-relaxed">
                             {item.replace(/^\W+/, '')}
                         </li>
                     ))}
@@ -86,7 +86,6 @@ export const ExecutiveSummaryDisplay: React.FC<ExecutiveSummaryDisplayProps> = (
         // Fallback layout if parsing failed
         return (
             <div className="flex flex-col gap-6 pl-6 border-l-4 border-black break-inside-avoid pdf-item">
-                <h3 className="text-3xl font-black text-black uppercase tracking-tight">Executive Summary</h3>
                 <div className="prose prose-slate max-w-none text-slate-900 font-medium leading-relaxed">
                     {raw}
                 </div>
@@ -96,12 +95,6 @@ export const ExecutiveSummaryDisplay: React.FC<ExecutiveSummaryDisplayProps> = (
 
     return (
         <div className={`flex flex-col gap-2 break-inside-avoid pdf-item ${!isPdf ? 'animate-in fade-in slide-in-from-bottom-2' : ''}`}>
-            {/* Main Header with Blue Box */}
-            <div className="flex items-center gap-4 mb-8">
-                <div className="w-6 h-10 bg-brand border-2 border-black shadow-neo"></div>
-                <h3 className="text-3xl font-black text-black uppercase tracking-tight">Executive Summary</h3>
-            </div>
-
             {/* Content with Thick Left Border */}
             <div className="pl-8 border-l-4 border-[#475569]">
                 <Section title="What Is Working" items={working} type="working" />

@@ -321,14 +321,8 @@ export const EmbeddableInput: React.FC<EmbeddableInputProps> = ({ config }) => {
                     setIsLoading(false);
                     setError(data.error || 'Audit failed during analysis.');
                 } else {
-                    // Still processing - show fine-grained status from logs
-                    const logs = data.report_data?.logs;
-                    if (logs && Array.isArray(logs) && logs.length > 0) {
-                        const latestLog = logs[logs.length - 1];
-                        if (latestLog?.message) setStatusMessage(latestLog.message);
-                    } else if (!statusMessage || statusMessage === 'Initializing...') {
-                        setStatusMessage(config.loadingText || 'Analyzing... This may take a moment.');
-                    }
+                    // Still processing
+                    setStatusMessage('Analyzing... This may take a moment.');
                 }
 
             } catch (err) {

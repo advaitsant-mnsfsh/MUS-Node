@@ -1,6 +1,6 @@
 import { StreamChunk, AnalysisReport, ExpertKey, Screenshot, AuditInput } from '../types';
 
-import { getBackendUrl } from './config';
+const apiUrl = import.meta.env.VITE_BACKEND_URL || import.meta.env.VITE_API_URL || (import.meta.env.PROD ? 'https://mus-node-production.up.railway.app' : 'http://localhost:3000');
 
 interface StreamCallbacks {
   onScrapeComplete: (screenshots: Screenshot[], screenshotMimeType: string) => void;
@@ -22,6 +22,8 @@ interface AnalyzeParams {
 const commonHeaders = {
   'Content-Type': 'application/json',
 };
+const functionUrl = `${apiUrl}/api/v1/audit`;
+
 
 // Helper to convert File to Base64
 const fileToBase64 = (file: File): Promise<string> => {
@@ -40,135 +42,72 @@ const fileToBase64 = (file: File): Promise<string> => {
   });
 };
 
-export const monitorJobPoll = (jobId: string, callbacks: StreamCallbacks): (() => void) => {
+export const monitorJobStream = async (jobId: string, callbacks: StreamCallbacks): Promise<void> => {
   const { onStatus, onData, onComplete, onError, onClose } = callbacks;
-  const sentKeys = new Set<string>();
-  let isPolling = true;
+  const finalReport: AnalysisReport = {};
 
-  const stopPolling = () => {
-    isPolling = false;
-  };
+  try {
+    const streamUrl = `${functionUrl}?mode=stream-job&jobId=${jobId}`;
+    console.log('[Stream] Connecting to:', streamUrl);
 
-  (async () => {
-    try {
-      const { authenticatedFetch } = await import('../lib/authenticatedFetch');
-      const statusUrl = `${getBackendUrl()}/api/public/jobs/${jobId}`;
+    // Use authenticatedFetch to ensure session token is sent
+    const { authenticatedFetch } = await import('../lib/authenticatedFetch');
+    const response = await authenticatedFetch(streamUrl, {
+      headers: {
+        'Cache-Control': 'no-cache',
+        'Connection': 'keep-alive'
+      }
+    });
 
-      const sentLogs = (callbacks as any)._sentLogs || new Set<string>();
-      (callbacks as any)._sentLogs = sentLogs;
-
-      const checkStatus = async () => {
-        if (!isPolling) return;
-
-        try {
-          // Use cache-buster to ensure we get fresh status
-          const response = await authenticatedFetch(`${statusUrl}?t=${Date.now()}`);
-          console.log(`[Poll] ${jobId} Status: ${response.status}`);
-
-          if (!response.ok) {
-            if (response.status === 401) throw new Error("Unauthorized");
-            if (response.status === 404) throw new Error("Job not found");
-            throw new Error(`Status check failed: ${response.status}`);
-          }
-
-          const job = await response.json();
-
-          // --- 1. Fetch High-Frequency Logs with Cache Buster ---
-          try {
-            const logsResponse = await authenticatedFetch(`${getBackendUrl()}/api/public/jobs/${jobId}/logs?t=${Date.now()}`);
-            if (logsResponse.ok) {
-              const logsData = await logsResponse.json();
-              const logs = logsData.logs || [];
-
-              if (logs.length > 0) {
-                // Logs are descending, so index 0 is latest
-                const latestLog = logs[0];
-
-                // Process ONLY new logs chronologically for milestones
-                const chronologicalLogs = [...logs].reverse();
-
-                chronologicalLogs.forEach((log: any) => {
-                  const logKey = log.id || `${log.timestamp}-${log.message}`;
-                  if (!sentLogs.has(logKey)) {
-                    console.log(`[Poll] 📝 NEW LOG: ${log.message}`);
-                    onStatus(log.message);
-                    sentLogs.add(logKey);
-                  }
-                });
-
-                // Always ensure the UI reflects the absolute latest message in the table
-                if (latestLog.message && latestLog.message !== (callbacks as any)._lastStatusText) {
-                  onStatus(latestLog.message);
-                  (callbacks as any)._lastStatusText = latestLog.message;
-                }
-              }
-            }
-          } catch (logErr) {
-            console.warn(`[Poll] Could not fetch dedicated logs:`, logErr);
-          }
-
-          // 2. Update Status Message (Fallback only if no logs yet)
-          if (job.status === 'pending') {
-            onStatus('Waiting in queue...');
-          } else if (job.status === 'processing' && sentLogs.size === 0) {
-            onStatus('Initializing audit agents...');
-          }
-
-          // 3. Check for new Data
-          if (job.report_data) {
-            Object.entries(job.report_data).forEach(([key, value]) => {
-              if (key !== 'logs' && !sentKeys.has(key)) {
-                onData({ key, data: value });
-                sentKeys.add(key);
-              }
-            });
-          }
-
-          // 3. Handle Completion
-          if (job.status === 'completed') {
-            onStatus('Audit completed!');
-            onComplete({
-              auditId: job.jobId,
-              resultUrl: job.resultUrl
-            });
-            isPolling = false;
-            onClose();
-            return;
-          }
-
-          // 4. Handle Failure
-          if (job.status === 'failed') {
-            const msg = job.errorMessage || 'Audit failed';
-            onError(msg);
-            isPolling = false;
-            onClose();
-            return;
-          }
-
-          // Poll again in 2 seconds
-          if (isPolling) {
-            setTimeout(checkStatus, 2000);
-          }
-
-        } catch (e: any) {
-          console.error("Poll Error:", e);
-          onError(e.message || "Polling failed");
-          isPolling = false;
-          onClose();
-        }
-      };
-
-      // Start Polling
-      checkStatus();
-
-    } catch (e) {
-      console.error('Monitor poll setup failed:', e);
-      onError(e instanceof Error ? e.message : 'Setup failed');
-      onClose();
+    if (!response.ok) {
+      throw new Error(`Stream connection failed: ${response.status} ${response.statusText}`);
     }
-  })();
 
-  return stopPolling;
+    if (!response.body) throw new Error("No response body from stream");
+    const reader = response.body.getReader();
+    const decoder = new TextDecoder();
+    let buffer = '';
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+
+      buffer += decoder.decode(value, { stream: true });
+      const lines = buffer.split('\n');
+      buffer = lines.pop() || '';
+
+      for (const line of lines) {
+        if (line.trim() === '') continue;
+        try {
+          const chunk = JSON.parse(line);
+
+          if (chunk.type === 'status') {
+            onStatus(chunk.message);
+          } else if (chunk.type === 'data') {
+            const { key, data } = chunk.payload;
+            console.log(`[Stream] Data Chunk Key: ${key}`);
+            finalReport[key] = data;
+            onData(chunk.payload);
+          } else if (chunk.type === 'complete') {
+            console.log("[Stream] Job Complete Payload:", chunk.payload);
+            onComplete(chunk.payload);
+            return;
+          } else if (chunk.type === 'error') {
+            onError(chunk.message);
+            return;
+          }
+        } catch (e) {
+          console.warn("Failed to parse chunk:", line);
+        }
+      }
+    }
+  } catch (e) {
+    console.error('Monitor stream failed:', e);
+    const errorMessage = e instanceof Error ? e.message : 'An unknown error occurred.';
+    onError(errorMessage);
+  } finally {
+    onClose();
+  }
 };
 
 export const analyzeWebsiteStream = async (
@@ -199,7 +138,7 @@ export const analyzeWebsiteStream = async (
     onStatus('Starting audit job...');
 
     const { authenticatedFetch } = await import('../lib/authenticatedFetch');
-    const startResponse = await authenticatedFetch(`${getBackendUrl()}/api/v1/audit`, {
+    const startResponse = await authenticatedFetch(functionUrl, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ mode: 'start-audit', inputs: processedInputs, auditMode })
@@ -213,8 +152,8 @@ export const analyzeWebsiteStream = async (
     if (onJobCreated) onJobCreated(jobId);
     onStatus('Audit job created. Waiting for worker...');
 
-    // 3. Monitor Job via Polling (it now returns a stop func, but we don't need it here as it terminates naturally)
-    monitorJobPoll(jobId, callbacks);
+    // 3. Monitor Job Stream
+    await monitorJobStream(jobId, callbacks);
 
   } catch (e) {
     console.error('Audit process failed:', e);

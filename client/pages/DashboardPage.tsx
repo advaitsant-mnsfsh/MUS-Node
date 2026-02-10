@@ -51,12 +51,6 @@ const DashboardPage: React.FC = () => {
     // Map audits from backend for display
     useEffect(() => {
         const displayAudits: DisplayAudit[] = allAudits
-            .filter((audit: UserAudit) => audit.status === 'completed')
-            .filter((audit: UserAudit) => {
-                if (selectedFilter === 'all') return true;
-                if (selectedFilter === 'direct') return !audit.api_key_id;
-                return audit.api_key_id === selectedFilter;
-            })
             .map((audit: UserAudit) => {
                 const url = extractUrl(audit.input_data);
                 const competitorUrl = extractCompetitorUrl(audit.input_data);
@@ -74,7 +68,7 @@ const DashboardPage: React.FC = () => {
             });
 
         setFilteredAudits(displayAudits);
-    }, [allAudits, selectedFilter]);
+    }, [allAudits]);
 
     const getSafeHostname = (urlStr: string) => {
         if (!urlStr || urlStr === 'Manual Upload' || urlStr === 'Unknown' || urlStr === 'Uploaded Image') {

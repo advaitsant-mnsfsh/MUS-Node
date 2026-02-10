@@ -7,14 +7,12 @@ import DashboardPage from './pages/DashboardPage';
 import APIKeysPage from './pages/APIKeysPage';
 import AboutPage from './pages/AboutPage';
 import PricingPage from './pages/PricingPage';
-import DocsWidgetPage from './pages/DocsWidgetPage';
 import { LoadingScreen } from './components/LoadingScreen';
-import { ReportDisplay } from './components/ReportDisplay';
+import { ReportContainer } from './components/report/ReportContainer'; // UPDATED THIS
 import { Logo } from './components/Logo';
 import { getSharedAudit } from './services/auditStorage';
 import { AnalysisReport, Screenshot } from './types';
 import { AuthProvider } from './contexts/AuthContext';
-import { AuditProvider } from './contexts/AuditContext';
 import { Layout } from './components/Layout';
 
 // Wrapper for Layout to use with Outlet
@@ -62,7 +60,7 @@ function SharedAuditView() {
                         // Job is done! Transform to Report format.
                         setReport(job.report_data);
                         setUrl(job.report_data?.url || 'Analyzed Site'); // Fallback
-                        if (job.report_data?.screenshots) setScreenshots(job.report_data.screenshots);
+                        setScreenshots([]);
                         setJobStatus('completed');
                         setLoading(false);
                         return; // Done
@@ -151,9 +149,9 @@ function SharedAuditView() {
     }
 
     return (
-        <div className="min-h-screen bg-slate-50 text-slate-800 font-sans p-2 sm:p-6 lg:p-8">
-            <div className="max-w-7xl mx-auto">
-                <ReportDisplay
+        <div className="min-h-screen bg-slate-50 text-slate-800 font-sans">
+            <div className="w-full">
+                <ReportContainer
                     report={report}
                     url={url}
                     screenshots={screenshots}
@@ -173,29 +171,26 @@ function SharedAuditView() {
 function AppWithRouting() {
     return (
         <AuthProvider>
-            <AuditProvider>
-                <BrowserRouter>
-                    <Toaster position="top-center" />
-                    <Routes>
-                        {/* Main Application with Global Layout */}
-                        <Route element={<LayoutWrapper />}>
-                            <Route path="/" element={<App />} />
-                            <Route path="/analysis/:auditId" element={<App />} />
-                            <Route path="/report/:auditId" element={<App />} />
-                            <Route path="/dashboard" element={<DashboardPage />} />
-                            <Route path="/api-keys" element={<APIKeysPage />} />
-                            <Route path="/login" element={<App />} />
-                            <Route path="/about" element={<AboutPage />} />
-                            <Route path="/pricing" element={<PricingPage />} />
-                            <Route path="/docs/widget" element={<DocsWidgetPage />} />
-                        </Route>
+            <BrowserRouter>
+                <Toaster position="top-center" />
+                <Routes>
+                    {/* Main Application with Global Layout */}
+                    <Route element={<LayoutWrapper />}>
+                        <Route path="/" element={<App />} />
+                        <Route path="/analysis/:auditId" element={<App />} />
+                        <Route path="/report/:auditId" element={<App />} />
+                        <Route path="/dashboard" element={<DashboardPage />} />
+                        <Route path="/api-keys" element={<APIKeysPage />} />
+                        <Route path="/login" element={<App />} />
+                        <Route path="/about" element={<AboutPage />} />
+                        <Route path="/pricing" element={<PricingPage />} />
+                    </Route>
 
-                        {/* Standalone Views (No Global Nav) */}
-                        <Route path="/shared/:auditId" element={<SharedAuditView />} />
-                        <Route path="/embed" element={<EmbedPage />} />
-                    </Routes>
-                </BrowserRouter>
-            </AuditProvider>
+                    {/* Standalone Views (No Global Nav) */}
+                    <Route path="/shared/:auditId" element={<SharedAuditView />} />
+                    <Route path="/embed" element={<EmbedPage />} />
+                </Routes>
+            </BrowserRouter>
         </AuthProvider>
     );
 }

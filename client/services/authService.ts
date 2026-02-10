@@ -164,25 +164,3 @@ export async function signOut() {
     clearSession();
     await authClient.signOut();
 }
-
-/**
- * Unsecure Password Reset (Dev/Simplified)
- */
-export async function resetPasswordUnsecure(email: string, newPassword: string): Promise<{ success: boolean; error?: string }> {
-    try {
-        const response = await fetch(`${import.meta.env.VITE_API_URL || '/api'}/auth/reset-password-unsecure`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ email, newPassword })
-        });
-
-        const data = await response.json();
-        if (!response.ok) {
-            return { success: false, error: data.error || 'Failed to reset password' };
-        }
-
-        return { success: true };
-    } catch (err: any) {
-        return { success: false, error: err.message || 'Network error' };
-    }
-}

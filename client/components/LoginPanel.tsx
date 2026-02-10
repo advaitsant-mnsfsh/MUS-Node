@@ -11,7 +11,7 @@ interface LoginPanelProps {
 
 export const LoginPanel: React.FC<LoginPanelProps> = ({ auditId }) => {
     const [isLoginMode, setIsLoginMode] = useState(false); // Toggle between Sign Up and Login
-    const [step, setStep] = useState<'email' | 'otp' | 'password' | 'forgot'>('email'); // For flows
+    const [step, setStep] = useState<'email' | 'otp' | 'password'>('email'); // For Signup flow
     const [tempPassword] = useState(() => Math.random().toString(36).slice(-12) + 'A1!'); // Bridge password
 
     // Form State
@@ -158,124 +158,22 @@ export const LoginPanel: React.FC<LoginPanelProps> = ({ auditId }) => {
         toast.success('Welcome! Your account is ready.');
     };
 
-    const handleResetPassword = async (e: React.FormEvent) => {
-        e.preventDefault();
-        if (!email || !password || !confirmPassword) {
-            toast.error("Please fill in all fields.");
-            return;
-        }
-        if (password !== confirmPassword) {
-            toast.error("Passwords do not match.");
-            return;
-        }
-
-        setIsLoading(true);
-        const { resetPasswordUnsecure } = await import('../services/authService');
-        const { success, error } = await resetPasswordUnsecure(email, password);
-        setIsLoading(false);
-
-        if (success) {
-            toast.success("Password reset successfully! You can now log in.");
-            setStep('email');
-            setIsLoginMode(true);
-            setPassword('');
-            setConfirmPassword('');
-        } else {
-            toast.error(error || "Failed to reset password");
-        }
-    };
-
     return (
         <div className="w-full max-w-md mx-auto px-6 pb-6 min-h-[540px] flex flex-col font-['DM_Sans']">
             {/* Header - Fixed Height */}
             <div className="h-24 flex flex-col justify-center mb-6 text-center md:text-left">
                 <h2 className="text-2xl font-bold text-slate-900 mb-2">
-                    {step === 'forgot' ? 'Reset Password' : isLoginMode ? 'Welcome Back' : 'Unlock Full Audit Report'}
+                    {isLoginMode ? 'Welcome Back' : 'Unlock Full Audit Report'}
                 </h2>
                 <p className="text-sm text-slate-600 line-clamp-2">
-                    {step === 'forgot'
-                        ? 'Enter your email and a new password to reset your account.'
-                        : isLoginMode
-                            ? 'Log in to access your saved reports.'
-                            : 'Get instant access to your detailed strategic roadmap and UI/UX insights.'}
+                    {isLoginMode
+                        ? 'Log in to access your saved reports.'
+                        : 'Get instant access to your detailed strategic roadmap and UI/UX insights.'}
                 </p>
             </div>
 
             {/* Form */}
-            {step === 'forgot' ? (
-                // FORGOT PASSWORD FORM
-                <form onSubmit={handleResetPassword} className="flex-grow flex flex-col">
-                    <div className="space-y-6 flex-grow">
-                        <div>
-                            <label htmlFor="email" className="block text-sm font-semibold text-slate-900 mb-2 text-left">
-                                Business Email <span className="text-red-600">*</span>
-                            </label>
-                            <input
-                                type="email"
-                                id="email"
-                                required
-                                className="w-full h-12 px-4 bg-white border-2 border-black rounded-none shadow-neo focus:outline-none focus:shadow-neo-hover transition-all text-base placeholder-slate-400"
-                                placeholder="you@company.com"
-                                value={email}
-                                onChange={(e) => setEmail(e.target.value)}
-                            />
-                        </div>
-                        <div>
-                            <label htmlFor="new-password" className="block text-sm font-semibold text-slate-900 mb-2 text-left">
-                                New Password <span className="text-red-600">*</span>
-                            </label>
-                            <input
-                                type="password"
-                                id="new-password"
-                                required
-                                className="w-full h-12 px-4 bg-white border-2 border-black rounded-none shadow-neo focus:outline-none focus:shadow-neo-hover transition-all text-base placeholder-slate-400"
-                                placeholder="••••••••"
-                                value={password}
-                                onChange={(e) => setPassword(e.target.value)}
-                                minLength={8}
-                            />
-                        </div>
-                        <div>
-                            <label htmlFor="confirm-new" className="block text-sm font-semibold text-slate-900 mb-2 text-left">
-                                Confirm New Password <span className="text-red-600">*</span>
-                            </label>
-                            <input
-                                type="password"
-                                id="confirm-new"
-                                required
-                                className="w-full h-12 px-4 bg-white border-2 border-black rounded-none shadow-neo focus:outline-none focus:shadow-neo-hover transition-all text-base placeholder-slate-400"
-                                placeholder="••••••••"
-                                value={confirmPassword}
-                                onChange={(e) => setConfirmPassword(e.target.value)}
-                                minLength={8}
-                            />
-                        </div>
-                    </div>
-
-                    <button
-                        type="submit"
-                        disabled={isLoading}
-                        className="w-full h-14 mt-8 bg-black hover:bg-slate-800 text-white border-2 border-black rounded-none shadow-neo hover:shadow-neo-hover active:translate-x-[1px] active:translate-y-[1px] active:shadow-none text-base font-bold transition-all disabled:opacity-70 disabled:cursor-not-allowed flex justify-center items-center gap-2"
-                    >
-                        {isLoading ? (
-                            <>
-                                <Loader2 className="w-5 h-5 animate-spin" />
-                                Resetting...
-                            </>
-                        ) : (
-                            'Reset Password'
-                        )}
-                    </button>
-
-                    <button
-                        type="button"
-                        onClick={() => setStep('email')}
-                        className="mt-4 text-sm text-slate-500 hover:text-black font-semibold underline decoration-2 underline-offset-4"
-                    >
-                        Back to Login
-                    </button>
-                </form>
-            ) : isLoginMode ? (
+            {isLoginMode ? (
                 // LOGIN FORM
                 <form onSubmit={handleLogin} className="flex-grow flex flex-col">
                     <div className="space-y-6 flex-grow">
@@ -294,18 +192,9 @@ export const LoginPanel: React.FC<LoginPanelProps> = ({ auditId }) => {
                             />
                         </div>
                         <div>
-                            <div className="flex justify-between items-center mb-2">
-                                <label htmlFor="password" className="block text-sm font-semibold text-slate-900 text-left">
-                                    Password <span className="text-red-600">*</span>
-                                </label>
-                                <button
-                                    type="button"
-                                    onClick={() => setStep('forgot')}
-                                    className="text-xs font-bold text-slate-500 hover:text-black transition-colors"
-                                >
-                                    Forgot Password?
-                                </button>
-                            </div>
+                            <label htmlFor="password" className="block text-sm font-semibold text-slate-900 mb-2 text-left">
+                                Password <span className="text-red-600">*</span>
+                            </label>
                             <input
                                 type="password"
                                 id="password"

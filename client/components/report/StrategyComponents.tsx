@@ -117,14 +117,14 @@ function UserPersonasDisplay({ personas, isPdf = false }: { personas?: StrategyA
 // --- MAIN COMPONENT: STRATEGY AUDIT (Context Capture) ---
 export function StrategyAuditDisplay({ audit, isPdf = false, forcePageBreak = false }: { audit: StrategyAudit, isPdf?: boolean, forcePageBreak?: boolean }) {
     const { DomainAnalysis, PurposeAnalysis, TargetAudience, UserPersonas } = audit || {};
-    const [isOpen, setIsOpen] = useState(true);
+    const [isOpen, setIsOpen] = useState(false);
 
     // Collapsible Logic
     // If it's PDF, always open.
     const isExpanded = isPdf ? true : isOpen;
 
     return (
-        <div className={`w-full bg-white border-2 border-black font-['DM_Sans'] transition-all ${isPdf ? '' : 'shadow-neo'} overflow-hidden`}>
+        <div className={`w-full bg-white border-2 border-b-0 border-black font-['DM_Sans'] transition-all ${isPdf ? '' : 'shadow-neo hover:shadow-neo-hover'} overflow-hidden`}>
 
             {/* Header / Toggle */}
             <div
@@ -133,7 +133,7 @@ export function StrategyAuditDisplay({ audit, isPdf = false, forcePageBreak = fa
             >
                 <div className="flex flex-col gap-1">
                     <h3 className="text-xl font-black text-black uppercase tracking-tight">Context Capture</h3>
-                    <p className="text-slate-600 font-bold text-sm">Essential context regarding the product & domain.</p>
+                    <p className="text-slate-600 font-bold text-sm">Understanding your website’s context, goals and target audience.</p>
                 </div>
                 {!isPdf && (
                     <button className="text-sm font-black text-black flex items-center gap-2 border-2 border-black bg-white px-3 py-1 shadow-neo-hover hover:translate-y-px hover:shadow-none transition-all">
