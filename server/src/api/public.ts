@@ -52,8 +52,6 @@ router.get('/jobs/:jobId/logs', async (req, res) => {
         const { auditJobLogs } = await import('../db/schema.js');
         const { eq, desc } = await import('drizzle-orm');
 
-        console.log(`[Public API] Fetching logs for job: ${jobId}`);
-
         const logs = await db.select({
             id: auditJobLogs.id,
             message: auditJobLogs.message,
@@ -75,7 +73,6 @@ router.get('/jobs/:jobId/logs', async (req, res) => {
 router.get('/jobs/:jobId', async (req, res) => {
     try {
         const { jobId } = req.params;
-        console.log(`[Public API] Fetching job: ${jobId}`);
 
         // Fetch Job
         const job = await JobService.getJob(jobId);

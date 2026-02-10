@@ -12,6 +12,12 @@ interface ScanningPreviewProps {
 
 export const ScanningPreview: React.FC<ScanningPreviewProps> = ({ screenshot, progress, url, loadingMessage, inputs }) => {
     const [displayUrl, setDisplayUrl] = React.useState(url || 'Scanning...');
+    const [hasMounted, setHasMounted] = React.useState(false);
+
+    React.useEffect(() => {
+        const timer = setTimeout(() => setHasMounted(true), 100);
+        return () => clearTimeout(timer);
+    }, []);
 
     // URL Rotation Logic
     React.useEffect(() => {
@@ -171,7 +177,7 @@ export const ScanningPreview: React.FC<ScanningPreviewProps> = ({ screenshot, pr
                         {/* Thicker Progress Bar */}
                         <div className="h-3 bg-slate-200 overflow-hidden">
                             <div
-                                className="h-full bg-gradient-to-r from-brand to-[#8B5CF6] transition-all duration-500 ease-out shadow-[0_0_12px_rgba(99,102,241,0.6)] relative"
+                                className={`h-full bg-gradient-to-r from-brand to-[#8B5CF6] ${hasMounted ? 'transition-all duration-500 ease-out' : 'transition-none'} shadow-[0_0_12px_rgba(99,102,241,0.6)] relative`}
                                 style={{ width: `${progress}%` }}
                             >
                                 {/* Shimmer effect */}

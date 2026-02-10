@@ -17,18 +17,7 @@ import { eq, isNull, and } from 'drizzle-orm';
 dotenv.config({ path: './.env' });
 
 const app = express();
-const port = Number(process.env.PORT) || 3000;
-
-// --- 1. VERBOSE LOGGING (Must be absolute first) ---
-app.use((req, res, next) => {
-    const start = Date.now();
-    res.on('finish', () => {
-        const duration = Date.now() - start;
-        // Use originalUrl to see /api/v1 even inside sub-routers
-        console.log(`[HTTP] ${req.method} ${req.originalUrl} ${res.statusCode} (${duration}ms)`);
-    });
-    next();
-});
+const port = Number(process.env.PORT) || 8080;
 
 // --- 2. CRITICAL HEALTH CHECKS (Must be before any heavy logic) ---
 app.get("/", (req: any, res: any) => {
@@ -72,9 +61,9 @@ app.use('/uploads', (req, res, next) => {
     const filePath = path.join(uploadsDir, relativePath);
 
     if (!fs.existsSync(filePath)) {
-        console.warn(`[Static-Diagnostic] ❌ File Not Found: ${filePath}`);
+        // Silenced diagnostic
     } else {
-        console.log(`[Static-Diagnostic] ✅ Serving File: ${filePath}`);
+        // Silenced diagnostic
     }
     next();
 }, express.static(uploadsDir, {
@@ -191,6 +180,7 @@ const server = app.listen(port, async () => {
     console.log(`[System] 🚀 Post-Deploy sequence complete. Ready for requests in ${ENV_NAME}.`);
 });
 
-setInterval(() => {
-    console.log(`[Health Monitor] Memory: ${Math.round(process.memoryUsage().heapUsed / 1024 / 1024)}MB`);
-}, 60000);
+// Health monitor silenced for clean terminal
+// setInterval(() => {
+//     console.log(`[Health Monitor] Memory: ${Math.round(process.memoryUsage().heapUsed / 1024 / 1024)}MB`);
+// }, 60000);

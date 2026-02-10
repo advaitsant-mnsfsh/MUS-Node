@@ -40,7 +40,8 @@ export class JobService {
     }
 
     static async updateProgress(jobId: string, message: string, partialData?: any) {
-        console.log(`[JobService] [${jobId}] ${message}`);
+        // Mirrored log for terminal visibility
+        console.log(`[JobProgress] ⚡ ${message}`);
 
         try {
             // 1. Insert into dedicated logs table (New performance-ready way)
@@ -86,7 +87,6 @@ export class JobService {
 
 
     static async getJob(jobId: string) {
-        const start = Date.now();
         try {
             // OPTIMIZATION: Select only needed columns for report rendering
             // We fetch input_data and api_key_id to ensure compatibility with JobProcessor and External API.
@@ -105,10 +105,7 @@ export class JobService {
                 .where(eq(auditJobs.id, jobId))
                 .limit(1);
 
-            const duration = Date.now() - start;
-            if (duration > 500) {
-                console.warn(`[JobService] getJob took ${duration}ms for ${jobId} (Payload size: ${JSON.stringify(job?.report_data).length / 1024} KB)`);
-            }
+
 
             return job || null;
         } catch (error) {

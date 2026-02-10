@@ -43,8 +43,11 @@ router.post('/audit', optionalUserAuth, async (req: express.Request, res: expres
 
         // Trigger processing (Fire and Forget)
         // Direct processing without Redis/Queue to prevent timeouts
-        console.log(`[API] [${new Date().toISOString()}] Job ${job.id} starting directly...`);
-        JobProcessor.processJob(job.id).catch(err => console.error(`[API] Background Job Error ${job.id}:`, err));
+        console.log(`[API] 🚀 New Audit Requested: ${job.id} (Mode: ${req.body.auditMode || 'standard'})`);
+
+        JobProcessor.processJob(job.id).catch(err => {
+            console.error(`[API] ❌ FATAL Background Job Error for ${job.id}:`, err);
+        });
 
         res.status(202).json({
             success: true,
@@ -187,6 +190,7 @@ router.get('/audit', async (req: express.Request, res: express.Response) => {
 router.get('/audit/:jobId', validateApiKey, async (req: express.Request, res: express.Response) => {
     try {
         const { jobId } = req.params;
+        console.log(`[Public API] 📂 FETCHING REPORT FOR VIEW: ${jobId}`);
         const authReq = req as AuthenticatedRequest;
 
         const job = await db.query.auditJobs.findFirst({
@@ -311,6 +315,35 @@ router.post('/audit/claim', optionalUserAuth, async (req: express.Request, res: 
     } catch (e: any) {
         console.error(`[Claim] 💥 Database Error:`, e);
         return res.status(500).json({ success: false, error: e.message });
+    }
+});
+
+// GET /api/v1/audit/active
+router.get('/audit/active', optionalUserAuth, async (req: express.Request, res: express.Response) => {
+    const authReq = req as AuthenticatedRequest;
+    const user = authReq.user;
+
+    if (!user) {
+        return res.json({ success: true, activeJob: null });
+    }
+
+    try {
+        const { desc, or } = await import('drizzle-orm');
+        const activeJob = await db.query.auditJobs.findFirst({
+            where: and(
+                eq(auditJobs.user_id, user.id),
+                or(
+                    eq(auditJobs.status, 'pending'),
+                    eq(auditJobs.status, 'processing')
+                )
+            ),
+            orderBy: [desc(auditJobs.created_at)]
+        });
+
+        res.json({ success: true, activeJob });
+    } catch (e: any) {
+        console.error(`[ActiveJob] Error:`, e);
+        res.status(500).json({ success: false, error: e.message });
     }
 });
 

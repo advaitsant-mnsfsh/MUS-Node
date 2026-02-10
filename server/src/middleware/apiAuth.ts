@@ -24,9 +24,6 @@ async function getCachedSession(req: Request) {
     const hasSessionCookie = cookies.includes('session_token');
     const hasBearerToken = authHeader?.startsWith('Bearer ');
 
-    console.log(`[Auth-Diagnostic] 🛡️ Checking Auth for ${path}`);
-    console.log(`[Auth-Diagnostic] Cookie found: ${!!cookies}, Auth Header found: ${!!authHeader}`);
-
     try {
         // 1. Fetch Session
         // With 'bearer' plugin enabled, Better-Auth will automatically check
@@ -36,9 +33,9 @@ async function getCachedSession(req: Request) {
         });
 
         if (session) {
-            console.log(`[Auth-Diagnostic] ✅ SUCCESS: Session found for ${session.user.email}`);
+            // Silenced
         } else if (hasBearerToken) {
-            console.warn(`[Auth-Diagnostic] ❌ FAILURE: Bearer token present but rejected by Better-Auth.`);
+            console.warn(`[Auth] ❌ Bearer token present but rejected.`);
         }
 
         return session;
@@ -62,7 +59,7 @@ export const requireUserAuth = async (req: Request, res: Response, next: NextFun
         }
 
         const isCached = Date.now() - start < 10; // If it took < 10ms, it was definitely from cache
-        console.log(`[Auth] requireUserAuth: Verified ${session.user.email} (took ${Date.now() - start}ms${isCached ? ' [CACHED]' : ''})`);
+        (req as AuthenticatedRequest).user = session.user;
 
         (req as AuthenticatedRequest).user = session.user;
         next();
@@ -107,7 +104,7 @@ export const validateAccess = async (req: Request, res: Response, next: NextFunc
             });
 
             if (keyRecord) {
-                console.log(`[Auth] validateAccess: API Key Verified for ${keyRecord.owner_name}`);
+                // console.log(`[Auth] validateAccess: API Key Verified for ${keyRecord.owner_name}`); // Removed verbose log
                 (req as AuthenticatedRequest).apiKey = {
                     id: keyRecord.id,
                     owner_name: keyRecord.owner_name

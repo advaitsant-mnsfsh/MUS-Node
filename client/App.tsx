@@ -5,6 +5,8 @@ import { useAudit } from './hooks/useAudit';
 import { LandingView } from './components/views/LandingView';
 import { AnalysisView } from './components/views/AnalysisView';
 import { ReportResultView } from './components/views/ReportResultView';
+import { LoadingScreen } from './components/LoadingScreen';
+import { DataLoadingScreen } from './components/DataLoadingScreen';
 
 // --- ERROR BOUNDARY ---
 class ErrorBoundary extends React.Component<{ children: React.ReactNode }, { hasError: boolean; error: any }> {
@@ -47,6 +49,7 @@ const App: React.FC = () => {
         screenshots,
         screenshotMimeType,
         uiAuditId,
+        isFetchingReport,
         performanceError,
         reportInputs,
         whiteLabelLogo,
@@ -128,6 +131,11 @@ const App: React.FC = () => {
                 handleRunNewAudit={handleRunNewAudit}
             />
         );
+    }
+
+    // 2b. FETCHING STATE (Loading existing report)
+    if (isFetchingReport) {
+        return <DataLoadingScreen message="Fetching your audit report..." />;
     }
 
     // 3. ANALYSIS / LOADING STATE

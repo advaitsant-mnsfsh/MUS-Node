@@ -19,14 +19,86 @@ interface AuditContextType extends GlobalAuditState {
 const AuditContext = createContext<AuditContextType | undefined>(undefined);
 
 export const AuditProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-    const [state, setState] = useState<GlobalAuditState>({
-        activeAuditId: null,
-        progress: 0,
-        status: '',
-        isCompleted: false,
-        isFailed: false,
-        error: null,
+    const [state, setState] = useState<GlobalAuditState>(() => {
+        // Initial state with localStorage recovery
+        if (typeof window === 'undefined') {
+            return { activeAuditId: null, progress: 0, status: '', isCompleted: false, isFailed: false, error: null };
+        }
+
+        const savedId = localStorage.getItem('active_audit_id');
+        const savedProgress = localStorage.getItem('active_audit_progress');
+        const savedStatus = localStorage.getItem('active_audit_status');
+
+        return {
+            activeAuditId: savedId,
+            progress: savedProgress ? parseInt(savedProgress, 10) : 0,
+            status: savedStatus || (savedId ? 'Resuming audit...' : ''),
+            isCompleted: false,
+            isFailed: false,
+            error: null,
+        };
     });
+
+    const setActiveAudit = useCallback((auditId: string) => {
+        setState(prev => {
+            if (prev.activeAuditId === auditId) return prev;
+            return {
+                activeAuditId: auditId,
+                progress: 5,
+                status: 'Audit in progress...',
+                isCompleted: false,
+                isFailed: false,
+                error: null,
+            };
+        });
+    }, []);
+
+    const clearActiveAudit = useCallback(() => {
+        setState({
+            activeAuditId: null,
+            progress: 0,
+            status: '',
+            isCompleted: false,
+            isFailed: false,
+            error: null,
+        });
+    }, []);
+
+    // Sync state to localStorage
+    useEffect(() => {
+        if (state.activeAuditId) {
+            localStorage.setItem('active_audit_id', state.activeAuditId);
+            localStorage.setItem('active_audit_progress', state.progress.toString());
+            localStorage.setItem('active_audit_status', state.status);
+        } else {
+            localStorage.removeItem('active_audit_id');
+            localStorage.removeItem('active_audit_progress');
+            localStorage.removeItem('active_audit_status');
+        }
+    }, [state.activeAuditId, state.progress, state.status]);
+
+    // Server-side recovery fallback
+    useEffect(() => {
+        if (state.activeAuditId) return;
+
+        const recoverFromServer = async () => {
+            try {
+                const { getBackendUrl } = await import('../services/config');
+                const response = await fetch(`${getBackendUrl()}/api/v1/audit/active`, {
+                    headers: { 'Accept': 'application/json' }
+                });
+                const data = await response.json();
+                if (data.success && data.activeJob) {
+                    console.log(`[GlobalAudit] Recovered active job from server: ${data.activeJob.id}`);
+                    setActiveAudit(data.activeJob.id);
+                }
+            } catch (err) {
+                console.error('[GlobalAudit] Failed to recover job from server:', err);
+            }
+        };
+
+        recoverFromServer();
+    }, [state.activeAuditId, setActiveAudit]);
 
     // Handle Polling locally in the provider so it survives navigation
     useEffect(() => {
@@ -80,32 +152,26 @@ export const AuditProvider: React.FC<{ children: ReactNode }> = ({ children }) =
             onClose: () => { }
         });
 
-        // If monitorJobPoll returned a cleanup function, use it.
-        // (Currently geminiService.ts doesn't return one, it uses isPolling internal flag)
-        // We might need to adjust geminiService to support explicit cancellation or use a singleton.
+        return () => {
+            if (typeof stopPolling === 'function') stopPolling();
+        };
     }, [state.activeAuditId, state.isCompleted, state.isFailed]);
 
-    const setActiveAudit = useCallback((auditId: string) => {
-        setState({
-            activeAuditId: auditId,
-            progress: 5,
-            status: 'Audit in progress...',
-            isCompleted: false,
-            isFailed: false,
-            error: null,
-        });
-    }, []);
+    // 2. Incremental "Confidence Builder" (Global Sync)
+    useEffect(() => {
+        if (!state.activeAuditId || state.isCompleted || state.isFailed || state.progress >= 90) return;
 
-    const clearActiveAudit = useCallback(() => {
-        setState({
-            activeAuditId: null,
-            progress: 0,
-            status: '',
-            isCompleted: false,
-            isFailed: false,
-            error: null,
-        });
-    }, []);
+        const interval = setInterval(() => {
+            setState(prev => {
+                if (prev.progress >= 90 || !prev.activeAuditId) return prev;
+                // Faster increment at the start (0-30%), slower later
+                const increment = prev.progress < 30 ? 2 : (prev.progress > 70 ? 0.5 : 1);
+                return { ...prev, progress: prev.progress + increment };
+            });
+        }, 8000);
+
+        return () => clearInterval(interval);
+    }, [state.activeAuditId, state.isCompleted, state.isFailed, state.progress >= 90]);
 
     return (
         <AuditContext.Provider value={{ ...state, setActiveAudit, clearActiveAudit }}>

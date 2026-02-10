@@ -9,6 +9,7 @@ import AboutPage from './pages/AboutPage';
 import PricingPage from './pages/PricingPage';
 import DocsWidgetPage from './pages/DocsWidgetPage';
 import { LoadingScreen } from './components/LoadingScreen';
+import { DataLoadingScreen } from './components/DataLoadingScreen';
 import { ReportDisplay } from './components/ReportDisplay';
 import { Logo } from './components/Logo';
 import { getSharedAudit } from './services/auditStorage';
@@ -130,8 +131,8 @@ function SharedAuditView() {
 
     // Render loading state (Job Polling or Initial Fetch)
     if (loading || (jobStatus && jobStatus !== 'completed' && jobStatus !== 'failed')) {
-        // Use the new LoadingScreen
-        return <LoadingScreen progress={pollProgress} message={jobStatus === 'pending' ? 'Queued for analysis...' : 'Processing your audit...'} />;
+        // Use the new DataLoadingScreen for fetching
+        return <DataLoadingScreen message={jobStatus === 'pending' ? 'Queued for analysis...' : 'Fetching your audit report...'} />;
     }
 
     if (error || !report) {

@@ -128,8 +128,8 @@ export const monitorJobPoll = (jobId: string, callbacks: StreamCallbacks): (() =
           if (job.status === 'completed') {
             onStatus('Audit completed!');
             onComplete({
-              auditId: job.jobId,
-              resultUrl: job.resultUrl
+              auditId: job.id,
+              resultUrl: job.report_data?.result_url || null
             });
             isPolling = false;
             onClose();

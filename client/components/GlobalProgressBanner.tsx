@@ -8,34 +8,58 @@ export const GlobalProgressBanner: React.FC = () => {
     const navigate = useNavigate();
     const location = useLocation();
     const [isVisible, setIsVisible] = useState(false);
-
-    // Don't show on home page, analysis page or results page
-    const isExcludedPage =
-        location.pathname === '/' ||
-        location.pathname.startsWith('/analysis/') ||
-        location.pathname.startsWith('/report/');
+    const { setActiveAudit, clearActiveAudit } = useGlobalAudit();
 
     useEffect(() => {
-        if (activeAuditId && !isExcludedPage) {
-            setIsVisible(true);
+        const isHomePage = location.pathname === '/';
+        const isAnalysisPage = location.pathname.startsWith('/analysis/');
+
+        // Extract ID from /report/:id
+        const reportMatch = location.pathname.match(/\/report\/([^/]+)/);
+        const reportIdInUrl = reportMatch ? reportMatch[1] : null;
+
+        // Condition: Show if we have an active audit AND
+        // 1. Not on home page
+        // 2. Not on ANY analysis page (keep the scan immersive)
+        // 3. If on a report page, ONLY show if it's NOT the active audit's report
+        const shouldShow = activeAuditId &&
+            !isHomePage &&
+            !isAnalysisPage &&
+            (reportIdInUrl !== activeAuditId);
+
+        setIsVisible(!!shouldShow);
+        console.log(`[Banner-Diagnostic] activeId=${activeAuditId}, path=${location.pathname}, visible=${shouldShow}`);
+    }, [activeAuditId, location.pathname]);
+
+    const [hasMounted, setHasMounted] = useState(false);
+
+    useEffect(() => {
+        if (isVisible) {
+            const timer = setTimeout(() => setHasMounted(true), 100);
+            return () => clearTimeout(timer);
         } else {
-            setIsVisible(false);
+            setHasMounted(false);
         }
-    }, [activeAuditId, isExcludedPage]);
+    }, [isVisible]);
 
     if (!isVisible || !activeAuditId) return null;
 
     const handleClick = () => {
+        if (!activeAuditId) return;
+
         if (isCompleted) {
-            navigate(`/report/${activeAuditId}`);
+            const currentId = activeAuditId;
+            // Clear from global state so the banner doesn't "re-haunt" the user
+            clearActiveAudit();
+            window.location.href = `/report/${currentId}`;
         } else {
-            navigate(`/analysis/${activeAuditId}`);
+            window.location.href = `/analysis/${activeAuditId}`;
         }
     };
 
     if (isFailed) {
         return (
-            <div className="bg-red-50 border-b border-red-200 py-3 px-4 sm:px-6 lg:px-8 animate-in slide-in-from-top duration-300">
+            <div className={`bg-red-50 border-b border-red-200 py-3 px-4 sm:px-6 lg:px-8 animate-in slide-in-from-top duration-300`}>
                 <div className="max-w-7xl mx-auto flex items-center justify-between gap-4">
                     <div className="flex items-center gap-3">
                         <AlertCircle className="w-5 h-5 text-red-500" />
@@ -57,7 +81,7 @@ export const GlobalProgressBanner: React.FC = () => {
 
     if (isCompleted) {
         return (
-            <div className="bg-[#E8F5E9] border-b border-[#C8E6C9] py-3 px-4 sm:px-6 lg:px-8 animate-in slide-in-from-top duration-300">
+            <div className={`bg-[#E8F5E9] border-b border-[#C8E6C9] py-3 px-4 sm:px-6 lg:px-8 animate-in slide-in-from-top duration-300`}>
                 <div className="max-w-7xl mx-auto flex items-center justify-between gap-4">
                     <div className="flex items-center gap-3">
                         <CheckCircle2 className="w-5 h-5 text-[#2E7D32]" />
@@ -75,7 +99,7 @@ export const GlobalProgressBanner: React.FC = () => {
     }
 
     return (
-        <div className="bg-[#FFF4E5] border-b border-[#FFE0BD] py-3 px-4 sm:px-6 lg:px-8 animate-in slide-in-from-top duration-300">
+        <div className={`bg-[#FFF4E5] border-b border-[#FFE0BD] py-3 px-4 sm:px-6 lg:px-8 animate-in slide-in-from-top duration-300`}>
             <div className="max-w-7xl mx-auto flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div className="flex items-center gap-4">
                     <div className="relative w-8 h-8 flex items-center justify-center">
@@ -90,7 +114,7 @@ export const GlobalProgressBanner: React.FC = () => {
                 <div className="flex items-center gap-6">
                     <div className="flex-1 md:w-48 bg-white/50 border border-orange-200 h-2.5 rounded-full overflow-hidden">
                         <div
-                            className="h-full bg-orange-400 transition-all duration-500 ease-out"
+                            className={`h-full bg-orange-400 ${hasMounted ? 'transition-all duration-500 ease-out' : 'transition-none'}`}
                             style={{ width: `${Math.max(5, progress)}%` }}
                         />
                     </div>
