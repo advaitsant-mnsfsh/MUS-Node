@@ -1,5 +1,5 @@
 import { db } from '../lib/db.js';
-import { auditJobs } from '../db/schema.js';
+import { auditJobs, auditJobLogs } from '../db/schema.js';
 import { eq, sql } from 'drizzle-orm';
 import crypto from 'crypto';
 
@@ -41,39 +41,29 @@ export class JobService {
 
     static async updateProgress(jobId: string, message: string, partialData?: any) {
         console.log(`[JobService] [${jobId}] ${message}`);
-        try {
-            const logEntry = {
-                timestamp: new Date().toISOString(),
-                message
-            };
 
-            // Use SQL template literal for safe partial updates
+        try {
+            // 1. Insert into dedicated logs table
+            await db.insert(auditJobLogs).values({
+                id: crypto.randomUUID(),
+                job_id: jobId,
+                message: message,
+                level: 'info'
+            });
+
+            // 2. If there's partial data (like screenshots), update audit_jobs
             if (partialData) {
-                await db.execute(sql`
-                    UPDATE audit_jobs 
-                    SET 
-                        report_data = (
-                            jsonb_set(
-                                COALESCE(report_data, '{}'::jsonb), 
-                                '{logs}', 
-                                (COALESCE(report_data->'logs', '[]'::jsonb) || ${JSON.stringify(logEntry)}::jsonb)
-                            ) || ${JSON.stringify(partialData)}::jsonb
-                        ),
-                        updated_at = NOW()
-                    WHERE id = ${jobId}
-                `);
+                await db.update(auditJobs)
+                    .set({
+                        report_data: sql`COALESCE(report_data, '{}'::jsonb) || ${JSON.stringify(partialData)}::jsonb`,
+                        updated_at: sql`NOW()`
+                    })
+                    .where(eq(auditJobs.id, jobId));
             } else {
-                await db.execute(sql`
-                    UPDATE audit_jobs 
-                    SET 
-                        report_data = jsonb_set(
-                            COALESCE(report_data, '{}'::jsonb), 
-                            '{logs}', 
-                            (COALESCE(report_data->'logs', '[]'::jsonb) || ${JSON.stringify(logEntry)}::jsonb)
-                        ),
-                        updated_at = NOW()
-                    WHERE id = ${jobId}
-                `);
+                // Still update timestamp to show activity
+                await db.update(auditJobs)
+                    .set({ updated_at: sql`NOW()` })
+                    .where(eq(auditJobs.id, jobId));
             }
         } catch (e) {
             console.error(`[JobService] Failed to update progress for ${jobId}:`, e);
