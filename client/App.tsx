@@ -2,7 +2,7 @@ import React from 'react';
 import { useAudit } from './hooks/useAudit';
 
 // --- VIEW COMPONENTS ---
-import { LandingView } from './components/views/LandingView';
+import { LandingView } from './components/views/LandingViewNew';
 import { AnalysisView } from './components/views/AnalysisView';
 import { ReportResultView } from './components/views/ReportResultView';
 
@@ -143,6 +143,7 @@ const App: React.FC = () => {
                 url={submittedUrl}
                 fullWidth={!!user}
                 auditId={auditId}
+                inputs={reportInputs}
             />
         );
     }

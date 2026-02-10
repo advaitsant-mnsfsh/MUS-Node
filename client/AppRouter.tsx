@@ -8,7 +8,7 @@ import APIKeysPage from './pages/APIKeysPage';
 import AboutPage from './pages/AboutPage';
 import PricingPage from './pages/PricingPage';
 import { LoadingScreen } from './components/LoadingScreen';
-import { ReportDisplay } from './components/ReportDisplay';
+import { ReportContainer } from './components/report/ReportContainer'; // UPDATED THIS
 import { Logo } from './components/Logo';
 import { getSharedAudit } from './services/auditStorage';
 import { AnalysisReport, Screenshot } from './types';
@@ -149,9 +149,9 @@ function SharedAuditView() {
     }
 
     return (
-        <div className="min-h-screen bg-slate-50 text-slate-800 font-sans p-2 sm:p-6 lg:p-8">
-            <div className="max-w-7xl mx-auto">
-                <ReportDisplay
+        <div className="min-h-screen bg-slate-50 text-slate-800 font-sans">
+            <div className="w-full">
+                <ReportContainer
                     report={report}
                     url={url}
                     screenshots={screenshots}

@@ -18,10 +18,11 @@ import { ExecutiveSummaryDisplay } from '../ExecutiveSummaryDisplay';
 interface StandardReportViewProps {
     report: AnalysisReport;
     primaryScreenshotSrc?: string;
+    isSharedView?: boolean;
 }
 
 // ... imports
-export const StandardReportView: React.FC<StandardReportViewProps> = ({ report, primaryScreenshotSrc }) => {
+export const StandardReportView: React.FC<StandardReportViewProps> = ({ report, primaryScreenshotSrc, isSharedView }) => {
 
     // --- DATA EXTRACT ---
     const {
@@ -39,9 +40,9 @@ export const StandardReportView: React.FC<StandardReportViewProps> = ({ report, 
 
     const TABS = [
         { id: 'All Parameters', label: 'All Parameters', icon: LayoutGrid },
-        { id: 'UX Audit', label: 'UX Design', icon: PenTool },
+        { id: 'UX & Heuristics', label: 'UX & Heuristics', icon: PenTool },
         { id: 'Visual Design', label: 'Visual Design', icon: Palette },
-        { id: 'Product Audit', label: 'Product Design', icon: Box },
+        { id: 'Product Fit', label: 'Product Fit', icon: Box },
         { id: 'Accessibility Audit', label: 'Accessibility', icon: Accessibility },
     ];
 
@@ -53,6 +54,11 @@ export const StandardReportView: React.FC<StandardReportViewProps> = ({ report, 
         if (scores.length === 0) return 0;
         return Math.round((scores.reduce((a, b) => a + b, 0) / scores.length) * 10) / 10;
     }, [ux, product, visual, accessibility, report]);
+
+    // Sticky Top Offset Calculation
+    // Normal: 154px (80px Global Nav + 74px Action Bar)
+    // Shared: 74px -> Reduced to 66px to ensure overlap/no gap
+    const stickyTopClass = isSharedView ? 'top-[58px] md:top-[66px]' : 'top-[146px] md:top-[154px]';
 
     return (
         <>
@@ -66,9 +72,9 @@ export const StandardReportView: React.FC<StandardReportViewProps> = ({ report, 
                         <div className="w-full lg:w-1/2 p-6 md:p-8 border-r-2 border-black flex flex-col gap-8">
 
                             {/* Scores Section */}
-                            <div className="w-full border-b-2 pb-6 border-black">
+                            <div className="w-full flex justify-between border-b-2 pb-6 border-black">
                                 {/* Overall Score (Large Hero Gauge) */}
-                                <div className="mb-8 flex justify-center">
+                                <div className="mb-0 flex justify-center">
                                     <div className="w-full max-w-[280px]">
                                         <ScoreDisplayCard score={overallScore} label="Overall Score" isHero={true} />
                                     </div>
@@ -104,8 +110,8 @@ export const StandardReportView: React.FC<StandardReportViewProps> = ({ report, 
                         {/* RIGHT COLUMN: Website Preview (50% - Full Bleed) */}
                         <div className="w-full lg:w-1/2 relative bg-slate-100 h-96 lg:h-auto border-t-2 lg:border-t-0 border-black group overflow-hidden">
                             {/* Overlay Badge */}
-                            <div className="absolute top-4 right-4 z-10 flex flex-col items-end pointer-events-none">
-                                <span className="text-[10px] font-black text-black uppercase tracking-wider bg-white px-2 py-1 border-2 border-black shadow-neo mb-1">
+                            <div className="absolute bottom-4 right-4 z-10 flex flex-col items-end pointer-events-none">
+                                <span className="text-[10px] font-black text-black uppercase tracking-wider bg-white px-2 py-1 border-2 border-black mb-1">
                                     Analyzed Website
                                 </span>
                             </div>
@@ -146,14 +152,14 @@ export const StandardReportView: React.FC<StandardReportViewProps> = ({ report, 
                 <div className="pt-2">
 
                     {/* Header & Tabs */}
-                    <div className="sticky top-0 z-10 bg-white border-2 border-black py-4 shadow-neo px-6 lg:px-8 mb-12 mx-4 md:mx-8">
+                    <div className={`sticky ${stickyTopClass} z-20 bg-page-bg border-2 border-black py-4 shadow-neo px-6 lg:px-8 mb-12 mx-4 md:mx-8 transition-all duration-300`}>
                         <div className="flex flex-col md:flex-row items-center justify-between gap-6">
                             <div>
                                 <h3 className="text-2xl font-black text-black uppercase">Score Breakdown</h3>
-                                <p className="text-slate-600 font-bold text-sm">Detailed parameter analysis.</p>
+                                {/* <p className="text-slate-600 font-bold text-sm">Detailed parameter analysis.</p> */}
                             </div>
 
-                            <nav className="flex space-x-2 bg-white overflow-x-auto no-scrollbar max-w-full p-1">
+                            <nav className="flex space-x-2 bg-page-bg overflow-x-auto no-scrollbar max-w-full p-1">
                                 {TABS.map((tab) => {
                                     const Icon = tab.icon;
                                     const isActive = activeTab === tab.id;
@@ -189,9 +195,9 @@ export const StandardReportView: React.FC<StandardReportViewProps> = ({ report, 
                         )}
 
                         {/* CASE 2: Specific Tabs */}
-                        {activeTab === 'UX Audit' && <DetailedAuditView auditData={ux} auditType={'UX Audit'} />}
+                        {activeTab === 'UX & Heuristics' && <DetailedAuditView auditData={ux} auditType={'UX Audit'} />}
                         {activeTab === 'Visual Design' && <DetailedAuditView auditData={visual} auditType={'Visual Design'} />}
-                        {activeTab === 'Product Audit' && <DetailedAuditView auditData={product} auditType={'Product Audit'} />}
+                        {activeTab === 'Product Fit' && <DetailedAuditView auditData={product} auditType={'Product Audit'} />}
                         {activeTab === 'Accessibility Audit' && accessibility && <AccessibilityAuditView data={accessibility} />}
                     </div>
                 </div>
