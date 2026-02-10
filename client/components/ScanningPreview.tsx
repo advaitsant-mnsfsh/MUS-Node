@@ -5,9 +5,10 @@ interface ScanningPreviewProps {
     screenshot: string | null;
     progress: number;
     url?: string;
+    loadingMessage?: string;
 }
 
-export const ScanningPreview: React.FC<ScanningPreviewProps> = ({ screenshot, progress, url }) => {
+export const ScanningPreview: React.FC<ScanningPreviewProps> = ({ screenshot, progress, url, loadingMessage }) => {
     return (
         <div className="relative w-full max-w-4xl mx-auto pl-0 md:pl-8">
             {/* Browser Frame Container */}
@@ -114,8 +115,8 @@ export const ScanningPreview: React.FC<ScanningPreviewProps> = ({ screenshot, pr
                                 </div>
 
                                 {/* Scanning Text */}
-                                <h3 className="text-sm font-bold text-text-primary">
-                                    Scanning...
+                                <h3 className="text-sm font-bold text-text-primary truncate max-w-[200px] md:max-w-[400px]">
+                                    {loadingMessage || 'Scanning...'}
                                 </h3>
                             </div>
 

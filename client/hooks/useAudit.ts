@@ -51,6 +51,22 @@ export const useAudit = () => {
         }
     }, [progress, targetProgress]);
 
+    // 1b. Automatic Incremental Progress (Confidence Builder)
+    useEffect(() => {
+        if (!isLoading || targetProgress >= 90 || targetProgress === 0) return;
+
+        const interval = setInterval(() => {
+            setTargetProgress(prev => {
+                if (prev >= 90) return prev;
+                // Slower increment as we get higher
+                const increment = prev > 70 ? 0.5 : 1;
+                return prev + increment;
+            });
+        }, 12000); // Crawl forward every 12 seconds
+
+        return () => clearInterval(interval);
+    }, [isLoading, targetProgress]);
+
     // 2. Microcopy Rotation
     useEffect(() => {
         if (isLoading) {

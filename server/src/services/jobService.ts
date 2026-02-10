@@ -40,6 +40,7 @@ export class JobService {
     }
 
     static async updateProgress(jobId: string, message: string, partialData?: any) {
+        console.log(`[JobService] [${jobId}] ${message}`);
         try {
             const logEntry = {
                 timestamp: new Date().toISOString(),

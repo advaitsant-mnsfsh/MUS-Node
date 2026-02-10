@@ -57,24 +57,18 @@ router.get('/jobs/:jobId', async (req, res) => {
             return res.status(404).json({ message: 'Job not found' });
         }
 
-        // If job is running, return status cleanly (prevents 403 console errors)
-        if (job.status !== 'completed' && job.status !== 'failed') {
-            return res.json({
-                id: job.id,
-                status: job.status
-            });
-        }
-
-        // Return the report data (no authentication required for sharing)
+        // Return basic status and report_data (including logs) even during processing
         res.json({
             id: job.id,
             status: job.status,
             report_data: job.report_data,
-            errorMessage: job.error_message, // Add this
-            inputs: (job.input_data as any)?.inputs || job.input_data, // Compatibility
+            errorMessage: job.error_message,
+            inputs: (job.input_data as any)?.inputs || job.input_data,
             created_at: job.created_at,
             updated_at: job.updated_at
         });
+
+        return;
 
     } catch (error: any) {
         console.error('Public Job Fetch Error:', error);

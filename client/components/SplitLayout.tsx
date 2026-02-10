@@ -44,6 +44,7 @@ export const SplitLayout: React.FC<SplitLayoutProps> = ({
                         screenshot={screenshot || null}
                         progress={progress}
                         url={url}
+                        loadingMessage={loadingMessage}
                     />
                 </div>
             </div>
@@ -60,6 +61,7 @@ export const SplitLayout: React.FC<SplitLayoutProps> = ({
                         screenshot={screenshot || null}
                         progress={progress}
                         url={url}
+                        loadingMessage={loadingMessage}
                     />
                 </div>
 
