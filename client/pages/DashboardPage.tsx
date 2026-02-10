@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { FileText, Calendar, ExternalLink, Loader2 } from 'lucide-react';
 import { getUserAudits, calculateOverallScore, extractUrl, extractCompetitorUrl, getScreenshotUrl, UserAudit } from '../services/userAuditsService';
@@ -22,6 +22,7 @@ const DashboardPage: React.FC = () => {
     const [apiKeys, setApiKeys] = useState<APIKey[]>([]);
     const [selectedFilter, setSelectedFilter] = useState<'all' | 'direct' | string>('all'); // 'all', 'direct', or api_key_id
     const [loading, setLoading] = useState(true);
+    const navigate = useNavigate();
 
     useEffect(() => {
         const fetchData = async () => {
@@ -51,8 +52,11 @@ const DashboardPage: React.FC = () => {
     // Map audits from backend for display
     useEffect(() => {
         const displayAudits: DisplayAudit[] = allAudits
-            .filter((audit: UserAudit) => audit.status === 'completed')
             .filter((audit: UserAudit) => {
+                // Only show completed reports as requested
+                if (audit.status !== 'completed') return false;
+
+                // Handle API Key filtering
                 if (selectedFilter === 'all') return true;
                 if (selectedFilter === 'direct') return !audit.api_key_id;
                 return audit.api_key_id === selectedFilter;
@@ -195,12 +199,16 @@ const DashboardPage: React.FC = () => {
                         {filteredAudits.map((audit) => (
                             <div
                                 key={audit.id}
-                                className="bg-white rounded-lg border-2 border-border-main shadow-neo hover:shadow-neo-hover transition-all cursor-pointer group flex flex-col"
+                                onClick={() => {
+                                    if (audit.status === 'completed') {
+                                        navigate(`/report/${audit.id}`);
+                                    }
+                                }}
+                                className="bg-white rounded-lg border-2 border-border-main shadow-neo hover:shadow-neo-hover transition-all cursor-pointer group flex flex-col overflow-hidden"
                             >
                                 {/* Logo Preview Area */}
                                 <div className="h-48 bg-gradient-to-br from-[#F1F5F9] to-[#E2E8F0] rounded-t-lg border-b-2 border-border-main flex items-center justify-center relative overflow-hidden p-6">
                                     {audit.competitorUrl ? (
-                                        // Competitor: Split layout with divider
                                         <div className="flex items-center justify-center w-full h-full gap-4">
                                             <div className="flex-1 flex items-center justify-center">
                                                 <SiteLogo domain={audit.url} size="medium" />
@@ -211,7 +219,6 @@ const DashboardPage: React.FC = () => {
                                             </div>
                                         </div>
                                     ) : (
-                                        // Standard: Full width logo
                                         <SiteLogo domain={audit.url} size="large" />
                                     )}
                                     {audit.score && (
@@ -223,75 +230,66 @@ const DashboardPage: React.FC = () => {
 
                                 {/* Card Content */}
                                 <div
-                                    className="p-4 flex flex-col flex-1"
+                                    className="p-5 flex flex-col flex-1"
                                     onMouseEnter={async () => {
-                                        // Speculative pre-fetch: prime the cache while user hovers
                                         try {
                                             const { getAuditJob } = await import('../services/auditStorage');
                                             getAuditJob(audit.id);
                                         } catch (e) { }
                                     }}
                                 >
-                                    <div className="flex items-start justify-between mb-3">
-                                        <div className="flex-1">
+                                    <div className="space-y-1 mb-4">
+                                        <div className="flex items-center gap-1.5">
                                             <h3 className="text-lg font-bold text-text-primary truncate group-hover:text-brand transition-colors">
                                                 {getSafeHostname(audit.url)}
                                             </h3>
-                                            {audit.competitorUrl && (
-                                                <h3 className="text-lg font-bold text-text-primary truncate group-hover:text-brand transition-colors mt-1">
-                                                    vs {getSafeHostname(audit.competitorUrl)}
-                                                </h3>
+                                            {audit.url !== 'Manual Upload' && audit.url !== 'Unknown' && (
+                                                <a
+                                                    href={audit.url}
+                                                    target="_blank"
+                                                    rel="noopener noreferrer"
+                                                    onClick={(e) => e.stopPropagation()}
+                                                    className="flex-shrink-0 text-slate-400 hover:text-brand transition-colors"
+                                                    title="Visit Website"
+                                                >
+                                                    <ExternalLink className="w-4 h-4 ml-0.5" />
+                                                </a>
                                             )}
                                         </div>
-                                        {audit.url !== 'Manual Upload' && audit.url !== 'Unknown' && (
-                                            <a
-                                                href={audit.url}
-                                                target="_blank"
-                                                rel="noopener noreferrer"
-                                                onClick={(e) => e.stopPropagation()}
-                                                className="shrink-0 ml-2 text-text-secondary hover:text-brand transition-colors"
-                                            >
-                                                <ExternalLink className="w-4 h-4" />
-                                            </a>
-                                        )}
-                                    </div>
 
-                                    {/* URL section with fixed minimum height for alignment */}
-                                    <div className="mb-3" style={{ minHeight: '48px' }}>
-                                        <p className="text-sm text-text-secondary truncate">{audit.url}</p>
                                         {audit.competitorUrl && (
-                                            <p className="text-sm text-text-secondary truncate mt-1">{audit.competitorUrl}</p>
+                                            <div className="flex items-center gap-1.5">
+                                                <h3 className="text-lg font-bold text-text-primary truncate group-hover:text-brand transition-colors">
+                                                    vs {getSafeHostname(audit.competitorUrl)}
+                                                </h3>
+                                                <a
+                                                    href={audit.competitorUrl}
+                                                    target="_blank"
+                                                    rel="noopener noreferrer"
+                                                    onClick={(e) => e.stopPropagation()}
+                                                    className="flex-shrink-0 text-slate-400 hover:text-brand transition-colors"
+                                                    title="Visit Competitor"
+                                                >
+                                                    <ExternalLink className="w-4 h-4 ml-0.5" />
+                                                </a>
+                                            </div>
                                         )}
                                     </div>
 
-                                    {/* Spacer to push date/status/button to consistent position */}
-                                    <div className="flex-grow"></div>
+                                    <div className="mb-4 space-y-1 opacity-60">
+                                        <p className="text-xs text-text-secondary truncate">{audit.url}</p>
+                                        {audit.competitorUrl && (
+                                            <p className="text-xs text-text-secondary truncate">{audit.competitorUrl}</p>
+                                        )}
+                                    </div>
 
-                                    <div className="flex items-center justify-between mb-4">
-                                        <div className="flex items-center text-xs text-text-secondary">
-                                            <Calendar className="w-3 h-3 mr-1" />
-                                            {new Date(audit.createdAt).toLocaleDateString()}
+                                    <div className="mt-auto pt-4 border-t border-slate-100 flex items-center justify-between">
+                                        <div className="flex items-center text-xs text-text-secondary font-medium uppercase tracking-wider">
+                                            <Calendar className="w-3.5 h-3.5 mr-1.5 opacity-50" />
+                                            {new Date(audit.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
                                         </div>
                                         {getStatusBadge(audit.status)}
                                     </div>
-
-                                    {/* Action Button */}
-                                    {audit.status === 'completed' && (
-                                        <Link
-                                            to={`/report/${audit.id}`}
-                                            className="block w-full px-4 py-2 bg-text-primary text-white text-sm font-semibold text-center rounded-lg hover:bg-[#374151] transition-colors"
-                                        >
-                                            View Report
-                                        </Link>
-                                    )}
-                                    {audit.status === 'processing' && (
-                                        <Link
-                                            to={`/analysis/${audit.id}`}
-                                            className="block w-full px-4 py-2 bg-yellow-600 text-white text-sm font-semibold text-center rounded-lg hover:bg-yellow-700 transition-colors"
-                                        >
-                                            View Progress
-                                        </Link>
-                                    )}
                                 </div>
                             </div>
                         ))}

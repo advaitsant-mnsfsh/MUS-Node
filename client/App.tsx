@@ -2,7 +2,7 @@ import React from 'react';
 import { useAudit } from './hooks/useAudit';
 
 // --- VIEW COMPONENTS ---
-import { LandingView } from './components/views/LandingView';
+import { LandingView } from './components/views/LandingViewNew';
 import { AnalysisView } from './components/views/AnalysisView';
 import { ReportResultView } from './components/views/ReportResultView';
 import { LoadingScreen } from './components/LoadingScreen';
@@ -147,7 +147,7 @@ const App: React.FC = () => {
                 loadingMessage={loadingMessage}
                 microcopy={currentMicrocopy}
                 animationData={qrCodeAnimationData}
-                screenshot={screenshots.length > 0 ? screenshots[0] : null}
+                screenshot={screenshots.length > 0 ? screenshots[0].data : null}
                 url={submittedUrl}
                 fullWidth={!!user}
                 auditId={auditId}

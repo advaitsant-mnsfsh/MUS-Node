@@ -186,6 +186,35 @@ router.get('/audit', async (req: express.Request, res: express.Response) => {
     }
 });
 
+// GET /api/v1/audit/active
+router.get('/audit/active', optionalUserAuth, async (req: express.Request, res: express.Response) => {
+    const authReq = req as AuthenticatedRequest;
+    const user = authReq.user;
+
+    if (!user) {
+        return res.json({ success: true, activeJob: null });
+    }
+
+    try {
+        const { desc, or } = await import('drizzle-orm');
+        const activeJob = await db.query.auditJobs.findFirst({
+            where: and(
+                eq(auditJobs.user_id, user.id),
+                or(
+                    eq(auditJobs.status, 'pending'),
+                    eq(auditJobs.status, 'processing')
+                )
+            ),
+            orderBy: [desc(auditJobs.created_at)]
+        });
+
+        res.json({ success: true, activeJob });
+    } catch (e: any) {
+        console.error(`[ActiveJob] Error:`, e);
+        res.status(500).json({ success: false, error: e.message });
+    }
+});
+
 // GET /api/v1/audit/:jobId (Polling Support)
 router.get('/audit/:jobId', validateApiKey, async (req: express.Request, res: express.Response) => {
     try {
@@ -318,33 +347,5 @@ router.post('/audit/claim', optionalUserAuth, async (req: express.Request, res: 
     }
 });
 
-// GET /api/v1/audit/active
-router.get('/audit/active', optionalUserAuth, async (req: express.Request, res: express.Response) => {
-    const authReq = req as AuthenticatedRequest;
-    const user = authReq.user;
-
-    if (!user) {
-        return res.json({ success: true, activeJob: null });
-    }
-
-    try {
-        const { desc, or } = await import('drizzle-orm');
-        const activeJob = await db.query.auditJobs.findFirst({
-            where: and(
-                eq(auditJobs.user_id, user.id),
-                or(
-                    eq(auditJobs.status, 'pending'),
-                    eq(auditJobs.status, 'processing')
-                )
-            ),
-            orderBy: [desc(auditJobs.created_at)]
-        });
-
-        res.json({ success: true, activeJob });
-    } catch (e: any) {
-        console.error(`[ActiveJob] Error:`, e);
-        res.status(500).json({ success: false, error: e.message });
-    }
-});
 
 export default router;

@@ -16,6 +16,7 @@ import {
     Globe
 } from 'lucide-react';
 import { ExecutiveSummaryDisplay } from '../ExecutiveSummaryDisplay';
+import SiteLogo from '../../SiteLogo';
 
 interface CompetitorReportViewProps {
     data: CompetitorAnalysisData;
@@ -23,6 +24,7 @@ interface CompetitorReportViewProps {
     competitorUrl?: string;
     primaryScreenshot?: string;
     competitorScreenshot?: string;
+    isSharedView?: boolean;
 }
 
 // ... imports remain the same
@@ -34,13 +36,34 @@ export const CompetitorReportView: React.FC<CompetitorReportViewProps> = ({
     primaryUrl = "Your Website",
     competitorUrl = "Competitor Website",
     primaryScreenshot,
-    competitorScreenshot
+    competitorScreenshot,
+    isSharedView
 }) => {
+    // Sticky Top Offset Calculation
+    // Normal: 154px (80px Global Nav + 74px Action Bar)
+    // Shared: 74px -> Reduced to 66px to ensure overlap/no gap
+    const stickyTopClass = isSharedView ? 'top-[58px] md:top-[66px]' : 'top-[146px] md:top-[154px]';
+    const PROD_URL = 'https://mus-node-production.up.railway.app';
+
+    // --- HELPERS ---
+    const handleImageError = (e: React.SyntheticEvent<HTMLImageElement, Event>) => {
+        const img = e.currentTarget;
+        const currentSrc = img.src;
+
+        // ONLY fallback if we are on localhost and the image failed on localhost
+        if (window.location.hostname === 'localhost' && currentSrc.includes('localhost')) {
+            console.log('[ReportDisplay] Local image failed, trying Railway fallback...');
+            img.src = currentSrc.replace(/http:\/\/localhost:\d+/, PROD_URL);
+        } else {
+            console.error('[ReportDisplay] Image Load Failed:', currentSrc);
+        }
+    };
+
     const [activeTab, setActiveTab] = useState<'UX' | 'Product' | 'Visual' | 'Strategy' | 'Accessibility'>('UX');
 
     // --- Helper Components (Brutalism Styled) ---
 
-    const StrengthCard = ({ title, description, impact }: { title: string, description: string, impact: string }) => (
+    const StrengthCard = ({ title, description }: { title: string, description: string, impact: string }) => (
         <div className="bg-white p-5 border-2 border-black shadow-neo hover:shadow-neo-hover hover:-translate-x-px hover:-translate-y-px transition-all duration-200 group">
             <div className="flex items-start gap-4 mb-3">
                 <div className="p-2 bg-emerald-100 text-black border-2 border-black">
@@ -48,9 +71,6 @@ export const CompetitorReportView: React.FC<CompetitorReportViewProps> = ({
                 </div>
                 <div>
                     <h4 className="font-bold text-black leading-tight text-lg">{title}</h4>
-                    <span className="inline-block mt-2 text-[10px] font-bold text-black bg-emerald-200 px-2 py-1 border border-black uppercase tracking-wide">
-                        Impact: {impact}
-                    </span>
                 </div>
             </div>
             <p className="text-sm text-slate-800 leading-relaxed font-bold border-t-2 border-black/10 pt-3 mt-1">
@@ -67,9 +87,6 @@ export const CompetitorReportView: React.FC<CompetitorReportViewProps> = ({
                 </div>
                 <div>
                     <h4 className="font-bold text-black leading-tight text-lg">{title}</h4>
-                    <span className="inline-block mt-2 text-[10px] font-bold text-black bg-blue-200 px-2 py-1 border border-black uppercase tracking-wide">
-                        Impact: {impact}
-                    </span>
                 </div>
             </div>
             <p className="text-sm text-slate-800 leading-relaxed font-bold border-t-2 border-black/10 pt-3 mt-1">
@@ -121,9 +138,17 @@ export const CompetitorReportView: React.FC<CompetitorReportViewProps> = ({
                         <thead>
                             <tr className="bg-brand/10 border-b-2 border-black text-xs font-black text-black uppercase tracking-wider">
                                 <th className="p-5 w-1/4">Parameter</th>
-                                <th className="p-5 w-24 text-center">You</th>
-                                <th className="p-5 w-24 text-center">Them</th>
-                                <th className="p-5 min-w-[300px]">Analysis</th>
+                                <th className="p-5 w-24 text-center">
+                                    <div className="flex items-center justify-center">
+                                        <SiteLogo domain={primaryUrl} size="tiny" className="shadow-neo-sm" />
+                                    </div>
+                                </th>
+                                <th className="p-5 w-24 text-center">
+                                    <div className="flex items-center justify-center">
+                                        <SiteLogo domain={competitorUrl} size="tiny" className="shadow-neo-sm" />
+                                    </div>
+                                </th>
+                                <th className="p-5 min-w-[300px]">Observations</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y-2 divide-black">
@@ -136,7 +161,7 @@ export const CompetitorReportView: React.FC<CompetitorReportViewProps> = ({
                                     {/* Primary Score */}
                                     <td className="p-5 text-center">
                                         <div className={`mx-auto w-10 h-10 flex items-center justify-center font-bold text-sm border-2 border-black ${Number(item.PrimaryScore) >= Number(item.CompetitorScore)
-                                            ? 'bg-emerald-100 text-black shadow-neo'
+                                            ? 'bg-amber-100 text-black shadow-neo'
                                             : 'bg-white text-slate-500'
                                             }`}>
                                             {item.PrimaryScore}
@@ -181,18 +206,18 @@ export const CompetitorReportView: React.FC<CompetitorReportViewProps> = ({
                 {/* Left: YOU */}
                 <div className="bg-white p-6 md:p-8 flex flex-col gap-4 border-b-2 md:border-b-0 md:border-r-2 border-black">
                     <div className="flex items-center gap-3 mb-2">
-                        <div className="p-2 bg-emerald-100 border-2 border-black shadow-neo">
-                            <Globe className="w-5 h-5 text-black" />
+                        <div className="border-2 border-black shadow-neo overflow-hidden">
+                            <SiteLogo domain={primaryUrl} size="small" className="shadow-none border-none rounded-none" />
                         </div>
                         <div className="flex flex-col">
-                            <span className="text-xs font-black text-black uppercase tracking-wider bg-emerald-200 px-2 py-0.5 w-fit border border-black mb-1">Primary Website</span>
+                            <span className="text-xs font-black text-black uppercase tracking-wider bg-amber-200 px-2 py-0.5 w-fit border border-black mb-1">Primary Website</span>
                             <h3 className="text-xl font-bold text-black break-all">{primaryUrl}</h3>
                         </div>
                     </div>
                     {/* Primary Screenshot Area */}
                     <div className="w-full aspect-video bg-white border-2 border-black overflow-hidden relative group shadow-neo">
                         {primaryScreenshot ? (
-                            <img src={primaryScreenshot} className="w-full h-full object-cover object-top transition-transform duration-700 group-hover:scale-105" alt="Primary Site" />
+                            <img src={primaryScreenshot} onError={handleImageError} className="w-full h-full object-cover object-top transition-transform duration-700 group-hover:scale-105" alt="Primary Site" />
                         ) : (
                             <div className="w-full h-full flex items-center justify-center text-slate-300 bg-[radial-gradient(#00000022_1px,transparent_1px)] bg-size-[16px_16px]">
                                 <span className="text-sm font-bold text-black bg-white px-3 py-1 border-2 border-black shadow-neo">No Preview</span>
@@ -208,14 +233,14 @@ export const CompetitorReportView: React.FC<CompetitorReportViewProps> = ({
                             <span className="text-xs font-black text-black uppercase tracking-wider bg-blue-200 px-2 py-0.5 w-fit border border-black mb-1">Competitor Website</span>
                             <h3 className="text-xl font-bold text-black break-all text-right">{competitorUrl}</h3>
                         </div>
-                        <div className="p-2 bg-blue-100 border-2 border-black shadow-neo">
-                            <Globe className="w-5 h-5 text-black" />
+                        <div className="border-2 border-black shadow-neo overflow-hidden">
+                            <SiteLogo domain={competitorUrl} size="small" className="shadow-none border-none rounded-none" />
                         </div>
                     </div>
                     {/* Competitor Screenshot Area */}
                     <div className="w-full aspect-video bg-white border-2 border-black overflow-hidden relative group shadow-neo">
                         {competitorScreenshot ? (
-                            <img src={competitorScreenshot} className="w-full h-full object-cover object-top transition-transform duration-700 group-hover:scale-105" alt="Competitor Site" />
+                            <img src={competitorScreenshot} onError={handleImageError} className="w-full h-full object-cover object-top transition-transform duration-700 group-hover:scale-105" alt="Competitor Site" />
                         ) : (
                             <div className="w-full h-full bg-slate-100 flex items-center justify-center relative overflow-hidden bg-[radial-gradient(#00000022_1px,transparent_1px)] bg-size-[16px_16px]">
                                 {/* Simple Brutalist Placeholder */}
@@ -294,7 +319,7 @@ export const CompetitorReportView: React.FC<CompetitorReportViewProps> = ({
 
             {/* 4. DETAILED COMPARISON TABLE */}
             <div className="pt-12 border-t-4 border-black">
-                <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-8">
+                <div className={`sticky ${stickyTopClass} z-20 bg-page-bg py-4 flex flex-col md:flex-row md:items-center justify-between gap-6 mb-8 border-b-2 border-black/5 transition-all duration-300`}>
                     <div>
                         <h2 className="text-3xl font-black text-black uppercase mb-1">Detailed Face-off</h2>
                         <p className="text-slate-600 font-bold px-1 inline-block">Direct head-to-head parameter comparison.</p>
@@ -329,6 +354,6 @@ export const CompetitorReportView: React.FC<CompetitorReportViewProps> = ({
                 {activeTab === 'Strategy' && <ComparisonTable items={data.StrategyComparison} title="Strategy" />}
                 {activeTab === 'Accessibility' && <ComparisonTable items={data.AccessibilityComparison} title="Accessibility" />}
             </div>
-        </div>
+        </div >
     );
 };

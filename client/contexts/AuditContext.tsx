@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useCallback, ReactNode, useEffect } from 'react';
 import { monitorJobPoll } from '../services/geminiService';
+import { useAuth } from './AuthContext';
 
 interface GlobalAuditState {
     activeAuditId: string | null;
@@ -77,16 +78,26 @@ export const AuditProvider: React.FC<{ children: ReactNode }> = ({ children }) =
         }
     }, [state.activeAuditId, state.progress, state.status]);
 
+    const { user, isLoading: isAuthLoading } = useAuth();
+
     // Server-side recovery fallback
     useEffect(() => {
-        if (state.activeAuditId) return;
+        if (state.activeAuditId || isAuthLoading || !user) return;
 
         const recoverFromServer = async () => {
             try {
                 const { getBackendUrl } = await import('../services/config');
-                const response = await fetch(`${getBackendUrl()}/api/v1/audit/active`, {
-                    headers: { 'Accept': 'application/json' }
-                });
+                const { authenticatedFetch } = await import('../lib/authenticatedFetch');
+
+                const response = await authenticatedFetch(`${getBackendUrl()}/api/v1/audit/active`);
+
+                if (!response.ok) {
+                    if (response.status !== 401) {
+                        console.warn(`[GlobalAudit] Failed to recover job: ${response.status}`);
+                    }
+                    return;
+                }
+
                 const data = await response.json();
                 if (data.success && data.activeJob) {
                     console.log(`[GlobalAudit] Recovered active job from server: ${data.activeJob.id}`);
@@ -98,7 +109,7 @@ export const AuditProvider: React.FC<{ children: ReactNode }> = ({ children }) =
         };
 
         recoverFromServer();
-    }, [state.activeAuditId, setActiveAudit]);
+    }, [state.activeAuditId, setActiveAudit, user, isAuthLoading]);
 
     // Handle Polling locally in the provider so it survives navigation
     useEffect(() => {
@@ -115,29 +126,41 @@ export const AuditProvider: React.FC<{ children: ReactNode }> = ({ children }) =
             onStatus: (message) => {
                 setState(prev => {
                     let newProgress = prev.progress;
-                    const msg = message.toUpperCase();
+                    const msg = message.toLowerCase();
 
-                    // Milestones for progress bar
-                    if (msg.includes('AUDIT IS IN PROGRESS')) newProgress = 5;
-                    if (msg.includes('STARTING STANDARD ANALYSIS')) newProgress = 10;
-                    if (msg.includes('SCRAPING')) newProgress = 15;
-                    if (msg.includes('SCRAPE SUCCESSFUL')) newProgress = 30;
-                    if (msg.includes('SCRAPE COMPLETE')) newProgress = 35;
-                    if (msg.includes('STARTING COMPETITOR ANALYSIS')) newProgress = 10;
-                    if (msg.includes('SCRAPING PRIMARY')) newProgress = 20;
-                    if (msg.includes('SCRAPING COMPETITOR')) newProgress = 40;
-                    if (msg.includes('AI COMPARISON')) newProgress = 60;
-                    if (msg.includes('UX COMPLETE')) newProgress = 42;
-                    if (msg.includes('PRODUCT COMPLETE')) newProgress = 54;
-                    if (msg.includes('VISUAL COMPLETE')) newProgress = 66;
-                    if (msg.includes('STRATEGY COMPLETE')) newProgress = 78;
-                    if (msg.includes('ACCESSIBILITY COMPLETE')) newProgress = 90;
-                    if (msg.includes('STRATEGIC IMPACT')) newProgress = 92;
-                    if (msg.includes('CONTEXTUAL ANALYSIS COMPLETE')) newProgress = 95;
+                    // Mappings from useAudit.ts for perfect sync
+                    if (msg.includes('initiating') || msg.includes('queued') || msg.includes('starting audit')) newProgress = 5;
+                    if (msg.includes('scraping') || msg.includes('processing uploaded')) newProgress = 15;
+                    if (msg.includes('scrape complete') || msg.includes('content acquired') || msg.includes('analyzing content')) newProgress = 30;
+                    if (msg.includes('checking performance') || msg.includes('performance check')) newProgress = 32;
+                    if (msg.includes('running experts') || msg.includes('starting batch')) newProgress = 35;
+
+                    // UX & Product
+                    if (msg.includes('running ux') || msg.includes('starting analyze-ux')) newProgress = 40;
+                    if (msg.includes('running product') || msg.includes('starting analyze-product')) newProgress = 40;
+                    if (msg.includes('ux complete') || msg.includes('ux audit analysis complete')) newProgress = 50;
+                    if (msg.includes('product complete') || msg.includes('product audit analysis complete')) newProgress = 50;
+
+                    // Visual & Strategy
+                    if (msg.includes('running visual') || msg.includes('starting analyze-visual')) newProgress = 60;
+                    if (msg.includes('running strategy') || msg.includes('starting analyze-strategy')) newProgress = 60;
+                    if (msg.includes('visual complete') || msg.includes('visual audit analysis complete')) newProgress = 70;
+                    if (msg.includes('strategy complete') || msg.includes('strategy audit completed')) newProgress = 70;
+
+                    // Accessibility
+                    if (msg.includes('running accessibility') || msg.includes('starting analyze-accessibility')) newProgress = 80;
+                    if (msg.includes('accessibility complete') || msg.includes('accessibility audit completed')) newProgress = 85;
+
+                    // Contextual & Final
+                    if (msg.includes('contextual') || msg.includes('strategic impact')) newProgress = 90;
+                    if (msg.includes('contextual analysis complete')) newProgress = 95;
+                    if (msg.includes('job completed') || msg.includes('saving') || msg.includes('finalizing')) newProgress = 98;
+                    if (msg.includes('complete') && (msg.includes('job') || msg.includes('all'))) newProgress = 100;
 
                     return { ...prev, status: message, progress: Math.max(prev.progress, newProgress) };
                 });
             },
+
             onData: (chunk) => {
                 if (chunk.key === 'screenshots' && chunk.data?.length > 0) {
                     setState(prev => ({ ...prev, latestScreenshot: chunk.data[0].data }));

@@ -89,7 +89,6 @@ export const GlobalNavbar: React.FC = () => {
                         >
                             Pricing
                         </Link>
-
                     </div>
 
                     {/* Right: Auth Section & Dynamic Links */}

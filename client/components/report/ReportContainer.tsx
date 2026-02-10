@@ -3,11 +3,9 @@ import { AnalysisReport, Screenshot, AuditInput } from '../../types';
 import { saveSharedAudit } from '../../services/auditStorage';
 import { useAuth } from '../../contexts/AuthContext';
 import { useReportPdf } from '../../hooks/useReportPdf';
-
 import { ASSETS } from './constants';
 import toast from 'react-hot-toast';
 import { ReportLayout } from './ReportLayout';
-import { getBaseUrlForStatic } from '../../services/config';
 
 interface ReportContainerProps {
     report: AnalysisReport | null;
@@ -43,6 +41,7 @@ export const ReportContainer: React.FC<ReportContainerProps> = ({
         }
     }, [user, isSharedView]);
 
+    // --- PDF LOGIC ---
     const { generatePdf, isPdfGenerating, pdfError } = useReportPdf({
         report,
         url,
@@ -50,8 +49,6 @@ export const ReportContainer: React.FC<ReportContainerProps> = ({
         whiteLabelLogo,
         defaultLogoSrc: ASSETS.headerLogo
     });
-
-
 
     // --- SHARE LOGIC ---
     const [isSharing, setIsSharing] = useState(false);
@@ -87,11 +84,9 @@ export const ReportContainer: React.FC<ReportContainerProps> = ({
 
     const getScreenshotSrc = (s: Screenshot | undefined) => {
         if (!s) return undefined;
-        if (s.url && (s.url.startsWith('/uploads') || !s.url.startsWith('http'))) {
-            const baseUrl = getBaseUrlForStatic();
-
-            const subPath = s.url.startsWith('/') ? s.url : `/${s.url}`;
-            return `${baseUrl}${subPath}?t=${Date.now()}`;
+        if (s.url && s.url.startsWith('/uploads')) {
+            const backendUrl = import.meta.env.VITE_BACKEND_URL || import.meta.env.VITE_API_URL || (import.meta.env.PROD ? 'https://mus-node-production.up.railway.app' : 'http://localhost:8080');
+            return `${backendUrl}${s.url}`;
         }
         if (s.url) return s.url;
         if (s.data) return `data:image/jpeg;base64,${s.data}`;
@@ -125,7 +120,6 @@ export const ReportContainer: React.FC<ReportContainerProps> = ({
             pdfError={pdfError}
             onGeneratePdf={generatePdf}
             isPdfGenerating={isPdfGenerating}
-
             onShareAudit={handleShareAudit}
             isSharing={isSharing}
             onRunNewAudit={onRunNewAudit}

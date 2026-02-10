@@ -1,5 +1,4 @@
 import React from 'react';
-import { getBaseUrlForStatic } from '../services/config';
 import { AuditInput } from '../types';
 
 interface ScanningPreviewProps {
@@ -87,15 +86,14 @@ export const ScanningPreview: React.FC<ScanningPreviewProps> = ({ screenshot, pr
                 </div>
 
                 {/* Screenshot Container */}
-                <div className="relative bg-white border-2 border-border-main rounded-b-xl overflow-hidden aspect-[16/10] shadow-neo hover:shadow-neo-hover transition-shadow">
+                <div className="relative bg-white border-2 border-border-main rounded-b-xl overflow-hidden aspect-[16/10] shadow-neo">
                     {screenshot ? (
                         <img
                             src={(() => {
                                 if (screenshot.startsWith('data:')) return screenshot;
-                                if (screenshot.startsWith('http')) return screenshot;
                                 if (screenshot.startsWith('/uploads')) {
-                                    const baseUrl = getBaseUrlForStatic();
-                                    return `${baseUrl}${screenshot}`;
+                                    const backendUrl = import.meta.env.VITE_BACKEND_URL || import.meta.env.VITE_API_URL || (import.meta.env.PROD ? 'https://mus-node-production.up.railway.app' : 'http://localhost:3000');
+                                    return `${backendUrl}${screenshot}`;
                                 }
                                 return `data:image/png;base64,${screenshot}`;
                             })()}
@@ -104,41 +102,31 @@ export const ScanningPreview: React.FC<ScanningPreviewProps> = ({ screenshot, pr
                         />
                     ) : (
                         <div className="w-full h-full bg-gradient-to-br from-slate-50 to-slate-100 flex flex-col items-center justify-center p-6">
-                            {url && (
-                                <div className="text-center">
-                                    {/* Status Badge */}
-                                    <div className="mt-0 flex items-center justify-center">
-                                        <div className="inline-flex items-top gap-2 px-4 py-2 bg-white border-2 border-border-main shadow-neo">
-                                            <span className="text-sm font-bold text-text-primary ml-2">
-                                                {/* Progress Text */}
-                                                <h2 className="text-xl md:text-2xl font-bold text-text-primary mb-2">
-                                                    Analyzing your website
-                                                </h2>
-                                                <p className="text-sm text-text-secondary mb-8">
-                                                    This typically takes 2-3 minutes
-                                                </p>
-                                            </span>
-                                        </div>
+                            <div className="text-center">
+                                <div className="mt-0 flex items-center justify-center">
+                                    <div className="inline-flex items-top gap-2 px-4 py-2 bg-white border-2 border-border-main shadow-neo">
+                                        <span className="text-sm font-bold text-text-primary ml-2">
+                                            <h2 className="text-xl md:text-2xl font-bold text-text-primary mb-2">
+                                                Analyzing your website
+                                            </h2>
+                                            <p className="text-sm text-text-secondary mb-8">
+                                                This typically takes 2-3 minutes
+                                            </p>
+                                        </span>
                                     </div>
                                 </div>
-                            )}
+                            </div>
                         </div>
                     )}
 
                     {/* Continuous Scanning Line with Triple Glow Effect */}
                     <div className="scanning-line-container absolute left-0 w-full h-1 z-30 pointer-events-none">
-                        {/* Outer glow (blur) */}
                         <div className="absolute inset-0 bg-gradient-to-r from-transparent via-brand to-transparent blur-md opacity-60"></div>
-
-                        {/* Middle glow */}
                         <div className="absolute inset-0 bg-gradient-to-r from-transparent via-[#8B5CF6] to-transparent blur-sm opacity-70"></div>
-
-                        {/* Sharp core line */}
                         <div className="absolute inset-0 h-[2px] bg-gradient-to-r from-transparent via-white to-transparent opacity-95"></div>
                     </div>
 
-
-                    {/* Grid Overlay (Matrix-style) */}
+                    {/* Grid Overlay */}
                     <div
                         className="absolute inset-0 pointer-events-none opacity-10"
                         style={{
@@ -147,40 +135,30 @@ export const ScanningPreview: React.FC<ScanningPreviewProps> = ({ screenshot, pr
                         }}
                     ></div>
 
-                    {/* Subtle vignette effect */}
                     <div className="absolute inset-0 bg-gradient-radial from-transparent via-transparent to-black/5 pointer-events-none"></div>
 
-                    {/* Progress Bar - Bottom with Two-Line Text */}
+                    {/* Progress Bar - Bottom */}
                     <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-white via-white/95 to-white/80 backdrop-blur-md border-t-2 border-border-main z-40">
-                        {/* Status Text + Percentage */}
                         <div className="px-4 pt-3 pb-2 flex items-center justify-between gap-4">
-                            {/* Left: Glow Dots + Text */}
                             <div className="flex items-center gap-2">
-                                {/* Pulsing Dot */}
                                 <div className="relative flex-shrink-0">
                                     <div className="w-2 h-2 bg-brand rounded-full animate-ping"></div>
                                     <div className="w-2 h-2 bg-brand rounded-full absolute top-0 left-0 animate-pulse"></div>
                                 </div>
-
-                                {/* Scanning Text */}
-                                <h3 className="text-sm font-bold text-text-primary truncate max-w-[200px] md:max-w-[400px]">
+                                <h3 className="text-sm font-bold text-text-primary">
                                     {loadingMessage || 'Scanning...'}
                                 </h3>
                             </div>
-
-                            {/* Right: Percentage */}
                             <span className="text-lg font-bold text-brand tabular-nums flex-shrink-0">
-                                {progress}%
+                                {Math.round(progress)}%
                             </span>
                         </div>
 
-                        {/* Thicker Progress Bar */}
                         <div className="h-3 bg-slate-200 overflow-hidden">
                             <div
                                 className={`h-full bg-gradient-to-r from-brand to-[#8B5CF6] ${hasMounted ? 'transition-all duration-500 ease-out' : 'transition-none'} shadow-[0_0_12px_rgba(99,102,241,0.6)] relative`}
                                 style={{ width: `${progress}%` }}
                             >
-                                {/* Shimmer effect */}
                                 <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/40 to-transparent animate-shimmer"></div>
                             </div>
                         </div>
@@ -189,43 +167,18 @@ export const ScanningPreview: React.FC<ScanningPreviewProps> = ({ screenshot, pr
             </div>
 
             <style>{`
-                /* Continuous scanning animation - infinite loop */
                 @keyframes scanContinuous {
-                    0% {
-                        top: 0%;
-                        opacity: 1;
-                    }
-                    45% {
-                        top: 100%;
-                        opacity: 1;
-                    }
-                    50% {
-                        top: 100%;
-                        opacity: 0;
-                    }
-                    55% {
-                        top: 0%;
-                        opacity: 0;
-                    }
-                    60% {
-                        top: 0%;
-                        opacity: 1;
-                    }
-                    100% {
-                        top: 100%;
-                        opacity: 1;
-                    }
+                    0% { top: 0%; opacity: 1; }
+                    45% { top: 100%; opacity: 1; }
+                    50% { top: 100%; opacity: 0; }
+                    55% { top: 0%; opacity: 0; }
+                    60% { top: 0%; opacity: 1; }
+                    100% { top: 100%; opacity: 1; }
                 }
                 
                 @keyframes pulse-slow {
-                    0%, 100% { 
-                        opacity: 1; 
-                        transform: scale(1);
-                    }
-                    50% { 
-                        opacity: 0.3;
-                        transform: scale(0.95);
-                    }
+                    0%, 100% { opacity: 1; transform: scale(1); }
+                    50% { opacity: 0.3; transform: scale(0.95); }
                 }
                 
                 .scanning-line-container {
@@ -236,7 +189,6 @@ export const ScanningPreview: React.FC<ScanningPreviewProps> = ({ screenshot, pr
                     animation: pulse-slow 2.5s cubic-bezier(0.4, 0, 0.6, 1) infinite;
                 }
 
-                /* Shimmer animation for progress bar */
                 @keyframes shimmer {
                     0% { transform: translateX(-100%); }
                     100% { transform: translateX(100%); }
@@ -246,7 +198,6 @@ export const ScanningPreview: React.FC<ScanningPreviewProps> = ({ screenshot, pr
                     animation: shimmer 2s infinite;
                 }
 
-                /* Radial gradient support */
                 .bg-gradient-radial {
                     background-image: radial-gradient(circle, var(--tw-gradient-stops));
                 }

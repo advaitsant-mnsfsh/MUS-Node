@@ -7,22 +7,37 @@ import { eq, desc } from "drizzle-orm";
 
 const router = Router();
 
-// --- UNSECURE RESET PASSWORD (For Dev/Simplified Flow) ---
-router.post("/auth/reset-password-unsecure", async (req, res) => {
-    const { email, newPassword } = req.body;
-    if (!email || !newPassword) {
-        return res.status(400).json({ error: "Missing email or newPassword" });
+// --- SECURE OTP-BASED PASSWORD RESET ---
+router.post("/auth/reset-password-with-otp", async (req, res) => {
+    const { email, otp, newPassword } = req.body;
+    if (!email || !otp || !newPassword) {
+        return res.status(400).json({ error: "Missing email, otp, or newPassword" });
     }
 
     try {
-        console.log(`[Auth] 🔄 Unsecure Reset Password requested for: ${email}`);
+        console.log(`[Auth] 🔄 Reset Password with OTP requested for: ${email}`);
 
-        // 1. Generate a reset token (internal call)
+        // 1. Verify OTP using the email-otp plugin API
+        // Note: verifyEmail will throw or return error if invalid
+        const verifyResult = await (auth.api as any).verifyEmail({
+            body: { email, otp }
+        });
+
+        if (verifyResult.error) {
+            console.error(`[Auth] ❌ OTP Verification failed for ${email}:`, verifyResult.error);
+            return res.status(400).json({ error: "Invalid or expired verification code." });
+        }
+
+        // 2. OTP is valid! Now we need to actually change the password.
+        // Since the user is now "verified", we can use the internal resetPassword API.
+        // We still need a token because Better-Auth's resetPassword requires one.
+
+        // Generate a reset token
         await (auth.api as any).forgotPassword({
             body: { email }
         });
 
-        // 2. Grab the token from the DB immediately
+        // Grab the token from the DB
         const [tokenRecord] = await db.select()
             .from(verification)
             .where(eq(verification.identifier, email))
@@ -30,11 +45,10 @@ router.post("/auth/reset-password-unsecure", async (req, res) => {
             .limit(1);
 
         if (!tokenRecord) {
-            console.error(`[Auth] ❌ Failed to find reset token for ${email}`);
-            return res.status(404).json({ error: "User not found or token generation failed." });
+            return res.status(500).json({ error: "Failed to generate security token." });
         }
 
-        // 3. Apply the reset
+        // Apply the reset
         await auth.api.resetPassword({
             body: {
                 token: tokenRecord.value,
@@ -42,10 +56,10 @@ router.post("/auth/reset-password-unsecure", async (req, res) => {
             }
         });
 
-        console.log(`[Auth] ✅ Password reset successfully for: ${email}`);
+        console.log(`[Auth] ✅ Password reset successfully via OTP for: ${email}`);
         return res.json({ success: true });
     } catch (e: any) {
-        console.error(`[Auth] 💥 Reset Password Error:`, e);
+        console.error(`[Auth] 💥 Reset Password OTP Error:`, e);
         return res.status(500).json({ error: e.message || "Internal Server Error" });
     }
 });

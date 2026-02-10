@@ -12,6 +12,7 @@ interface ReportRendererProps {
     // Context inputs passed down for Competitor view
     primaryUrl?: string;
     competitorUrl?: string;
+    isSharedView?: boolean;
 }
 
 export const ReportRenderer: React.FC<ReportRendererProps> = ({
@@ -20,7 +21,8 @@ export const ReportRenderer: React.FC<ReportRendererProps> = ({
     competitorScreenshotSrc,
     isCompetitorReport,
     primaryUrl,
-    competitorUrl
+    competitorUrl,
+    isSharedView
 }) => {
     if (!report) {
         return (
@@ -48,5 +50,11 @@ export const ReportRenderer: React.FC<ReportRendererProps> = ({
     }
 
     // STANDARD REPORT
-    return <StandardReportView report={report} primaryScreenshotSrc={primaryScreenshotSrc} />;
+    return (
+        <StandardReportView
+            report={report}
+            primaryScreenshotSrc={primaryScreenshotSrc}
+            isSharedView={isSharedView}
+        />
+    );
 };

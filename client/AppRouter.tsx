@@ -7,15 +7,13 @@ import DashboardPage from './pages/DashboardPage';
 import APIKeysPage from './pages/APIKeysPage';
 import AboutPage from './pages/AboutPage';
 import PricingPage from './pages/PricingPage';
-import DocsWidgetPage from './pages/DocsWidgetPage';
 import { LoadingScreen } from './components/LoadingScreen';
 import { DataLoadingScreen } from './components/DataLoadingScreen';
-import { ReportDisplay } from './components/ReportDisplay';
+import { ReportContainer } from './components/report/ReportContainer';
+
 import { Logo } from './components/Logo';
 import { getSharedAudit } from './services/auditStorage';
-import { AnalysisReport, Screenshot } from './types';
-import { AuthProvider } from './contexts/AuthContext';
-import { AuditProvider } from './contexts/AuditContext';
+import { AnalysisReport, Screenshot, AuditInput } from './types';
 import { Layout } from './components/Layout';
 
 // Wrapper for Layout to use with Outlet
@@ -33,6 +31,7 @@ function SharedAuditView() {
     const [report, setReport] = useState<AnalysisReport | null>(null);
     const [url, setUrl] = useState<string>('');
     const [screenshots, setScreenshots] = useState<Screenshot[]>([]);
+    const [inputs, setInputs] = useState<AuditInput[]>([]);
     const [screenshotMimeType, setScreenshotMimeType] = useState<string>('image/png');
     const [whiteLabelLogo, setWhiteLabelLogo] = useState<string | null>(null);
 
@@ -63,7 +62,8 @@ function SharedAuditView() {
                         // Job is done! Transform to Report format.
                         setReport(job.report_data);
                         setUrl(job.report_data?.url || 'Analyzed Site'); // Fallback
-                        if (job.report_data?.screenshots) setScreenshots(job.report_data.screenshots);
+                        setScreenshots(job.report_data?.screenshots || []);
+                        setInputs(job.inputs || []);
                         setJobStatus('completed');
                         setLoading(false);
                         return; // Done
@@ -108,6 +108,7 @@ function SharedAuditView() {
                     setReport(data.report);
                     setUrl(data.url);
                     setScreenshots(data.screenshots);
+                    setInputs(data.inputs || []);
                     setScreenshotMimeType(data.screenshotMimeType);
                     setWhiteLabelLogo(data.whiteLabelLogo || null);
                     setLoading(false);
@@ -152,9 +153,9 @@ function SharedAuditView() {
     }
 
     return (
-        <div className="min-h-screen bg-slate-50 text-slate-800 font-sans p-2 sm:p-6 lg:p-8">
-            <div className="max-w-7xl mx-auto">
-                <ReportDisplay
+        <div className="min-h-screen bg-slate-50 text-slate-800 font-sans">
+            <div className="w-full">
+                <ReportContainer
                     report={report}
                     url={url}
                     screenshots={screenshots}
@@ -163,6 +164,7 @@ function SharedAuditView() {
                     auditId={auditId || null}
                     onRunNewAudit={() => { }} // No-op in shared view
                     whiteLabelLogo={whiteLabelLogo}
+                    inputs={inputs}
                     isSharedView={true} // New prop to indicate shared/read-only mode
                 />
             </div>
@@ -173,31 +175,26 @@ function SharedAuditView() {
 // Root component with routing
 function AppWithRouting() {
     return (
-        <AuthProvider>
-            <AuditProvider>
-                <BrowserRouter>
-                    <Toaster position="top-center" />
-                    <Routes>
-                        {/* Main Application with Global Layout */}
-                        <Route element={<LayoutWrapper />}>
-                            <Route path="/" element={<App />} />
-                            <Route path="/analysis/:auditId" element={<App />} />
-                            <Route path="/report/:auditId" element={<App />} />
-                            <Route path="/dashboard" element={<DashboardPage />} />
-                            <Route path="/api-keys" element={<APIKeysPage />} />
-                            <Route path="/login" element={<App />} />
-                            <Route path="/about" element={<AboutPage />} />
-                            <Route path="/pricing" element={<PricingPage />} />
-                            <Route path="/docs/widget" element={<DocsWidgetPage />} />
-                        </Route>
+        <BrowserRouter>
+            <Toaster position="top-center" />
+            <Routes>
+                {/* Main Application with Global Layout */}
+                <Route element={<LayoutWrapper />}>
+                    <Route path="/" element={<App />} />
+                    <Route path="/analysis/:auditId" element={<App />} />
+                    <Route path="/report/:auditId" element={<App />} />
+                    <Route path="/dashboard" element={<DashboardPage />} />
+                    <Route path="/api-keys" element={<APIKeysPage />} />
+                    <Route path="/login" element={<App />} />
+                    <Route path="/about" element={<AboutPage />} />
+                    <Route path="/pricing" element={<PricingPage />} />
+                </Route>
 
-                        {/* Standalone Views (No Global Nav) */}
-                        <Route path="/shared/:auditId" element={<SharedAuditView />} />
-                        <Route path="/embed" element={<EmbedPage />} />
-                    </Routes>
-                </BrowserRouter>
-            </AuditProvider>
-        </AuthProvider>
+                {/* Standalone Views (No Global Nav) */}
+                <Route path="/shared/:auditId" element={<SharedAuditView />} />
+                <Route path="/embed" element={<EmbedPage />} />
+            </Routes>
+        </BrowserRouter>
     );
 }
 

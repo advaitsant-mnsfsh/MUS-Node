@@ -8,10 +8,11 @@ export interface SharedAuditData {
     screenshotMimeType: string;
     whiteLabelLogo?: string | null;
     createdAt: string;
+    inputs?: any[];
 }
 
 // Backend URL logic
-import { getBackendUrl } from './config';
+const backendUrl = import.meta.env.VITE_BACKEND_URL || import.meta.env.VITE_API_URL || (import.meta.env.PROD ? 'https://mus-node-production.up.railway.app' : 'http://localhost:8080');
 
 /**
  * Save audit data (Unified Flow)
@@ -60,7 +61,8 @@ export async function getSharedAudit(auditId: string): Promise<SharedAuditData |
         screenshots: screenshots,
         screenshotMimeType: report.screenshotMimeType || 'image/jpeg',
         whiteLabelLogo: null,
-        createdAt: new Date().toISOString()
+        createdAt: new Date().toISOString(),
+        inputs: job.inputs || []
     };
 }
 
@@ -86,7 +88,7 @@ export async function getAuditJob(jobId: string): Promise<AuditJobData | null> {
         try {
             // Prioritize API over Storage (since we stopped using Storage)
             // Try API endpoint
-            const response = await fetch(`${getBackendUrl()}/api/public/jobs/${jobId}`);
+            const response = await fetch(`${backendUrl}/api/public/jobs/${jobId}`);
             if (response.ok) {
                 const apiData = await response.json();
                 return {
@@ -129,7 +131,7 @@ export async function transferAuditOwnership(auditId: string, userId: string): P
         const { authenticatedFetch } = await import('../lib/authenticatedFetch');
 
         // Use authenticatedFetch to ensure session token is sent
-        const response = await authenticatedFetch(`${getBackendUrl()}/api/v1/audit/claim`, {
+        const response = await authenticatedFetch(`${backendUrl}/api/v1/audit/claim`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'

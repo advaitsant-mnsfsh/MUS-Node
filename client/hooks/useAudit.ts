@@ -18,7 +18,7 @@ export const useAudit = () => {
     const { auditId } = useParams<{ auditId: string }>();
     const navigate = useNavigate();
     const location = useLocation();
-    const { user } = useAuth(); // Restore useAuth hook
+    const { user } = useAuth();
     const { activeAuditId: globalAuditId, progress: globalProgress, status: globalStatus, setActiveAudit, clearActiveAudit } = useGlobalAudit();
     const isResumingActive = globalAuditId === auditId;
 
@@ -51,7 +51,7 @@ export const useAudit = () => {
             setTargetProgress(globalProgress);
             if (globalStatus) setLoadingMessage(globalStatus);
         }
-    }, [isResumingActive, globalProgress, globalStatus]);
+    }, [isResumingActive, globalProgress, globalStatus, targetProgress]);
 
     // 1. Smooth Progress Interpolation
     useEffect(() => {
@@ -70,7 +70,10 @@ export const useAudit = () => {
         if (isResumingActive && globalProgress > targetProgress) {
             setTargetProgress(globalProgress);
         }
-    }, [isResumingActive, globalProgress, targetProgress]);
+        if (isResumingActive && globalStatus && globalStatus !== loadingMessage) {
+            setLoadingMessage(globalStatus);
+        }
+    }, [isResumingActive, globalProgress, globalStatus, targetProgress, loadingMessage]);
 
     // 2. Microcopy Rotation
     useEffect(() => {
@@ -97,7 +100,6 @@ export const useAudit = () => {
             setPerformanceError(errorMessage);
         },
         onJobCreated: (id: string) => {
-            setActiveAudit(id);
             navigate(`/analysis/${id}`, { state: { newAudit: true } });
         },
         onStatus: (message: string) => {
@@ -113,32 +115,35 @@ export const useAudit = () => {
             // Progress Logic
             setTargetProgress(prev => {
                 let newProgress = prev;
-                const msg = message.toUpperCase();
+                const msg = message.toLowerCase();
 
-                // 0. Initial & Scrape Phase (5-35%)
-                if (msg.includes('AUDIT IS IN PROGRESS')) newProgress = 5;
-                if (msg.includes('STARTING STANDARD ANALYSIS')) newProgress = 10;
-                if (msg.includes('SCRAPING')) newProgress = 15;
-                if (msg.includes('SCRAPE SUCCESSFUL')) newProgress = 30;
-                if (msg.includes('SCRAPE COMPLETE')) newProgress = 35;
+                if (msg.includes('initiating') || msg.includes('queued') || msg.includes('starting audit')) newProgress = 5;
+                if (msg.includes('scraping') || msg.includes('processing uploaded')) newProgress = 15;
+                if (msg.includes('scrape complete') || msg.includes('content acquired') || msg.includes('analyzing content')) newProgress = 30;
+                if (msg.includes('checking performance') || msg.includes('performance check')) newProgress = 32;
+                if (msg.includes('running experts') || msg.includes('starting batch')) newProgress = 35;
 
-                // 2. Competitor Specific (10-50%)
-                if (msg.includes('STARTING COMPETITOR ANALYSIS')) newProgress = 10;
-                if (msg.includes('SCRAPING PRIMARY')) newProgress = 20;
-                if (msg.includes('SCRAPING COMPETITOR')) newProgress = 40;
-                if (msg.includes('AI COMPARISON')) newProgress = 60;
+                // UX & Product
+                if (msg.includes('running ux') || msg.includes('starting analyze-ux')) newProgress = 40;
+                if (msg.includes('running product') || msg.includes('starting analyze-product')) newProgress = 40;
+                if (msg.includes('ux complete') || msg.includes('ux audit analysis complete')) newProgress = 50;
+                if (msg.includes('product complete') || msg.includes('product audit analysis complete')) newProgress = 50;
 
-                // 3. Experts Phase (40-90%) - Pro-rated jump per expert
-                if (msg.includes('UX COMPLETE')) newProgress = 42;
-                if (msg.includes('PRODUCT COMPLETE')) newProgress = 54;
-                if (msg.includes('VISUAL COMPLETE')) newProgress = 66;
-                if (msg.includes('STRATEGY COMPLETE')) newProgress = 78;
-                if (msg.includes('ACCESSIBILITY COMPLETE')) newProgress = 90;
+                // Visual & Strategy
+                if (msg.includes('running visual') || msg.includes('starting analyze-visual')) newProgress = 60;
+                if (msg.includes('running strategy') || msg.includes('starting analyze-strategy')) newProgress = 60;
+                if (msg.includes('visual complete') || msg.includes('visual audit analysis complete')) newProgress = 70;
+                if (msg.includes('strategy complete') || msg.includes('strategy audit completed')) newProgress = 70;
 
-                // 4. Final Phase (90-100%)
-                if (msg.includes('STRATEGIC IMPACT')) newProgress = 92;
-                if (msg.includes('CONTEXTUAL ANALYSIS COMPLETE')) newProgress = 95;
-                if (msg.includes('FAILED')) newProgress = 0;
+                // Accessibility
+                if (msg.includes('running accessibility') || msg.includes('starting analyze-accessibility')) newProgress = 80;
+                if (msg.includes('accessibility complete') || msg.includes('accessibility audit completed')) newProgress = 85;
+
+                // Contextual & Final
+                if (msg.includes('contextual') || msg.includes('strategic impact')) newProgress = 90;
+                if (msg.includes('contextual analysis complete')) newProgress = 95;
+                if (msg.includes('job completed') || msg.includes('saving') || msg.includes('finalizing')) newProgress = 98;
+                if (msg.includes('complete') && (msg.includes('job') || msg.includes('all'))) newProgress = 100;
 
                 return Math.max(prev, newProgress);
             });
@@ -148,7 +153,7 @@ export const useAudit = () => {
             if (chunk.key === 'screenshotMimeType') setScreenshotMimeType(chunk.data);
             setReport(prevReport => ({ ...prevReport, [chunk.key]: chunk.data }));
         },
-        onComplete: ({ auditId: completedId, screenshotUrl }: any) => {
+        onComplete: ({ auditId: completedId }: any) => {
             setUiAuditId(completedId);
             setTargetProgress(100);
             setIsLoading(false);
@@ -161,7 +166,7 @@ export const useAudit = () => {
             setProgress(0);
         },
         onClose: () => { }
-    }), [navigate, location.pathname, auditId, setActiveAudit, clearActiveAudit]);
+    }), [navigate, location.pathname, auditId]);
 
 
     const lastAuditId = useRef<string | undefined>(undefined);
@@ -169,7 +174,6 @@ export const useAudit = () => {
     // 3. Main Data Loading / Resume Logic
     useEffect(() => {
         if (!auditId) {
-            // User navigated to root (Start New Audit) - Reset State
             if (report || isLoading || error) {
                 setReport(null);
                 setScreenshots([]);
@@ -184,7 +188,6 @@ export const useAudit = () => {
             return;
         }
 
-        // Prevent double-loading for the SAME ID in StrictMode or re-renders
         if (lastAuditId.current === auditId) return;
         lastAuditId.current = auditId;
 
@@ -192,7 +195,6 @@ export const useAudit = () => {
             const { getAuditJob } = await import('../services/auditStorage');
 
             try {
-                // Support job from location.state for instant loading
                 // @ts-ignore
                 const isNewAudit = location.state?.newAudit;
                 // @ts-ignore
@@ -206,10 +208,13 @@ export const useAudit = () => {
                 }
 
                 if (job) {
-                    console.log(`[useAudit] Initial job load: status=${job.status}, hasReport=${!!job.report_data}`);
-                    // Update state from job
                     const reportData = job.report_data;
-                    if (reportData) setReport(reportData);
+                    if (reportData) {
+                        setReport(reportData);
+                        if (reportData.screenshots) setScreenshots(reportData.screenshots);
+                        if (reportData.screenshotMimeType) setScreenshotMimeType(reportData.screenshotMimeType);
+                    }
+
                     if (job.inputs) {
                         setReportInputs(job.inputs);
                         if (job.inputs.length > 0) {
@@ -217,61 +222,46 @@ export const useAudit = () => {
                             setSubmittedUrl(firstInput.type === 'url' ? firstInput.url! : 'Manual Upload');
                         }
                     }
-                    if (job.report_data?.screenshots && job.report_data.screenshots.length > 0) {
-                        setScreenshots(job.report_data.screenshots);
-                    } else if ((job as any).screenshots && (job as any).screenshots.length > 0) {
+
+                    if ((job as any).screenshots && (job as any).screenshots.length > 0) {
                         setScreenshots((job as any).screenshots);
                     }
-
-                    if (job.report_data?.screenshotMimeType) {
-                        setScreenshotMimeType(job.report_data.screenshotMimeType);
-                    } else if ((job as any).screenshotMimeType) {
-                        setScreenshotMimeType((job as any).screenshotMimeType);
-                    }
+                    if ((job as any).screenshotMimeType) setScreenshotMimeType((job as any).screenshotMimeType);
 
                     setUiAuditId(job.id);
 
                     if (job.status === 'completed' && reportData) {
-                        console.log('[useAudit] Job is already completed. Navigating to report.');
                         setIsLoading(false);
                         if (location.pathname.includes('/analysis/')) {
                             navigate(`/report/${auditId}`, { replace: true });
                         }
                         return;
                     }
-                    if (job.status === 'failed') {
-                        console.error('[useAudit] Job failed:', job.error_message);
-                        setError(job.error_message || 'Audit failed');
-                        setIsLoading(false);
-                        return;
-                    }
                 }
 
-                // If not found or not completed, THEN show loading screen for the stream/fetch
                 const { getBackendUrl } = await import('../services/config');
-                console.log(`[useAudit] Monitoring stream for ${auditId} on ${getBackendUrl()}`);
-                console.log(`[useAudit] 🛠️ DEBUG LINK (Public API): ${getBackendUrl()}/api/public/jobs/${auditId}`);
+                console.log(`[useAudit] Monitoring poll for ${auditId} on ${getBackendUrl()}`);
+
                 if (!isResumingActive) {
                     setLoadingMessage('Optimizing connection to audit stream...');
                 }
+
                 setUiAuditId(auditId);
                 setActiveAudit(auditId);
-                const { monitorJobPoll } = await import('../services/geminiService');
+
                 monitorJobPoll(auditId, getStreamCallbacks(true));
                 setIsLoading(true);
 
             } catch (e) {
                 console.error('[useAudit] loadOrMonitor failed:', e);
-                // Try stream anyway as fallback
                 setActiveAudit(auditId);
-                const { monitorJobPoll } = await import('../services/geminiService');
                 monitorJobPoll(auditId, getStreamCallbacks(true));
                 setIsLoading(true);
             }
         };
 
         loadOrMonitor();
-    }, [auditId, location.pathname]); // Keep dependencies minimal
+    }, [auditId, location.pathname, isResumingActive, setActiveAudit, getStreamCallbacks, navigate, report, isLoading, error]);
 
 
     // --- ACTION HANDLERS ---
@@ -283,16 +273,12 @@ export const useAudit = () => {
         setScreenshotMimeType('image/png');
         setUiAuditId(null);
         setPerformanceError(null);
-        setLoadingMessage('Starting audit agents...');
+        setLoadingMessage('Initiating mixed-input audit...');
         setProgress(0);
         setTargetProgress(0);
 
-        // Get auth token if user is logged in
-        // Legacy Auth Token Logic Removed - Using Session Cookies via Better-Auth
-        const token = undefined;
-
-        analyzeWebsiteStream({ inputs, auditMode, token }, getStreamCallbacks(false));
-    }, [getStreamCallbacks, user]);
+        analyzeWebsiteStream({ inputs, auditMode }, getStreamCallbacks(false));
+    }, [getStreamCallbacks]);
 
     const handleAnalyze = useCallback(async (inputs: AuditInput[], auditMode: 'standard' | 'competitor' = 'standard') => {
         setError(null);
@@ -370,7 +356,6 @@ export const useAudit = () => {
     }, [startAnalysis]);
 
     const handleRunNewAudit = useCallback(() => {
-        clearActiveAudit();
         setReport(null);
         setError(null);
         setSubmittedUrl('');
@@ -382,10 +367,9 @@ export const useAudit = () => {
         setTargetProgress(0);
         setIsLoading(false);
         navigate('/');
-    }, [navigate, clearActiveAudit]);
+    }, [navigate]);
 
     return {
-        // State
         submittedUrl,
         report,
         isLoading,
@@ -402,8 +386,6 @@ export const useAudit = () => {
         whiteLabelLogo,
         auditId,
         user,
-
-        // Actions
         handleAnalyze,
         handleRunNewAudit,
         setWhiteLabelLogo
