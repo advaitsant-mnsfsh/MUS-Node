@@ -305,6 +305,19 @@ export const useAudit = () => {
         setSubmittedUrl(firstInput.type === 'url' ? firstInput.url! : 'Manual Upload');
         setReportInputs(inputs);
 
+        // If it's an uploaded screenshot, show it immediately
+        if (firstInput.type === 'upload' && (firstInput.file || firstInput.files?.length)) {
+            const file = firstInput.files?.[0] || firstInput.file;
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const base64 = e.target?.result as string;
+                    setScreenshots([{ data: base64.split(',')[1], path: '/', isMobile: false }]);
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
         // --- 2. DEFERRED PROCESSING ---
         setTimeout(async () => {
             const processedInputs: AuditInput[] = [];
