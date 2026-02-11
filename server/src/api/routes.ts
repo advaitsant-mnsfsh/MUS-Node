@@ -147,17 +147,30 @@ router.get('/audit', async (req: express.Request, res: express.Response) => {
                     lastStatus = job.status;
                 }
 
-                // Fine-grained Log Updates
-                const reportData = job.report_data as any;
-                if (reportData?.logs && Array.isArray(reportData.logs)) {
-                    const logs = reportData.logs;
+                // Fine-grained Log Updates from auditjobs_logs table
+                try {
+                    const { auditJobLogs } = await import('../db/schema.js');
+                    const { desc } = await import('drizzle-orm');
+
+                    const logs = await db.select({
+                        id: auditJobLogs.id,
+                        message: auditJobLogs.message,
+                        timestamp: auditJobLogs.created_at
+                    })
+                        .from(auditJobLogs)
+                        .where(eq(auditJobLogs.job_id, jobId))
+                        .orderBy(desc(auditJobLogs.created_at))
+                        .limit(1);
+
                     if (logs.length > 0) {
-                        const latestLog = logs[logs.length - 1];
+                        const latestLog = logs[0];
                         if (latestLog.message && latestLog.message !== (req as any)._lastLogMsg) {
                             sendChunk({ type: 'status', message: latestLog.message });
                             (req as any)._lastLogMsg = latestLog.message;
                         }
                     }
+                } catch (logErr) {
+                    console.warn(`[Stream] Could not fetch logs for job ${jobId}:`, logErr);
                 }
 
                 // Check if server is shutting down (Rolling deploy)
