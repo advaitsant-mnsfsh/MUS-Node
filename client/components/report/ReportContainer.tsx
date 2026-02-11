@@ -85,7 +85,7 @@ export const ReportContainer: React.FC<ReportContainerProps> = ({
     const getScreenshotSrc = (s: Screenshot | undefined) => {
         if (!s) return undefined;
         if (s.url && s.url.startsWith('/uploads')) {
-            const backendUrl = import.meta.env.VITE_BACKEND_URL || import.meta.env.VITE_API_URL || (import.meta.env.PROD ? 'https://mus-node-production.up.railway.app' : 'http://localhost:3000');
+            const backendUrl = import.meta.env.VITE_BACKEND_URL || import.meta.env.VITE_API_URL || (import.meta.env.PROD ? 'https://mus-node-production.up.railway.app' : 'http://localhost:8080');
             return `${backendUrl}${s.url}`;
         }
         if (s.url) return s.url;

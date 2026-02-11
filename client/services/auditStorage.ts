@@ -8,6 +8,7 @@ export interface SharedAuditData {
     screenshotMimeType: string;
     whiteLabelLogo?: string | null;
     createdAt: string;
+    inputs?: any[];
 }
 
 // Backend URL logic
@@ -60,7 +61,8 @@ export async function getSharedAudit(auditId: string): Promise<SharedAuditData |
         screenshots: screenshots,
         screenshotMimeType: report.screenshotMimeType || 'image/jpeg',
         whiteLabelLogo: null,
-        createdAt: new Date().toISOString()
+        createdAt: new Date().toISOString(),
+        inputs: job.inputs || []
     };
 }
 

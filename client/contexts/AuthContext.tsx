@@ -20,6 +20,7 @@ interface AuthContextType {
     user: User | null;
     isLoading: boolean;
     signOut: () => Promise<void>;
+    changePassword: (data: { currentPassword: string; newPassword: string }) => Promise<{ success: boolean; error?: string }>;
 }
 
 const AuthContext = createContext<AuthContextType>({
@@ -27,6 +28,7 @@ const AuthContext = createContext<AuthContextType>({
     user: null,
     isLoading: true,
     signOut: async () => { },
+    changePassword: async () => ({ success: false, error: 'Auth not initialized' }),
 });
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -69,8 +71,27 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         await authClient.signOut();
     };
 
+    const changePassword = async ({ currentPassword, newPassword }: { currentPassword: string; newPassword: string }) => {
+        try {
+            const { error } = await authClient.changePassword({
+                newPassword,
+                currentPassword,
+                revokeOtherSessions: true,
+            });
+
+            if (error) {
+                return { success: false, error: error.message || 'Failed to change password' };
+            }
+
+            return { success: true };
+        } catch (e: any) {
+            console.error('[AuthContext] Change Password Error:', e);
+            return { success: false, error: e.message || 'An unexpected error occurred' };
+        }
+    };
+
     return (
-        <AuthContext.Provider value={{ session, user, isLoading, signOut }}>
+        <AuthContext.Provider value={{ session, user, isLoading, signOut, changePassword }}>
             {children}
         </AuthContext.Provider>
     );

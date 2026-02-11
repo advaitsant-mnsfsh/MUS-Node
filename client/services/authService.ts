@@ -91,11 +91,12 @@ export async function signIn(email: string, password: string): Promise<{ session
 /**
  * Send OTP to email (for verification or login)
  */
-export async function sendOtp(email: string): Promise<{ error: string | null }> {
+export async function sendOtp(email: string, type: 'email-verification' | 'forget-password' = 'email-verification'): Promise<{ error: string | null }> {
     try {
         const client = authClient as any;
         const { error } = await client.emailOtp.sendVerificationOtp({
-            email
+            email,
+            type
         });
 
         if (error) {
@@ -107,6 +108,30 @@ export async function sendOtp(email: string): Promise<{ error: string | null }> 
     } catch (err: any) {
         console.error('Unexpected error sending OTP:', err);
         return { error: err.message || 'Failed to send OTP' };
+    }
+}
+
+/**
+ * Reset Password using OTP
+ */
+export async function resetPasswordWithOtp(email: string, otp: string, newPassword: string): Promise<{ success: boolean; error: string | null }> {
+    try {
+        const baseUrl = import.meta.env.VITE_BACKEND_URL || import.meta.env.VITE_API_URL || (import.meta.env.PROD ? 'https://mus-node-production.up.railway.app' : 'http://localhost:8080');
+        const response = await fetch(`${baseUrl}/api/auth/reset-password-with-otp`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email, otp, newPassword })
+        });
+
+        const result = await response.json();
+        if (!response.ok) {
+            return { success: false, error: result.error || 'Failed to reset password' };
+        }
+
+        return { success: true, error: null };
+    } catch (err: any) {
+        console.error('Unexpected error resetting password:', err);
+        return { success: false, error: err.message || 'Failed to reset password' };
     }
 }
 

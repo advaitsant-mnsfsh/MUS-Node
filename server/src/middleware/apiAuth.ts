@@ -24,9 +24,6 @@ async function getCachedSession(req: Request) {
     const hasSessionCookie = cookies.includes('session_token');
     const hasBearerToken = authHeader?.startsWith('Bearer ');
 
-    console.log(`[Auth-Diagnostic] 🛡️ Checking Auth for ${path}`);
-    console.log(`[Auth-Diagnostic] Cookie found: ${!!cookies}, Auth Header found: ${!!authHeader}`);
-
     try {
         // 1. Fetch Session
         // With 'bearer' plugin enabled, Better-Auth will automatically check
@@ -35,12 +32,12 @@ async function getCachedSession(req: Request) {
             headers: fromNodeHeaders(req.headers)
         });
 
-        if (session) {
-            console.log(`[Auth-Diagnostic] ✅ SUCCESS: Session found for ${session.user.email}`);
-        } else if (hasBearerToken) {
-            console.warn(`[Auth-Diagnostic] ❌ FAILURE: Bearer token present but rejected by Better-Auth.`);
+        if (!session) {
+            console.warn(`[Auth] ❌ Session fetch failed.`);
+            return null;
         }
 
+        // session.session is the actual session object, session.user is the user object
         return session;
     } catch (e) {
         console.error("[Auth-Diagnostic] 💥 Critical Auth Error:", e);
@@ -54,17 +51,14 @@ async function getCachedSession(req: Request) {
 export const requireUserAuth = async (req: Request, res: Response, next: NextFunction) => {
     const start = Date.now();
     try {
-        const session = await getCachedSession(req);
+        const sessionData = await getCachedSession(req);
 
-        if (!session) {
+        if (!sessionData) {
             console.warn(`[Auth] requireUserAuth: No session (took ${Date.now() - start}ms)`);
             return res.status(401).json({ error: 'Unauthorized: Session required' });
         }
 
-        const isCached = Date.now() - start < 10; // If it took < 10ms, it was definitely from cache
-        console.log(`[Auth] requireUserAuth: Verified ${session.user.email} (took ${Date.now() - start}ms${isCached ? ' [CACHED]' : ''})`);
-
-        (req as AuthenticatedRequest).user = session.user;
+        (req as AuthenticatedRequest).user = sessionData.user;
         next();
 
     } catch (error) {
@@ -79,12 +73,13 @@ export const requireUserAuth = async (req: Request, res: Response, next: NextFun
 export const validateAccess = async (req: Request, res: Response, next: NextFunction) => {
     const start = Date.now();
     // 1. Check Session
+    // 1. Check Session
     try {
-        const session = await getCachedSession(req);
-        if (session) {
+        const sessionData = await getCachedSession(req);
+        if (sessionData) {
             const isCached = Date.now() - start < 10;
-            console.log(`[Auth] validateAccess: Found Session (took ${Date.now() - start}ms${isCached ? ' [CACHED]' : ''})`);
-            (req as AuthenticatedRequest).user = session.user;
+            // console.log(`[Auth] validateAccess: Found Session (took ${Date.now() - start}ms${isCached ? ' [CACHED]' : ''})`);
+            (req as AuthenticatedRequest).user = sessionData.user;
             return next();
         }
     } catch (e) {
@@ -107,7 +102,7 @@ export const validateAccess = async (req: Request, res: Response, next: NextFunc
             });
 
             if (keyRecord) {
-                console.log(`[Auth] validateAccess: API Key Verified for ${keyRecord.owner_name}`);
+                // console.log(`[Auth] validateAccess: API Key Verified for ${keyRecord.owner_name}`); // Removed verbose log
                 (req as AuthenticatedRequest).apiKey = {
                     id: keyRecord.id,
                     owner_name: keyRecord.owner_name

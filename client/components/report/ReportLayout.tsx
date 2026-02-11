@@ -7,6 +7,7 @@ import { SkeletonLoader } from '../SkeletonLoader';
 import { AuthBlocker } from '../AuthBlocker';
 import { ReportRenderer } from './ReportRenderer';
 import { ChevronLeft, Link as LinkIcon, Share2, Download, Plus } from 'lucide-react';
+import SiteLogo from '../SiteLogo';
 
 interface ReportLayoutProps {
     report: AnalysisReport | null;
@@ -50,7 +51,7 @@ const UrlPillGroup = ({ inputs, fallbackUrl, label }: { inputs?: AuditInput[], f
         <div className="flex items-center gap-2">
             {/* Main URL Pill */}
             <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-white border-2 border-black shadow-neo-sm text-sm font-bold text-black min-w-0" title={mainUrlDisplay}>
-                <LinkIcon className="w-3.5 h-3.5 text-black stroke-[3px] shrink-0" />
+                <SiteLogo domain={mainUrlDisplay} size="tiny" className="shadow-none border-none p-0 rounded-none bg-transparent" />
                 <span className="truncate max-w-[120px] md:max-w-[200px] font-mono text-xs tracking-tight">
                     {mainUrlDisplay}
                 </span>
@@ -69,7 +70,7 @@ const UrlPillGroup = ({ inputs, fallbackUrl, label }: { inputs?: AuditInput[], f
                             Analyzed URLs ({inputs?.length})
                         </div>
                         <div className="flex flex-col gap-2 max-h-48 overflow-y-auto">
-                            {inputs?.map((input, idx) => (
+                            {inputs?.slice(1).map((input, idx) => (
                                 <div key={idx} className="flex items-center gap-2 text-xs font-medium text-slate-700 truncate">
                                     <div className="w-1.5 h-1.5 bg-black rounded-full shrink-0"></div>
                                     <span className="truncate font-mono">
@@ -203,6 +204,7 @@ export const ReportLayout: React.FC<ReportLayoutProps> = ({
                                     isCompetitorReport={auditMode === 'competitor'}
                                     primaryUrl={inputs.find(i => i.role === 'primary')?.url || inputs[0]?.url || url}
                                     competitorUrl={inputs.find(i => i.role === 'competitor')?.url || inputs[1]?.url || 'Competitor Website'}
+                                    isSharedView={isSharedView}
                                 />
                             </div>
                         </div>

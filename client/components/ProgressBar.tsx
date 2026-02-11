@@ -5,6 +5,13 @@ interface ProgressBarProps {
 }
 
 export const ProgressBar: React.FC<ProgressBarProps> = ({ progress }) => {
+  const [hasMounted, setHasMounted] = React.useState(false);
+
+  React.useEffect(() => {
+    const timer = setTimeout(() => setHasMounted(true), 100);
+    return () => clearTimeout(timer);
+  }, []);
+
   // Ensure progress is within 0-100 range for styling
   const clampedProgress = Math.max(0, Math.min(100, progress));
 
@@ -12,7 +19,7 @@ export const ProgressBar: React.FC<ProgressBarProps> = ({ progress }) => {
     <div className="flex items-center w-full max-w-lg mx-auto">
       <div className="w-full bg-slate-200 rounded-full h-3">
         <div
-          className="bg-indigo-600 h-3 rounded-full transition-all duration-300 ease-linear"
+          className={`bg-indigo-600 h-3 rounded-full ${hasMounted ? 'transition-all duration-300 ease-linear' : 'transition-none'}`}
           style={{ width: `${clampedProgress}%` }}
           role="progressbar"
           aria-valuenow={clampedProgress}

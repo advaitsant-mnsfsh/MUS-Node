@@ -9,7 +9,7 @@ import { getSchemas } from '../prompts.js';
 export class JobProcessor {
     static async processJob(jobId: string) {
         const envName = process.env.RAILWAY_ENVIRONMENT_NAME || process.env.NODE_ENV || 'development';
-        console.log(`[JobProcessor] [${envName}] Starting job ${jobId}`);
+        console.log(`[JobProcessor] 🌀 Starting Job: ${jobId}`);
         try {
             // 1. Update Status
             await JobService.updateJobStatus(jobId, 'processing');
@@ -194,14 +194,16 @@ export class JobProcessor {
                     const startTime = Date.now();
                     try {
                         const result = await performAnalysis(apiKeys, mode, analysisContext);
-                        console.log(`[JobProcessor] ✓ ${mode} completed in ${Date.now() - startTime}ms`);
+                        const duration = Date.now() - startTime;
+                        console.log(`[JobProcessor] ✅ EXPERT OK: ${mode} (${duration}ms)`);
 
                         // Update DB with partial result
                         await JobService.updateProgress(jobId, `✓ ${expertName} complete.`, { [result.key]: result.data });
 
                         return result;
                     } catch (error: any) {
-                        console.error(`[JobProcessor] ✗ ${mode} failed:`, error.message);
+                        console.error(`[JobProcessor] ❌ EXPERT FAILED: ${mode}:`, error.message);
+                        await JobService.updateProgress(jobId, `⚠️ ${expertName} failed: ${error.message.substring(0, 100)}`);
                         return { key: mode, data: null, error: error.message };
                     }
                 };
@@ -283,7 +285,7 @@ ${JSON.stringify(allIssues, null, 2)}`;
             const resultUrl = `/report/${jobId}`;
 
             await JobService.updateJobStatus(jobId, 'completed', reportData, undefined, resultUrl);
-            console.log(`[JobProcessor] Job ${jobId} finished successfully.`);
+            console.log(`[JobProcessor] ✨ Job Completed: ${jobId}`);
 
         } catch (error: any) {
             console.error(`[JobProcessor] Job ${jobId} failed:`, error);

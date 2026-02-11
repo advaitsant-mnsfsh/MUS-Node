@@ -31,10 +31,12 @@ export const auth = betterAuth({
         bearer(),
         emailOTP({
             async sendVerificationOTP({ email, otp, type }) {
-                const resendApiKey = process.env.RESEND_API_KEY;
+                const resendApiKey = process.env.RESEND_API_KEY || process.env.RESENT_API_KEY;
+                const fromEmail = process.env.RESEND_FROM_EMAIL || 'onboarding@resend.dev';
+
                 if (!resendApiKey) {
-                    console.error("[AUTH] RESEND_API_KEY is missing. OTP cannot be sent.");
-                    console.log(`[AUTH] FALLBACK OTP for ${email}: ${otp}`);
+                    console.error("[AUTH] ❌ RESEND_API_KEY is missing. OTP cannot be sent via email.");
+                    console.log(`[AUTH] 🔑 FALLBACK OTP for ${email}: ${otp}`);
                     return;
                 }
 
@@ -42,35 +44,54 @@ export const auth = betterAuth({
                     const { Resend } = await import("resend");
                     const resend = new Resend(resendApiKey);
 
-                    console.log(`[AUTH] 📤 Attempting to send OTP to ${email} via Resend...`);
+                    console.log(`[AUTH] 📤 Sending ${type} OTP to ${email} (From: ${fromEmail})`);
+
+                    const isReset = type === 'forget-password';
+                    const subject = isReset ? 'Reset Your MUS Password' : 'Your MUS Verification Code';
+                    const title = isReset ? 'Password Reset' : 'Verification Code';
+                    const description = isReset
+                        ? 'We received a request to reset your password. Use the code below to proceed.'
+                        : 'Enter the code below to complete your sign-in to MUS.';
 
                     const { data, error } = await resend.emails.send({
-                        from: 'onboarding@resend.dev',
+                        from: fromEmail,
                         to: [email],
-                        subject: 'Your Verification Code',
+                        subject: subject,
                         html: `
-                            <div style="font-family: sans-serif; padding: 20px; border: 1px solid #eee; border-radius: 10px; max-width: 500px; margin: auto;">
-                                <h1 style="color: #333;">Verification Code</h1>
-                                <p style="font-size: 16px; color: #666;">Use the following code to sign in to MUS:</p>
-                                <div style="font-size: 32px; font-weight: bold; color: #000; letter-spacing: 5px; margin: 20px 0;">${otp}</div>
-                                <p style="font-size: 14px; color: #999;">This code will expire in 10 minutes.</p>
+                            <div style="font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; padding: 40px 20px; background-color: #f8fafc; text-align: center;">
+                                <div style="max-width: 480px; margin: 0 auto; background-color: #ffffff; border: 2px solid #000000; border-radius: 12px; padding: 40px; box-shadow: 8px 8px 0px 0px rgba(0,0,0,0.1);">
+                                    <div style="margin-bottom: 24px;">
+                                        <h1 style="color: #000000; margin: 0; font-size: 28px; font-weight: 900; letter-spacing: -0.02em;">MUS</h1>
+                                    </div>
+                                    <h2 style="color: #1a202c; margin-bottom: 8px; font-size: 20px; font-weight: 700;">${title}</h2>
+                                    <p style="font-size: 16px; color: #4a5568; margin-bottom: 32px; line-height: 1.5;">${description}</p>
+                                    
+                                    <div style="background-color: #f1f5f9; border: 2px dashed #cbd5e1; border-radius: 8px; padding: 20px; margin-bottom: 32px;">
+                                        <div style="font-size: 38px; font-weight: 800; color: #6366f1; letter-spacing: 12px; margin-left: 12px;">${otp}</div>
+                                    </div>
+                                    
+                                    <p style="font-size: 13px; color: #94a3b8; margin: 0;">This code will expire in 10 minutes.</p>
+                                    <div style="margin-top: 40px; border-top: 1px solid #f1f5f9; pt: 20px;">
+                                        <p style="font-size: 12px; color: #94a3b8;">If you didn't request this code, you can safely ignore this email.</p>
+                                    </div>
+                                </div>
                             </div>
                         `,
                     });
 
                     if (error) {
-                        console.error("[AUTH] ❌ Resend Error Detail:", JSON.stringify(error, null, 2));
-                        console.log(`[AUTH] 💡 Quick Tip: If you are in Resend Sandbox, you can ONLY send to yourself unless you verify your domain.`);
-                        console.log(`[AUTH] FALLBACK OTP for ${email}: ${otp}`);
+                        console.error("[AUTH] ❌ Resend API Error:", error);
+                        console.log(`[AUTH] 🚩 FALLBACK OTP for ${email}: ${otp}`);
                     } else {
-                        console.log(`[AUTH] ✅ OTP sent successfully to ${email}. ID: ${data?.id}`);
+                        console.log(`[AUTH] ✅ OTP sent via Resend. ID: ${data?.id}`);
                     }
                 } catch (err) {
-                    console.error("[AUTH] Failed to send OTP via Resend:", err);
-                    console.log(`[AUTH] FALLBACK OTP for ${email}: ${otp} (Because code crashed)`);
+                    console.error("[AUTH] 💥 Failed to send OTP via Resend:", err);
+                    console.log(`[AUTH] 🚩 FALLBACK OTP for ${email}: ${otp}`);
                 }
             },
             sendVerificationOnSignUp: true,
+            otpLength: 6
         }),
     ],
 
@@ -85,16 +106,23 @@ export const auth = betterAuth({
     // 🔒 Security & Cookie Config
     trustedOrigins: [
         process.env.CLIENT_URL || "http://localhost:5173",
+        "http://localhost:3000",
+        "http://localhost:5173",
+        "http://localhost:5174",
+        "http://localhost:8080",
         "https://mus-node.vercel.app",
-        "https://mus-node-client-ui.vercel.app", // Common Vercel pattern
-        "https://mus-node-client-ui-advait-sants-projects.vercel.app" // Full Vercel URL
+        "https://mus-node-client-ui.vercel.app",
+        "https://mus-node-production.up.railway.app",
+        // Add wildcards for Vercel preview branches
+        "https://*-advait-sants-projects.vercel.app",
+        "https://*-monsoonfish.vercel.app"
     ],
     cookies: {
         sessionToken: {
             name: 'better-auth.session_token', // Explicit cookie name
             attributes: {
                 sameSite: 'none', // Required for cross-origin
-                secure: true, // Required for sameSite: none
+                secure: process.env.BETTER_AUTH_URL?.startsWith("https://") ? true : false,
                 httpOnly: true, // Security best practice
                 path: '/', // Available on all paths
                 maxAge: 60 * 60 * 24 * 30 // 30 days in seconds

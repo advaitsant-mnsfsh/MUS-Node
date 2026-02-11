@@ -16,6 +16,7 @@ import {
     Globe
 } from 'lucide-react';
 import { ExecutiveSummaryDisplay } from '../ExecutiveSummaryDisplay';
+import SiteLogo from '../../SiteLogo';
 
 interface CompetitorReportViewProps {
     data: CompetitorAnalysisData;
@@ -42,6 +43,21 @@ export const CompetitorReportView: React.FC<CompetitorReportViewProps> = ({
     // Normal: 154px (80px Global Nav + 74px Action Bar)
     // Shared: 74px -> Reduced to 66px to ensure overlap/no gap
     const stickyTopClass = isSharedView ? 'top-[58px] md:top-[66px]' : 'top-[146px] md:top-[154px]';
+    const PROD_URL = 'https://mus-node-production.up.railway.app';
+
+    // --- HELPERS ---
+    const handleImageError = (e: React.SyntheticEvent<HTMLImageElement, Event>) => {
+        const img = e.currentTarget;
+        const currentSrc = img.src;
+
+        // ONLY fallback if we are on localhost and the image failed on localhost
+        if (window.location.hostname === 'localhost' && currentSrc.includes('localhost')) {
+            console.log('[ReportDisplay] Local image failed, trying Railway fallback...');
+            img.src = currentSrc.replace(/http:\/\/localhost:\d+/, PROD_URL);
+        } else {
+            console.error('[ReportDisplay] Image Load Failed:', currentSrc);
+        }
+    };
 
     const [activeTab, setActiveTab] = useState<'UX' | 'Product' | 'Visual' | 'Strategy' | 'Accessibility'>('UX');
 
@@ -123,15 +139,13 @@ export const CompetitorReportView: React.FC<CompetitorReportViewProps> = ({
                             <tr className="bg-brand/10 border-b-2 border-black text-xs font-black text-black uppercase tracking-wider">
                                 <th className="p-5 w-1/4">Parameter</th>
                                 <th className="p-5 w-24 text-center">
-                                    <div className="flex items-center justify-center gap-1">
-                                        <div className="w-3 h-3 bg-amber-200 border border-black shadow-neo-sm"></div>
-                                        You
+                                    <div className="flex items-center justify-center">
+                                        <SiteLogo domain={primaryUrl} size="tiny" className="shadow-neo-sm" />
                                     </div>
                                 </th>
                                 <th className="p-5 w-24 text-center">
-                                    <div className="flex items-center justify-center gap-1">
-                                        <div className="w-3 h-3 bg-blue-200 border border-black shadow-neo-sm"></div>
-                                        Them
+                                    <div className="flex items-center justify-center">
+                                        <SiteLogo domain={competitorUrl} size="tiny" className="shadow-neo-sm" />
                                     </div>
                                 </th>
                                 <th className="p-5 min-w-[300px]">Observations</th>
@@ -192,18 +206,18 @@ export const CompetitorReportView: React.FC<CompetitorReportViewProps> = ({
                 {/* Left: YOU */}
                 <div className="bg-white p-6 md:p-8 flex flex-col gap-4 border-b-2 md:border-b-0 md:border-r-2 border-black">
                     <div className="flex items-center gap-3 mb-2">
-                        <div className="p-2 bg-amber-100 border-2 border-black shadow-neo">
-                            <Globe className="w-5 h-5 text-black" />
+                        <div className="border-2 border-black shadow-neo overflow-hidden">
+                            <SiteLogo domain={primaryUrl} size="small" className="shadow-none border-none rounded-none" />
                         </div>
                         <div className="flex flex-col">
                             <span className="text-xs font-black text-black uppercase tracking-wider bg-amber-200 px-2 py-0.5 w-fit border border-black mb-1">Primary Website</span>
-                            {/* <h3 className="text-xl font-bold text-black break-all">{primaryUrl}</h3> */}
+                            <h3 className="text-xl font-bold text-black break-all">{primaryUrl}</h3>
                         </div>
                     </div>
                     {/* Primary Screenshot Area */}
                     <div className="w-full aspect-video bg-white border-2 border-black overflow-hidden relative group shadow-neo">
                         {primaryScreenshot ? (
-                            <img src={primaryScreenshot} className="w-full h-full object-cover object-top transition-transform duration-700 group-hover:scale-105" alt="Primary Site" />
+                            <img src={primaryScreenshot} onError={handleImageError} className="w-full h-full object-cover object-top transition-transform duration-700 group-hover:scale-105" alt="Primary Site" />
                         ) : (
                             <div className="w-full h-full flex items-center justify-center text-slate-300 bg-[radial-gradient(#00000022_1px,transparent_1px)] bg-size-[16px_16px]">
                                 <span className="text-sm font-bold text-black bg-white px-3 py-1 border-2 border-black shadow-neo">No Preview</span>
@@ -219,14 +233,14 @@ export const CompetitorReportView: React.FC<CompetitorReportViewProps> = ({
                             <span className="text-xs font-black text-black uppercase tracking-wider bg-blue-200 px-2 py-0.5 w-fit border border-black mb-1">Competitor Website</span>
                             <h3 className="text-xl font-bold text-black break-all text-right">{competitorUrl}</h3>
                         </div>
-                        <div className="p-2 bg-blue-100 border-2 border-black shadow-neo">
-                            <Globe className="w-5 h-5 text-black" />
+                        <div className="border-2 border-black shadow-neo overflow-hidden">
+                            <SiteLogo domain={competitorUrl} size="small" className="shadow-none border-none rounded-none" />
                         </div>
                     </div>
                     {/* Competitor Screenshot Area */}
                     <div className="w-full aspect-video bg-white border-2 border-black overflow-hidden relative group shadow-neo">
                         {competitorScreenshot ? (
-                            <img src={competitorScreenshot} className="w-full h-full object-cover object-top transition-transform duration-700 group-hover:scale-105" alt="Competitor Site" />
+                            <img src={competitorScreenshot} onError={handleImageError} className="w-full h-full object-cover object-top transition-transform duration-700 group-hover:scale-105" alt="Competitor Site" />
                         ) : (
                             <div className="w-full h-full bg-slate-100 flex items-center justify-center relative overflow-hidden bg-[radial-gradient(#00000022_1px,transparent_1px)] bg-size-[16px_16px]">
                                 {/* Simple Brutalist Placeholder */}
@@ -340,6 +354,6 @@ export const CompetitorReportView: React.FC<CompetitorReportViewProps> = ({
                 {activeTab === 'Strategy' && <ComparisonTable items={data.StrategyComparison} title="Strategy" />}
                 {activeTab === 'Accessibility' && <ComparisonTable items={data.AccessibilityComparison} title="Accessibility" />}
             </div>
-        </div>
+        </div >
     );
 };

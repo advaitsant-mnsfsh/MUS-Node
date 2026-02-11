@@ -60,6 +60,21 @@ export const StandardReportView: React.FC<StandardReportViewProps> = ({ report, 
     // Shared: 74px -> Reduced to 66px to ensure overlap/no gap
     const stickyTopClass = isSharedView ? 'top-[58px] md:top-[66px]' : 'top-[146px] md:top-[154px]';
 
+    // --- HELPERS ---
+    const handleImageError = (e: React.SyntheticEvent<HTMLImageElement, Event>) => {
+        const img = e.currentTarget;
+        const currentSrc = img.src;
+        const PROD_URL = 'https://mus-node-production.up.railway.app';
+
+        // ONLY fallback if we are on localhost and the image failed on localhost
+        if (window.location.hostname === 'localhost' && currentSrc.includes('localhost')) {
+            console.log('[ReportDisplay] Local image failed, trying Railway fallback...');
+            img.src = currentSrc.replace(/http:\/\/localhost:\d+/, PROD_URL);
+        } else {
+            console.error('[ReportDisplay] Image Load Failed:', currentSrc);
+        }
+    };
+
     return (
         <>
             <div className="font-['DM_Sans']">
@@ -123,7 +138,7 @@ export const StandardReportView: React.FC<StandardReportViewProps> = ({ report, 
                                         src={primaryScreenshotSrc}
                                         className="w-full h-full object-cover object-top transition-transform duration-700 hover:scale-105"
                                         alt="Analyzed Page Preview"
-                                        onError={(e) => console.error('[ReportDisplay] Image Load Failed:', e.currentTarget.src)}
+                                        onError={handleImageError}
                                     />
                                 ) : (
                                     <div className="w-full h-full flex items-center justify-center bg-slate-50">

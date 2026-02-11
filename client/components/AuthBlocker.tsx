@@ -17,12 +17,13 @@ interface AuthBlockerProps {
 export const AuthBlocker: React.FC<AuthBlockerProps> = ({ onUnlock, isUnlocked, auditUrl, auditId, onClose, initialLoginMode = false }) => {
     const [isLoginMode, setIsLoginMode] = useState(initialLoginMode); // Toggle between Sign Up and Login
     const [isHidden, setIsHidden] = useState(false); // Local state to close the modal
-    const [step, setStep] = useState<'email' | 'otp' | 'password'>('email'); // For Signup flow
+    const [step, setStep] = useState<'email' | 'otp' | 'password' | 'forgot-email' | 'forgot-otp' | 'forgot-reset'>('email'); // For flows
     const [tempPassword] = useState(() => Math.random().toString(36).slice(-12) + 'A1!'); // Bridge password
 
     // Sync isLoginMode with prop when it changes (e.g. navbar clicks)
     React.useEffect(() => {
         setIsLoginMode(!!initialLoginMode);
+        setStep('email'); // Reset step when mode changes
     }, [initialLoginMode]);
 
     // Form State
@@ -65,6 +66,64 @@ export const AuthBlocker: React.FC<AuthBlockerProps> = ({ onUnlock, isUnlocked, 
             toast.success('Welcome back!');
             onUnlock();
         }
+    };
+
+    const handleForgotPasswordRequest = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!email) {
+            toast.error("Please enter your email.");
+            return;
+        }
+
+        setIsLoading(true);
+        const { sendOtp } = await import('../services/authService');
+        const { error } = await sendOtp(email, 'forget-password');
+        setIsLoading(false);
+
+        if (error) {
+            toast.error(error);
+        } else {
+            toast.success('Security code sent to ' + email);
+            setStep('forgot-otp');
+        }
+    };
+
+    const handleForgotPasswordVerify = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!otp) return;
+        setStep('forgot-reset');
+    };
+
+    const handleForgotPasswordReset = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!password || !confirmPassword) {
+            toast.error("Please enter and confirm your password.");
+            return;
+        }
+        if (password !== confirmPassword) {
+            toast.error("Passwords do not match.");
+            return;
+        }
+        if (password.length < 8) {
+            toast.error("Password must be at least 8 characters.");
+            return;
+        }
+
+        setIsLoading(true);
+        const { resetPasswordWithOtp } = await import('../services/authService');
+        const { success, error } = await resetPasswordWithOtp(email, otp, password);
+
+        if (success) {
+            toast.success('Password reset successfully! You can now log in.');
+            setIsLoginMode(true);
+            setStep('email');
+            setPassword('');
+            setConfirmPassword('');
+            setOtp('');
+        } else {
+            toast.error(error || "Failed to reset password");
+        }
+        setIsLoading(false);
     };
 
     const handleSignupStep1 = async (e: React.FormEvent) => {
@@ -219,9 +278,21 @@ export const AuthBlocker: React.FC<AuthBlockerProps> = ({ onUnlock, isUnlocked, 
                             />
                         </div>
                         <div>
-                            <label htmlFor="password" className="block text-sm font-semibold text-slate-900 mb-2">
-                                Password <span className="text-red-600">*</span>
-                            </label>
+                            <div className="flex justify-between mb-2">
+                                <label htmlFor="password" className="block text-sm font-semibold text-slate-900">
+                                    Password <span className="text-red-600">*</span>
+                                </label>
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        setIsLoginMode(false);
+                                        setStep('forgot-email');
+                                    }}
+                                    className="text-xs font-bold text-slate-500 hover:text-black hover:underline"
+                                >
+                                    Forgot Password?
+                                </button>
+                            </div>
                             <input
                                 type="password"
                                 id="password"
@@ -248,6 +319,119 @@ export const AuthBlocker: React.FC<AuthBlockerProps> = ({ onUnlock, isUnlocked, 
                             ) : (
                                 'Log In'
                             )}
+                        </button>
+                    </form>
+                ) : step === 'forgot-email' ? (
+                    // FORGOT PASSWORD: EMAIL
+                    <form onSubmit={handleForgotPasswordRequest} className="space-y-6">
+                        <div className="p-4 bg-brand/5 border-l-4 border-brand">
+                            <p className="text-sm font-bold text-slate-900">Reset Password</p>
+                            <p className="text-xs text-slate-600">Enter your business email and we'll send you a security code.</p>
+                        </div>
+                        <div>
+                            <label htmlFor="email" className="block text-sm font-semibold text-slate-900 mb-2">
+                                Business Email
+                            </label>
+                            <input
+                                type="email"
+                                id="email"
+                                required
+                                className="w-full h-12 px-4 bg-white border-2 border-black rounded-none shadow-neo focus:outline-none focus:shadow-neo-hover transition-all text-base"
+                                placeholder="you@company.com"
+                                value={email}
+                                onChange={(e) => setEmail(e.target.value)}
+                            />
+                        </div>
+                        <button
+                            type="submit"
+                            disabled={isLoading}
+                            className="w-full h-14 bg-black text-white font-bold border-2 border-black shadow-neo hover:shadow-neo-hover active:translate-x-px active:translate-y-px active:shadow-none transition-all flex justify-center items-center gap-2"
+                        >
+                            {isLoading ? "Sending..." : "Send Reset Code"}
+                        </button>
+                        <button
+                            type="button"
+                            onClick={() => {
+                                setIsLoginMode(true);
+                                setStep('email');
+                            }}
+                            className="w-full text-sm text-slate-500 hover:text-black font-semibold underline underline-offset-4"
+                        >
+                            Back to Login
+                        </button>
+                    </form>
+                ) : step === 'forgot-otp' ? (
+                    // FORGOT PASSWORD: OTP
+                    <form onSubmit={handleForgotPasswordVerify} className="space-y-6">
+                        <div className="text-center">
+                            <label htmlFor="otp" className="block text-sm font-semibold text-slate-900 mb-4">
+                                Verification Code for <br /><span className="text-brand">{email}</span>
+                            </label>
+                            <input
+                                type="text"
+                                id="otp"
+                                required
+                                autoFocus
+                                className="w-full h-16 px-4 bg-white border-2 border-black rounded-none shadow-neo text-center tracking-[0.5em] text-2xl font-mono"
+                                placeholder="------"
+                                maxLength={6}
+                                value={otp}
+                                onChange={(e) => setOtp(e.target.value)}
+                            />
+                        </div>
+                        <button
+                            type="submit"
+                            className="w-full h-14 bg-black text-white font-bold border-2 border-black shadow-neo hover:shadow-neo-hover active:translate-x-px active:translate-y-px active:shadow-none transition-all"
+                        >
+                            Confirm Security Code
+                        </button>
+                        <button
+                            type="button"
+                            onClick={() => setStep('forgot-email')}
+                            className="w-full text-sm text-slate-500 hover:text-black font-semibold underline underline-offset-4"
+                        >
+                            Resend or Change Email
+                        </button>
+                    </form>
+                ) : step === 'forgot-reset' ? (
+                    // FORGOT PASSWORD: NEW PASSWORD
+                    <form onSubmit={handleForgotPasswordReset} className="space-y-6">
+                        <div className="p-4 bg-green-50 border-l-4 border-green-500">
+                            <p className="text-sm font-bold text-slate-900">Security Verified</p>
+                            <p className="text-xs text-slate-600">Now choose a new strong password for your account.</p>
+                        </div>
+                        <div>
+                            <label className="block text-sm font-semibold text-slate-900 mb-2">
+                                New Password
+                            </label>
+                            <input
+                                type="password"
+                                required
+                                minLength={8}
+                                className="w-full h-12 px-4 bg-white border-2 border-black rounded-none shadow-neo text-base"
+                                value={password}
+                                onChange={(e) => setPassword(e.target.value)}
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-sm font-semibold text-slate-900 mb-2">
+                                Confirm New Password
+                            </label>
+                            <input
+                                type="password"
+                                required
+                                minLength={8}
+                                className="w-full h-12 px-4 bg-white border-2 border-black rounded-none shadow-neo text-base"
+                                value={confirmPassword}
+                                onChange={(e) => setConfirmPassword(e.target.value)}
+                            />
+                        </div>
+                        <button
+                            type="submit"
+                            disabled={isLoading}
+                            className="w-full h-14 bg-black text-white font-bold border-2 border-black shadow-neo hover:shadow-neo-hover active:translate-x-px active:translate-y-px active:shadow-none transition-all"
+                        >
+                            {isLoading ? "Saving..." : "Update Password & Login"}
                         </button>
                     </form>
                 ) : step === 'email' ? (

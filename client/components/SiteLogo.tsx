@@ -2,7 +2,7 @@ import { useState } from 'react';
 
 interface SiteLogoProps {
     domain: string;
-    size?: 'small' | 'medium' | 'large';
+    size?: 'tiny' | 'small' | 'medium' | 'large';
     className?: string;
 }
 
@@ -36,19 +36,22 @@ export default function SiteLogo({ domain, size = 'medium', className = '' }: Si
 
     // Size mapping
     const sizeClasses = {
-        small: 'w-12 h-12',
+        tiny: 'w-8 h-8',
+        small: 'w-14 h-14',
         medium: 'w-20 h-20',
         large: 'w-32 h-32'
     };
 
     const iconSize = {
-        small: '48px',
+        tiny: '32px',
+        small: '56px',
         medium: '80px',
         large: '128px'
     };
 
     const fontSize = {
-        small: 'text-xl',
+        tiny: 'text-xs',
+        small: 'text-2xl',
         medium: 'text-3xl',
         large: 'text-5xl'
     };
@@ -97,11 +100,11 @@ export default function SiteLogo({ domain, size = 'medium', className = '' }: Si
 
     // Render logo image with crisp rendering
     return (
-        <div className={`${sizeClasses[size]} ${className} rounded-lg overflow-hidden bg-white shadow-md flex items-center justify-center`}>
+        <div className={`${sizeClasses[size]} ${className} rounded-lg overflow-hidden bg-white shadow-md flex items-center justify-center shrink-0`}>
             <img
                 src={googleFaviconUrl}
                 alt={`${cleanDomain} logo`}
-                className="w-full h-full object-contain p-2"
+                className={`w-full h-full object-contain ${size === 'tiny' ? 'p-0.5' : 'p-2'}`}
                 onError={handleImageError}
                 loading="lazy"
             />

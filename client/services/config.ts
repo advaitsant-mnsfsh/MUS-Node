@@ -9,7 +9,12 @@ export const getBackendUrl = () => {
         const hostname = window.location.hostname;
         const origin = window.location.origin;
 
-        // Support dynamic Railway environments (e.g., stage-1) by default
+        // 1. Check for local development
+        if (hostname === 'localhost' || hostname === '127.0.0.1') {
+            return 'http://localhost:8080';
+        }
+
+        // 2. Support dynamic Railway environments (e.g., stage-1) by default
         // We prioritize this over VITE_ vars because those are often baked-in at build time
         if (hostname.endsWith('.railway.app')) {
             console.log(`[Config] 🚂 Auto-detected Railway Origin: ${origin}`);
@@ -25,7 +30,7 @@ export const getBackendUrl = () => {
         console.log(`[Config] 🏠 Using Hardcoded Production: https://mus-node-production.up.railway.app`);
     }
 
-    // Hardcoded production fallback per user request to ensure audits go to Railway
+    // Static Production URL (as final fallback)
     return 'https://mus-node-production.up.railway.app';
 };
 

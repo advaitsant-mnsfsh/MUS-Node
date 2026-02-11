@@ -3,6 +3,7 @@ import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { AnalysisReport, Screenshot, AuditInput } from '../types';
 import { monitorJobStream, analyzeWebsiteStream } from '../services/geminiService';
 import { useAuth } from '../contexts/AuthContext';
+import { useGlobalAudit } from '../contexts/AuditContext';
 import { getAuditInputs } from '../services/userAuditsService';
 
 const loadingMicrocopy = [
@@ -17,27 +18,40 @@ export const useAudit = () => {
     const { auditId } = useParams<{ auditId: string }>();
     const navigate = useNavigate();
     const location = useLocation();
-    const { user } = useAuth(); // Restore useAuth hook
+    const { user } = useAuth();
+    const { activeAuditId: globalAuditId, progress: globalProgress, status: globalStatus, setActiveAudit, clearActiveAudit } = useGlobalAudit();
+    const isResumingActive = globalAuditId === auditId;
 
     // --- STATE ---
     const [submittedUrl, setSubmittedUrl] = useState<string>('');
     const [report, setReport] = useState<AnalysisReport | null>(null);
     const [isLoading, setIsLoading] = useState<boolean>(!!auditId);
+    const [isFetchingReport, setIsFetchingReport] = useState<boolean>(false);
     const [error, setError] = useState<string | null>(null);
-    const [loadingMessage, setLoadingMessage] = useState<string>('Initiating multi-faceted audit...');
+    const [loadingMessage, setLoadingMessage] = useState<string>(isResumingActive && globalStatus ? globalStatus : 'Starting audit agents...');
     const [screenshots, setScreenshots] = useState<Screenshot[]>([]);
     const [screenshotMimeType, setScreenshotMimeType] = useState<string>('image/png');
     const [uiAuditId, setUiAuditId] = useState<string | null>(null);
     const [performanceError, setPerformanceError] = useState<string | null>(null);
     const [currentMicrocopy, setCurrentMicrocopy] = useState(loadingMicrocopy[0]);
-    const [progress, setProgress] = useState<number>(0);
-    const [targetProgress, setTargetProgress] = useState<number>(0);
+    const [progress, setProgress] = useState<number>(isResumingActive ? globalProgress : 0);
+    const [targetProgress, setTargetProgress] = useState<number>(isResumingActive ? globalProgress : 0);
     const [reportInputs, setReportInputs] = useState<AuditInput[]>([]);
     const [whiteLabelLogo, setWhiteLabelLogo] = useState<string | null>(null);
 
     const lastLogTime = useRef<number>(Date.now());
 
     // --- EFFECTS ---
+
+    // 0. Sync with Global State on Load/Recovery
+    useEffect(() => {
+        if (isResumingActive && globalProgress > 0 && targetProgress === 0) {
+            console.log(`[useAudit] Initializing local progress from global state: ${globalProgress}%`);
+            setProgress(globalProgress);
+            setTargetProgress(globalProgress);
+            if (globalStatus) setLoadingMessage(globalStatus);
+        }
+    }, [isResumingActive, globalProgress, globalStatus, targetProgress]);
 
     // 1. Smooth Progress Interpolation
     useEffect(() => {
@@ -50,6 +64,16 @@ export const useAudit = () => {
             return () => clearTimeout(timer);
         }
     }, [progress, targetProgress]);
+
+    // 1b. Continuous Sync with Global Progress (confidence builder source)
+    useEffect(() => {
+        if (isResumingActive && globalProgress > targetProgress) {
+            setTargetProgress(globalProgress);
+        }
+        if (isResumingActive && globalStatus && globalStatus !== loadingMessage) {
+            setLoadingMessage(globalStatus);
+        }
+    }, [isResumingActive, globalProgress, globalStatus, targetProgress, loadingMessage]);
 
     // 2. Microcopy Rotation
     useEffect(() => {
@@ -129,7 +153,7 @@ export const useAudit = () => {
             if (chunk.key === 'screenshotMimeType') setScreenshotMimeType(chunk.data);
             setReport(prevReport => ({ ...prevReport, [chunk.key]: chunk.data }));
         },
-        onComplete: ({ auditId: completedId, screenshotUrl }: any) => {
+        onComplete: ({ auditId: completedId }: any) => {
             setUiAuditId(completedId);
             setTargetProgress(100);
             setIsLoading(false);
@@ -145,12 +169,11 @@ export const useAudit = () => {
     }), [navigate, location.pathname, auditId]);
 
 
-    const hasStarted = useRef<boolean>(false);
+    const lastAuditId = useRef<string | undefined>(undefined);
 
     // 3. Main Data Loading / Resume Logic
     useEffect(() => {
         if (!auditId) {
-            // User navigated to root (Start New Audit) - Reset State
             if (report || isLoading || error) {
                 setReport(null);
                 setScreenshots([]);
@@ -161,19 +184,17 @@ export const useAudit = () => {
                 setTargetProgress(0);
                 setIsLoading(false);
             }
-            hasStarted.current = false;
+            lastAuditId.current = undefined;
             return;
         }
 
-        // Prevent double-loading in StrictMode or re-renders
-        if (hasStarted.current) return;
-        hasStarted.current = true;
+        if (lastAuditId.current === auditId) return;
+        lastAuditId.current = auditId;
 
         const loadOrMonitor = async () => {
             const { getAuditJob } = await import('../services/auditStorage');
 
             try {
-                // Support job from location.state for instant loading
                 // @ts-ignore
                 const isNewAudit = location.state?.newAudit;
                 // @ts-ignore
@@ -181,23 +202,30 @@ export const useAudit = () => {
                 let job = jobFromState || null;
 
                 if (!isNewAudit && !job) {
-                    setIsLoading(true); // Show loader while fetching
+                    setIsFetchingReport(true);
                     job = await getAuditJob(auditId);
+                    setIsFetchingReport(false);
                 }
 
                 if (job) {
-                    // Update state from job
                     const reportData = job.report_data;
                     if (reportData) {
                         setReport(reportData);
-                        // Extract screenshots from report_data if not directly on job
                         if (reportData.screenshots) setScreenshots(reportData.screenshots);
                         if (reportData.screenshotMimeType) setScreenshotMimeType(reportData.screenshotMimeType);
                     }
 
-                    if (job.inputs) setReportInputs(job.inputs);
-                    // Legacy checks
-                    if ((job as any).screenshots) setScreenshots((job as any).screenshots);
+                    if (job.inputs) {
+                        setReportInputs(job.inputs);
+                        if (job.inputs.length > 0) {
+                            const firstInput = job.inputs[0];
+                            setSubmittedUrl(firstInput.type === 'url' ? firstInput.url! : 'Manual Upload');
+                        }
+                    }
+
+                    if ((job as any).screenshots && (job as any).screenshots.length > 0) {
+                        setScreenshots((job as any).screenshots);
+                    }
                     if ((job as any).screenshotMimeType) setScreenshotMimeType((job as any).screenshotMimeType);
 
                     setUiAuditId(job.id);
@@ -212,24 +240,31 @@ export const useAudit = () => {
                 }
 
                 // If not found or not completed, THEN show loading screen for the stream/fetch
-                console.log(`[useAudit] Monitoring stream for ${auditId}`);
-                setLoadingMessage('Optimizing connection to audit stream...');
+                const { getBackendUrl } = await import('../services/config');
+                const { monitorJobPoll } = await import('../services/geminiService');
+                console.log(`[useAudit] Monitoring poll for ${auditId} on ${getBackendUrl()}`);
+
+                if (!isResumingActive) {
+                    setLoadingMessage('Optimizing connection to audit stream...');
+                }
+
                 setUiAuditId(auditId);
-                const { monitorJobStream } = await import('../services/geminiService');
-                monitorJobStream(auditId, getStreamCallbacks(true));
+                setActiveAudit(auditId);
+
+                monitorJobPoll(auditId, getStreamCallbacks(true));
                 setIsLoading(true);
 
             } catch (e) {
                 console.error('[useAudit] loadOrMonitor failed:', e);
-                // Try stream anyway as fallback
-                const { monitorJobStream } = await import('../services/geminiService');
-                monitorJobStream(auditId, getStreamCallbacks(true));
+                const { monitorJobPoll } = await import('../services/geminiService');
+                setActiveAudit(auditId);
+                monitorJobPoll(auditId, getStreamCallbacks(true));
                 setIsLoading(true);
             }
         };
 
         loadOrMonitor();
-    }, [auditId, location.pathname]); // Keep dependencies minimal
+    }, [auditId, location.pathname, isResumingActive, setActiveAudit, getStreamCallbacks, navigate, report, isLoading, error]);
 
 
     // --- ACTION HANDLERS ---
@@ -245,12 +280,8 @@ export const useAudit = () => {
         setProgress(0);
         setTargetProgress(0);
 
-        // Get auth token if user is logged in
-        // Legacy Auth Token Logic Removed - Using Session Cookies via Better-Auth
-        const token = undefined;
-
-        analyzeWebsiteStream({ inputs, auditMode, token }, getStreamCallbacks(false));
-    }, [getStreamCallbacks, user]);
+        analyzeWebsiteStream({ inputs, auditMode }, getStreamCallbacks(false));
+    }, [getStreamCallbacks]);
 
     const handleAnalyze = useCallback(async (inputs: AuditInput[], auditMode: 'standard' | 'competitor' = 'standard') => {
         setError(null);
@@ -342,10 +373,10 @@ export const useAudit = () => {
     }, [navigate]);
 
     return {
-        // State
         submittedUrl,
         report,
         isLoading,
+        isFetchingReport,
         error,
         loadingMessage,
         currentMicrocopy,
@@ -358,8 +389,6 @@ export const useAudit = () => {
         whiteLabelLogo,
         auditId,
         user,
-
-        // Actions
         handleAnalyze,
         handleRunNewAudit,
         setWhiteLabelLogo
