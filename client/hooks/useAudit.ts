@@ -300,29 +300,26 @@ export const useAudit = () => {
     const handleAnalyze = useCallback(async (inputs: AuditInput[], auditMode: 'standard' | 'competitor' = 'standard') => {
         setError(null);
         setIsLoading(true);
+        setLoadingMessage('Preparing your audit...');
 
         const processedInputs: AuditInput[] = [];
+        const { resizeImage } = await import('../lib/imageUtils');
 
         const processFiles = async (files?: File[], singleFile?: File): Promise<string[]> => {
             const filesToProcess = files && files.length > 0 ? files : (singleFile ? [singleFile] : []);
             if (filesToProcess.length === 0) return [];
-            return Promise.all(filesToProcess.map(file =>
-                new Promise<string>((resolve, reject) => {
-                    const reader = new FileReader();
-                    reader.onload = () => {
-                        const result = reader.result?.toString().split(',')[1];
-                        if (result) resolve(result);
-                        else reject("Failed to process image.");
-                    };
-                    reader.onerror = () => reject("Failed to read file.");
-                    reader.readAsDataURL(file);
-                })
-            ));
+
+            setLoadingMessage(`Optimizing ${filesToProcess.length} image${filesToProcess.length > 1 ? 's' : ''}...`);
+            return Promise.all(filesToProcess.map(file => resizeImage(file)));
         };
 
         try {
             for (const input of inputs) {
                 const filesData = await processFiles(input.files, input.file);
+
+                // Construct cleaned input (remove raw File objects to prevent double-processing)
+                const cleanedInput = { ...input, file: undefined, files: undefined };
+
                 if (input.type === 'url') {
                     if (!input.url) continue;
                     let normalized = input.url.trim();
@@ -335,7 +332,7 @@ export const useAudit = () => {
                         return;
                     }
                     processedInputs.push({
-                        ...input,
+                        ...cleanedInput,
                         url: normalized,
                         filesData: filesData.length > 0 ? filesData : undefined,
                         fileData: filesData.length > 0 ? filesData[0] : undefined
@@ -346,7 +343,11 @@ export const useAudit = () => {
                         setIsLoading(false);
                         return;
                     }
-                    processedInputs.push({ ...input, filesData: filesData, fileData: filesData[0] });
+                    processedInputs.push({
+                        ...cleanedInput,
+                        filesData: filesData,
+                        fileData: filesData[0]
+                    });
                 }
             }
 
@@ -364,9 +365,11 @@ export const useAudit = () => {
                 initialScreenshots = [{ data: firstInput.filesData[0], mimeType: 'image/png' }];
             }
 
+            setLoadingMessage('Initializing server agents...');
             startAnalysis(processedInputs, auditMode, initialScreenshots);
 
         } catch (e: any) {
+            console.error('[useAudit] Input processing failed:', e);
             setError(`Error processing inputs: ${e.message || e}`);
             setIsLoading(false);
         }

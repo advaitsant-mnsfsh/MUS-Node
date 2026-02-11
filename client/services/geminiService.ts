@@ -274,11 +274,15 @@ export const analyzeWebsiteStream = async (
   const { onScrapeComplete, onStatus, onData, onJobCreated, onComplete, onError, onClose, onPerformanceError } = callbacks;
 
   try {
-    onStatus('Preparing audit inputs...');
     const processedInputs: any[] = [];
 
     for (const input of inputs) {
-      if (input.type === 'upload' && (input.file || input.files?.length)) {
+      // If useAudit already converted to base64 (filesData present), use it directly
+      if (input.filesData && input.filesData.length > 0) {
+        processedInputs.push({ ...input, file: undefined, files: undefined });
+      } else if (input.type === 'upload' && (input.file || input.files?.length)) {
+        // Fallback for any other path that might not have pre-processed
+        onStatus('Compressing images...');
         const filesData: string[] = [];
         const files = input.files || [input.file!];
         for (const f of files) {
@@ -290,7 +294,8 @@ export const analyzeWebsiteStream = async (
       }
     }
 
-    onStatus('Starting audit job...');
+    onStatus('Uploading audit data...');
+    console.log('[GeminiService] Starting POST to:', functionUrl);
 
     const { authenticatedFetch } = await import('../lib/authenticatedFetch');
     const startResponse = await authenticatedFetch(functionUrl, {
@@ -300,12 +305,16 @@ export const analyzeWebsiteStream = async (
     });
 
     if (!startResponse.ok) {
-      throw new Error(`Failed to start audit: ${startResponse.statusText}`);
+      const errorText = await startResponse.text();
+      console.error('[GeminiService] Start failed:', errorText);
+      throw new Error(`Failed to start audit: ${startResponse.status} ${startResponse.statusText}`);
     }
 
     const { jobId } = await startResponse.json();
+    console.log('[GeminiService] Job created:', jobId);
+
     if (onJobCreated) onJobCreated(jobId);
-    onStatus('Audit job created. Waiting for worker...');
+    onStatus('Audit job created. Connecting to stream...');
 
     await monitorJobStream(jobId, callbacks);
 
