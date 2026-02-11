@@ -1,4 +1,4 @@
-import express from 'express';
+the tablimport express from 'express';
 import { db } from '../lib/db.js';
 import { auditJobs, leads } from '../db/schema.js';
 import { validateApiKey, optionalUserAuth, AuthenticatedRequest } from '../middleware/apiAuth.js';
@@ -66,7 +66,9 @@ router.get('/audit', async (req: express.Request, res: express.Response) => {
     const { mode, jobId } = req.query;
 
     if (mode === 'stream-job' && typeof jobId === 'string') {
-        // Setup Streaming Response
+        // Setup Streaming Response with CORS
+        res.setHeader('Access-Control-Allow-Origin', req.headers.origin || '*');
+        res.setHeader('Access-Control-Allow-Credentials', 'true');
         res.setHeader('Content-Type', 'text/plain');
         res.setHeader('Transfer-Encoding', 'chunked');
         res.setHeader('Cache-Control', 'no-cache');
