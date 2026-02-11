@@ -295,81 +295,86 @@ export const useAudit = () => {
         analyzeWebsiteStream({ inputs, auditMode }, getStreamCallbacks(false));
     }, [getStreamCallbacks]);
 
-    const handleAnalyze = useCallback(async (inputs: AuditInput[], auditMode: 'standard' | 'competitor' = 'standard') => {
+    const handleAnalyze = useCallback((inputs: AuditInput[], auditMode: 'standard' | 'competitor' = 'standard') => {
+        // --- 1. INSTANT UI PIVOT ---
         setError(null);
         setIsLoading(true);
-        setLoadingMessage('Preparing your audit...');
+        setLoadingMessage('Initializing analysis engine...');
 
-        const processedInputs: AuditInput[] = [];
+        const firstInput = inputs[0];
+        setSubmittedUrl(firstInput.type === 'url' ? firstInput.url! : 'Manual Upload');
+        setReportInputs(inputs);
 
-        const processFiles = async (files?: File[], singleFile?: File): Promise<string[]> => {
-            const filesToProcess = files && files.length > 0 ? files : (singleFile ? [singleFile] : []);
-            if (filesToProcess.length === 0) return [];
+        // --- 2. DEFERRED PROCESSING ---
+        setTimeout(async () => {
+            const processedInputs: AuditInput[] = [];
 
-            setLoadingMessage(`Optimizing ${filesToProcess.length} image${filesToProcess.length > 1 ? 's' : ''}...`);
-            return Promise.all(filesToProcess.map(file => resizeImage(file)));
-        };
+            const processFiles = async (files?: File[], singleFile?: File): Promise<string[]> => {
+                const filesToProcess = files && files.length > 0 ? files : (singleFile ? [singleFile] : []);
+                if (filesToProcess.length === 0) return [];
 
-        try {
-            for (const input of inputs) {
-                const filesData = await processFiles(input.files, input.file);
+                setLoadingMessage(`Optimizing ${filesToProcess.length} image${filesToProcess.length > 1 ? 's' : ''}...`);
+                return Promise.all(filesToProcess.map(file => resizeImage(file)));
+            };
 
-                // Construct cleaned input (remove raw File objects to prevent double-processing)
-                const cleanedInput = { ...input, file: undefined, files: undefined };
+            try {
+                for (const input of inputs) {
+                    const filesData = await processFiles(input.files, input.file);
 
-                if (input.type === 'url') {
-                    if (!input.url) continue;
-                    let normalized = input.url.trim();
-                    if (!normalized.startsWith('http://') && !normalized.startsWith('https://')) {
-                        normalized = 'https://' + normalized;
+                    const cleanedInput = { ...input, file: undefined, files: undefined };
+
+                    if (input.type === 'url') {
+                        if (!input.url) continue;
+                        let normalized = input.url.trim();
+                        if (!normalized.startsWith('http://') && !normalized.startsWith('https://')) {
+                            normalized = 'https://' + normalized;
+                        }
+                        try { new URL(normalized); } catch {
+                            setError(`Invalid URL format: "${input.url}"`);
+                            setIsLoading(false);
+                            return;
+                        }
+                        processedInputs.push({
+                            ...cleanedInput,
+                            url: normalized,
+                            filesData: filesData.length > 0 ? filesData : undefined,
+                            fileData: filesData.length > 0 ? filesData[0] : undefined
+                        });
+                    } else if (input.type === 'upload') {
+                        if (filesData.length === 0) {
+                            setError("Missing file for upload.");
+                            setIsLoading(false);
+                            return;
+                        }
+                        processedInputs.push({
+                            ...cleanedInput,
+                            filesData: filesData,
+                            fileData: filesData[0]
+                        });
                     }
-                    try { new URL(normalized); } catch {
-                        setError(`Invalid URL format: "${input.url}"`);
-                        setIsLoading(false);
-                        return;
-                    }
-                    processedInputs.push({
-                        ...cleanedInput,
-                        url: normalized,
-                        filesData: filesData.length > 0 ? filesData : undefined,
-                        fileData: filesData.length > 0 ? filesData[0] : undefined
-                    });
-                } else if (input.type === 'upload') {
-                    if (filesData.length === 0) {
-                        setError("Missing file for upload.");
-                        setIsLoading(false);
-                        return;
-                    }
-                    processedInputs.push({
-                        ...cleanedInput,
-                        filesData: filesData,
-                        fileData: filesData[0]
-                    });
                 }
-            }
 
-            if (processedInputs.length === 0) {
-                setError("No valid inputs provided.");
+                if (processedInputs.length === 0) {
+                    setError("No valid inputs provided.");
+                    setIsLoading(false);
+                    return;
+                }
+
+                const updatedFirstInput = processedInputs[0];
+                let initialScreenshots: any[] = [];
+                if (updatedFirstInput.type === 'upload' && updatedFirstInput.filesData && updatedFirstInput.filesData.length > 0) {
+                    initialScreenshots = [{ data: updatedFirstInput.filesData[0], mimeType: 'image/png' }];
+                }
+
+                setLoadingMessage('Deploying audit agents...');
+                startAnalysis(processedInputs, auditMode, initialScreenshots);
+
+            } catch (e: any) {
+                console.error('[useAudit] Background processing failed:', e);
+                setError(`Error processing inputs: ${e.message || e}`);
                 setIsLoading(false);
-                return;
             }
-
-            const firstInput = processedInputs[0];
-            setSubmittedUrl(firstInput.type === 'url' ? firstInput.url! : 'Manual Upload');
-
-            let initialScreenshots: any[] = [];
-            if (firstInput.type === 'upload' && firstInput.filesData && firstInput.filesData.length > 0) {
-                initialScreenshots = [{ data: firstInput.filesData[0], mimeType: 'image/png' }];
-            }
-
-            setLoadingMessage('Initializing server agents...');
-            startAnalysis(processedInputs, auditMode, initialScreenshots);
-
-        } catch (e: any) {
-            console.error('[useAudit] Input processing failed:', e);
-            setError(`Error processing inputs: ${e.message || e}`);
-            setIsLoading(false);
-        }
+        }, 10);
     }, [startAnalysis]);
 
     const handleRunNewAudit = useCallback(() => {
