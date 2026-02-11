@@ -41,6 +41,7 @@ export const useAudit = () => {
     const [whiteLabelLogo, setWhiteLabelLogo] = useState<string | null>(null);
 
     const lastLogTime = useRef<number>(Date.now());
+    const isStreamActive = useRef<boolean>(false);
 
     // --- EFFECTS ---
 
@@ -101,6 +102,7 @@ export const useAudit = () => {
             setPerformanceError(errorMessage);
         },
         onJobCreated: (id: string) => {
+            isStreamActive.current = true;
             navigate(`/analysis/${id}`, { state: { newAudit: true } });
         },
         onStatus: (message: string) => {
@@ -155,12 +157,14 @@ export const useAudit = () => {
             setReport(prevReport => ({ ...prevReport, [chunk.key]: chunk.data }));
         },
         onComplete: ({ auditId: completedId }: any) => {
+            isStreamActive.current = false;
             setUiAuditId(completedId);
             setTargetProgress(100);
             setIsLoading(false);
             navigate(`/report/${completedId}`, { replace: true });
         },
         onError: (errorMessage: string) => {
+            isStreamActive.current = false;
             setError(errorMessage);
             setIsLoading(false);
             setTargetProgress(0);
@@ -248,10 +252,11 @@ export const useAudit = () => {
                 const isNewAudit = location.state?.newAudit;
 
                 // If this is a FRESH audit we just started via handleAnalyze, 
-                // we should still monitor it, but we give a hint to the loading message.
-                if (isNewAudit) {
-                    console.log(`[useAudit] Fresh audit detected, ensuring monitor starts.`);
+                // the stream is already active. Don't start polling.
+                if (isNewAudit && isStreamActive.current) {
+                    console.log(`[useAudit] Fresh audit with active stream detected. Skipping poll.`);
                     setIsLoading(true);
+                    return;
                 }
 
                 console.log(`[useAudit] Monitoring poll for ${auditId} on ${getBackendUrl()}`);
