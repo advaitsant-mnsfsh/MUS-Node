@@ -18,6 +18,7 @@ interface SplitLayoutProps {
     reportUrl?: string;
     reportScreenshots?: Screenshot[];
     screenshotMimeType?: string;
+    inputs?: any[]; // Allow inputs for ScanningPreview
 }
 
 export const SplitLayout: React.FC<SplitLayoutProps> = ({
@@ -33,7 +34,8 @@ export const SplitLayout: React.FC<SplitLayoutProps> = ({
     report,
     reportUrl,
     reportScreenshots,
-    screenshotMimeType
+    screenshotMimeType,
+    inputs
 }) => {
     // If fullWidth (user is logged in during analysis), show only the preview
     if (fullWidth) {
@@ -44,6 +46,8 @@ export const SplitLayout: React.FC<SplitLayoutProps> = ({
                         screenshot={screenshot || null}
                         progress={progress}
                         url={url}
+                        loadingMessage={loadingMessage}
+                        inputs={inputs}
                     />
                 </div>
             </div>
@@ -60,6 +64,8 @@ export const SplitLayout: React.FC<SplitLayoutProps> = ({
                         screenshot={screenshot || null}
                         progress={progress}
                         url={url}
+                        loadingMessage={loadingMessage}
+                        inputs={inputs}
                     />
                 </div>
 
