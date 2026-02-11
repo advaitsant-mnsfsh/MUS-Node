@@ -127,8 +127,9 @@ export const monitorJobPoll = (jobId: string, callbacks: StreamCallbacks): (() =
       const { authenticatedFetch } = await import('../lib/authenticatedFetch');
       const { getBackendUrl } = await import('./config');
 
-      const statusUrl = `${getBackendUrl()}/api/v1/audit?mode=stream-job&jobId=${jobId}`;
-      const response = await authenticatedFetch(`${statusUrl}&t=${Date.now()}`);
+      // Use Public API for polling as it returns standard JSON, not a stream
+      const statusUrl = `${getBackendUrl()}/api/public/jobs/${jobId}`;
+      const response = await authenticatedFetch(`${statusUrl}?t=${Date.now()}`);
 
       if (!response.ok) {
         if (response.status === 401) throw new Error("Unauthorized");
