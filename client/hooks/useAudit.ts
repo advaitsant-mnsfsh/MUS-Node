@@ -1,10 +1,11 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { AnalysisReport, Screenshot, AuditInput } from '../types';
-import { monitorJobStream, analyzeWebsiteStream } from '../services/geminiService';
+import { monitorJobStream, analyzeWebsiteStream, monitorJobPoll } from '../services/geminiService';
 import { useAuth } from '../contexts/AuthContext';
 import { useGlobalAudit } from '../contexts/AuditContext';
 import { getAuditInputs } from '../services/userAuditsService';
+import { resizeImage } from '../lib/imageUtils';
 
 const loadingMicrocopy = [
     "Analyzing UX with 250+ parameters…",
@@ -243,14 +244,14 @@ export const useAudit = () => {
                 const { getBackendUrl } = await import('../services/config');
                 const { monitorJobPoll } = await import('../services/geminiService');
 
-                // If this is a FRESH audit we just started via handleAnalyze, 
-                // we should NOT immediately start polling because monitorJobStream is already running.
-                // We only poll if it's NOT a new session or if we are resuming an old one.
                 // @ts-ignore
-                if (location.state?.newAudit) {
-                    console.log(`[useAudit] Fresh audit detected, skipping immediate poll fallback.`);
+                const isNewAudit = location.state?.newAudit;
+
+                // If this is a FRESH audit we just started via handleAnalyze, 
+                // we should still monitor it, but we give a hint to the loading message.
+                if (isNewAudit) {
+                    console.log(`[useAudit] Fresh audit detected, ensuring monitor starts.`);
                     setIsLoading(true);
-                    return;
                 }
 
                 console.log(`[useAudit] Monitoring poll for ${auditId} on ${getBackendUrl()}`);
@@ -262,11 +263,8 @@ export const useAudit = () => {
                 setUiAuditId(auditId);
                 setActiveAudit(auditId);
 
-                // Add a small delay for polls to avoid clashing with the initial stream setup
-                setTimeout(() => {
-                    monitorJobPoll(auditId, getStreamCallbacks(true));
-                }, 1000);
-
+                // Start polling immediately to avoid perceived lag
+                monitorJobPoll(auditId, getStreamCallbacks(true));
                 setIsLoading(true);
             } catch (e) {
                 console.error('[useAudit] loadOrMonitor failed:', e);
@@ -303,7 +301,6 @@ export const useAudit = () => {
         setLoadingMessage('Preparing your audit...');
 
         const processedInputs: AuditInput[] = [];
-        const { resizeImage } = await import('../lib/imageUtils');
 
         const processFiles = async (files?: File[], singleFile?: File): Promise<string[]> => {
             const filesToProcess = files && files.length > 0 ? files : (singleFile ? [singleFile] : []);

@@ -9,6 +9,8 @@ import { retryWithBackoff } from '../utils/retry.js';
 export const performScrape = async (url: string, isMobile: boolean, isFirstPage: boolean, browserEndpoint?: string) => {
     let browser;
     let isRemoteBrowser = false;
+    let lastConnectError = '';
+
     try {
         if (browserEndpoint) {
             try {
@@ -16,8 +18,9 @@ export const performScrape = async (url: string, isMobile: boolean, isFirstPage:
                 const connectBrowser = () => puppeteer.connect({ browserWSEndpoint: browserEndpoint });
                 browser = await retryWithBackoff(connectBrowser, 3, 2000, "Puppeteer Connect");
                 isRemoteBrowser = true;
-            } catch (remoteError) {
-                console.warn(`[SCRAPE] Remote browser connection failed. Falling back to local browser. Error: ${(remoteError as any).message}`);
+            } catch (remoteError: any) {
+                lastConnectError = remoteError.message;
+                console.warn(`[SCRAPE] Remote browser connection failed. Falling back to local browser. Error: ${lastConnectError}`);
             }
         }
 
@@ -28,7 +31,11 @@ export const performScrape = async (url: string, isMobile: boolean, isFirstPage:
             if (process.env.NODE_ENV === 'production' && process.env.ALLOW_LOCAL_CHROME !== 'true') {
                 const hasValue = !!browserEndpoint;
                 const valueLength = browserEndpoint?.length || 0;
-                throw new Error(`Misconfigured Scraper: Local Puppeteer launch blocked in Production. BrowserEndpoint Found: ${hasValue} (Length: ${valueLength}). Ensure 'PUPPETEER_BROWSER_ENDPOINT' is set in Railway app_secrets table.`);
+                const errorDetail = hasValue
+                    ? `Remote browser connection failed (Endpoint present but unreachable). Error: ${lastConnectError}. Check your PUPPETEER_BROWSER_ENDPOINT.`
+                    : `PUPPETEER_BROWSER_ENDPOINT is missing or empty.`;
+
+                throw new Error(`Scraper Error: Local Puppeteer launch blocked in Production to prevent container OOM. ${errorDetail} (Endpoint found: ${hasValue}, Len: ${valueLength})`);
             }
 
             console.log('[SCRAPE] Launching local browser...');
