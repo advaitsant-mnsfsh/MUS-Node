@@ -111,7 +111,8 @@ export const monitorJobStream = async (jobId: string, callbacks: StreamCallbacks
 export const monitorJobPoll = (jobId: string, callbacks: StreamCallbacks): (() => void) => {
   const { onStatus, onData, onComplete, onError, onClose } = callbacks;
   let isPolling = true;
-  const sentKeys = new Set<string>();
+  const sentValues = (callbacks as any)._sentValues || new Map<string, string>();
+  (callbacks as any)._sentValues = sentValues;
   const sentLogs = (callbacks as any)._sentLogs || new Set<string>();
   (callbacks as any)._sentLogs = sentLogs;
 
@@ -177,9 +178,14 @@ export const monitorJobPoll = (jobId: string, callbacks: StreamCallbacks): (() =
       // 2. Data Updates
       if (job.report_data) {
         Object.entries(job.report_data).forEach(([key, value]) => {
-          if (key !== 'logs' && !sentKeys.has(key)) {
+          if (key === 'logs') return; // Skip logs in data processing
+
+          const valueStr = JSON.stringify(value);
+          const lastValue = sentValues.get(key);
+
+          if (lastValue !== valueStr) {
             onData({ key, data: value });
-            sentKeys.add(key);
+            sentValues.set(key, valueStr);
           }
         });
       }

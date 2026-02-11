@@ -53,8 +53,10 @@ const DashboardPage: React.FC = () => {
     useEffect(() => {
         const displayAudits: DisplayAudit[] = allAudits
             .filter((audit: UserAudit) => {
+                const status = audit.status?.toLowerCase();
+
                 // Only show completed reports as requested
-                if (audit.status !== 'completed') return false;
+                if (status !== 'completed') return false;
 
                 // Handle API Key filtering
                 if (selectedFilter === 'all') return true;
@@ -70,7 +72,7 @@ const DashboardPage: React.FC = () => {
                     url: url,
                     competitorUrl: competitorUrl,
                     createdAt: audit.created_at,
-                    status: audit.status as any,
+                    status: (audit.status?.toLowerCase() || 'pending') as any,
                     // Score and Screenshot are null since we don't fetch report_data in the list
                     score: undefined,
                     screenshotUrl: undefined
@@ -78,7 +80,7 @@ const DashboardPage: React.FC = () => {
             });
 
         setFilteredAudits(displayAudits);
-    }, [allAudits]);
+    }, [allAudits, selectedFilter]);
 
     const getSafeHostname = (urlStr: string) => {
         if (!urlStr || urlStr === 'Manual Upload' || urlStr === 'Unknown' || urlStr === 'Uploaded Image') {
