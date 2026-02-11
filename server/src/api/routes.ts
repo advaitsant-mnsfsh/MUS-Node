@@ -1,4 +1,4 @@
-the tablimport express from 'express';
+import express from 'express';
 import { db } from '../lib/db.js';
 import { auditJobs, leads } from '../db/schema.js';
 import { validateApiKey, optionalUserAuth, AuthenticatedRequest } from '../middleware/apiAuth.js';
