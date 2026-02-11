@@ -111,6 +111,9 @@ export const monitorJobStream = async (jobId: string, callbacks: StreamCallbacks
 export const monitorJobPoll = (jobId: string, callbacks: StreamCallbacks): (() => void) => {
   const { onStatus, onData, onComplete, onError, onClose } = callbacks;
   let isPolling = true;
+  let retryCount = 0;
+  const maxRetries = 3;
+
   const sentValues = (callbacks as any)._sentValues || new Map<string, string>();
   (callbacks as any)._sentValues = sentValues;
   const sentLogs = (callbacks as any)._sentLogs || new Set<string>();
@@ -129,6 +132,8 @@ export const monitorJobPoll = (jobId: string, callbacks: StreamCallbacks): (() =
 
       // Use Public API for polling as it returns standard JSON, not a stream
       const statusUrl = `${getBackendUrl()}/api/public/jobs/${jobId}`;
+      console.log(`[Poll] Checking status for ${jobId} at: ${statusUrl}`);
+
       const response = await authenticatedFetch(`${statusUrl}?t=${Date.now()}`);
 
       if (!response.ok) {
@@ -138,12 +143,44 @@ export const monitorJobPoll = (jobId: string, callbacks: StreamCallbacks): (() =
       }
 
       const contentType = response.headers.get("content-type");
-      if (!contentType || !contentType.includes("application/json")) {
-        const text = await response.text();
-        throw new Error(`Server returned non-JSON response: ${text.substring(0, 100)}...`);
+      const text = await response.text();
+      let job: any = null;
+
+      try {
+        // Attempt to parse as JSON. 
+        // We handle the case where it might be NDJSON (multiple objects) by taking the last valid one.
+        if (text.includes('\n')) {
+          const lines = text.split('\n').filter(l => l.trim() !== '');
+          const lastLine = lines[lines.length - 1];
+          job = JSON.parse(lastLine);
+
+          // If the parsed line is a stream-chunk format (type: status/data), 
+          // we use the payload if it's a 'complete' chunk, or just ignore for standard poll
+          if (job.type === 'data' && job.payload) {
+            // If we got a stream chunk accidentally, try to peek into standard job format later or use this
+            console.warn("[Poll] Received stream chunk instead of job object, attempting to adapt...");
+            // This is a fallback for legacy/conflict issues
+          }
+        } else {
+          job = JSON.parse(text);
+        }
+      } catch (parseErr) {
+        console.warn(`[Poll] JSON Parse Error for jobId ${jobId}:`, parseErr);
+        throw new Error(`Invalid response format from server`);
       }
 
-      const job = await response.json();
+      // Reset retry count on successful parse
+      retryCount = 0;
+
+      // Handle the case where we got a stream chunk instead of a job object
+      // (This can happen if there's a routing conflict or stale cache)
+      if (job.type && !job.status) {
+        console.warn("[Poll] Received chunk type but no job status. Skipping this poll cycle.");
+        if (isPolling) setTimeout(checkStatus, 3000);
+        return;
+      }
+
+      // --- Normal Job Processing ---
 
       // --- 1. Fetch Logs ---
       try {
@@ -212,10 +249,17 @@ export const monitorJobPoll = (jobId: string, callbacks: StreamCallbacks): (() =
       }
 
     } catch (e: any) {
-      console.error("Poll Error:", e);
-      onError(e.message || "Polling failed");
-      isPolling = false;
-      onClose();
+      retryCount++;
+      console.error(`[Poll Error - Attempt ${retryCount}/${maxRetries}]:`, e);
+
+      if (retryCount < maxRetries && isPolling) {
+        console.warn(`[Poll] Retrying status check for ${jobId} in 5s...`);
+        setTimeout(checkStatus, 5000);
+      } else {
+        onError(e.message || "Polling failed");
+        isPolling = false;
+        onClose();
+      }
     }
   };
 
