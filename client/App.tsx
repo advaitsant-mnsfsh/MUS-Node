@@ -147,7 +147,7 @@ const App: React.FC = () => {
                 loadingMessage={loadingMessage}
                 microcopy={currentMicrocopy}
                 animationData={qrCodeAnimationData}
-                screenshot={screenshots.length > 0 ? screenshots[0].data : null}
+                screenshot={screenshots.length > 0 ? (screenshots[0].url || screenshots[0].data) : null}
                 url={submittedUrl}
                 fullWidth={!!user}
                 auditId={auditId}
