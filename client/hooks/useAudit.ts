@@ -242,6 +242,17 @@ export const useAudit = () => {
                 // If not found or not completed, THEN show loading screen for the stream/fetch
                 const { getBackendUrl } = await import('../services/config');
                 const { monitorJobPoll } = await import('../services/geminiService');
+
+                // If this is a FRESH audit we just started via handleAnalyze, 
+                // we should NOT immediately start polling because monitorJobStream is already running.
+                // We only poll if it's NOT a new session or if we are resuming an old one.
+                // @ts-ignore
+                if (location.state?.newAudit) {
+                    console.log(`[useAudit] Fresh audit detected, skipping immediate poll fallback.`);
+                    setIsLoading(true);
+                    return;
+                }
+
                 console.log(`[useAudit] Monitoring poll for ${auditId} on ${getBackendUrl()}`);
 
                 if (!isResumingActive) {
@@ -251,9 +262,12 @@ export const useAudit = () => {
                 setUiAuditId(auditId);
                 setActiveAudit(auditId);
 
-                monitorJobPoll(auditId, getStreamCallbacks(true));
-                setIsLoading(true);
+                // Add a small delay for polls to avoid clashing with the initial stream setup
+                setTimeout(() => {
+                    monitorJobPoll(auditId, getStreamCallbacks(true));
+                }, 1000);
 
+                setIsLoading(true);
             } catch (e) {
                 console.error('[useAudit] loadOrMonitor failed:', e);
                 const { monitorJobPoll } = await import('../services/geminiService');
@@ -264,7 +278,7 @@ export const useAudit = () => {
         };
 
         loadOrMonitor();
-    }, [auditId, location.pathname, isResumingActive, setActiveAudit, getStreamCallbacks, navigate, report, isLoading, error]);
+    }, [auditId, location.pathname, isResumingActive, setActiveAudit, getStreamCallbacks, navigate, report, isLoading, error, location.state]);
 
 
     // --- ACTION HANDLERS ---
