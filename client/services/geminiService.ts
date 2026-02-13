@@ -310,11 +310,20 @@ export const analyzeWebsiteStream = async (
       throw new Error(`Failed to start audit: ${startResponse.status} ${startResponse.statusText}`);
     }
 
-    const { jobId } = await startResponse.json();
-    console.log('[GeminiService] Job created:', jobId);
+    const { jobId, queuePosition, queueType } = await startResponse.json();
+    console.log('[GeminiService] Job created:', jobId, 'at position:', queuePosition);
 
     if (onJobCreated) onJobCreated(jobId);
-    onStatus('Audit job created. Connecting to stream...');
+
+    // Initial status update with queue info
+    if (queuePosition > 0) {
+      const queueMsg = queuePosition === 1
+        ? "You're next! Starting your audit now..."
+        : `Queue position: ${queuePosition}. ${queueType === 'email' ? 'High volume: results will be emailed.' : 'Estimated wait: a few minutes.'}`;
+      onStatus(queueMsg);
+    } else {
+      onStatus('Audit job created. Connecting to stream...');
+    }
 
     await monitorJobStream(jobId, callbacks);
 

@@ -173,8 +173,11 @@ const server = app.listen(port, async () => {
 
     try {
         await preWarmDatabase();
+        // Start the background worker
+        const { WorkerService } = await import('./services/workerService.js');
+        WorkerService.start();
     } catch (err) {
-        console.warn('[System] Database pre-warm failed, but server is listening.');
+        console.warn('[System] Database pre-warm or Worker start failed, but server is listening.');
     }
 
     console.log(`[System] 🚀 Post-Deploy sequence complete. Ready for requests in ${ENV_NAME}.`);

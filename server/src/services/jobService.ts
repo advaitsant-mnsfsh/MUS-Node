@@ -10,10 +10,32 @@ export interface CreateJobParams {
 }
 
 export class JobService {
+    private static async withRetry<T>(fn: () => Promise<T>, retries = 2): Promise<T> {
+        let lastError: any;
+        for (let i = 0; i <= retries; i++) {
+            try {
+                return await fn();
+            } catch (err: any) {
+                lastError = err;
+                const isTransient = err.message?.includes('Connection terminated') ||
+                    err.message?.includes('client has been closed') ||
+                    err.message?.includes('timeout');
+
+                if (isTransient && i < retries) {
+                    const delay = 500 * (i + 1);
+                    console.warn(`[JobService] DB update failed, retrying in ${delay}ms... (Attempt ${i + 1}/${retries})`);
+                    await new Promise(resolve => setTimeout(resolve, delay));
+                    continue;
+                }
+                throw err;
+            }
+        }
+        throw lastError;
+    }
+
     static async createJob(params: CreateJobParams) {
-        // Drizzle Insert
         const [job] = await db.insert(auditJobs).values({
-            id: crypto.randomUUID(), // Manual ID generation
+            id: crypto.randomUUID(),
             api_key_id: params.apiKeyId || undefined,
             user_id: params.userId || null,
             status: 'pending',
@@ -31,26 +53,29 @@ export class JobService {
         if (resultUrl) updatePayload.result_url = resultUrl;
 
         try {
-            await db.update(auditJobs)
-                .set(updatePayload)
-                .where(eq(auditJobs.id, jobId));
+            await this.withRetry(() =>
+                db.update(auditJobs)
+                    .set(updatePayload)
+                    .where(eq(auditJobs.id, jobId))
+            );
         } catch (error) {
-            console.error(`Failed to update job ${jobId}:`, error);
+            console.error(`[JobService] 🚨 Final update failed for ${jobId} after retries:`, error);
         }
     }
 
     static async updateProgress(jobId: string, message: string, partialData?: any) {
-        // Mirrored log for terminal visibility
         console.log(`[JobProgress] ⚡ ${message}`);
 
         try {
-            // 1. Insert into dedicated logs table (New performance-ready way)
-            await db.insert(auditJobLogs).values({
-                id: crypto.randomUUID(),
-                job_id: jobId,
-                message: message,
-                level: 'info'
-            });
+            // 1. Insert into dedicated logs table
+            await this.withRetry(() =>
+                db.insert(auditJobLogs).values({
+                    id: crypto.randomUUID(),
+                    job_id: jobId,
+                    message: message,
+                    level: 'info'
+                })
+            );
 
             // 2. ALSO update the legacy JSONB column in audit_jobs (Keep as it was)
             const logEntry = {
@@ -64,39 +89,37 @@ export class JobService {
                 (COALESCE(report_data->'logs', '[]'::jsonb) || ${JSON.stringify(logEntry)}::jsonb)
             )`;
 
-            if (partialData) {
-                await db.update(auditJobs)
-                    .set({
-                        report_data: sql`${jsonbUpdate} || ${JSON.stringify(partialData)}::jsonb`,
-                        updated_at: sql`NOW()`
-                    })
-                    .where(eq(auditJobs.id, jobId));
-            } else {
-                await db.update(auditJobs)
-                    .set({
-                        report_data: jsonbUpdate,
-                        updated_at: sql`NOW()`
-                    })
-                    .where(eq(auditJobs.id, jobId));
-            }
+            await this.withRetry(() => {
+                if (partialData) {
+                    return db.update(auditJobs)
+                        .set({
+                            report_data: sql`${jsonbUpdate} || ${JSON.stringify(partialData)}::jsonb`,
+                            updated_at: sql`NOW()`
+                        })
+                        .where(eq(auditJobs.id, jobId));
+                } else {
+                    return db.update(auditJobs)
+                        .set({
+                            report_data: jsonbUpdate,
+                            updated_at: sql`NOW()`
+                        })
+                        .where(eq(auditJobs.id, jobId));
+                }
+            });
         } catch (e) {
             console.error(`[JobService] Failed to update progress for ${jobId}:`, e);
         }
     }
 
-
-
     static async getJob(jobId: string) {
         try {
-            // OPTIMIZATION: Select only needed columns for report rendering
-            // We fetch input_data and api_key_id to ensure compatibility with JobProcessor and External API.
             const [job] = await db.select({
                 id: auditJobs.id,
                 status: auditJobs.status,
-                api_key_id: auditJobs.api_key_id, // Required by external API
+                api_key_id: auditJobs.api_key_id,
                 input_data: auditJobs.input_data,
                 report_data: auditJobs.report_data,
-                result_url: auditJobs.result_url,   // Required by external API
+                result_url: auditJobs.result_url,
                 error_message: auditJobs.error_message,
                 created_at: auditJobs.created_at,
                 updated_at: auditJobs.updated_at
@@ -105,13 +128,10 @@ export class JobService {
                 .where(eq(auditJobs.id, jobId))
                 .limit(1);
 
-
-
             return job || null;
         } catch (error) {
             console.error(`[JobService] getJob failed for ${jobId}:`, error);
             return null;
         }
     }
-
 }

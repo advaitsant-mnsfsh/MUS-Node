@@ -1,6 +1,7 @@
 import React from 'react';
 import { SplitLayout } from '../SplitLayout';
 import { LoginPanel } from '../LoginPanel';
+import { ScanningPreview } from '../ScanningPreview';
 
 import { AuditInput } from '../../types';
 
@@ -14,6 +15,7 @@ interface AnalysisViewProps {
     fullWidth: boolean;
     auditId?: string | null;
     inputs?: AuditInput[];
+    isError?: boolean;
 }
 
 export const AnalysisView: React.FC<AnalysisViewProps> = ({
@@ -25,7 +27,8 @@ export const AnalysisView: React.FC<AnalysisViewProps> = ({
     url,
     fullWidth,
     auditId,
-    inputs
+    inputs,
+    isError
 }) => {
     return (
         <SplitLayout
@@ -38,9 +41,12 @@ export const AnalysisView: React.FC<AnalysisViewProps> = ({
             url={url}
             fullWidth={fullWidth}
             inputs={inputs}
+            isError={isError}
         >
             <div className="flex flex-col items-center justify-center w-full h-full animate-in fade-in duration-500">
-                <LoginPanel auditId={auditId} />
+                <div className="mt-8">
+                    <LoginPanel auditId={auditId} />
+                </div>
             </div>
         </SplitLayout>
     );
