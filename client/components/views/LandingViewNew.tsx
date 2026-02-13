@@ -26,7 +26,7 @@ export const LandingView: React.FC<LandingViewProps> = ({
         <div className="h-[calc(100vh-5rem)] w-full flex flex-col relative bg-page-bg font-sans overflow-x-hidden overflow-y-auto custom-scrollbar">
 
             {/* Main Content (Hero + Input) */}
-            <main className="w-full min-h-full flex flex-col items-center justify-center pt-16 md:pt-[8vh] px-4 pb-20 animate-in fade-in duration-500 z-10 w-full">
+            <main className="w-full min-h-full flex flex-col items-center pt-16 md:pt-[8vh] px-4 pb-20 animate-in fade-in duration-500 z-10">
                 <LandingHero />
 
                 <div className="w-full max-w-4xl mt-8 space-y-6">

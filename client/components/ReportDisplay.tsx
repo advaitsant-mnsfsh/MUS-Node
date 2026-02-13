@@ -20,9 +20,10 @@ import { ASSETS } from './report/constants';
 import AccessibilityAuditView from './report/AccessibilityAuditView';
 import { CompetitorAnalysisView } from './report/CompetitorAnalysisView';
 
-// --- YOUR PDF HOOK ---
+// --- YOUR PDF HOOKS ---
 import { useReportPdf } from '../hooks/useReportPdf';
-import { useNewReportPdf } from '../hooks/useNewReportPdf';
+import { useStandardReportPdf } from '../hooks/useStandardReportPdf';
+import { useCompetitorReportPdf } from '../hooks/useCompetitorReportPdf';
 
 interface ReportDisplayProps {
     report: AnalysisReport | null;
@@ -83,8 +84,9 @@ export function ReportDisplay({
         }
     }, [user, isSharedView]);
 
-    // --- PDF LOGIC (Your Feature) ---
-    const { generatePdf, isPdfGenerating, pdfError } = useReportPdf({
+    // --- PDF LOGIC (React-PDF Primary, Legacy Fallback) ---
+    // Legacy method (heavy, image-based)
+    const { generatePdf: generateLegacyPdf, isPdfGenerating: isLegacyPdfGenerating, pdfError } = useReportPdf({
         report,
         url,
         screenshots,
@@ -92,10 +94,17 @@ export function ReportDisplay({
         defaultLogoSrc: ASSETS.headerLogo
     });
 
-    const { generateNewPdf, isGenerating: isNewPdfGenerating } = useNewReportPdf({
+    // New React-PDF method (lightweight, text-selectable) - For Standard Reports
+    const { generateStandardPdf, isGenerating: isStandardPdfGenerating } = useStandardReportPdf({
         report,
         url,
         screenshots
+    });
+
+    // Competitor Report PDF (React-PDF based)
+    const { generatePdf: generateCompetitorPdf, isGenerating: isCompetitorPdfGenerating } = useCompetitorReportPdf({
+        data: competitorAnalysis,
+        url
     });
 
     // --- DATA ---
@@ -211,28 +220,27 @@ export function ReportDisplay({
                             </nav>
 
                             <div className="flex items-center gap-3">
-                                {/* PDF Button (Your Feature) */}
+                                {/* Primary PDF Button - React-PDF (Lightweight) */}
                                 <button
-                                    onClick={generatePdf}
-                                    disabled={isPdfGenerating}
+                                    onClick={isCompetitorReport ? generateCompetitorPdf : generateStandardPdf}
+                                    disabled={isCompetitorReport ? isCompetitorPdfGenerating : isStandardPdfGenerating}
                                     className="inline-flex items-center gap-2 px-4 py-2 text-sm font-bold text-white bg-indigo-600 rounded-lg hover:bg-indigo-700 disabled:bg-indigo-400"
                                 >
-                                    {isPdfGenerating ? 'Generating...' : 'Download Report'}
+                                    <FileDown className="w-4 h-4" />
+                                    {(isCompetitorReport ? isCompetitorPdfGenerating : isStandardPdfGenerating) ? 'Generating...' : 'Download Report'}
                                 </button>
 
-                                <button
-                                    onClick={generateNewPdf}
-                                    disabled={isNewPdfGenerating}
-                                    className="inline-flex items-center gap-2 px-4 py-2 text-sm font-bold text-white bg-emerald-600 rounded-lg hover:bg-emerald-700 disabled:bg-emerald-400"
-                                    title="Experimental: Data-driven PDF generation"
-                                >
-                                    {isNewPdfGenerating ? 'Testing...' : (
-                                        <>
-                                            <FileDown className="w-4 h-4" />
-                                            Test New PDF
-                                        </>
-                                    )}
-                                </button>
+                                {/* Legacy PDF Button - Fallback (Image-based) */}
+                                {!isCompetitorReport && (
+                                    <button
+                                        onClick={generateLegacyPdf}
+                                        disabled={isLegacyPdfGenerating}
+                                        className="inline-flex items-center gap-2 px-4 py-2 text-sm font-bold text-slate-600 bg-slate-100 border border-slate-300 rounded-lg hover:bg-slate-200 disabled:bg-slate-400"
+                                        title="Legacy: Image-based PDF (larger file size)"
+                                    >
+                                        {isLegacyPdfGenerating ? 'Generating...' : 'Legacy PDF'}
+                                    </button>
+                                )}
 
                                 {/* Share Button (Partner Feature) */}
                                 {!isSharedView && (
