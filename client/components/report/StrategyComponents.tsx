@@ -15,9 +15,12 @@ import {
 // const HEADING_STYLE = "text-lg font-bold text-slate-900 leading-tight"; // Unused
 
 // Helper for Confidence Text (Text Only, No Pill)
+// Helper for Confidence Text (Text Only, No Pill)
 const getConfidenceColor = (confidence: string = 'High') => {
-    // For Brutalism, we might prefer just black text with a colored background badge
-    return '#000000';
+    const c = confidence.toLowerCase();
+    if (c === 'high') return 'text-emerald-600';
+    if (c === 'medium') return 'text-amber-600';
+    return 'text-red-600';
 };
 
 // --- HELPER: PDF AVATAR (Handles CORS for PDF Generation) ---
@@ -128,7 +131,7 @@ export function StrategyAuditDisplay({ audit, isPdf = false, forcePageBreak = fa
 
             {/* Header / Toggle */}
             <div
-                className="flex items-center justify-between p-6 cursor-pointer hover:bg-yellow-50 transition-colors select-none border-b-2 border-black bg-white"
+                className={`flex items-center justify-between p-6 cursor-pointer transition-colors select-none border-b-2 border-black ${isOpen ? 'bg-yellow-50' : 'bg-white hover:bg-yellow-50'}`}
                 onClick={() => setIsOpen(!isOpen)}
             >
                 <div className="flex flex-col gap-1">
@@ -161,7 +164,7 @@ export function StrategyAuditDisplay({ audit, isPdf = false, forcePageBreak = fa
                                     <div className="flex items-center justify-between mb-4">
                                         <h4 className="text-lg font-black text-black uppercase">Domain Analysis</h4>
                                         {DomainAnalysis?.Confidence && (
-                                            <span className="bg-emerald-100 border border-black text-black text-[10px] font-bold px-2 py-1 uppercase tracking-wide shadow-neo-hover">
+                                            <span className={`text-[10px] font-bold uppercase tracking-wide ${getConfidenceColor(DomainAnalysis.Confidence)}`}>
                                                 {DomainAnalysis.Confidence} Confidence
                                             </span>
                                         )}
@@ -185,7 +188,7 @@ export function StrategyAuditDisplay({ audit, isPdf = false, forcePageBreak = fa
                                     <div className="flex items-center justify-between mb-4">
                                         <h4 className="text-lg font-black text-black uppercase">Purpose Analysis</h4>
                                         {PurposeAnalysis?.Confidence && (
-                                            <span className="bg-emerald-100 border border-black text-black text-[10px] font-bold px-2 py-1 uppercase tracking-wide shadow-neo-hover">
+                                            <span className={`text-[10px] font-bold uppercase tracking-wide ${getConfidenceColor(PurposeAnalysis.Confidence)}`}>
                                                 {PurposeAnalysis.Confidence} Confidence
                                             </span>
                                         )}
@@ -228,7 +231,7 @@ export function StrategyAuditDisplay({ audit, isPdf = false, forcePageBreak = fa
                                 <div className="flex items-center justify-between mb-6">
                                     <h4 className="text-lg font-black text-black uppercase">Target Audience</h4>
                                     {TargetAudience.Confidence && (
-                                        <span className="bg-emerald-100 border border-black text-black text-[10px] font-bold px-2 py-1 uppercase tracking-wide shadow-neo-hover">
+                                        <span className={`text-[10px] font-bold uppercase tracking-wide ${getConfidenceColor(TargetAudience.Confidence)}`}>
                                             {TargetAudience.Confidence} Confidence
                                         </span>
                                     )}

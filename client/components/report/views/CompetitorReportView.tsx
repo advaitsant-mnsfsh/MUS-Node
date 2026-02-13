@@ -43,7 +43,18 @@ export const CompetitorReportView: React.FC<CompetitorReportViewProps> = ({
     // Sticky Top Offset Calculation
     // Normal: 154px (80px Global Nav + 74px Action Bar)
     // Shared: 74px -> Reduced to 66px to ensure overlap/no gap
+    // Sticky Top Offset Calculation
+    // NORMAL VIEW:
+    // Mobile: 146px (Nav) + 88px (FilterBar) = 234px
+    // Desktop: 154px (Nav) + 88px (FilterBar) = 242px
+
+    // SHARED VIEW:
+    // Mobile: 58px (Nav) + 88px (FilterBar) = 146px
+    // Desktop: 66px (Nav) + 88px (FilterBar) = 154px
+
     const stickyTopClass = isSharedView ? 'top-[58px] md:top-[66px]' : 'top-[146px] md:top-[154px]';
+    // Use static strings for Tailwind to detect them
+    const tableHeaderTopClass = isSharedView ? 'top-[146px] md:top-[154px]' : 'top-[234px] md:top-[242px]';
     const PROD_URL = 'https://mus-node-production.up.railway.app';
 
     // --- HELPERS ---
@@ -125,7 +136,7 @@ export const CompetitorReportView: React.FC<CompetitorReportViewProps> = ({
     ];
 
     // --- Comparison Table ---
-    const ComparisonTable = ({ items, title }: { items: CompetitorComparisonItem[], title: string }) => {
+    const ComparisonTable = ({ items, title, stickyTopClass }: { items: CompetitorComparisonItem[], title: string, stickyTopClass: string }) => {
         if (!items || items.length === 0) return (
             <div className="p-12 text-center bg-white border-2 border-dashed border-black">
                 <p className="text-black font-bold">No comparison data available for this section.</p>
@@ -133,23 +144,23 @@ export const CompetitorReportView: React.FC<CompetitorReportViewProps> = ({
         );
 
         return (
-            <div className="bg-white border-2 border-black shadow-neo overflow-hidden animate-in fade-in slide-in-from-bottom-2 duration-300">
-                <div className="overflow-x-auto">
+            <div className="bg-white border-2 border-black shadow-neo overflow-hidden md:overflow-visible animate-in fade-in slide-in-from-bottom-2 duration-300">
+                <div className="overflow-x-auto md:overflow-visible">
                     <table className="w-full text-left border-collapse">
                         <thead>
-                            <tr className="bg-brand/10 border-b-2 border-black text-xs font-black text-black uppercase tracking-wider">
-                                <th className="p-5 w-1/4">Parameter</th>
-                                <th className="p-5 w-24 text-center">
+                            <tr className="bg-transparent">
+                                <th className={`p-5 w-1/4 sticky ${stickyTopClass} z-10 bg-slate-100 shadow-[inset_0_-2px_0_black] text-xs font-black text-black uppercase tracking-wider`}>Parameter</th>
+                                <th className={`p-5 w-24 text-center sticky ${stickyTopClass} z-10 bg-slate-100 shadow-[inset_0_-2px_0_black]`}>
                                     <div className="flex items-center justify-center">
                                         <SiteLogo domain={primaryUrl} size="tiny" className="shadow-neo-sm" />
                                     </div>
                                 </th>
-                                <th className="p-5 w-24 text-center">
+                                <th className={`p-5 w-24 text-center sticky ${stickyTopClass} z-10 bg-slate-100 shadow-[inset_0_-2px_0_black]`}>
                                     <div className="flex items-center justify-center">
                                         <SiteLogo domain={competitorUrl} size="tiny" className="shadow-neo-sm" />
                                     </div>
                                 </th>
-                                <th className="p-5 min-w-[300px]">Observations</th>
+                                <th className={`p-5 min-w-[300px] sticky ${stickyTopClass} z-10 bg-slate-100 shadow-[inset_0_-2px_0_black] text-xs font-black text-black uppercase tracking-wider`}>Observations</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y-2 divide-black">
@@ -320,14 +331,13 @@ export const CompetitorReportView: React.FC<CompetitorReportViewProps> = ({
 
             {/* 4. DETAILED COMPARISON TABLE */}
             <div className="pt-12 border-t-4 border-black">
-                <div className={`sticky ${stickyTopClass} z-20 bg-page-bg py-4 flex flex-col md:flex-row md:items-center justify-between gap-6 mb-8 border-b-2 border-black/5 transition-all duration-300`}>
+                <div className={`sticky ${stickyTopClass} z-20 bg-page-bg border-2 border-black py-4 shadow-neo px-6 lg:px-8 flex flex-col md:flex-row md:items-center justify-between gap-6 mb-0 transition-all duration-300 h-[88px]`}>
                     <div>
-                        <h2 className="text-3xl font-black text-black uppercase mb-1">Detailed Face-off</h2>
-                        <p className="text-slate-600 font-bold px-1 inline-block">Direct head-to-head parameter comparison.</p>
+                        <h2 className="text-2xl font-black text-black uppercase mb-1">Detailed Face-off</h2>
                     </div>
 
                     {/* Filter Navbar */}
-                    <div className="flex bg-white p-2 border-2 border-black shadow-neo gap-2 overflow-x-auto no-scrollbar">
+                    <div className="flex bg-page-bg gap-2 overflow-x-auto no-scrollbar p-1">
                         {TABS.map((tab) => {
                             const Icon = tab.icon;
                             const isActive = activeTab === tab.id;
@@ -336,7 +346,7 @@ export const CompetitorReportView: React.FC<CompetitorReportViewProps> = ({
                                     key={tab.id}
                                     onClick={() => setActiveTab(tab.id as any)}
                                     className={`flex items-center gap-2 px-4 py-2 font-bold transition-all whitespace-nowrap border-2 ${isActive
-                                        ? 'bg-brand text-white border-black shadow-neo -translate-y-[2px]'
+                                        ? 'bg-brand text-white border-black shadow-neo'
                                         : 'bg-transparent text-slate-500 border-transparent hover:bg-slate-100 hover:text-black hover:border-black'
                                         }`}
                                 >
@@ -349,11 +359,11 @@ export const CompetitorReportView: React.FC<CompetitorReportViewProps> = ({
                 </div>
 
                 {/* Render Active Table */}
-                {activeTab === 'UX' && <ComparisonTable items={data.UXComparison} title="User Experience" />}
-                {activeTab === 'Product' && <ComparisonTable items={data.ProductComparison} title="Product Value" />}
-                {activeTab === 'Visual' && <ComparisonTable items={data.VisualComparison} title="Visual Design" />}
-                {activeTab === 'Strategy' && <ComparisonTable items={data.StrategyComparison} title="Strategy" />}
-                {activeTab === 'Accessibility' && <ComparisonTable items={data.AccessibilityComparison} title="Accessibility" />}
+                {activeTab === 'UX' && <ComparisonTable items={data.UXComparison} title="User Experience" stickyTopClass={tableHeaderTopClass} />}
+                {activeTab === 'Product' && <ComparisonTable items={data.ProductComparison} title="Product Value" stickyTopClass={tableHeaderTopClass} />}
+                {activeTab === 'Visual' && <ComparisonTable items={data.VisualComparison} title="Visual Design" stickyTopClass={tableHeaderTopClass} />}
+                {activeTab === 'Strategy' && <ComparisonTable items={data.StrategyComparison} title="Strategy" stickyTopClass={tableHeaderTopClass} />}
+                {activeTab === 'Accessibility' && <ComparisonTable items={data.AccessibilityComparison} title="Accessibility" stickyTopClass={tableHeaderTopClass} />}
             </div>
         </div >
     );

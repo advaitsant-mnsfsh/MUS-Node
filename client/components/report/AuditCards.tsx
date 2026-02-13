@@ -43,12 +43,33 @@ const EditorialCard = ({
 }) => {
     const [isOpen, setIsOpen] = useState(false); // Default to collapsed as requested "collaps and close"
 
-    // Normalize confidence for color badge
+    // Normalize confidence for text color only (no background)
     const getConfidenceColor = (conf: string) => {
         const c = conf.toLowerCase();
-        if (c === 'high') return 'bg-emerald-100 text-black border-black';
-        if (c === 'medium') return 'bg-amber-100 text-black border-black';
-        return 'bg-red-100 text-black border-black';
+        if (c === 'high') return 'text-emerald-600';
+        if (c === 'medium') return 'text-amber-600';
+        return 'text-red-600';
+    };
+
+    // Get score background and shadow based on score (0-100 scale)
+    const getScoreStyle = (score: number) => {
+        const displayScore = Math.round(score * 10);
+        if (displayScore >= 80) {
+            return {
+                bg: 'bg-[#DAF6D5]',
+                shadow: 'shadow-[2px_2px_0px_0px_#9ae68d]'
+            };
+        } else if (displayScore >= 50) {
+            return {
+                bg: 'bg-[#F6E8D5]',
+                shadow: 'shadow-[2px_2px_0px_0px_#e8c696]'
+            };
+        } else {
+            return {
+                bg: 'bg-[#F1D0D0]',
+                shadow: 'shadow-[2px_2px_0px_0px_#e8a4a4]'
+            };
+        }
     };
 
     // Calculate score for display (0-100)
@@ -59,7 +80,7 @@ const EditorialCard = ({
 
             {/* --- HEADER (Always Visible) --- */}
             <div
-                className="flex flex-col md:flex-row items-start md:items-center justify-between p-6 cursor-pointer hover:bg-yellow-50 transition-colors gap-4 select-none"
+                className={`flex flex-col md:flex-row items-start md:items-center justify-between p-6 cursor-pointer transition-colors gap-4 select-none ${isOpen ? 'bg-yellow-50' : 'hover:bg-yellow-50'}`}
                 onClick={() => setIsOpen(!isOpen)}
             >
                 {/* Left: Title & Audit Type */}
@@ -80,13 +101,13 @@ const EditorialCard = ({
 
                 {/* Right: Confidence, Score & Toggle */}
                 <div className="flex items-center gap-3 shrink-0">
-                    {/* Confidence Badge - MOVED HERE */}
-                    <span className={`inline-block w-fit text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 border ${getConfidenceColor(confidence)} shadow-neo-hover`}>
+                    {/* Confidence Badge - Text Only, No Background */}
+                    <span className={`inline-block w-fit text-[10px] font-bold uppercase tracking-wider ${getConfidenceColor(confidence)}`}>
                         {confidence} Confidence
                     </span>
 
-                    {/* Score Pill (White Background) */}
-                    <div className="flex items-center justify-center px-3 py-1.5 bg-white text-black min-w-[70px] border-2 border-black shadow-[2px_2px_0px_0px_#fbbf24]">
+                    {/* Score Pill (Colored Background Based on Score) */}
+                    <div className={`flex items-center justify-center px-3 py-1.5 text-black min-w-[70px] border-2 border-black ${getScoreStyle(score).bg} ${getScoreStyle(score).shadow}`}>
                         <span className="text-sm font-bold">
                             {displayScore}<span className="text-slate-500 text-[10px] ml-0.5">/100</span>
                         </span>
@@ -120,10 +141,10 @@ const EditorialCard = ({
                     </div>
 
                     {/* Observation & Recommendation Grid */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 bg-page-bg border-2 border-black overflow-hidden shadow-neo-sm">
+                    <div className="grid grid-cols-1 md:grid-cols-2 -mx-6 border-y border-slate-200">
 
                         {/* Observation */}
-                        <div className="p-5 border-b-2 md:border-b-0 md:border-r-2 border-black">
+                        <div className="p-6 border-b md:border-b-0 md:border-r border-slate-200 bg-slate-100">
                             <div className={LABEL_STYLE}>
                                 <div className="p-1 bg-blue-500 text-white border border-black">
                                     <Target className="w-3 h-3" />
@@ -136,7 +157,7 @@ const EditorialCard = ({
                         </div>
 
                         {/* Recommendation */}
-                        <div className="p-5">
+                        <div className="p-6 bg-slate-100">
                             <div className={LABEL_STYLE}>
                                 <div className="p-1 bg-accent-yellow text-black border border-black">
                                     <Lightbulb className="w-3 h-3" />
