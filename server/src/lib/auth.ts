@@ -47,35 +47,125 @@ export const auth = betterAuth({
                     console.log(`[AUTH] 📤 Sending ${type} OTP to ${email} (From: ${fromEmail})`);
 
                     const isReset = type === 'forget-password';
-                    const subject = isReset ? 'Reset Your MUS Password' : 'Your MUS Verification Code';
-                    const title = isReset ? 'Password Reset' : 'Verification Code';
-                    const description = isReset
-                        ? 'We received a request to reset your password. Use the code below to proceed.'
-                        : 'Enter the code below to complete your sign-in to MUS.';
+                    const subject = isReset ? 'Reset Your Password' : 'Your Verification Code';
+                    const title = 'Verification Code';
+                    const description = 'Please enter this code on the screen where you started your sign in';
 
                     const { data, error } = await resend.emails.send({
                         from: fromEmail,
                         to: [email],
                         subject: subject,
                         html: `
-                            <div style="font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; padding: 40px 20px; background-color: #f8fafc; text-align: center;">
-                                <div style="max-width: 480px; margin: 0 auto; background-color: #ffffff; border: 2px solid #000000; border-radius: 12px; padding: 40px; box-shadow: 8px 8px 0px 0px rgba(0,0,0,0.1);">
-                                    <div style="margin-bottom: 24px;">
-                                        <h1 style="color: #000000; margin: 0; font-size: 28px; font-weight: 900; letter-spacing: -0.02em;">MUS</h1>
-                                    </div>
-                                    <h2 style="color: #1a202c; margin-bottom: 8px; font-size: 20px; font-weight: 700;">${title}</h2>
-                                    <p style="font-size: 16px; color: #4a5568; margin-bottom: 32px; line-height: 1.5;">${description}</p>
-                                    
-                                    <div style="background-color: #f1f5f9; border: 2px dashed #cbd5e1; border-radius: 8px; padding: 20px; margin-bottom: 32px;">
-                                        <div style="font-size: 38px; font-weight: 800; color: #6366f1; letter-spacing: 12px; margin-left: 12px;">${otp}</div>
-                                    </div>
-                                    
-                                    <p style="font-size: 13px; color: #94a3b8; margin: 0;">This code will expire in 10 minutes.</p>
-                                    <div style="margin-top: 40px; border-top: 1px solid #f1f5f9; pt: 20px;">
-                                        <p style="font-size: 12px; color: #94a3b8;">If you didn't request this code, you can safely ignore this email.</p>
-                                    </div>
-                                </div>
-                            </div>
+                            <!DOCTYPE html>
+                            <html>
+                            <head>
+                                <meta charset="utf-8">
+                                <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                                <meta name="color-scheme" content="light dark">
+                                <meta name="supported-color-schemes" content="light dark">
+                                <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+                                <style>
+                                    body { margin: 0; padding: 0; font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; }
+                                    .light-logo { display: block !important; }
+                                    .dark-logo { display: none !important; max-height: 0 !important; overflow: hidden !important; }
+                                    .email-container { padding: 40px 20px; }
+                                    .main-card { max-width: 540px; width: 100%; padding: 48px 40px; }
+                                    .otp-box { min-width: 320px; padding: 28px 24px; }
+                                    .otp-text { font-size: 48px; letter-spacing: 0.3em; }
+                                    .title-text { font-size: 32px; }
+                                    @media only screen and (max-width: 600px) {
+                                        .email-container { padding: 20px 16px !important; }
+                                        .main-card { padding: 32px 20px !important; max-width: 100% !important; }
+                                        .otp-box { min-width: auto !important; width: 100% !important; padding: 20px 16px !important; box-sizing: border-box !important; }
+                                        .otp-text { font-size: 32px !important; letter-spacing: 0.2em !important; }
+                                        .title-text { font-size: 24px !important; }
+                                        .desc-text { font-size: 14px !important; }
+                                        .footer-text { font-size: 12px !important; }
+                                    }
+                                    @media (prefers-color-scheme: dark) {
+                                        .bg-gradient { background: linear-gradient(180deg, #1A1A1A 0%, #3D3416 100%) !important; }
+                                        .card-bg { background: #262626 !important; border-color: #404040 !important; }
+                                        .text-primary { color: #FFFFFF !important; }
+                                        .text-secondary { color: #A3A3A3 !important; }
+                                        .text-muted { color: #737373 !important; }
+                                        .otp-box { background: #624F04 !important; border-color: #78350F !important; }
+                                        .otp-text { color: #FFFFFF !important; }
+                                        .footer-bg { background: #292524 !important; }
+                                        .light-logo { display: none !important; max-height: 0 !important; overflow: hidden !important; }
+                                        .dark-logo { display: block !important; max-height: none !important; }
+                                    }
+                                    /* Dark mode support for email clients */
+                                    [data-ogsc] .light-logo { display: none !important; max-height: 0 !important; }
+                                    [data-ogsc] .dark-logo { display: block !important; max-height: none !important; }
+                                </style>
+                            </head>
+                            <body class="bg-gradient" style="background: linear-gradient(180deg, #FEFEFE 0%, #FFFBF0 100%); min-height: 100vh; padding: 40px 20px;">
+                                <table width="100%" cellpadding="0" cellspacing="0" border="0">
+                                    <tr>
+                                        <td align="center">
+                                            <!-- Logo -->
+                                            <table cellpadding="0" cellspacing="0" border="0" style="margin-bottom: 32px;">
+                                                <tr>
+                                                    <td align="center">
+                                                        <!-- Light mode logo -->
+                                                        <img src="${process.env.CLIENT_URL || 'https://mus-node.vercel.app'}/logo.png" alt="MyUXScore" class="light-logo" style="height: 48px; width: auto; max-width: 100%; display: block;" />
+                                                        <!-- Dark mode logo -->
+                                                        <div class="dark-logo" style="display: none; max-height: 0; overflow: hidden;">
+                                                            <img src="${process.env.CLIENT_URL || 'https://mus-node.vercel.app'}/logo-white.png" alt="MyUXScore" style="height: 48px; width: auto; max-width: 100%; display: block;" />
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                            </table>
+                                            
+                                            <!-- Main Card -->
+                                            <table class="card-bg main-card" cellpadding="0" cellspacing="0" border="0" style="max-width: 540px; width: 100%; background: #FAFAFA; border: 1px solid #E0E0E0; border-radius: 24px; padding: 48px 40px;">
+                                                <tr>
+                                                    <td align="center" style="padding-bottom: 32px;">
+                                                        <h1 class="text-primary title-text" style="margin: 0; font-size: 32px; font-weight: 600; color: #1A1A1A;">Verification Code</h1>
+                                                    </td>
+                                                </tr>
+                                                
+                                                <tr>
+                                                    <td align="center" style="padding-bottom: 24px;">
+                                                        <div class="otp-box" style="background: #FEF3C7; border: 2px dotted #D4A574; border-radius: 16px; padding: 28px 24px;">
+                                                            <div class="otp-text" style="font-size: 48px; font-weight: 700; color: #1A1A1A; letter-spacing: 0.3em;">${otp}</div>
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                                
+                                                <tr>
+                                                    <td align="center" style="padding-bottom: 16px;">
+                                                        <p class="text-secondary desc-text" style="margin: 0; font-size: 15px; font-weight: 400; color: #666666; line-height: 1.6;">Please enter this code on the screen<br/>where you started your sign in</p>
+                                                    </td>
+                                                </tr>
+                                                
+                                                <tr>
+                                                    <td align="center" style="padding-bottom: 48px;">
+                                                        <p class="text-muted desc-text" style="margin: 0; font-size: 14px; font-weight: 400; color: #999999;">This code is valid for next 10 minutes</p>
+                                                    </td>
+                                                </tr>
+                                                
+                                                <tr>
+                                                    <td align="center" style="padding-top: 32px; border-top: 1px solid rgba(0,0,0,0.08);">
+                                                        <p class="text-muted footer-text" style="margin: 0; font-size: 14px; font-weight: 400; color: #999999;">MyUXScore, stop guessing and start growing.</p>
+                                                    </td>
+                                                </tr>
+                                            </table>
+                                            
+                                            <!-- Footer -->
+                                            <table class="footer-bg" cellpadding="0" cellspacing="0" border="0" style="max-width: 540px; width: 100%; margin-top: 24px; background: #FFF9E6; padding: 24px; border-radius: 16px;">
+                                                <tr>
+                                                    <td align="center">
+                                                        <p class="text-secondary footer-text" style="margin: 0 0 8px 0; font-size: 13px; font-weight: 400; color: #666666;">If you didn't request this code, please ignore this mail</p>
+                                                        <p class="text-secondary footer-text" style="margin: 0; font-size: 13px; font-weight: 400; color: #666666;">© ${new Date().getFullYear()} MyUXScore. All rights reserved.</p>
+                                                    </td>
+                                                </tr>
+                                            </table>
+                                        </td>
+                                    </tr>
+                                </table>
+                            </body>
+                            </html>
                         `,
                     });
 

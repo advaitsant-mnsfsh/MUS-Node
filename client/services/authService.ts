@@ -93,6 +93,8 @@ export async function signIn(email: string, password: string): Promise<{ session
  */
 export async function sendOtp(email: string, type: 'email-verification' | 'forget-password' = 'email-verification'): Promise<{ error: string | null }> {
     try {
+        console.log(`[CLIENT AUTH] 🚀 Sending OTP to: ${email}, type: ${type}`);
+
         const client = authClient as any;
         const { error } = await client.emailOtp.sendVerificationOtp({
             email,
@@ -100,13 +102,14 @@ export async function sendOtp(email: string, type: 'email-verification' | 'forge
         });
 
         if (error) {
-            console.error('Error sending OTP:', error);
+            console.error('[CLIENT AUTH] ❌ Error sending OTP:', error);
             return { error: error.message };
         }
 
+        console.log('[CLIENT AUTH] ✅ OTP request successful - check your email!');
         return { error: null };
     } catch (err: any) {
-        console.error('Unexpected error sending OTP:', err);
+        console.error('[CLIENT AUTH] 💥 Unexpected error sending OTP:', err);
         return { error: err.message || 'Failed to send OTP' };
     }
 }

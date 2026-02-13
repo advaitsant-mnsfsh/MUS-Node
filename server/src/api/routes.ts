@@ -97,58 +97,48 @@ router.get('/audit', async (req: express.Request, res: express.Response) => {
             }
 
             try {
-                const job = await db.query.auditJobs.findFirst({
-                    where: eq(auditJobs.id, jobId)
-                });
+                // CRITICAL OPTIMIZATION: Don't fetch report_data on every poll!
+                // Only fetch it when job is completed to save massive bandwidth
+                const jobStatus = await db.select({
+                    id: auditJobs.id,
+                    status: auditJobs.status,
+                    error_message: auditJobs.error_message,
+                    result_url: auditJobs.result_url
+                })
+                    .from(auditJobs)
+                    .where(eq(auditJobs.id, jobId))
+                    .limit(1)
+                    .then(rows => rows[0]);
 
-                if (!job) {
+                if (!jobStatus) {
                     sendChunk({ type: 'error', message: 'Job not found' });
                     res.end();
                     return;
                 }
 
-                if (job.status === 'failed') {
-                    sendChunk({ type: 'error', message: job.error_message || 'Audit failed' });
+                if (jobStatus.status === 'failed') {
+                    sendChunk({ type: 'error', message: jobStatus.error_message || 'Audit failed' });
                     res.end();
                     return;
                 }
 
-                // DATA UPDATE LOGIC:
-                // If there is report_data, send any keys we haven't sent yet
-                if (job.report_data && typeof job.report_data === 'object') {
-                    const data = job.report_data as Record<string, any>;
-                    for (const [key, value] of Object.entries(data)) {
-                        // Skip 'logs' which we handle via status/progress
-                        if (key === 'logs') continue;
-
-                        if (!sentDataKeys.has(key)) {
-                            console.log(`[Stream] Sending new data key: ${key} for job ${jobId}`);
-                            sendChunk({
-                                type: 'data',
-                                payload: { key, data: value }
-                            });
-                            sentDataKeys.add(key);
-                        }
-                    }
-                }
-
-                if (job.status === 'completed') {
+                if (jobStatus.status === 'completed') {
                     console.log(`[Stream] Job ${jobId} completed. Sending final signal.`);
                     sendChunk({
                         type: 'complete',
                         payload: {
-                            auditId: job.result_url?.split('/').pop() || job.id,
-                            resultUrl: job.result_url
+                            auditId: jobStatus.result_url?.split('/').pop() || jobStatus.id,
+                            resultUrl: jobStatus.result_url
                         }
                     });
                     res.end();
                     return;
                 }
 
-                // Status Update
-                if (job.status !== lastStatus) {
-                    sendChunk({ type: 'status', message: `Job Status: ${job.status}` });
-                    lastStatus = job.status;
+                // Status Update (for pending/processing)
+                if (jobStatus.status !== lastStatus) {
+                    sendChunk({ type: 'status', message: `Job Status: ${jobStatus.status}` });
+                    lastStatus = jobStatus.status;
                 }
 
                 // Fine-grained Log Updates from auditjobs_logs table
@@ -187,8 +177,8 @@ router.get('/audit', async (req: express.Request, res: express.Response) => {
                     return;
                 }
 
-                // Poll again
-                setTimeout(checkStatus, 2000);
+                // Poll again (increased from 2s to 3s to reduce DB load)
+                setTimeout(checkStatus, 3000);
 
             } catch (err: any) {
                 console.error("Stream Error:", err);
