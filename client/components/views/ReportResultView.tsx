@@ -57,6 +57,7 @@ export const ReportResultView: React.FC<ReportResultViewProps> = ({
                 reportUrl={submittedUrl}
                 reportScreenshots={screenshots}
                 screenshotMimeType={screenshotMimeType}
+                isError={!!error}
             >
                 <div className="flex flex-col items-center justify-center w-full h-full animate-in fade-in duration-500">
                     <LoginPanel auditId={uiAuditId || auditId} />

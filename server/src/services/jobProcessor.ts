@@ -7,14 +7,11 @@ import { performAnalysis, callApi } from './aiService.js';
 import { getSchemas } from '../prompts.js';
 
 export class JobProcessor {
-    static async processJob(jobId: string) {
+    static async processJob(jobId: string, forcedBrowserEndpoint?: string, onBrowserFinished?: () => Promise<void>) {
         const envName = process.env.RAILWAY_ENVIRONMENT_NAME || process.env.NODE_ENV || 'development';
         console.log(`[JobProcessor] 🌀 Starting Job: ${jobId}`);
         try {
-            // 1. Update Status
-            await JobService.updateJobStatus(jobId, 'processing');
-
-            // 2. Fetch Job & Secrets
+            // 1. Fetch Job & Secrets
             const job = await JobService.getJob(jobId);
             if (!job) throw new Error('Job not found');
 
@@ -23,11 +20,13 @@ export class JobProcessor {
 
             const apiKeyRaw = appSecrets['GEMINI_API_KEY'] || appSecrets['API_KEY'] || process.env.GEMINI_API_KEY || process.env.API_KEY;
             const apiKeyBup = appSecrets['GEMINI_API_KEY_BUP'] || appSecrets['API_KEY_BUP'] || process.env.GEMINI_API_KEY_BUP || process.env.API_KEY_BUP;
-            const browserEndpoint = appSecrets['PUPPETEER_BROWSER_ENDPOINT'] || process.env.PUPPETEER_BROWSER_ENDPOINT;
+
+            // Use forced endpoint from Worker Pool, or fallback to general secret, or env
+            const browserEndpoint = forcedBrowserEndpoint || appSecrets['PUPPETEER_BROWSER_ENDPOINT'] || process.env.PUPPETEER_BROWSER_ENDPOINT;
 
             // LOUD LOG for Browser Endpoint
             if (browserEndpoint) {
-                console.log(`[JobProcessor] [${jobId}] Browser Endpoint found! (Length: ${browserEndpoint.length}, Source: ${appSecrets['PUPPETEER_BROWSER_ENDPOINT'] ? 'DB' : 'ENV'})`);
+                console.log(`[JobProcessor] [${jobId}] Using Browser Endpoint: ${browserEndpoint.substring(0, 30)}... (Source: ${forcedBrowserEndpoint ? 'WORKER_POOL' : 'SECRET/ENV'})`);
             } else {
                 console.warn(`[JobProcessor] [${jobId}] CRITICAL: No browser endpoint found in DB or ENV.`);
             }
@@ -76,6 +75,12 @@ export class JobProcessor {
                 await JobService.updateProgress(jobId, `Scraping Competitor Site: ${competitorInput.url}...`);
                 const competitorScrape = await performScrape(competitorInput.url, false, true, browserEndpoint);
                 finalScreenshots = [primaryScrape.screenshot, competitorScrape.screenshot];
+
+                // RELEASE BROWSER - Scrape phase complete
+                if (onBrowserFinished) {
+                    console.log(`[JobProcessor] [${jobId}] Browser tasks complete. Signaling early release.`);
+                    await onBrowserFinished();
+                }
 
                 // C. Analyze
                 console.log(`[JobProcessor] Running Competitor Analysis...`);
@@ -131,6 +136,12 @@ export class JobProcessor {
                         screenshotMimeType: 'image/jpeg'
                     });
 
+                    // RELEASE BROWSER - Scrape phase complete
+                    if (onBrowserFinished) {
+                        console.log(`[JobProcessor] [${jobId}] Browser tasks complete. Signaling early release.`);
+                        await onBrowserFinished();
+                    }
+
                     // B. Performance
                     console.log(`[JobProcessor] Checking performance...`);
                     // Use secrets from DB for PageSpeed if available
@@ -180,6 +191,11 @@ export class JobProcessor {
                         performanceData: null
                     };
                     await JobService.updateProgress(jobId, 'Processing uploaded image...');
+
+                    // RELEASE BROWSER - No browser needed for uploads
+                    if (onBrowserFinished) {
+                        await onBrowserFinished();
+                    }
                 }
 
                 // Run Experts
@@ -289,8 +305,13 @@ ${JSON.stringify(allIssues, null, 2)}`;
 
         } catch (error: any) {
             console.error(`[JobProcessor] Job ${jobId} failed:`, error);
-            await JobService.updateProgress(jobId, `🚨 Job Failed: ${error.message}`);
-            await JobService.updateJobStatus(jobId, 'failed', undefined, error.message);
+            try {
+                await JobService.updateProgress(jobId, `🚨 Job Failed: ${error.message}`);
+                await JobService.updateJobStatus(jobId, 'failed', undefined, error.message);
+            } catch (innerErr) {
+                console.error(`[JobProcessor] Critical: Failed to record failure for ${jobId}:`, innerErr);
+            }
+            throw error; // Rethrow so WorkerService knows it failed
         }
     }
 }

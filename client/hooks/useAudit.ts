@@ -161,10 +161,12 @@ export const useAudit = () => {
             navigate(`/report/${completedId}`, { replace: true });
         },
         onError: (errorMessage: string) => {
+            console.error(`[useAudit] 🚨 Error triggered:`, errorMessage);
             setError(errorMessage);
             setIsLoading(false);
-            setTargetProgress(0);
-            setProgress(0);
+            setReport(null); // Clear report so we stay in AnalysisView (error state)
+            setTargetProgress(95); // Keep progress high but not complete
+            setProgress(95);
         },
         onClose: () => { }
     }), [navigate, location.pathname, auditId]);
@@ -236,6 +238,16 @@ export const useAudit = () => {
                         if (location.pathname.includes('/analysis/')) {
                             navigate(`/report/${auditId}`, { replace: true });
                         }
+                        return;
+                    }
+
+                    if (job.status === 'failed') {
+                        console.warn(`[useAudit] Resuming a FAILED job: ${auditId}`);
+                        setError(job.errorMessage || 'Audit failed during processing.');
+                        setIsLoading(false);
+                        setReport(null);
+                        setTargetProgress(95);
+                        setProgress(95);
                         return;
                     }
                 }

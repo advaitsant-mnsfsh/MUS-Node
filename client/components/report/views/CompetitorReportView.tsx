@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useGlobalAudit } from '../../../contexts/AuditContext';
 import { CompetitorAnalysisData, CompetitorComparisonItem } from '../../../types';
 import {
     LayoutGrid,

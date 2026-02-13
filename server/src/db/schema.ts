@@ -105,3 +105,30 @@ export const appSecrets = pgTable("app_secrets", {
     created_at: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
     updated_at: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull()
 });
+
+export const auditQueue = pgTable("audit_queue", {
+    id: text("id").primaryKey(),
+    job_id: text("job_id").notNull(),
+    status: text("status").default('waiting').notNull(),
+    queue_type: text("queue_type").default('realtime').notNull(),
+    priority: integer("priority").default(0),
+    payload: jsonb("payload").notNull(),
+    browser_key: integer("browser_key"), // 1 or 2
+    error_log: text("error_log"),
+    created_at: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+    started_at: timestamp("started_at", { withTimezone: true }),
+    completed_at: timestamp("completed_at", { withTimezone: true })
+}, (table) => {
+    return {
+        status_idx: index("idx_queue_status").on(table.status),
+        priority_idx: index("idx_queue_priority").on(table.priority, table.created_at)
+    }
+});
+
+export const browserUsageLogs = pgTable("browser_usage_logs", {
+    id: text("id").primaryKey(),
+    browser_key: integer("browser_key").notNull(),
+    job_id: text("job_id"),
+    action: text("action").notNull(), // 'acquired', 'released'
+    timestamp: timestamp("timestamp", { withTimezone: true }).defaultNow().notNull()
+});

@@ -107,7 +107,7 @@ const App: React.FC = () => {
     };
 
     // --- DIAGNOSTIC LOGGING ---
-    console.log(`[App] Current State: auditId=${auditId}, hasReport=${!!report}, isLoading=${isLoading}`);
+    console.log(`[App] Current State: auditId=${auditId}, hasReport=${!!report}, isLoading=${isLoading}, isError=${!!error}`);
 
     // 2. REPORT STATE (Locked or Full)
     // We only show Results if we have an auditId AND the report data is actually present.
@@ -142,17 +142,25 @@ const App: React.FC = () => {
     // Show this if specifically loading OR if we have an ID but data isn't here yet.
     if (isLoading || (auditId && !report)) {
         return (
-            <AnalysisView
-                progress={progress}
-                loadingMessage={loadingMessage}
-                microcopy={currentMicrocopy}
-                animationData={qrCodeAnimationData}
-                screenshot={screenshots.length > 0 ? (screenshots[0].url || screenshots[0].data) : null}
-                url={submittedUrl}
-                fullWidth={!!user}
-                auditId={auditId}
-                inputs={reportInputs}
-            />
+            <div className="relative">
+                <AnalysisView
+                    progress={progress}
+                    loadingMessage={error ? 'Analysis Aborted' : loadingMessage}
+                    microcopy={error ? 'Technical error encountered' : currentMicrocopy}
+                    animationData={qrCodeAnimationData}
+                    screenshot={screenshots.length > 0 ? (screenshots[0].url || screenshots[0].data) : null}
+                    url={submittedUrl}
+                    fullWidth={!!user}
+                    auditId={auditId}
+                    inputs={reportInputs}
+                    isError={!!error}
+                />
+                {error && (
+                    <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-50 w-full max-w-xl px-4 animate-in slide-in-from-bottom-8 duration-500">
+                        {renderError()}
+                    </div>
+                )}
+            </div>
         );
     }
 

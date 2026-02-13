@@ -1,5 +1,34 @@
 # 🦅 The Great Migration: Supabase to Railway (Self-Hosted)
 
+## 🚦 PHASE 0: PRE-IMPLEMENTATION PREPARATION (Audit Queue)
+*Goal: Prepare the environment for tomorrow's queuing implementation.*
+
+### 0.1 Prepare Database Tables (Manual Creation)
+Since you are creating tables manually in Railway, create a new table called `audit_jobs`. Use these columns:
+
+| Column Name | Data Type | Constraint | Description |
+| :--- | :--- | :--- | :--- |
+| `id` | `uuid` or `text` | Primary Key | Use a random unique ID |
+| `user_id` | `text` | Not Null | ID of the user starting the audit |
+| `status` | `text` | Default: 'pending' | 'pending', 'processing', 'completed', 'failed' |
+| `payload` | `jsonb` | Not Null | Store URL1, URL2, and scan settings |
+| `results` | `jsonb` | Nullable | Store the final AI analysis |
+| `error_log` | `text` | Nullable | Store error details if failed |
+| `created_at` | `timestamp` | Default: now() | Tracking |
+| `updated_at` | `timestamp` | Default: now() | For timeout detection |
+
+### 0.2 Puppeteer Browser Endpoints
+You will need two separate instances to handle concurrent primary/competitor scraping perfectly. Setup these keys in Railway Variables:
+1.  **`BROWSER_WS_ENDPOINT_PRIMARY`**: WebSocket URL for the first instance.
+2.  **`BROWSER_WS_ENDPOINT_COMPETITOR`**: WebSocket URL for the second instance (different session).
+
+### 0.3 Infrastructure Decision: No Redis/BullMQ
+Based on our new architecture:
+*   **Action:** Go to Railway and **Delete/Uninstall the Redis service**.
+*   **Reason:** We will implement a **Database-backed Queue** using the `audit_jobs` table. This removes the BullMQ complexity while keeping background processing reliable.
+
+---
+
 ## � Overview
 This document outlines the step-by-step master plan to fully decouple from Supabase and migrate the entire stack to a self-hosted environment on Railway.
 
@@ -24,9 +53,9 @@ This document outlines the step-by-step master plan to fully decouple from Supab
 *   **Note:** MinIO allows you to keep everything inside Railway.
 *   **Variables to Capture:** `S3_ENDPOINT`, `S3_ACCESS_KEY`, `S3_SECRET_KEY`, `S3_BUCKET_NAME`.
 
-### 1.3 Provision Redis (Optional but Recommended)
-*   **Action:** Create a **Redis** service on Railway.
-*   **Why:** Better-Auth uses it for rate limiting and session caching (makes auth fast).
+### 1.3 Provision Redis (REMOVED)
+*   **Action:** DO NOT provision Redis. If it exists, **Delete it**.
+*   **Why:** We are moving to a Postgres-backed job queue to simplify Railway management and costs.
 
 ---
 

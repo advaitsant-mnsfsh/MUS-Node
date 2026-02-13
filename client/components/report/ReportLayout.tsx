@@ -6,7 +6,8 @@ import { UserBadge } from '../UserBadge';
 import { SkeletonLoader } from '../SkeletonLoader';
 import { AuthBlocker } from '../AuthBlocker';
 import { ReportRenderer } from './ReportRenderer';
-import { ChevronLeft, Link as LinkIcon, Share2, Download, Plus } from 'lucide-react';
+import { useGlobalAudit } from '../../contexts/AuditContext';
+import { ChevronLeft, Share2, Download, AlertCircle } from 'lucide-react';
 import SiteLogo from '../SiteLogo';
 
 interface ReportLayoutProps {

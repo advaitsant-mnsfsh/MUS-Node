@@ -2,7 +2,7 @@ import express from 'express';
 import { db } from '../lib/db.js';
 import { auditJobs, leads } from '../db/schema.js';
 import { validateApiKey, optionalUserAuth, AuthenticatedRequest } from '../middleware/apiAuth.js';
-import { JobProcessor } from '../services/jobProcessor.js';
+import { QueueService } from '../services/queueService.js';
 import { eq, and, isNull } from 'drizzle-orm';
 import crypto from 'crypto';
 
@@ -24,16 +24,17 @@ router.post('/audit', optionalUserAuth, async (req: express.Request, res: expres
         }
 
         const jobId = crypto.randomUUID();
+        const payload = {
+            inputs: auditInputs,
+            auditMode: req.body.auditMode || 'standard'
+        };
 
-        // Create Job Record
+        // 1. Create permanent Job Record
         const [job] = await db.insert(auditJobs).values({
             id: jobId,
             api_key_id: authReq.apiKey?.id,
             status: 'pending',
-            input_data: {
-                inputs: auditInputs,
-                auditMode: req.body.auditMode || 'standard'
-            },
+            input_data: payload,
             user_id: authReq.user?.id || null
         }).returning();
 
@@ -41,18 +42,19 @@ router.post('/audit', optionalUserAuth, async (req: express.Request, res: expres
             throw new Error("Failed to create job record");
         }
 
-        // Trigger processing (Fire and Forget)
-        // Direct processing without Redis/Queue to prevent timeouts
-        console.log(`[API] 🚀 New Audit Requested: ${job.id} (Mode: ${req.body.auditMode || 'standard'})`);
+        // 2. Add to Queue
+        const { position, queueType } = await QueueService.addJobToQueue(jobId, payload, authReq.user?.id);
 
-        JobProcessor.processJob(job.id).catch(err => {
-            console.error(`[API] ❌ FATAL Background Job Error for ${job.id}:`, err);
-        });
+        console.log(`[API] 🚀 New Audit Queued: ${jobId} (Position: ${position}, Mode: ${req.body.auditMode || 'standard'})`);
 
         res.status(202).json({
             success: true,
             jobId: job.id,
-            message: 'Audit started in background'
+            queuePosition: position,
+            queueType: queueType,
+            message: position <= 4
+                ? `Audit started. You are in position ${position}.`
+                : `High volume detected. You are in position ${position}. We will email you results.`
         });
 
     } catch (error: any) {
@@ -245,6 +247,19 @@ router.get('/audit/:jobId', validateApiKey, async (req: express.Request, res: ex
             return res.status(404).json({ error: 'Job not found' });
         }
 
+        // --- SECURITY CHECK ---
+        // If the audit is owned by a user, only that user (or a valid API key) can fetch it via this route.
+        // Shared views should use the /api/public/jobs/:id route.
+        if (job.user_id && !authReq.apiKey) {
+            if (!authReq.user || authReq.user.id !== job.user_id) {
+                console.warn(`[Security] 🚫 Unauthorized access attempt to audit ${jobId} by user ${authReq.user?.email || 'GUEST'}`);
+                return res.status(403).json({
+                    error: 'Forbidden',
+                    message: 'You do not have permission to view this report. It belongs to another user.'
+                });
+            }
+        }
+
         res.json({
             jobId: job.id,
             status: job.status,
@@ -362,5 +377,33 @@ router.post('/audit/claim', optionalUserAuth, async (req: express.Request, res: 
     }
 });
 
+
+// GET /api/v1/admin/queue (Debug Only)
+router.get('/admin/queue', async (req, res) => {
+    try {
+        const { auditQueue, browserUsageLogs } = await import('../db/schema.js');
+        const { desc } = await import('drizzle-orm');
+
+        const { QueueService } = await import('../services/queueService.js');
+        const queueDepth = await db.select().from(auditQueue).orderBy(desc(auditQueue.created_at)).limit(50);
+        const browserLogs = await db.select().from(browserUsageLogs).orderBy(desc(browserUsageLogs.timestamp)).limit(20);
+
+        const waitingCount = await QueueService.getWaitingCount();
+        const inProgressCount = await QueueService.getInProgressCount();
+
+        res.json({
+            success: true,
+            summary: {
+                waiting: waitingCount,
+                processing: inProgressCount,
+                totalRecent: queueDepth.length
+            },
+            queue: queueDepth,
+            browserLogs: browserLogs
+        });
+    } catch (e: any) {
+        res.status(500).json({ error: e.message });
+    }
+});
 
 export default router;
