@@ -3,6 +3,8 @@ import { AnalysisReport, Screenshot, AuditInput } from '../../types';
 import { saveSharedAudit } from '../../services/auditStorage';
 import { useAuth } from '../../contexts/AuthContext';
 import { useReportPdf } from '../../hooks/useReportPdf';
+import { useStandardReportPdf } from '../../hooks/useStandardReportPdf';
+import { useCompetitorReportPdf } from '../../hooks/useCompetitorReportPdf';
 import { ASSETS } from './constants';
 import toast from 'react-hot-toast';
 import { ReportLayout } from './ReportLayout';
@@ -41,14 +43,37 @@ export const ReportContainer: React.FC<ReportContainerProps> = ({
         }
     }, [user, isSharedView]);
 
-    // --- PDF LOGIC ---
-    const { generatePdf, isPdfGenerating, pdfError } = useReportPdf({
+    // --- PDF LOGIC (React-PDF Primary, Legacy Fallback) ---
+    // Determine report type FIRST (needed for hook conditionals)
+    const isCompetitorReport = !!report?.["Competitor Analysis expert"];
+    const isStandardReport = !!(report?.["UX Audit expert"]);
+
+    // Legacy method (heavy, image-based) - Fallback only
+    const { generatePdf: generateLegacyPdf, isPdfGenerating: isLegacyPdfGenerating, pdfError } = useReportPdf({
         report,
         url,
         screenshots,
         whiteLabelLogo,
         defaultLogoSrc: ASSETS.headerLogo
     });
+
+    // New React-PDF method (lightweight, text-selectable) - For Standard Reports
+    const { generateStandardPdf, isGenerating: isStandardPdfGenerating } = useStandardReportPdf({
+        report,
+        url,
+        screenshots
+    });
+
+    // Competitor Report PDF (React-PDF based)
+    const competitorAnalysis = report?.["Competitor Analysis expert"];
+    const { generatePdf: generateCompetitorPdf, isGenerating: isCompetitorPdfGenerating } = useCompetitorReportPdf({
+        data: competitorAnalysis,
+        url
+    });
+
+    // Select the appropriate PDF generator based on report type
+    const generatePdf = isCompetitorReport ? generateCompetitorPdf : generateStandardPdf;
+    const isPdfGenerating = isCompetitorReport ? isCompetitorPdfGenerating : isStandardPdfGenerating;
 
     // --- SHARE LOGIC ---
     const [isSharing, setIsSharing] = useState(false);
@@ -96,9 +121,7 @@ export const ReportContainer: React.FC<ReportContainerProps> = ({
     const primaryScreenshotSrc = getScreenshotSrc(primaryScreenshot);
     const competitorScreenshotSrc = getScreenshotSrc(competitorScreenshot);
 
-    // Determine Mode
-    const isCompetitorReport = !!report?.["Competitor Analysis expert"];
-    const isStandardReport = !!(report?.["UX Audit expert"]); // Basic check
+    // isReportReady check (moved after PDF hooks)
     const isReportReady = !!report && (isStandardReport || isCompetitorReport);
 
     // Default to Standard unless specifically Competitor
