@@ -80,7 +80,7 @@ const EditorialCard = ({
 
             {/* --- HEADER (Always Visible) --- */}
             <div
-                className="flex flex-col md:flex-row items-start md:items-center justify-between p-6 cursor-pointer hover:bg-yellow-50 transition-colors gap-4 select-none"
+                className={`flex flex-col md:flex-row items-start md:items-center justify-between p-6 cursor-pointer transition-colors gap-4 select-none ${isOpen ? 'bg-yellow-50' : 'hover:bg-yellow-50'}`}
                 onClick={() => setIsOpen(!isOpen)}
             >
                 {/* Left: Title & Audit Type */}
@@ -141,10 +141,10 @@ const EditorialCard = ({
                     </div>
 
                     {/* Observation & Recommendation Grid */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 bg-page-bg border-2 border-black overflow-hidden shadow-neo-sm">
+                    <div className="grid grid-cols-1 md:grid-cols-2 -mx-6 border-y border-slate-200">
 
                         {/* Observation */}
-                        <div className="p-5 border-b-2 md:border-b-0 md:border-r-2 border-black">
+                        <div className="p-6 border-b md:border-b-0 md:border-r border-slate-200 bg-slate-100">
                             <div className={LABEL_STYLE}>
                                 <div className="p-1 bg-blue-500 text-white border border-black">
                                     <Target className="w-3 h-3" />
@@ -157,7 +157,7 @@ const EditorialCard = ({
                         </div>
 
                         {/* Recommendation */}
-                        <div className="p-5">
+                        <div className="p-6 bg-slate-100">
                             <div className={LABEL_STYLE}>
                                 <div className="p-1 bg-accent-yellow text-black border border-black">
                                     <Lightbulb className="w-3 h-3" />
