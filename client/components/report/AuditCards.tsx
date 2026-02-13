@@ -43,12 +43,33 @@ const EditorialCard = ({
 }) => {
     const [isOpen, setIsOpen] = useState(false); // Default to collapsed as requested "collaps and close"
 
-    // Normalize confidence for color badge
+    // Normalize confidence for text color only (no background)
     const getConfidenceColor = (conf: string) => {
         const c = conf.toLowerCase();
-        if (c === 'high') return 'bg-emerald-100 text-black border-black';
-        if (c === 'medium') return 'bg-amber-100 text-black border-black';
-        return 'bg-red-100 text-black border-black';
+        if (c === 'high') return 'text-emerald-600';
+        if (c === 'medium') return 'text-amber-600';
+        return 'text-red-600';
+    };
+
+    // Get score background and shadow based on score (0-100 scale)
+    const getScoreStyle = (score: number) => {
+        const displayScore = Math.round(score * 10);
+        if (displayScore >= 80) {
+            return {
+                bg: 'bg-[#DAF6D5]',
+                shadow: 'shadow-[2px_2px_0px_0px_#9ae68d]'
+            };
+        } else if (displayScore >= 50) {
+            return {
+                bg: 'bg-[#F6E8D5]',
+                shadow: 'shadow-[2px_2px_0px_0px_#e8c696]'
+            };
+        } else {
+            return {
+                bg: 'bg-[#F1D0D0]',
+                shadow: 'shadow-[2px_2px_0px_0px_#e8a4a4]'
+            };
+        }
     };
 
     // Calculate score for display (0-100)
@@ -80,13 +101,13 @@ const EditorialCard = ({
 
                 {/* Right: Confidence, Score & Toggle */}
                 <div className="flex items-center gap-3 shrink-0">
-                    {/* Confidence Badge - MOVED HERE */}
-                    <span className={`inline-block w-fit text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 border ${getConfidenceColor(confidence)} shadow-neo-hover`}>
+                    {/* Confidence Badge - Text Only, No Background */}
+                    <span className={`inline-block w-fit text-[10px] font-bold uppercase tracking-wider ${getConfidenceColor(confidence)}`}>
                         {confidence} Confidence
                     </span>
 
-                    {/* Score Pill (White Background) */}
-                    <div className="flex items-center justify-center px-3 py-1.5 bg-white text-black min-w-[70px] border-2 border-black shadow-[2px_2px_0px_0px_#fbbf24]">
+                    {/* Score Pill (Colored Background Based on Score) */}
+                    <div className={`flex items-center justify-center px-3 py-1.5 text-black min-w-[70px] border-2 border-black ${getScoreStyle(score).bg} ${getScoreStyle(score).shadow}`}>
                         <span className="text-sm font-bold">
                             {displayScore}<span className="text-slate-500 text-[10px] ml-0.5">/100</span>
                         </span>

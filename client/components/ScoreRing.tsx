@@ -18,13 +18,13 @@ export const ScoreRing: React.FC<ScoreRingProps> = ({
   const offset = circumference - (cappedScore / 10) * circumference;
 
   const getScoreColor = (s: number) => {
-    if (s >= 9) return { main: '#16a34a', grad: 'url(#gradient-green)' }; // green-600
-    if (s >= 7) return { main: '#ca8a04', grad: 'url(#gradient-yellow)' }; // yellow-600
-    if (s >= 5) return { main: '#f97316', grad: 'url(#gradient-orange)' }; // orange-500
-    return { main: '#dc2626', grad: 'url(#gradient-red)' }; // red-600
+    if (s >= 9) return { main: '#16a34a', grad: 'url(#gradient-green)', shadow: '#9ae68d' }; // green-600
+    if (s >= 7) return { main: '#ca8a04', grad: 'url(#gradient-yellow)', shadow: '#e8c696' }; // yellow-600
+    if (s >= 5) return { main: '#f97316', grad: 'url(#gradient-orange)', shadow: '#e8a4a4' }; // orange-500
+    return { main: '#dc2626', grad: 'url(#gradient-red)', shadow: '#e8a4a4' }; // red-600
   };
-  
-  const {main: color, grad: gradient} = getScoreColor(cappedScore);
+
+  const { main: color, grad: gradient, shadow: shadowColor } = getScoreColor(cappedScore);
   const scoreText = score % 1 === 0 ? score.toFixed(0) : score.toFixed(1);
 
   const angle = Math.PI - (cappedScore / 10) * Math.PI;
@@ -49,7 +49,7 @@ export const ScoreRing: React.FC<ScoreRingProps> = ({
             <stop offset="0%" stopColor="#ca8a04" />
             <stop offset="100%" stopColor="#eab308" />
           </linearGradient>
-           <linearGradient id="gradient-orange" x1="0%" y1="0%" x2="100%" y2="0%">
+          <linearGradient id="gradient-orange" x1="0%" y1="0%" x2="100%" y2="0%">
             <stop offset="0%" stopColor="#f97316" />
             <stop offset="100%" stopColor="#fb923c" />
           </linearGradient>
@@ -57,6 +57,10 @@ export const ScoreRing: React.FC<ScoreRingProps> = ({
             <stop offset="0%" stopColor="#dc2626" />
             <stop offset="100%" stopColor="#ef4444" />
           </linearGradient>
+          {/* Drop shadow filter */}
+          <filter id="score-shadow" x="-50%" y="-50%" width="200%" height="200%">
+            <feDropShadow dx="2" dy="2" stdDeviation="0" floodColor={shadowColor} floodOpacity="1" />
+          </filter>
         </defs>
         <path
           d={`M ${strokeWidth / 2} ${size / 2} A ${radius} ${radius} 0 0 1 ${size - strokeWidth / 2} ${size / 2}`}
@@ -73,13 +77,14 @@ export const ScoreRing: React.FC<ScoreRingProps> = ({
           strokeDasharray={circumference}
           strokeDashoffset={offset}
           strokeLinecap="round"
+          filter="url(#score-shadow)"
           style={{
             transition: 'stroke-dashoffset 0.5s ease-out',
           }}
         />
         {/* Indicator */}
         <g style={{ transition: 'transform 0.5s ease-out', transform: `translate(${indicatorX}px, ${indicatorY}px)` }}>
-          <circle 
+          <circle
             r={strokeWidth / 2}
             fill={color}
             stroke="rgba(255,255,255,0.5)"
