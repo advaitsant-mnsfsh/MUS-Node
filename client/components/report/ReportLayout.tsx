@@ -127,7 +127,7 @@ export const ReportLayout: React.FC<ReportLayoutProps> = ({
                 {isReportReady && report && (
                     <>
                         {/* ACTION BAR (Neo-Brutalist Refinement) */}
-                        <div className={`px-4 md:px-6 py-3 md:py-4 border-b-2 border-black bg-white flex flex-row justify-between items-center gap-2 md:gap-4 z-40 ${isSharedView ? 'sticky top-0' : 'sticky top-20'}`}>
+                        <div className={`px-4 md:px-6 py-3 md:py-4 border-b-2 border-black bg-white flex flex-row justify-between items-center gap-2 md:gap-4 z-40 ${isSharedView ? 'sticky top-0' : 'sticky top-16'}`}>
 
                             {/* LEFT: Branding & Inputs */}
                             <div className="flex items-center gap-2 md:gap-4 flex-1 min-w-0">
