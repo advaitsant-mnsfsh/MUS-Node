@@ -65,6 +65,7 @@ function SharedAuditView() {
                         setUrl(job.report_data?.url || 'Analyzed Site'); // Fallback
                         setScreenshots(job.report_data?.screenshots || []);
                         setInputs(job.inputs || []);
+                        setWhiteLabelLogo(job.report_data?.whiteLabelLogo || (job as any).input_data?.whiteLabelLogo || null);
                         setJobStatus('completed');
                         setLoading(false);
                         return; // Done

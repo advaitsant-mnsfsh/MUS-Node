@@ -11,7 +11,7 @@ const router = express.Router();
 // POST /api/v1/audit
 router.post('/audit', optionalUserAuth, async (req: express.Request, res: express.Response) => {
     try {
-        const { inputs } = req.body;
+        const { inputs, whiteLabelLogo } = req.body;
         const auditInputs = inputs || req.body.inputs;
         const authReq = req as AuthenticatedRequest;
 
@@ -26,7 +26,8 @@ router.post('/audit', optionalUserAuth, async (req: express.Request, res: expres
         const jobId = crypto.randomUUID();
         const payload = {
             inputs: auditInputs,
-            auditMode: req.body.auditMode || 'standard'
+            auditMode: req.body.auditMode || 'standard',
+            whiteLabelLogo: whiteLabelLogo || null
         };
 
         // 1. Create permanent Job Record

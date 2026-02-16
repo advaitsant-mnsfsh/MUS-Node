@@ -1,5 +1,5 @@
 import React from 'react';
-import { Document, Page, Text, View, StyleSheet } from '@react-pdf/renderer';
+import { Document, Page, Text, View, StyleSheet, Image } from '@react-pdf/renderer';
 import { CompetitorAnalysisData, Screenshot, CompetitorComparisonItem } from '../../../types';
 
 // --- DESIGN TOKENS ---
@@ -212,6 +212,7 @@ const formatParameterName = (name: string): string => {
 interface CompetitorReportPDFProps {
     data: CompetitorAnalysisData;
     url: string;
+    whiteLabelLogo?: string | null;
 }
 
 const ComparisonTable = ({ items, title }: { items: CompetitorComparisonItem[], title: string }) => {
@@ -297,7 +298,7 @@ const ComparisonTable = ({ items, title }: { items: CompetitorComparisonItem[], 
     );
 };
 
-export const CompetitorReportPDF: React.FC<CompetitorReportPDFProps> = ({ data, url }) => {
+export const CompetitorReportPDF: React.FC<CompetitorReportPDFProps> = ({ data, url, whiteLabelLogo }) => {
     const cleanUrl = url.replace(/^https?:\/\//, '').replace(/\/$/, '');
 
     return (
@@ -305,10 +306,14 @@ export const CompetitorReportPDF: React.FC<CompetitorReportPDFProps> = ({ data, 
             {/* PAGE 1: Executive Summary */}
             <Page size="A4" style={styles.page}>
                 <View style={styles.header}>
-                    <View style={styles.logoContainer}>
-                        <Text style={styles.logoText}>MUS NODE</Text>
-                        <Text style={[styles.logoText, styles.logoDot]}>.</Text>
-                    </View>
+                    {whiteLabelLogo ? (
+                        <Image src={whiteLabelLogo} style={{ height: 30, width: 'auto' }} />
+                    ) : (
+                        <View style={styles.logoContainer}>
+                            <Text style={styles.logoText}>MUS NODE</Text>
+                            <Text style={[styles.logoText, styles.logoDot]}>.</Text>
+                        </View>
+                    )}
                     <Text style={styles.urlText}>{cleanUrl}</Text>
                 </View>
 

@@ -17,6 +17,7 @@ interface StreamCallbacks {
 interface AnalyzeParams {
   inputs: AuditInput[];
   auditMode?: 'standard' | 'competitor';
+  whiteLabelLogo?: string | null;
   token?: string;
 }
 
@@ -268,8 +269,9 @@ export const monitorJobPoll = (jobId: string, callbacks: StreamCallbacks): (() =
   return stopPolling;
 };
 
+
 export const analyzeWebsiteStream = async (
-  { inputs, auditMode = 'standard' }: AnalyzeParams,
+  { inputs, auditMode = 'standard', whiteLabelLogo = null }: AnalyzeParams,
   callbacks: StreamCallbacks
 ): Promise<void> => {
   const { onScrapeComplete, onStatus, onData, onJobCreated, onComplete, onError, onClose, onPerformanceError } = callbacks;
@@ -302,7 +304,7 @@ export const analyzeWebsiteStream = async (
     const startResponse = await authenticatedFetch(functionUrl, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ mode: 'start-audit', inputs: processedInputs, auditMode })
+      body: JSON.stringify({ mode: 'start-audit', inputs: processedInputs, auditMode, whiteLabelLogo })
     });
 
     if (!startResponse.ok) {

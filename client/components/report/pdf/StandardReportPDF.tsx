@@ -514,9 +514,10 @@ interface StandardReportPDFProps {
     report: AnalysisReport;
     url: string;
     screenshots: Screenshot[];
+    whiteLabelLogo?: string | null;
 }
 
-export const StandardReportPDF: React.FC<StandardReportPDFProps> = ({ report, url, screenshots }) => {
+export const StandardReportPDF: React.FC<StandardReportPDFProps> = ({ report, url, screenshots, whiteLabelLogo }) => {
     const {
         "UX Audit expert": ux,
         "Product Audit expert": product,
@@ -576,10 +577,14 @@ export const StandardReportPDF: React.FC<StandardReportPDFProps> = ({ report, ur
             {/* PAGE 1: HERO + EXECUTIVE SUMMARY */}
             <Page size="A4" style={styles.page}>
                 <View style={styles.header}>
-                    <View style={styles.logoContainer}>
-                        <Text style={styles.logoText}>MUS NODE</Text>
-                        <Text style={[styles.logoText, styles.logoDot]}>.</Text>
-                    </View>
+                    {whiteLabelLogo ? (
+                        <Image src={whiteLabelLogo} style={{ height: 30, width: 'auto' }} />
+                    ) : (
+                        <View style={styles.logoContainer}>
+                            <Text style={styles.logoText}>MUS NODE</Text>
+                            <Text style={[styles.logoText, styles.logoDot]}>.</Text>
+                        </View>
+                    )}
                     <Text style={styles.urlText}>{cleanUrl}</Text>
                 </View>
 

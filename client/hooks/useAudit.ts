@@ -222,6 +222,11 @@ export const useAudit = () => {
                         setReport(reportData);
                         if (reportData.screenshots) setScreenshots(reportData.screenshots);
                         if (reportData.screenshotMimeType) setScreenshotMimeType(reportData.screenshotMimeType);
+                        if (reportData.whiteLabelLogo) setWhiteLabelLogo(reportData.whiteLabelLogo);
+                    }
+
+                    if (job.input_data && (job.input_data as any).whiteLabelLogo) {
+                        setWhiteLabelLogo((job.input_data as any).whiteLabelLogo);
                     }
 
                     if (job.inputs) {
@@ -300,7 +305,7 @@ export const useAudit = () => {
         setProgress(0);
         setTargetProgress(0);
 
-        analyzeWebsiteStream({ inputs, auditMode }, getStreamCallbacks(false));
+        analyzeWebsiteStream({ inputs, auditMode, whiteLabelLogo }, getStreamCallbacks(false));
     }, [getStreamCallbacks]);
 
     const handleAnalyze = useCallback((inputs: AuditInput[], auditMode: 'standard' | 'competitor' = 'standard') => {
