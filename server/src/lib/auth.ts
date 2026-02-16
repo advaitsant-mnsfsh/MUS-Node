@@ -3,6 +3,8 @@ import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { db } from "./db.js"; // Our Drizzle Client
 import { google } from "better-auth/social-providers";
 import { emailOTP, bearer } from "better-auth/plugins";
+import fs from 'node:fs';
+import path from 'node:path';
 
 export const auth = betterAuth({
     baseURL: process.env.BETTER_AUTH_URL, // e.g. https://mus-node-production.up.railway.app
@@ -225,4 +227,127 @@ export const auth = betterAuth({
     //     window: 60, // 60 seconds
     //     max: 100, // 100 requests
     // }
+    // }
 });
+
+/**
+ * 📧 Sends a "Report Ready" notification email to users who opted in.
+ */
+export async function sendReportReadyEmail(email: string, jobId: string, userName?: string | null) {
+    const resendApiKey = process.env.RESEND_API_KEY || process.env.RESENT_API_KEY;
+    const fromEmail = process.env.RESEND_FROM_EMAIL || 'onboarding@resend.dev';
+    const clientUrl = process.env.CLIENT_URL || 'http://localhost:5173';
+
+    if (!resendApiKey) {
+        console.error("[AUTH] ❌ RESEND_API_KEY is missing. Cannot send report email.");
+        console.log(`[AUTH] 📂 Report for ${email} is ready at: ${clientUrl}/report/${jobId}`);
+        return;
+    }
+
+    try {
+        const { Resend } = await import("resend");
+        const resend = new Resend(resendApiKey);
+
+        const reportUrl = `${clientUrl}/report/${jobId}`;
+        const displayName = userName || 'there';
+
+        // Resolve logo paths for embedding
+        const serverRoot = process.cwd();
+        const logoPath = path.join(serverRoot, '..', 'client', 'public', 'logo.png');
+        const logoWhitePath = path.join(serverRoot, '..', 'client', 'public', 'logo-white.png');
+
+        const attachments = [];
+        if (fs.existsSync(logoPath)) {
+            attachments.push({
+                filename: 'logo.png',
+                content: fs.readFileSync(logoPath),
+                cid: 'brand_logo'
+            });
+        }
+        if (fs.existsSync(logoWhitePath)) {
+            attachments.push({
+                filename: 'logo-white.png',
+                content: fs.readFileSync(logoWhitePath),
+                cid: 'brand_logo_white'
+            });
+        }
+
+        await resend.emails.send({
+            from: fromEmail,
+            to: email,
+            subject: '🏆 Your UX Audit Report is Ready!',
+            attachments,
+            html: `
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <meta charset="utf-8">
+                    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                    <meta name="color-scheme" content="light dark">
+                    <meta name="supported-color-schemes" content="light dark">
+                    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+                    <style>
+                        body { margin: 0; padding: 0; font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; }
+                        .light-logo { display: block !important; }
+                        .dark-logo { display: none !important; max-height: 0 !important; overflow: hidden !important; }
+                        @media (prefers-color-scheme: dark) {
+                            .bg-gradient { background: linear-gradient(180deg, #1A1A1A 0%, #3D3416 100%) !important; }
+                            .card-bg { background: #262626 !important; border-color: #404040 !important; }
+                            .text-primary { color: #FFFFFF !important; }
+                            .text-secondary { color: #A3A3A3 !important; }
+                            .light-logo { display: none !important; max-height: 0 !important; overflow: hidden !important; }
+                            .dark-logo { display: block !important; max-height: none !important; }
+                        }
+                    </style>
+                </head>
+                <body class="bg-gradient" style="background: linear-gradient(180deg, #FEFEFE 0%, #FFFBF0 100%); min-height: 100vh; padding: 40px 20px;">
+                    <table width="100%" cellpadding="0" cellspacing="0" border="0">
+                        <tr>
+                            <td align="center">
+                                <!-- Logo -->
+                                <table cellpadding="0" cellspacing="0" border="0" style="margin-bottom: 32px;">
+                                    <tr>
+                                        <td align="center">
+                                            <img src="cid:brand_logo" alt="MyUXScore" class="light-logo" style="height: 48px; width: auto; max-width: 100%; display: block;" />
+                                            <div class="dark-logo" style="display: none; max-height: 0; overflow: hidden;">
+                                                <img src="cid:brand_logo_white" alt="MyUXScore" style="height: 48px; width: auto; max-width: 100%; display: block;" />
+                                            </div>
+                                        </td>
+                                    </tr>
+                                </table>
+                                
+                                <!-- Main Card -->
+                                <table class="card-bg" cellpadding="0" cellspacing="0" border="0" style="max-width: 540px; width: 100%; background: #FAFAFA; border: 1px solid #E0E0E0; border-radius: 24px; padding: 48px 40px;">
+                                    <tr>
+                                        <td align="center" style="padding-bottom: 24px;">
+                                            <h1 class="text-primary" style="margin: 0; font-size: 28px; font-weight: 600; color: #1A1A1A;">Great news, ${displayName}!</h1>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td align="center" style="padding-bottom: 32px;">
+                                            <p class="text-secondary" style="margin: 0; font-size: 16px; font-weight: 400; color: #666666; line-height: 1.6;">Your UX Audit is complete and ready for review. We found some great insights to help you grow.</p>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td align="center" style="padding-bottom: 32px;">
+                                            <a href="${reportUrl}" style="background: #D4A574; color: #FFFFFF; padding: 16px 32px; border-radius: 12px; text-decoration: none; font-weight: 600; font-size: 16px; display: inline-block;">View Full Report</a>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td align="center" style="padding-top: 32px; border-top: 1px solid rgba(0,0,0,0.08);">
+                                            <p class="text-muted" style="margin: 0; font-size: 14px; font-weight: 400; color: #999999;">MyUXScore, stop guessing and start growing.</p>
+                                        </td>
+                                    </tr>
+                                </table>
+                            </td>
+                        </tr>
+                    </table>
+                </body>
+                </html>
+            `
+        });
+        console.log(`[AUTH] ✅ Report ready email sent to ${email}`);
+    } catch (err) {
+        console.error("[AUTH] 💥 Failed to send report ready email:", err);
+    }
+}

@@ -42,7 +42,7 @@ export const SplitLayout: React.FC<SplitLayoutProps> = ({
     // If fullWidth (user is logged in during analysis), show only the preview
     if (fullWidth) {
         return (
-            <div className="h-[calc(100vh-5rem)] bg-page-bg flex items-center justify-center p-4">
+            <div className="h-[calc(100vh-5rem)] bg-page-bg flex items-center justify-center p-4 relative">
                 <div className="w-full max-w-5xl">
                     <ScanningPreview
                         screenshot={screenshot || null}
@@ -53,6 +53,14 @@ export const SplitLayout: React.FC<SplitLayoutProps> = ({
                         isError={isError}
                     />
                 </div>
+                {/* Overlay for children (like Queue Notice) in full-width mode */}
+                {children && (
+                    <div className="absolute inset-0 flex items-center justify-center p-4 z-50 pointer-events-none">
+                        <div className="pointer-events-auto w-full max-w-md">
+                            {children}
+                        </div>
+                    </div>
+                )}
             </div>
         );
     }

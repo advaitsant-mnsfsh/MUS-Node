@@ -77,7 +77,7 @@ export default function SiteLogo({ domain, size = 'medium', className = '' }: Si
 
     // Logo URLs - Use larger size for better quality
     const clearbitUrl = `https://logo.clearbit.com/${cleanDomain}`;
-    const googleFaviconUrl = `https://www.google.com/s2/favicons?domain=${cleanDomain}&sz=256`;
+    const googleFaviconUrl = `https://www.google.com/s2/favicons?domain=${cleanDomain}&sz=256&default=404`;
 
     const handleImageError = () => {
         // Fall back to letter circle if Google Favicon fails

@@ -11,9 +11,15 @@ export class JobProcessor {
         const envName = process.env.RAILWAY_ENVIRONMENT_NAME || process.env.NODE_ENV || 'development';
         console.log(`[JobProcessor] 🌀 Starting Job: ${jobId}`);
         try {
-            // 1. Fetch Job & Secrets
+            // 1. Fetch Job
             const job = await JobService.getJob(jobId);
-            if (!job) throw new Error('Job not found');
+            if (!job) throw new Error("Job not found");
+
+            const inputDataRaw = job.input_data as any;
+            const inputs = Array.isArray(inputDataRaw) ? inputDataRaw : (inputDataRaw?.inputs || []);
+            const auditMode = Array.isArray(inputDataRaw) ? 'standard' : (inputDataRaw?.auditMode || 'standard');
+
+            // --- STANDARD/COMPETITOR AUDIT FLOW ---
 
             // Use Database Secrets (app_secrets) with Env Var fallback
             const appSecrets = await SecretService.getSecrets();
@@ -37,10 +43,6 @@ export class JobProcessor {
             const apiKeys = [apiKeyRaw];
             if (apiKeyBup) apiKeys.push(apiKeyBup);
             const primaryKey = apiKeys[0];
-
-            const inputDataRaw = job.input_data as any;
-            const inputs = Array.isArray(inputDataRaw) ? inputDataRaw : (inputDataRaw?.inputs || []);
-            const auditMode = Array.isArray(inputDataRaw) ? 'standard' : (inputDataRaw?.auditMode || 'standard');
 
             if (!inputs || inputs.length === 0) {
                 throw new Error("No inputs found in job data.");
@@ -84,7 +86,7 @@ export class JobProcessor {
 
                 // C. Analyze
                 console.log(`[JobProcessor] Running Competitor Analysis...`);
-                await JobService.updateProgress(jobId, 'Analyzed content acquired. Starting AI comparison...');
+                await JobService.updateProgress(jobId, 'Analyzed content acquired. Starting comparison...');
 
                 const analysisBody = {
                     primaryUrl: primaryInput.url,
@@ -109,9 +111,9 @@ export class JobProcessor {
                 let analysisContext: any = {};
 
                 if (firstInput.type === 'url') {
-                    finalUrl = firstInput.url;
-                    console.log(`[JobProcessor] Scraping ${finalUrl}...`);
-                    await JobService.updateProgress(jobId, `Scraping ${finalUrl}...`);
+                    finalUrl = firstInput.customName || firstInput.url;
+                    console.log(`[JobProcessor] Scraping ${firstInput.url}...`);
+                    await JobService.updateProgress(jobId, `Scraping ${firstInput.url}...`);
 
                     // A. Scrape
                     const scrapeResult = await performScrape(finalUrl, false, true, browserEndpoint);
@@ -160,7 +162,7 @@ export class JobProcessor {
                     };
 
                 } else if (firstInput.type === 'upload') {
-                    finalUrl = 'Uploaded Image';
+                    finalUrl = firstInput.customName || 'Uploaded Image';
                     let base64 = firstInput.filesData?.[0] || firstInput.fileData; // Handles different input formats
 
                     // Handle Pre-uploaded URLs if they ever exist in New Flow
@@ -184,10 +186,10 @@ export class JobProcessor {
                     finalMimeType = 'image/png';
 
                     analysisContext = {
-                        url: 'Uploaded Image',
+                        url: finalUrl,
                         screenshotBase64: base64,
                         screenshotMimeType: 'image/png',
-                        liveText: "Content extracted from uploaded image.",
+                        liveText: `Content extracted from: ${finalUrl}`,
                         performanceData: null
                     };
                     await JobService.updateProgress(jobId, 'Processing uploaded image...');

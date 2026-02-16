@@ -7,9 +7,10 @@ import { transferAuditOwnership } from '../services/auditStorage';
 
 interface LoginPanelProps {
     auditId?: string | null;
+    hideTitle?: boolean;
 }
 
-export const LoginPanel: React.FC<LoginPanelProps> = ({ auditId }) => {
+export const LoginPanel: React.FC<LoginPanelProps> = ({ auditId, hideTitle = false }) => {
     const [isLoginMode, setIsLoginMode] = useState(false); // Toggle between Sign Up and Login
     const [step, setStep] = useState<'email' | 'otp' | 'password'>('email'); // For Signup flow
     const [tempPassword] = useState(() => Math.random().toString(36).slice(-12) + 'A1!'); // Bridge password
@@ -161,16 +162,18 @@ export const LoginPanel: React.FC<LoginPanelProps> = ({ auditId }) => {
     return (
         <div className="w-full max-w-md mx-auto px-6 pb-6 min-h-[540px] flex flex-col font-['DM_Sans']">
             {/* Header - Fixed Height */}
-            <div className="h-24 flex flex-col justify-center mb-6 text-center md:text-left">
-                <h2 className="text-2xl font-bold text-slate-900 mb-2">
-                    {isLoginMode ? 'Welcome Back' : 'Unlock Full Audit Report'}
-                </h2>
-                <p className="text-sm text-slate-600 line-clamp-2">
-                    {isLoginMode
-                        ? 'Log in to access your saved reports.'
-                        : 'Get instant access to your detailed strategic roadmap and UI/UX insights.'}
-                </p>
-            </div>
+            {!hideTitle && (
+                <div className="h-24 flex flex-col justify-center mb-6 text-center md:text-left">
+                    <h2 className="text-2xl font-bold text-slate-900 mb-2">
+                        {isLoginMode ? 'Welcome Back' : 'Unlock Full Audit Report'}
+                    </h2>
+                    <p className="text-sm text-slate-600 line-clamp-2">
+                        {isLoginMode
+                            ? 'Log in to access your saved reports.'
+                            : 'Get instant access to your detailed strategic roadmap and UI/UX insights.'}
+                    </p>
+                </div>
+            )}
 
             {/* Form */}
             {isLoginMode ? (

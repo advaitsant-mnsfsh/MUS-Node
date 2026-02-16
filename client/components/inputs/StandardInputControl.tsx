@@ -4,7 +4,9 @@ import {
     Globe,
     FileImage,
     Plus,
-    X
+    X,
+    Pencil,
+    Check
 } from 'lucide-react';
 
 // --- HELPER: VALIDATORS ---
@@ -45,6 +47,8 @@ export const StandardInputControl: React.FC<StandardInputControlProps> = ({
     placeholder
 }) => {
     const fileInputRef = useRef<HTMLInputElement>(null);
+    const [editingId, setEditingId] = React.useState<string | null>(null);
+    const [tempName, setTempName] = React.useState('');
     const MAX_INPUTS = 5;
     const remainingSlots = MAX_INPUTS - queue.length;
 
@@ -111,6 +115,18 @@ export const StandardInputControl: React.FC<StandardInputControlProps> = ({
         setErrorMsg(null);
     };
 
+    const startRenaming = (item: any) => {
+        setEditingId(item.id);
+        setTempName(item.customName || (item.url ? (getDomain(item.url) || item.url) : item.files?.[0]?.name));
+    };
+
+    const saveName = (id: string) => {
+        setQueue((prev: any) => prev.map((item: any) =>
+            item.id === id ? { ...item, customName: tempName.trim() || undefined } : item
+        ));
+        setEditingId(null);
+    };
+
     return (
         <div className="space-y-2">
             <div className={`group relative flex items-center bg-white border-2 rounded-lg shadow-sm transition-all duration-200 focus-within:shadow-neo-hover hover:shadow-neo-hover focus-within:border-accent-cyan ${remainingSlots === 0 ? 'border-[#DDDDDD] bg-slate-50 opacity-70 cursor-not-allowed' : 'border-border-main hover:border-accent-cyan hover:bg-accent-cyan/5'}`}>
@@ -147,10 +163,48 @@ export const StandardInputControl: React.FC<StandardInputControlProps> = ({
             {queue.length > 0 && (
                 <div className="flex flex-wrap gap-2">
                     {queue.map((item: any, index: number) => (
-                        <div key={item.id} className="flex items-center gap-1.5 px-2.5 py-1.5 bg-white border-2 border-border-main rounded-md text-xs font-bold text-text-primary shadow-neo">
+                        <div key={item.id} className="flex items-center gap-1.5 px-2.5 py-1.5 bg-white border-2 border-border-main rounded-md text-xs font-bold text-text-primary shadow-neo group/pill">
                             {item.type === 'url' ? <Globe className="w-3 h-3 text-brand" /> : <FileImage className="w-3 h-3 text-[#10B981]" />}
-                            <span className="max-w-[120px] truncate">{item.url ? getDomain(item.url) || item.url : item.files?.[0]?.name}</span>
-                            <button type="button" onClick={() => remove(index)} className="ml-1 text-[#94A3B8] hover:text-[#EF4444] transition-colors"><X className="w-3 h-3" /></button>
+
+                            {editingId === item.id ? (
+                                <div className="flex items-center gap-1">
+                                    <input
+                                        autoFocus
+                                        type="text"
+                                        value={tempName}
+                                        onChange={(e) => setTempName(e.target.value)}
+                                        onKeyDown={(e) => {
+                                            if (e.key === 'Enter') saveName(item.id);
+                                            if (e.key === 'Escape') setEditingId(null);
+                                        }}
+                                        className="w-[120px] bg-slate-50 border-b border-brand outline-none px-1 py-0"
+                                    />
+                                    <button type="button" onClick={() => saveName(item.id)} className="text-brand hover:text-brand-hover">
+                                        <Check className="w-3 h-3" />
+                                    </button>
+                                </div>
+                            ) : (
+                                <div className="flex items-center gap-1.5">
+                                    <span
+                                        className="max-w-[120px] truncate cursor-pointer hover:text-brand transition-colors"
+                                        onClick={() => startRenaming(item)}
+                                        title="Click to rename"
+                                    >
+                                        {item.customName || (item.url ? getDomain(item.url) || item.url : item.files?.[0]?.name)}
+                                    </span>
+                                    <button
+                                        type="button"
+                                        onClick={() => startRenaming(item)}
+                                        className="opacity-0 group-hover/pill:opacity-100 transition-opacity text-[#94A3B8] hover:text-brand"
+                                    >
+                                        <Pencil className="w-2.5 h-2.5" />
+                                    </button>
+                                </div>
+                            )}
+
+                            <button type="button" onClick={() => remove(index)} className="ml-1 text-[#94A3B8] hover:text-[#EF4444] transition-colors">
+                                <X className="w-3 h-3" />
+                            </button>
                         </div>
                     ))}
                 </div>

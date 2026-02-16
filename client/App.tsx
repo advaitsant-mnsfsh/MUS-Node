@@ -55,8 +55,10 @@ const App: React.FC = () => {
         whiteLabelLogo,
         auditId,
         user,
+        queuePosition,
         handleAnalyze,
         handleRunNewAudit,
+        handleEmailOptIn,
         setWhiteLabelLogo
     } = useAudit();
 
@@ -154,6 +156,9 @@ const App: React.FC = () => {
                     auditId={auditId}
                     inputs={reportInputs}
                     isError={!!error}
+                    queuePosition={queuePosition}
+                    onEmailOptIn={handleEmailOptIn}
+                    user={user}
                 />
                 {error && (
                     <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-50 w-full max-w-xl px-4 animate-in slide-in-from-bottom-8 duration-500">

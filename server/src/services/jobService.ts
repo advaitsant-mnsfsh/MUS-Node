@@ -7,6 +7,9 @@ export interface CreateJobParams {
     apiKeyId?: string; // Made optional for guest/demo usage
     userId?: string;   // Optional Link to User
     inputData: any;
+    auditType?: string;
+    emailOptIn?: boolean;
+    optInEmail?: string;
 }
 
 export class JobService {
@@ -40,6 +43,9 @@ export class JobService {
             user_id: params.userId || null,
             status: 'pending',
             input_data: params.inputData,
+            audit_type: params.auditType || 'standard',
+            email_opt_in: params.emailOptIn || false,
+            opt_in_email: params.optInEmail || null,
         }).returning({ id: auditJobs.id });
 
         if (!job) throw new Error("Failed to create job");
@@ -58,6 +64,37 @@ export class JobService {
                     .set(updatePayload)
                     .where(eq(auditJobs.id, jobId))
             );
+
+            // --- 📧 Email Notification Logic ---
+            if (status === 'completed') {
+                const job = await db.query.auditJobs.findFirst({
+                    where: eq(auditJobs.id, jobId)
+                });
+
+                if (job?.email_opt_in) {
+                    const { user } = await import('../db/schema.js');
+                    let targetEmail = job.opt_in_email;
+                    let targetName = 'there';
+
+                    // If job is linked to a user, get their latest email/name from DB
+                    if (job.user_id) {
+                        const [userData] = await db.select()
+                            .from(user)
+                            .where(eq(user.id, job.user_id))
+                            .limit(1);
+
+                        if (userData) {
+                            targetEmail = userData.email;
+                            targetName = userData.name;
+                        }
+                    }
+
+                    if (targetEmail) {
+                        const { sendReportReadyEmail } = await import('../lib/auth.js');
+                        await sendReportReadyEmail(targetEmail, jobId, targetName);
+                    }
+                }
+            }
         } catch (error) {
             console.error(`[JobService] 🚨 Final update failed for ${jobId} after retries:`, error);
         }
