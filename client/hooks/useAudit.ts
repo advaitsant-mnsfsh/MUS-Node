@@ -39,6 +39,8 @@ export const useAudit = () => {
     const [targetProgress, setTargetProgress] = useState<number>(isResumingActive ? globalProgress : 0);
     const [reportInputs, setReportInputs] = useState<AuditInput[]>([]);
     const [whiteLabelLogo, setWhiteLabelLogo] = useState<string | null>(null);
+    const [queuePosition, setQueuePosition] = useState<number>(0);
+    const [queueType, setQueueType] = useState<string>('realtime');
 
     const lastLogTime = useRef<number>(Date.now());
 
@@ -102,6 +104,10 @@ export const useAudit = () => {
         },
         onJobCreated: (id: string) => {
             navigate(`/analysis/${id}`, { state: { newAudit: true } });
+        },
+        onQueueUpdate: (position: number, type: string) => {
+            setQueuePosition(position);
+            setQueueType(type);
         },
         onStatus: (message: string) => {
             if (location.pathname.includes('/report/') && auditId) {
@@ -216,6 +222,11 @@ export const useAudit = () => {
                         setReport(reportData);
                         if (reportData.screenshots) setScreenshots(reportData.screenshots);
                         if (reportData.screenshotMimeType) setScreenshotMimeType(reportData.screenshotMimeType);
+                        if (reportData.whiteLabelLogo) setWhiteLabelLogo(reportData.whiteLabelLogo);
+                    }
+
+                    if (job.input_data && (job.input_data as any).whiteLabelLogo) {
+                        setWhiteLabelLogo((job.input_data as any).whiteLabelLogo);
                     }
 
                     if (job.inputs) {
@@ -294,7 +305,7 @@ export const useAudit = () => {
         setProgress(0);
         setTargetProgress(0);
 
-        analyzeWebsiteStream({ inputs, auditMode }, getStreamCallbacks(false));
+        analyzeWebsiteStream({ inputs, auditMode, whiteLabelLogo }, getStreamCallbacks(false));
     }, [getStreamCallbacks]);
 
     const handleAnalyze = useCallback((inputs: AuditInput[], auditMode: 'standard' | 'competitor' = 'standard') => {
@@ -403,8 +414,35 @@ export const useAudit = () => {
         setProgress(0);
         setTargetProgress(0);
         setIsLoading(false);
+        setQueuePosition(0);
         navigate('/');
     }, [navigate]);
+
+    const handleEmailOptIn = useCallback(async (email?: string) => {
+        if (!uiAuditId) return;
+        try {
+            const { getBackendUrl } = await import('../services/config');
+            const { authenticatedFetch } = await import('../lib/authenticatedFetch');
+            const { default: toast } = await import('react-hot-toast');
+
+            const response = await authenticatedFetch(`${getBackendUrl()}/api/v1/audit/${uiAuditId}/opt-in`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email })
+            });
+
+            if (response.ok) {
+                toast.success("We'll email you the report once it's ready!");
+                setTimeout(() => {
+                    navigate('/');
+                }, 2000);
+            } else {
+                toast.error("Failed to set up email notification.");
+            }
+        } catch (e) {
+            console.error("[useAudit] Opt-in failed:", e);
+        }
+    }, [uiAuditId, navigate]);
 
     return {
         submittedUrl,
@@ -423,8 +461,11 @@ export const useAudit = () => {
         whiteLabelLogo,
         auditId,
         user,
+        queuePosition,
+        queueType,
         handleAnalyze,
         handleRunNewAudit,
+        handleEmailOptIn,
         setWhiteLabelLogo
     };
 };

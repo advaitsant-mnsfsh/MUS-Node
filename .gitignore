@@ -13,3 +13,4 @@ client/dist
 .vercel
 .cache
 .turbo
+server/uploads

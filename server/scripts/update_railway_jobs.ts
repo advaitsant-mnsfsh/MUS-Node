@@ -3,35 +3,51 @@ import { auditJobs } from '../src/db/schema.js';
 import { eq, or, and } from 'drizzle-orm';
 
 async function updateRailwayJobs() {
-    const TARGET_JOB_ID = 'c856e7b9-2da0-4794-baf5-5704fe762428';
     console.log('🔄 Connecting to Railway Database...');
+    console.log('🧹 Cleaning up ALL stuck jobs in "processing" status...\n');
 
     try {
-        console.log(`📊 Searching for Target Job: ${TARGET_JOB_ID}...`);
-
-        const job = await db.select()
+        // Find all jobs stuck in 'processing'
+        const stuckJobs = await db.select()
             .from(auditJobs)
-            .where(eq(auditJobs.id, TARGET_JOB_ID));
+            .where(eq(auditJobs.status, 'processing'));
 
-        if (job.length > 0) {
-            console.log(`🎯 Found job with status: ${job[0].status}. Marking as failed...`);
-
-            await db.update(auditJobs)
-                .set({
-                    status: 'failed',
-                    error_message: 'Manually stopped by administrator to resolve database access issues.'
-                })
-                .where(eq(auditJobs.id, TARGET_JOB_ID));
-
-            console.log(`✅ Successfully stopped job ${TARGET_JOB_ID}.`);
-        } else {
-            console.log(`❌ Job ID ${TARGET_JOB_ID} not found in database.`);
+        if (stuckJobs.length === 0) {
+            console.log('✨ No stuck jobs found. Database is clean!');
+            process.exit(0);
+            return;
         }
 
-        console.log('🏁 Operation complete.');
+        console.log(`🎯 Found ${stuckJobs.length} stuck job(s):\n`);
+
+        // Show what we found
+        stuckJobs.forEach((job, index) => {
+            const createdAt = new Date(job.created_at).toLocaleString();
+            console.log(`   ${index + 1}. Job ID: ${job.id.substring(0, 12)}...`);
+            console.log(`      Created: ${createdAt}`);
+            console.log(`      User: ${job.user_id ? job.user_id.substring(0, 12) + '...' : 'GUEST'}\n`);
+        });
+
+        console.log('👷 Marking all as failed...\n');
+
+        // Update all stuck jobs
+        const result = await db.update(auditJobs)
+            .set({
+                status: 'failed',
+                error_message: 'System cleanup: Job was interrupted and did not complete. Please try again.'
+            })
+            .where(eq(auditJobs.status, 'processing'))
+            .returning({ id: auditJobs.id });
+
+        console.log(`✅ Successfully cleaned up ${result.length} stuck job(s).`);
+        result.forEach((job, index) => {
+            console.log(`   ${index + 1}. ${job.id}`);
+        });
+
+        console.log('\n🏁 Cleanup complete. Your dashboard should now be clear!');
         process.exit(0);
     } catch (error) {
-        console.error('❌ Operation failed:', error);
+        console.error('❌ Cleanup failed:', error);
         process.exit(1);
     }
 }

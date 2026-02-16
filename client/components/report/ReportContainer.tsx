@@ -61,14 +61,15 @@ export const ReportContainer: React.FC<ReportContainerProps> = ({
     const { generateStandardPdf, isGenerating: isStandardPdfGenerating } = useStandardReportPdf({
         report,
         url,
-        screenshots
+        screenshots,
+        whiteLabelLogo
     });
 
     // Competitor Report PDF (React-PDF based)
-    const competitorAnalysis = report?.["Competitor Analysis expert"];
     const { generatePdf: generateCompetitorPdf, isGenerating: isCompetitorPdfGenerating } = useCompetitorReportPdf({
-        data: competitorAnalysis,
-        url
+        data: report?.["Competitor Analysis expert"] as any,
+        url,
+        whiteLabelLogo
     });
 
     // Select the appropriate PDF generator based on report type

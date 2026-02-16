@@ -6,16 +6,17 @@ import { CompetitorAnalysisData } from '../types';
 interface UseCompetitorReportPdfProps {
     data: CompetitorAnalysisData | null;
     url: string;
+    whiteLabelLogo?: string | null;
 }
 
-export const useCompetitorReportPdf = ({ data, url }: UseCompetitorReportPdfProps) => {
+export const useCompetitorReportPdf = ({ data, url, whiteLabelLogo }: UseCompetitorReportPdfProps) => {
     const [isGenerating, setIsGenerating] = useState(false);
 
     const generatePdf = async () => {
         if (!data) return;
         setIsGenerating(true);
         try {
-            const blob = await pdf(<CompetitorReportPDF data={data} url={url} />).toBlob();
+            const blob = await pdf(<CompetitorReportPDF data={data} url={url} whiteLabelLogo={whiteLabelLogo} />).toBlob();
             const downloadUrl = URL.createObjectURL(blob);
             const link = document.createElement('a');
             link.href = downloadUrl;

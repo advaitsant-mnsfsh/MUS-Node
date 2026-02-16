@@ -6,6 +6,7 @@ interface StreamCallbacks {
   onScrapeComplete: (screenshots: Screenshot[], screenshotMimeType: string) => void;
   onPerformanceError?: (message: string) => void;
   onStatus: (message: string) => void;
+  onQueueUpdate?: (position: number, queueType: string) => void;
   onJobCreated?: (jobId: string) => void;
   onData: (chunk: any) => void;
   onComplete: (payload: any) => void;
@@ -16,6 +17,7 @@ interface StreamCallbacks {
 interface AnalyzeParams {
   inputs: AuditInput[];
   auditMode?: 'standard' | 'competitor';
+  whiteLabelLogo?: string | null;
   token?: string;
 }
 
@@ -267,8 +269,9 @@ export const monitorJobPoll = (jobId: string, callbacks: StreamCallbacks): (() =
   return stopPolling;
 };
 
+
 export const analyzeWebsiteStream = async (
-  { inputs, auditMode = 'standard' }: AnalyzeParams,
+  { inputs, auditMode = 'standard', whiteLabelLogo = null }: AnalyzeParams,
   callbacks: StreamCallbacks
 ): Promise<void> => {
   const { onScrapeComplete, onStatus, onData, onJobCreated, onComplete, onError, onClose, onPerformanceError } = callbacks;
@@ -301,7 +304,7 @@ export const analyzeWebsiteStream = async (
     const startResponse = await authenticatedFetch(functionUrl, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ mode: 'start-audit', inputs: processedInputs, auditMode })
+      body: JSON.stringify({ mode: 'start-audit', inputs: processedInputs, auditMode, whiteLabelLogo })
     });
 
     if (!startResponse.ok) {
@@ -314,6 +317,7 @@ export const analyzeWebsiteStream = async (
     console.log('[GeminiService] Job created:', jobId, 'at position:', queuePosition);
 
     if (onJobCreated) onJobCreated(jobId);
+    if (callbacks.onQueueUpdate) callbacks.onQueueUpdate(queuePosition, queueType);
 
     // Initial status update with queue info
     if (queuePosition > 0) {

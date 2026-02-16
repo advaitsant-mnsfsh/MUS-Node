@@ -12,6 +12,7 @@ import { DataLoadingScreen } from './components/DataLoadingScreen';
 import { ReportContainer } from './components/report/ReportContainer';
 
 import { Logo } from './components/Logo';
+import { AdminAuditDashboard } from './pages/AdminAuditDashboard';
 import { getSharedAudit } from './services/auditStorage';
 import { AnalysisReport, Screenshot, AuditInput } from './types';
 import { Layout } from './components/Layout';
@@ -64,6 +65,7 @@ function SharedAuditView() {
                         setUrl(job.report_data?.url || 'Analyzed Site'); // Fallback
                         setScreenshots(job.report_data?.screenshots || []);
                         setInputs(job.inputs || []);
+                        setWhiteLabelLogo(job.report_data?.whiteLabelLogo || (job as any).input_data?.whiteLabelLogo || null);
                         setJobStatus('completed');
                         setLoading(false);
                         return; // Done
@@ -193,6 +195,7 @@ function AppWithRouting() {
                 {/* Standalone Views (No Global Nav) */}
                 <Route path="/shared/:auditId" element={<SharedAuditView />} />
                 <Route path="/embed" element={<EmbedPage />} />
+                <Route path="/system-audit-admin" element={<AdminAuditDashboard />} />
             </Routes>
         </BrowserRouter>
     );

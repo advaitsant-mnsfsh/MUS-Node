@@ -3,7 +3,7 @@ import { db } from '../lib/db.js';
 import { auditJobs, leads } from '../db/schema.js';
 import { validateApiKey, optionalUserAuth, AuthenticatedRequest } from '../middleware/apiAuth.js';
 import { QueueService } from '../services/queueService.js';
-import { eq, and, isNull } from 'drizzle-orm';
+import { eq, and, isNull, sql, asc, desc, inArray, or } from 'drizzle-orm';
 import crypto from 'crypto';
 
 const router = express.Router();
@@ -11,7 +11,7 @@ const router = express.Router();
 // POST /api/v1/audit
 router.post('/audit', optionalUserAuth, async (req: express.Request, res: express.Response) => {
     try {
-        const { inputs } = req.body;
+        const { inputs, whiteLabelLogo } = req.body;
         const auditInputs = inputs || req.body.inputs;
         const authReq = req as AuthenticatedRequest;
 
@@ -26,7 +26,8 @@ router.post('/audit', optionalUserAuth, async (req: express.Request, res: expres
         const jobId = crypto.randomUUID();
         const payload = {
             inputs: auditInputs,
-            auditMode: req.body.auditMode || 'standard'
+            auditMode: req.body.auditMode || 'standard',
+            whiteLabelLogo: whiteLabelLogo || null
         };
 
         // 1. Create permanent Job Record
@@ -35,6 +36,7 @@ router.post('/audit', optionalUserAuth, async (req: express.Request, res: expres
             api_key_id: authReq.apiKey?.id,
             status: 'pending',
             input_data: payload,
+            audit_type: payload.auditMode === 'competitor' ? 'competitor' : 'standard',
             user_id: authReq.user?.id || null
         }).returning();
 
@@ -51,7 +53,7 @@ router.post('/audit', optionalUserAuth, async (req: express.Request, res: expres
             success: true,
             jobId: job.id,
             queuePosition: position,
-            queueType: queueType,
+            queueType: position <= 4 ? 'realtime' : 'email',
             message: position <= 4
                 ? `Audit started. You are in position ${position}.`
                 : `High volume detected. You are in position ${position}. We will email you results.`
@@ -263,6 +265,157 @@ router.get('/audit/:jobId', validateApiKey, async (req: express.Request, res: ex
 
     } catch (error: any) {
         res.status(500).json({ error: error.message });
+    }
+});
+
+// POST /api/v1/audit/:jobId/opt-in
+router.post('/audit/:jobId/opt-in', optionalUserAuth, async (req: express.Request, res: express.Response) => {
+    try {
+        const { jobId } = req.params;
+        const { email } = req.body;
+        const authReq = req as AuthenticatedRequest;
+
+        const [job] = await db.select()
+            .from(auditJobs)
+            .where(eq(auditJobs.id, jobId))
+            .limit(1);
+
+        if (!job) return res.status(404).json({ error: 'Job not found' });
+
+        const updateData: any = {
+            email_opt_in: true,
+            updated_at: new Date()
+        };
+
+        // If logged in, link to user and use their email
+        if (authReq.user) {
+            updateData.user_id = authReq.user.id;
+            updateData.opt_in_email = authReq.user.email;
+        } else if (email) {
+            // If guest provided email
+            updateData.opt_in_email = email;
+        }
+
+        await db.update(auditJobs)
+            .set(updateData)
+            .where(eq(auditJobs.id, jobId));
+
+        res.json({ success: true, message: 'Opt-in successful' });
+    } catch (e: any) {
+        console.error("[Opt-in] Error:", e);
+        res.status(500).json({ error: e.message });
+    }
+});
+
+// GET /api/v1/admin/audits (Protected Terminal-style Dashboard API)
+router.get('/admin/audits', async (req: express.Request, res: express.Response) => {
+    const adminPass = req.headers['x-admin-password'] || req.query.pass;
+
+    // Simple hardcoded security for local/dev
+    if (adminPass !== '0000') {
+        return res.status(401).json({ error: 'Unauthorized admin access' });
+    }
+
+    try {
+        const { desc, ilike, or } = await import('drizzle-orm');
+        const { user: userTable } = await import('../db/schema.js');
+
+        const { q, searchType, status } = req.query;
+
+        // Build composite conditions
+        let conditions: any[] = [];
+
+        if (status) {
+            conditions.push(eq(auditJobs.status, status as string));
+        }
+
+        if (q) {
+            const searchTerm = `%${q}%`;
+            if (searchType === 'id') {
+                conditions.push(ilike(auditJobs.id, searchTerm));
+            } else if (searchType === 'user') {
+                conditions.push(or(
+                    ilike(userTable.name, searchTerm),
+                    ilike(userTable.email, searchTerm),
+                    ilike(auditJobs.opt_in_email, searchTerm)
+                ));
+            } else {
+                // Default: search everywhere
+                conditions.push(or(
+                    ilike(auditJobs.id, searchTerm),
+                    ilike(userTable.name, searchTerm),
+                    ilike(userTable.email, searchTerm),
+                    ilike(auditJobs.opt_in_email, searchTerm)
+                ));
+            }
+        }
+
+        const query = db.select({
+            id: auditJobs.id,
+            status: auditJobs.status,
+            audit_type: auditJobs.audit_type,
+            input_data: auditJobs.input_data,
+            created_at: auditJobs.created_at,
+            email_opt_in: auditJobs.email_opt_in,
+            opt_in_email: auditJobs.opt_in_email,
+            user_name: userTable.name,
+            user_email: userTable.email,
+        })
+            .from(auditJobs)
+            .leftJoin(userTable, eq(auditJobs.user_id, userTable.id));
+
+        if (conditions.length > 0) {
+            query.where(and(...conditions));
+        }
+
+        const recentJobs = await query
+            .orderBy(desc(auditJobs.created_at))
+            .limit(50); // Lowered from 100 to 50 for stability
+
+        if (recentJobs.length === 0) {
+            return res.json({ success: true, audits: [] });
+        }
+
+        // Fetch logs in ONE batch query instead of N+1
+        const { auditJobLogs: logsTable } = await import('../db/schema.js');
+        const jobIds = recentJobs.map(j => j.id);
+        const allLogs = await db.select({
+            job_id: logsTable.job_id,
+            message: logsTable.message,
+            created_at: logsTable.created_at
+        })
+            .from(logsTable)
+            .where(inArray(logsTable.job_id, jobIds))
+            .orderBy(asc(logsTable.created_at));
+
+        // Group logs by Job ID
+        const logsMap: Record<string, any[]> = {};
+        allLogs.forEach(log => {
+            if (!logsMap[log.job_id]) logsMap[log.job_id] = [];
+            logsMap[log.job_id].push({ message: log.message, created_at: log.created_at });
+        });
+
+        // Assemble and Sanitize
+        const jobsWithLogs = recentJobs.map(job => {
+            const rawInputData = job.input_data as any;
+
+            // CRITICAL: Strip heavy base64 data to prevent payload Bloat
+            const sanitizedInputs = rawInputData?.inputs?.map((input: any) => {
+                const { fileData, filesData, ...rest } = input;
+                return rest;
+            }) || [];
+
+            return {
+                ...job,
+                input_data: { ...rawInputData, inputs: sanitizedInputs },
+                logs: logsMap[job.id] || []
+            };
+        });
+
+        res.json({ success: true, audits: jobsWithLogs });
+    } catch (e: any) {
+        console.error("[Admin] Audit fetch error:", e);
+        res.status(500).json({ error: e.message });
     }
 });
 

@@ -1,6 +1,6 @@
 import { db } from '../lib/db.js';
 import { auditQueue } from '../db/schema.js';
-import { eq, sql, desc, and } from 'drizzle-orm';
+import { eq, sql, desc, asc, and } from 'drizzle-orm';
 import crypto from 'crypto';
 
 export class QueueService {
@@ -36,7 +36,7 @@ export class QueueService {
         const [nextJob] = await db.select()
             .from(auditQueue)
             .where(eq(auditQueue.status, 'waiting'))
-            .orderBy(desc(auditQueue.priority), auditQueue.created_at)
+            .orderBy(desc(auditQueue.priority), asc(auditQueue.created_at))
             .limit(1);
 
         return nextJob || null;
