@@ -5,8 +5,72 @@ import { validateApiKey, optionalUserAuth, AuthenticatedRequest } from '../middl
 import { QueueService } from '../services/queueService.js';
 import { eq, and, isNull, sql, asc, desc, inArray, or } from 'drizzle-orm';
 import crypto from 'crypto';
+import fs from 'fs';
+import path from 'path';
 
 const router = express.Router();
+
+// POST /api/v1/feedback
+router.post('/feedback', optionalUserAuth, async (req: express.Request, res: express.Response) => {
+    try {
+        const { teamNumber, jobId, websiteUrl, errorDetails, email } = req.body;
+        const authReq = req as AuthenticatedRequest;
+        const userEmail = email || authReq.user?.email || 'anonymous';
+
+        const feedback = {
+            timestamp: new Date().toISOString(),
+            userEmail,
+            teamNumber,
+            jobId,
+            websiteUrl,
+            errorDetails
+        };
+
+        const feedbackDir = path.join(process.cwd(), 'data');
+        if (!fs.existsSync(feedbackDir)) {
+            fs.mkdirSync(feedbackDir, { recursive: true });
+        }
+
+        const feedbackFile = path.join(feedbackDir, 'feedback.json');
+        let currentFeedback = [];
+        if (fs.existsSync(feedbackFile)) {
+            try {
+                const content = fs.readFileSync(feedbackFile, 'utf-8');
+                currentFeedback = JSON.parse(content);
+            } catch (e) {
+                currentFeedback = [];
+            }
+        }
+        currentFeedback.push(feedback);
+        fs.writeFileSync(feedbackFile, JSON.stringify(currentFeedback, null, 2));
+
+        res.json({ success: true, message: 'Feedback received' });
+    } catch (error) {
+        console.error('[Feedback] Error saving feedback:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
+// GET /api/v1/feedback
+router.get('/feedback', async (req: express.Request, res: express.Response) => {
+    try {
+        const password = req.headers['x-admin-password'];
+        if (password !== '0000') {
+            return res.status(401).json({ error: 'Unauthorized' });
+        }
+
+        const feedbackFile = path.join(process.cwd(), 'data', 'feedback.json');
+        if (!fs.existsSync(feedbackFile)) {
+            return res.json([]);
+        }
+        const content = fs.readFileSync(feedbackFile, 'utf-8');
+        const feedback = JSON.parse(content);
+        res.json(feedback.reverse()); // Show newest first
+    } catch (error) {
+        console.error('[Feedback] Error fetching feedback:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
 
 // POST /api/v1/audit
 router.post('/audit', optionalUserAuth, async (req: express.Request, res: express.Response) => {

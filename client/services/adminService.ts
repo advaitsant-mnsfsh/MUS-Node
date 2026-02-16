@@ -34,5 +34,14 @@ export const adminService = {
             }
         });
         return response.data.audits;
+    },
+
+    async fetchFeedback(password: string): Promise<any[]> {
+        const response = await axios.get(`${API_BASE_URL}/feedback`, {
+            headers: {
+                'x-admin-password': password
+            }
+        });
+        return response.data;
     }
 };

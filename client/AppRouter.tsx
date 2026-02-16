@@ -13,6 +13,7 @@ import { ReportContainer } from './components/report/ReportContainer';
 
 import { Logo } from './components/Logo';
 import { AdminAuditDashboard } from './pages/AdminAuditDashboard';
+import { FeedbackPage } from './pages/FeedbackPage';
 import { getSharedAudit } from './services/auditStorage';
 import { AnalysisReport, Screenshot, AuditInput } from './types';
 import { Layout } from './components/Layout';
@@ -190,6 +191,7 @@ function AppWithRouting() {
                     <Route path="/login" element={<App />} />
                     <Route path="/about" element={<AboutPage />} />
                     <Route path="/pricing" element={<PricingPage />} />
+                    <Route path="/feedback" element={<FeedbackPage />} />
                 </Route>
 
                 {/* Standalone Views (No Global Nav) */}

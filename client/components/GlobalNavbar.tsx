@@ -89,6 +89,19 @@ export const GlobalNavbar: React.FC = () => {
                         >
                             Pricing
                         </Link>
+
+                        {/* Feedback - Visible only when logged in */}
+                        {user && (
+                            <Link
+                                to="/feedback"
+                                className={`text-sm font-semibold transition-colors ${isActive('/feedback')
+                                    ? 'text-brand'
+                                    : 'text-text-secondary hover:text-text-primary'
+                                    }`}
+                            >
+                                Feedback
+                            </Link>
+                        )}
                     </div>
 
                     {/* Right: Auth Section & Dynamic Links */}
