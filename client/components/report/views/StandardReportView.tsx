@@ -56,9 +56,9 @@ export const StandardReportView: React.FC<StandardReportViewProps> = ({ report, 
     }, [ux, product, visual, accessibility, report]);
 
     // Sticky Top Offset Calculation
-    // Normal: 154px (80px Global Nav + 74px Action Bar)
+    // Normal: 138px (64px Global Nav + 74px Action Bar)
     // Shared: 74px -> Reduced to 66px to ensure overlap/no gap
-    const stickyTopClass = isSharedView ? 'top-[58px] md:top-[66px]' : 'top-[146px] md:top-[154px]';
+    const stickyTopClass = isSharedView ? 'top-[58px] md:top-[66px]' : 'top-[130px] md:top-[138px]';
 
     // --- HELPERS ---
     const handleImageError = (e: React.SyntheticEvent<HTMLImageElement, Event>) => {

@@ -45,16 +45,16 @@ export const CompetitorReportView: React.FC<CompetitorReportViewProps> = ({
     // Shared: 74px -> Reduced to 66px to ensure overlap/no gap
     // Sticky Top Offset Calculation
     // NORMAL VIEW:
-    // Mobile: 146px (Nav) + 88px (FilterBar) = 234px
-    // Desktop: 154px (Nav) + 88px (FilterBar) = 242px
+    // Mobile: 130px (Nav) + 88px (FilterBar) = 218px
+    // Desktop: 138px (Nav) + 88px (FilterBar) = 226px
 
     // SHARED VIEW:
     // Mobile: 58px (Nav) + 88px (FilterBar) = 146px
     // Desktop: 66px (Nav) + 88px (FilterBar) = 154px
 
-    const stickyTopClass = isSharedView ? 'top-[58px] md:top-[66px]' : 'top-[146px] md:top-[154px]';
+    const stickyTopClass = isSharedView ? 'top-[58px] md:top-[66px]' : 'top-[130px] md:top-[138px]';
     // Use static strings for Tailwind to detect them
-    const tableHeaderTopClass = isSharedView ? 'top-[146px] md:top-[154px]' : 'top-[234px] md:top-[242px]';
+    const tableHeaderTopClass = isSharedView ? 'top-[146px] md:top-[154px]' : 'top-[218px] md:top-[226px]';
     const PROD_URL = 'https://mus-node-production.up.railway.app';
 
     // --- HELPERS ---

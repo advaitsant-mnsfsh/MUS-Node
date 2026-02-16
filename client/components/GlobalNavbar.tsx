@@ -23,7 +23,7 @@ export const GlobalNavbar: React.FC = () => {
     return (
         <nav className="sticky top-0 z-50 bg-white border-b border-slate-200 shadow-sm font-['DM_Sans']">
             <div className="w-full mx-auto px-4 sm:px-6 lg:px-8">
-                <div className="relative flex justify-between items-center h-20">
+                <div className="relative flex justify-between items-center h-16">
                     {/* Left: Logo */}
                     <div className="shrink-0 z-10">
                         <Link to="/">
