@@ -302,7 +302,7 @@ export function ReportDisplay({
                                                             <div className="flex flex-col items-center justify-center w-full h-full text-slate-400 bg-slate-50 p-8 text-center">
                                                                 <ImageIcon className="w-12 h-12 mb-4 opacity-20" />
                                                                 <p className="text-sm font-semibold">Screenshot Unavailable</p>
-                                                                <p className="text-xs mt-1 text-slate-500 max-w-[250px]">
+                                                                <p className="text-sm mt-1 text-slate-500 max-w-[250px]">
                                                                     This usually happens for older reports after a server maintenance or restart.
                                                                 </p>
                                                             </div>

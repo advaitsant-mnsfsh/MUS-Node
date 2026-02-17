@@ -182,7 +182,7 @@ export const WhiteLabelModal: React.FC<WhiteLabelModalProps> = ({ isOpen, onClos
                   </div>
                   <p className="mb-2 text-lg font-bold text-text-primary">Click to upload logo</p>
                   <p className="text-sm text-text-secondary">or drag and drop here</p>
-                  <p className="text-xs text-slate-400 mt-4 font-mono bg-slate-100 px-2 py-1 rounded">PNG, JPG (MAX. 5MB)</p>
+                  <p className="text-sm text-slate-400 mt-4 font-mono bg-slate-100 px-2 py-1 rounded">PNG, JPG (MAX. 5MB)</p>
                 </div>
                 {/* Decorative background pattern */}
                 <div className="absolute inset-0 opacity-[0.03] bg-[radial-gradient(#000_1px,transparent_1px)] bg-size-[16px_16px]"></div>
@@ -220,7 +220,7 @@ export const WhiteLabelModal: React.FC<WhiteLabelModalProps> = ({ isOpen, onClos
                       <CropIcon className="w-4 h-4" />
                       Crop Aspect Ratio:
                     </span>
-                    <label className="cursor-pointer text-xs font-bold text-brand hover:text-brand-hover underline decoration-dotted underline-offset-2 flex items-center gap-1">
+                    <label className="cursor-pointer text-sm font-bold text-brand hover:text-brand-hover underline decoration-dotted underline-offset-2 flex items-center gap-1">
                       Change Image
                       <input type="file" className="hidden" accept="image/*" onChange={onFileChange} />
                     </label>
@@ -231,7 +231,7 @@ export const WhiteLabelModal: React.FC<WhiteLabelModalProps> = ({ isOpen, onClos
                       <button
                         key={ratio.label}
                         onClick={() => handleAspectChange(ratio.value)}
-                        className={`px-4 py-2 text-xs font-bold rounded border-2 transition-all ${aspect === ratio.value
+                        className={`px-4 py-2 text-sm font-bold rounded border-2 transition-all ${aspect === ratio.value
                           ? 'bg-text-primary text-white border-text-primary shadow-[2px_2px_0px_0px_rgba(0,0,0,0.3)]'
                           : 'bg-white text-text-secondary border-border-main hover:bg-slate-50'
                           }`}

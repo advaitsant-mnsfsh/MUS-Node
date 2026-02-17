@@ -73,11 +73,11 @@ export const AnalysisView: React.FC<AnalysisViewProps> = ({
                             {user ? (
                                 <div className="space-y-4">
                                     <div className="bg-slate-50 border border-slate-100 rounded-2xl p-4 flex items-center gap-3">
-                                        <div className="w-8 h-8 rounded-full bg-slate-200 flex items-center justify-center text-xs font-bold text-slate-600 uppercase">
+                                        <div className="w-8 h-8 rounded-full bg-slate-200 flex items-center justify-center text-sm font-bold text-slate-600 uppercase">
                                             {user.name?.[0] || user.email?.[0]}
                                         </div>
                                         <div className="flex-1 min-w-0">
-                                            <p className="text-xs text-slate-400 font-medium uppercase tracking-wider mb-0.5">Email to</p>
+                                            <p className="text-sm text-slate-400 font-medium uppercase tracking-wider mb-0.5">Email to</p>
                                             <p className="text-sm font-semibold text-slate-700 truncate">{user.email}</p>
                                         </div>
                                     </div>
@@ -90,7 +90,7 @@ export const AnalysisView: React.FC<AnalysisViewProps> = ({
                                 </div>
                             ) : (
                                 <div className="space-y-4">
-                                    <p className="text-xs text-slate-400 text-center font-medium">Please login to receive notifications</p>
+                                    <p className="text-sm text-slate-400 text-center font-medium">Please login to receive notifications</p>
                                     <div className="bg-white rounded-2xl p-1 border border-slate-100 shadow-sm">
                                         <LoginPanel auditId={auditId} hideTitle={true} />
                                     </div>

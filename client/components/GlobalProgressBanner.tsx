@@ -72,19 +72,19 @@ export const GlobalProgressBanner: React.FC = () => {
                         <AlertCircle className="w-5 h-5 text-red-500" />
                         <div className="flex flex-col sm:flex-row sm:items-baseline gap-1 sm:gap-2">
                             <span className="text-sm font-bold text-red-900">Assessment Failed</span>
-                            <span className="text-xs text-red-700 truncate max-w-[200px] sm:max-w-md">{error || 'An unexpected error occurred'}</span>
+                            <span className="text-sm text-red-700 truncate max-w-[200px] sm:max-w-md">{error || 'An unexpected error occurred'}</span>
                         </div>
                     </div>
                     <div className="flex items-center gap-3">
                         <button
                             onClick={() => navigate(`/analysis/${activeAuditId}`)}
-                            className="flex-shrink-0 text-xs font-bold text-red-900 hover:underline flex items-center gap-1"
+                            className="shrink-0 text-sm font-bold text-red-900 hover:underline flex items-center gap-1"
                         >
                             View Details <ArrowRight className="w-3 h-3" />
                         </button>
                         <button
                             onClick={() => clearActiveAudit()}
-                            className="flex-shrink-0 p-1 hover:bg-red-100 rounded-full transition-colors"
+                            className="shrink-0 p-1 hover:bg-red-100 rounded-full transition-colors"
                             aria-label="Dismiss banner"
                         >
                             <X className="w-4 h-4 text-red-900" />
@@ -106,13 +106,13 @@ export const GlobalProgressBanner: React.FC = () => {
                     <div className="flex items-center gap-3">
                         <button
                             onClick={handleClick}
-                            className="flex-shrink-0 text-sm font-bold text-brand hover:text-brand-hover flex items-center gap-1 underline decoration-2 underline-offset-4"
+                            className="shrink-0 text-sm font-bold text-brand hover:text-brand-hover flex items-center gap-1 underline decoration-2 underline-offset-4"
                         >
                             Check it Out <ArrowRight className="w-4 h-4" />
                         </button>
                         <button
                             onClick={() => clearActiveAudit()}
-                            className="flex-shrink-0 p-1 hover:bg-[#C8E6C9] rounded-full transition-colors"
+                            className="shrink-0 p-1 hover:bg-[#C8E6C9] rounded-full transition-colors"
                             aria-label="Dismiss banner"
                         >
                             <X className="w-4 h-4 text-[#2E7D32]" />
@@ -133,7 +133,7 @@ export const GlobalProgressBanner: React.FC = () => {
                         </div>
                         <div className="flex flex-col">
                             <span className="text-sm font-bold text-[#663C00]">Assessment in progress...</span>
-                            <span className="text-xs text-[#995C00] font-medium uppercase tracking-wider">{status || 'Analyzing UX Parameters...'}</span>
+                            <span className="text-sm text-[#995C00] font-medium uppercase tracking-wider">{status || 'Analyzing UX Parameters...'}</span>
                         </div>
                     </div>
 
@@ -146,14 +146,14 @@ export const GlobalProgressBanner: React.FC = () => {
                         </div>
                         <button
                             onClick={handleClick}
-                            className="flex-shrink-0 text-sm font-bold text-brand hover:text-brand-hover flex items-center gap-1 underline decoration-2 underline-offset-4"
+                            className="shrink-0 text-sm font-bold text-brand hover:text-brand-hover flex items-center gap-1 underline decoration-2 underline-offset-4"
                         >
                             {Math.round(progress)}% Complete...
                         </button>
 
                         <button
                             onClick={() => setIsDismissed(true)}
-                            className="flex-shrink-0 p-1 hover:bg-orange-100 rounded-full transition-colors"
+                            className="shrink-0 p-1 hover:bg-orange-100 rounded-full transition-colors"
                             aria-label="Dismiss banner"
                         >
                             <X className="w-4 h-4 text-orange-500" />

@@ -47,9 +47,9 @@ export const CompetitorAnalysisView: React.FC<CompetitorAnalysisViewProps> = ({ 
                                         <td className="p-4 text-center font-bold text-indigo-600 bg-indigo-50/30">{item.PrimaryScore}/10</td>
                                         <td className="p-4 text-center font-bold text-slate-600">{item.CompetitorScore}/10</td>
                                         <td className="p-4 text-center">
-                                            {item.Winner === 'Primary' && <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">You</span>}
-                                            {item.Winner === 'Competitor' && <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">Them</span>}
-                                            {item.Winner === 'Tie' && <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-slate-100 text-slate-800">Tie</span>}
+                                            {item.Winner === 'Primary' && <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-sm font-medium bg-green-100 text-green-800">You</span>}
+                                            {item.Winner === 'Competitor' && <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-sm font-medium bg-red-100 text-red-800">Them</span>}
+                                            {item.Winner === 'Tie' && <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-sm font-medium bg-slate-100 text-slate-800">Tie</span>}
                                         </td>
                                         <td className="p-4 text-slate-600 leading-relaxed">{item.Analysis}</td>
                                     </tr>
@@ -117,7 +117,7 @@ export const CompetitorAnalysisView: React.FC<CompetitorAnalysisViewProps> = ({ 
                                             {str.Strength}
                                         </h4>
                                         <p className="text-slate-700 text-sm mb-2">{str.Description}</p>
-                                        <div className="text-xs font-semibold text-green-700 bg-green-100 px-2 py-1 rounded w-fit uppercase tracking-wide">
+                                        <div className="text-sm font-semibold text-green-700 bg-green-100 px-2 py-1 rounded w-fit uppercase tracking-wide">
                                             Impact: {str.Impact}
                                         </div>
                                     </div>
@@ -144,7 +144,7 @@ export const CompetitorAnalysisView: React.FC<CompetitorAnalysisViewProps> = ({ 
                                             {str.Strength}
                                         </h4>
                                         <p className="text-slate-700 text-sm mb-2">{str.Description}</p>
-                                        <div className="text-xs font-semibold text-red-700 bg-red-100 px-2 py-1 rounded w-fit uppercase tracking-wide">
+                                        <div className="text-sm font-semibold text-red-700 bg-red-100 px-2 py-1 rounded w-fit uppercase tracking-wide">
                                             Impact: {str.Impact}
                                         </div>
                                     </div>
@@ -154,7 +154,7 @@ export const CompetitorAnalysisView: React.FC<CompetitorAnalysisViewProps> = ({ 
                     </div>
 
                     {/* Opportunities */}
-                    <div className="bg-gradient-to-br from-indigo-600 to-purple-700 rounded-2xl shadow-lg text-white overflow-hidden relative break-inside-avoid pdf-item">
+                    <div className="bg-linear-to-br from-indigo-600 to-purple-700 rounded-2xl shadow-lg text-white overflow-hidden relative break-inside-avoid pdf-item">
                         <div className="absolute top-0 right-0 p-32 bg-white opacity-5 rounded-full blur-3xl transform translate-x-1/2 -translate-y-1/2"></div>
                         <div className="p-8 relative z-10">
                             <div className="flex items-center gap-4 mb-8 border-b border-indigo-400/30 pb-6">

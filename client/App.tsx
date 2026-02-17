@@ -70,7 +70,7 @@ const App: React.FC = () => {
         let message: React.ReactNode = (
             <div className="text-left text-red-700 mt-2 text-sm space-y-2">
                 <p>The analysis failed due to an unexpected technical issue. The full error from the backend is provided below for debugging:</p>
-                <pre className="whitespace-pre-wrap bg-red-50 p-2 rounded text-xs font-mono break-all">{error}</pre>
+                <pre className="whitespace-pre-wrap bg-red-50 p-2 rounded text-sm font-mono break-all">{error}</pre>
             </div>
         );
 

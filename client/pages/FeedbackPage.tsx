@@ -78,7 +78,7 @@ export const FeedbackPage: React.FC = () => {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                     {/* User Email (Info Only) */}
                     <div className="space-y-2">
-                        <label className="block text-xs font-black uppercase tracking-widest text-slate-500">Your Email</label>
+                        <label className="block text-sm font-black uppercase tracking-widest text-slate-500">Your Email</label>
                         <div className="w-full px-4 py-4 bg-slate-50 border-2 border-slate-200 text-slate-500 font-bold">
                             {user?.email || 'Loading...'}
                         </div>
@@ -86,7 +86,7 @@ export const FeedbackPage: React.FC = () => {
 
                     {/* Team Number */}
                     <div className="space-y-2">
-                        <label htmlFor="teamNumber" className="block text-xs font-black uppercase tracking-widest text-black">Team Number</label>
+                        <label htmlFor="teamNumber" className="block text-sm font-black uppercase tracking-widest text-black">Team Number</label>
                         <input
                             id="teamNumber"
                             type="text"
@@ -100,7 +100,7 @@ export const FeedbackPage: React.FC = () => {
 
                     {/* Job ID */}
                     <div className="space-y-2">
-                        <label htmlFor="jobId" className="block text-xs font-black uppercase tracking-widest text-black">Audit / Job ID (Optional)</label>
+                        <label htmlFor="jobId" className="block text-sm font-black uppercase tracking-widest text-black">Audit / Job ID (Optional)</label>
                         <input
                             id="jobId"
                             type="text"
@@ -113,7 +113,7 @@ export const FeedbackPage: React.FC = () => {
 
                     {/* Website URL */}
                     <div className="space-y-2">
-                        <label htmlFor="websiteUrl" className="block text-xs font-black uppercase tracking-widest text-black">Website URL (Optional)</label>
+                        <label htmlFor="websiteUrl" className="block text-sm font-black uppercase tracking-widest text-black">Website URL (Optional)</label>
                         <input
                             id="websiteUrl"
                             type="text"
@@ -127,7 +127,7 @@ export const FeedbackPage: React.FC = () => {
 
                 {/* Error Details */}
                 <div className="space-y-2">
-                    <label htmlFor="errorDetails" className="block text-xs font-black uppercase tracking-widest text-black">Error Details / Comments</label>
+                    <label htmlFor="errorDetails" className="block text-sm font-black uppercase tracking-widest text-black">Error Details / Comments</label>
                     <textarea
                         id="errorDetails"
                         required

@@ -93,7 +93,7 @@ export const AdminAuditDashboard: React.FC = () => {
 
     if (!isAuthenticated) {
         return (
-            <div className="min-h-screen bg-[#0F172A] flex items-center justify-center p-4">
+            <div className="fixed inset-0 z-100 flex items-center justify-center p-4">
                 <div className="w-full max-w-md bg-slate-900/50 backdrop-blur-xl border border-slate-800 rounded-3xl p-10 shadow-2xl">
                     <div className="flex justify-center mb-8">
                         <div className="bg-indigo-500/10 p-4 rounded-2xl border border-indigo-500/20">
@@ -105,7 +105,7 @@ export const AdminAuditDashboard: React.FC = () => {
 
                     <form onSubmit={handleLogin} className="space-y-4">
                         <div className="space-y-2">
-                            <label className="text-xs font-semibold text-slate-500 uppercase tracking-wider ml-1">Access Key</label>
+                            <label className="text-sm font-semibold text-slate-500 uppercase tracking-wider ml-1">Access Key</label>
                             <input
                                 type="password"
                                 value={password}
@@ -136,7 +136,7 @@ export const AdminAuditDashboard: React.FC = () => {
                             </div>
                             <div>
                                 <h2 className="text-xl font-bold text-white">System Monitor</h2>
-                                <div className="flex items-center gap-2 text-xs text-slate-500">
+                                <div className="flex items-center gap-2 text-sm text-slate-500">
                                     <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
                                     Live Status Updates
                                 </div>
@@ -164,7 +164,7 @@ export const AdminAuditDashboard: React.FC = () => {
 
                     <div className="flex items-center gap-6">
                         <div className="text-right">
-                            <div className="text-xs text-slate-500 uppercase font-medium tracking-widest mb-1">Last Sync</div>
+                            <div className="text-sm text-slate-500 uppercase font-medium tracking-widest mb-1">Last Sync</div>
                             <div className="text-sm font-mono text-slate-300">{format(lastRefresh, 'HH:mm:ss')}</div>
                         </div>
                         <button
@@ -200,7 +200,7 @@ export const AdminAuditDashboard: React.FC = () => {
                                     <button
                                         key={type}
                                         onClick={() => setSearchType(type)}
-                                        className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-all ${searchType === type ? 'bg-indigo-600 text-white shadow-lg' : 'text-slate-500 hover:text-slate-300'}`}
+                                        className={`px-4 py-1.5 rounded-lg text-sm font-bold transition-all ${searchType === type ? 'bg-indigo-600 text-white shadow-lg' : 'text-slate-500 hover:text-slate-300'}`}
                                     >
                                         {type === 'all' ? 'Global' : type === 'id' ? 'Job ID' : 'People'}
                                     </button>
@@ -239,7 +239,7 @@ export const AdminAuditDashboard: React.FC = () => {
                             <div key={audit.id} className="bg-slate-900/40 border border-slate-800 rounded-3xl overflow-hidden hover:border-slate-700/50 transition-all hover:bg-slate-900/60 group">
                                 <div className="p-6">
                                     <div className="flex flex-wrap items-start justify-between gap-4 mb-6">
-                                        <div className="flex items-center gap-4 text-xs font-mono">
+                                        <div className="flex items-center gap-4 text-sm font-mono">
                                             <span className={`px-3 py-1.5 rounded-lg border uppercase font-bold tracking-wider transition-all ${audit.audit_type === 'competitor'
                                                 ? 'bg-purple-500/10 text-purple-400 border-purple-500/20 shadow-[0_0_15px_rgba(168,85,247,0.1)]'
                                                 : 'bg-slate-800 text-slate-400 border-slate-700/50'
@@ -311,7 +311,7 @@ export const AdminAuditDashboard: React.FC = () => {
                                                 <div>
                                                     <div className="text-[10px] text-slate-500 uppercase tracking-widest mb-1 font-bold">Initiator</div>
                                                     <div className="text-white flex items-center gap-2">
-                                                        <div className="w-6 h-6 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-[10px] font-bold">
+                                                        <div className="w-12 h-12 bg-linear-to-br from-purple-100 to-blue-100 rounded-lg border-2 border-black flex items-center justify-center shadow-neo">
                                                             {(audit.user_name || 'G')[0]}
                                                         </div>
                                                         {audit.user_name || 'Guest User'}
@@ -366,7 +366,7 @@ export const AdminAuditDashboard: React.FC = () => {
                                         ? `No audits found matching your search criteria.`
                                         : `No active audits found in the system shadow.`}
                                 </div>
-                                <div className="text-xs text-slate-600">
+                                <div className="text-sm text-slate-600">
                                     {searchTerm || statusFilter !== 'all'
                                         ? "Try adjusting your filters or search term."
                                         : "All quiet on the front lines."}
@@ -386,11 +386,11 @@ export const AdminAuditDashboard: React.FC = () => {
                                         </div>
                                         <div>
                                             <div className="text-white font-bold">{item.userEmail}</div>
-                                            <div className="text-xs text-slate-500">User Report</div>
+                                            <div className="text-sm text-slate-500">User Report</div>
                                         </div>
                                     </div>
                                     <div className="text-right">
-                                        <div className="text-xs text-slate-500 font-mono">{format(new Date(item.timestamp), 'MMM d, HH:mm:ss')}</div>
+                                        <div className="text-sm text-slate-500 font-mono">{format(new Date(item.timestamp), 'MMM d, HH:mm:ss')}</div>
                                         <div className="mt-1 bg-indigo-500/10 text-indigo-400 text-[10px] font-black uppercase tracking-widest px-2 py-0.5 rounded border border-indigo-500/20">
                                             {item.teamNumber || 'No Team'}
                                         </div>
@@ -465,7 +465,7 @@ const SiteDisplay: React.FC<{ inputs: Array<{ url: string; device?: string; cust
                     <div className="absolute top-full left-0 mt-2 w-full bg-slate-900 border border-slate-700/50 rounded-xl shadow-2xl z-[100] p-2 space-y-1 animate-in fade-in slide-in-from-top-1 duration-200">
                         {inputs.slice(1).map((input, idx) => (
                             <div key={idx} className="flex items-center justify-between p-2 hover:bg-slate-800 rounded-lg group/item transition-colors">
-                                <span className="text-xs text-slate-400 truncate flex-1">{input.customName || input.url}</span>
+                                <span className="text-sm text-slate-400 truncate flex-1">{input.customName || input.url}</span>
                                 <span className="text-[8px] text-slate-600 bg-slate-800 px-1 py-0.5 rounded uppercase font-bold ml-2">
                                     {input.device || 'desktop'}
                                 </span>

@@ -20,7 +20,7 @@ const CodeBlock: React.FC<{ code: string; language: string }> = ({ code, languag
                         <div className="w-2.5 h-2.5 rounded-full bg-yellow-500/20 border border-yellow-500/40"></div>
                         <div className="w-2.5 h-2.5 rounded-full bg-green-500/20 border border-green-500/40"></div>
                     </div>
-                    <span className="text-xs font-mono text-slate-400 ml-2 uppercase tracking-widest">{language}</span>
+                    <span className="text-sm font-mono text-slate-400 ml-2 uppercase tracking-widest">{language}</span>
                 </div>
                 <button
                     onClick={handleCopy}
@@ -103,7 +103,7 @@ export default function AuditWidget() {
 
                 {/* Header */}
                 <div className="space-y-4">
-                    <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-brand/10 border border-brand/20 text-brand text-xs font-bold uppercase tracking-widest">
+                    <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-brand/10 border border-brand/20 text-brand text-sm font-bold uppercase tracking-widest">
                         <Code className="w-3 h-3" /> Documentation
                     </div>
                     <h1 className="text-4xl md:text-5xl font-black text-text-primary tracking-tight">
@@ -195,7 +195,7 @@ export default function AuditWidget() {
                         <div className="grid md:grid-cols-2 gap-8">
                             {/* Category: Layout & Sizing */}
                             <div className="bg-white p-6 rounded-2xl border-2 border-slate-100 space-y-4">
-                                <h4 className="font-bold uppercase text-xs tracking-widest text-brand">Layout & Sizing</h4>
+                                <h4 className="font-bold uppercase text-sm tracking-widest text-brand">Layout & Sizing</h4>
                                 <ul className="space-y-2 text-sm">
                                     <li className="flex justify-between border-b border-slate-50 pb-2">
                                         <code className="text-indigo-600">layout</code>
@@ -218,7 +218,7 @@ export default function AuditWidget() {
 
                             {/* Category: Colors */}
                             <div className="bg-white p-6 rounded-2xl border-2 border-slate-100 space-y-4">
-                                <h4 className="font-bold uppercase text-xs tracking-widest text-brand">Colors & Branding</h4>
+                                <h4 className="font-bold uppercase text-sm tracking-widest text-brand">Colors & Branding</h4>
                                 <ul className="space-y-2 text-sm">
                                     <li className="flex justify-between border-b border-slate-50 pb-2">
                                         <code className="text-indigo-600">primaryColor</code>
@@ -241,7 +241,7 @@ export default function AuditWidget() {
 
                             {/* Category: Loading State */}
                             <div className="bg-white p-6 rounded-2xl border-2 border-slate-100 space-y-4">
-                                <h4 className="font-bold uppercase text-xs tracking-widest text-brand">Loading States</h4>
+                                <h4 className="font-bold uppercase text-sm tracking-widest text-brand">Loading States</h4>
                                 <ul className="space-y-2 text-sm">
                                     <li className="flex justify-between border-b border-slate-50 pb-2">
                                         <code className="text-indigo-600">loadingText</code>
@@ -260,7 +260,7 @@ export default function AuditWidget() {
 
                             {/* Category: Success View */}
                             <div className="bg-white p-6 rounded-2xl border-2 border-slate-100 space-y-4">
-                                <h4 className="font-bold uppercase text-xs tracking-widest text-brand">Success Screen</h4>
+                                <h4 className="font-bold uppercase text-sm tracking-widest text-brand">Success Screen</h4>
                                 <ul className="space-y-2 text-sm">
                                     <li className="flex justify-between border-b border-slate-50 pb-2">
                                         <code className="text-indigo-600">successTitle</code>

@@ -41,7 +41,7 @@ export const ReportPDFTemplate: React.FC<ReportPDFTemplateProps> = ({ report, ur
                         <h1 className="text-[24px] font-extrabold text-slate-900 tracking-tight">
                             <span className="text-[#CE8100]">UX Assessment of</span> <span className="text-[#24312D]">{cleanUrl}</span>
                         </h1>
-                        <p className="text-[#7F7F7F] text-xs font-medium mt-0.5">Here’s your AI-powered UX diagnosis with actionable recommendations</p>
+                        <p className="text-[#7F7F7F] text-sm font-medium mt-0.5">Here’s your AI-powered UX diagnosis with actionable recommendations</p>
                     </div>
                 </div>
 
@@ -58,7 +58,7 @@ export const ReportPDFTemplate: React.FC<ReportPDFTemplateProps> = ({ report, ur
 
                 {primaryScreenshotSrc ? (
                     <div className="self-stretch w-full mb-4 break-inside-avoid pdf-item">
-                        <div className="text-xs font-bold uppercase text-slate-500 mb-3 text-left">
+                        <div className="text-sm font-bold uppercase text-slate-500 mb-3 text-left">
                             ANALYZED PAGE VIEW
                         </div>
                         <div className="rounded-xl border border-slate-200 bg-slate-50 shadow-sm relative overflow-hidden" style={{ height: '360px' }}>

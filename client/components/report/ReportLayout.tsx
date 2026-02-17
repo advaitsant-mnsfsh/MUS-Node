@@ -53,7 +53,7 @@ const UrlPillGroup = ({ inputs, fallbackUrl, label }: { inputs?: AuditInput[], f
             {/* Main URL Pill */}
             <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-white border-2 border-black shadow-neo-sm text-sm font-bold text-black min-w-0" title={mainUrlDisplay}>
                 <SiteLogo domain={mainUrlDisplay} size="tiny" className="shadow-none border-none p-0 rounded-none bg-transparent" />
-                <span className="truncate max-w-[120px] md:max-w-[200px] font-mono text-xs tracking-tight">
+                <span className="truncate max-w-[120px] md:max-w-[200px] font-mono text-sm tracking-tight">
                     {mainUrlDisplay}
                 </span>
             </div>
@@ -61,18 +61,18 @@ const UrlPillGroup = ({ inputs, fallbackUrl, label }: { inputs?: AuditInput[], f
             {/* "+N More" with Tooltip */}
             {moreCount > 0 && (
                 <div className="relative group cursor-pointer ml-1">
-                    <span className="text-xs font-black text-brand hover:underline decoration-2 underline-offset-2 whitespace-nowrap">
+                    <span className="text-sm font-black text-brand hover:underline decoration-2 underline-offset-2 whitespace-nowrap">
                         +{moreCount} more
                     </span>
 
                     {/* Tooltip Dropdown */}
                     <div className="absolute top-full left-0 mt-2 w-64 bg-white border-2 border-black shadow-neo p-3 z-50 hidden group-hover:block animate-in fade-in slide-in-from-top-1">
-                        <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2 border-b border-slate-200 pb-1">
+                        <div className="text-sm font-bold text-slate-400 uppercase tracking-wider mb-2 border-b border-slate-200 pb-1">
                             Analyzed URLs ({inputs?.length})
                         </div>
                         <div className="flex flex-col gap-2 max-h-48 overflow-y-auto">
                             {inputs?.slice(1).map((input, idx) => (
-                                <div key={idx} className="flex items-center gap-2 text-xs font-medium text-slate-700 truncate">
+                                <div key={idx} className="flex items-center gap-2 text-sm font-medium text-slate-700 truncate">
                                     <div className="w-1.5 h-1.5 bg-black rounded-full shrink-0"></div>
                                     <span className="truncate font-mono">
                                         {input.url?.replace(/^https?:\/\//, '').replace(/\/$/, '') || input.file?.name}
@@ -144,7 +144,7 @@ export const ReportLayout: React.FC<ReportLayoutProps> = ({
                                 <div className="h-8 w-0.5 bg-black mx-2 hidden sm:block"></div>
 
                                 <div className="flex flex-wrap items-center gap-2 md:gap-3 min-w-0">
-                                    <span className="text-black font-black text-xs uppercase tracking-wider hidden lg:inline">Audit Report for</span>
+                                    <span className="text-black font-black text-sm uppercase tracking-wider hidden lg:inline">Audit Report for</span>
 
                                     {/* URL DISPLAY LOGIC */}
                                     {auditMode === 'competitor' ? (
@@ -154,7 +154,7 @@ export const ReportLayout: React.FC<ReportLayoutProps> = ({
                                             <UrlPillGroup inputs={primaryInputs} fallbackUrl={url} />
 
                                             {/* VS Separator */}
-                                            <span className="font-black text-slate-400 text-xs px-1">vs</span>
+                                            <span className="font-black text-slate-400 text-sm px-1">vs</span>
 
                                             {/* Competitor Group */}
                                             <UrlPillGroup inputs={competitorInputs} fallbackUrl="Competitor Site" />

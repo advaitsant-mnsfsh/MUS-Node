@@ -97,21 +97,21 @@ export const APIKeysPage: React.FC = () => {
 
     return (
         <>
-            <div className="min-h-[calc(100vh-5rem)] bg-[#FFF9F0] font-['DM_Sans']">
+            <div className="min-h-[calc(100vh-5rem)] bg-page-bg font-['DM_Sans']">
                 <div className="max-w-5xl mx-auto px-4 py-12">
                     {/* Header */}
                     <div className="mb-8">
-                        <h1 className="text-4xl font-bold text-[#1E293B] mb-2">Widget API Keys</h1>
-                        <p className="text-[#64748B]">Embed UX audits directly on your website</p>
+                        <h1 className="text-4xl font-bold text-text-primary mb-2">Widget API Keys</h1>
+                        <p className="text-text-secondary">Embed UX audits directly on your website</p>
                     </div>
 
                     {/* Widget Info Section - Always visible */}
-                    <div className="bg-white rounded-lg border-2 border-[#000000] shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] p-8 mb-8">
+                    <div className="bg-white rounded-lg border-2 border-border-main shadow-neo-hover p-8 mb-8">
                         <div className="flex items-start gap-3 mb-6">
-                            <Code className="w-6 h-6 text-[#6366F1] flex-shrink-0 mt-1" />
+                            <Code className="w-6 h-6 text-brand shrink-0 mt-1" />
                             <div>
-                                <h2 className="text-2xl font-bold text-[#1E293B] mb-2">How to Use the Widget</h2>
-                                <p className="text-[#64748B] mb-4">
+                                <h2 className="text-2xl font-bold text-text-primary mb-2">How to Use the Widget</h2>
+                                <p className="text-text-secondary mb-4">
                                     Add our widget to your website and let your users run UX audits without leaving your platform.
                                 </p>
                             </div>
@@ -120,24 +120,24 @@ export const APIKeysPage: React.FC = () => {
                         {/* Steps */}
                         <div className="space-y-6">
                             <div className="flex gap-4">
-                                <div className="flex-shrink-0 w-8 h-8 bg-[#6366F1] text-white rounded-full flex items-center justify-center font-bold">
+                                <div className="shrink-0 w-8 h-8 bg-brand text-white rounded-full flex items-center justify-center font-bold">
                                     1
                                 </div>
                                 <div>
-                                    <h3 className="font-bold text-[#1E293B] mb-2">Generate your API Key</h3>
-                                    <p className="text-[#64748B] text-sm">
+                                    <h3 className="font-bold text-text-primary mb-2">Generate your API Key</h3>
+                                    <p className="text-text-secondary text-sm">
                                         Click the "Generate API Key" button below to create your unique widget key.
                                     </p>
                                 </div>
                             </div>
 
                             <div className="flex gap-4">
-                                <div className="flex-shrink-0 w-8 h-8 bg-[#6366F1] text-white rounded-full flex items-center justify-center font-bold">
+                                <div className="shrink-0 w-8 h-8 bg-brand text-white rounded-full flex items-center justify-center font-bold">
                                     2
                                 </div>
                                 <div>
-                                    <h3 className="font-bold text-[#1E293B] mb-2">Add the Widget Script</h3>
-                                    <p className="text-[#64748B] text-sm mb-3">
+                                    <h3 className="font-bold text-text-primary mb-2">Add the Widget Script</h3>
+                                    <p className="text-text-secondary text-sm mb-3">
                                         Copy this code snippet and paste it into your website's HTML, just before the closing &lt;/body&gt; tag:
                                     </p>
                                     <div className="bg-slate-900 text-slate-100 p-4 rounded-lg font-mono text-sm overflow-x-auto">
@@ -152,12 +152,12 @@ export const APIKeysPage: React.FC = () => {
                             </div>
 
                             <div className="flex gap-4">
-                                <div className="flex-shrink-0 w-8 h-8 bg-[#6366F1] text-white rounded-full flex items-center justify-center font-bold">
+                                <div className="shrink-0 w-8 h-8 bg-brand text-white rounded-full flex items-center justify-center font-bold">
                                     3
                                 </div>
                                 <div>
-                                    <h3 className="font-bold text-[#1E293B] mb-2">Start Receiving Audits</h3>
-                                    <p className="text-[#64748B] text-sm">
+                                    <h3 className="font-bold text-text-primary mb-2">Start Receiving Audits</h3>
+                                    <p className="text-text-secondary text-sm">
                                         The widget will appear on your site and users can trigger UX audits. All results will be available in your dashboard.
                                     </p>
                                 </div>
@@ -166,25 +166,25 @@ export const APIKeysPage: React.FC = () => {
 
                         {/* Features List */}
                         <div className="mt-8 pt-8 border-t-2 border-slate-200">
-                            <h3 className="font-bold text-[#1E293B] mb-4 flex items-center gap-2">
-                                <Zap className="w-5 h-5 text-[#6366F1]" />
+                            <h3 className="font-bold text-text-primary mb-4 flex items-center gap-2">
+                                <Zap className="w-5 h-5 text-brand" />
                                 Widget Features
                             </h3>
-                            <ul className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm text-[#64748B]">
+                            <ul className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm text-text-secondary">
                                 <li className="flex items-start gap-2">
-                                    <span className="text-[#6366F1] mt-1">✓</span>
+                                    <span className="text-brand mt-1">✓</span>
                                     <span>Customizable button placement</span>
                                 </li>
                                 <li className="flex items-start gap-2">
-                                    <span className="text-[#6366F1] mt-1">✓</span>
+                                    <span className="text-brand mt-1">✓</span>
                                     <span>Real-time audit results</span>
                                 </li>
                                 <li className="flex items-start gap-2">
-                                    <span className="text-[#6366F1] mt-1">✓</span>
+                                    <span className="text-brand mt-1">✓</span>
                                     <span>Branded UI matching your site</span>
                                 </li>
                                 <li className="flex items-start gap-2">
-                                    <span className="text-[#6366F1] mt-1">✓</span>
+                                    <span className="text-brand mt-1">✓</span>
                                     <span>Analytics and tracking</span>
                                 </li>
                             </ul>
@@ -195,12 +195,12 @@ export const APIKeysPage: React.FC = () => {
                     <div className="mb-8 text-center">
                         <button
                             onClick={handleGenerateKey}
-                            className="px-8 py-4 bg-[#6366F1] text-white font-bold text-lg rounded-lg hover:bg-[#4F46E5] transition-colors border-2 border-[#000000] shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] active:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]"
+                            className="px-8 py-4 bg-brand text-white font-bold text-lg rounded-lg hover:bg-brand-hover transition-colors border-2 border-border-main shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] active:shadow-neo-hover"
                         >
                             {user ? '+ Generate New API Key' : '🔐 Login to Generate API Key'}
                         </button>
                         {!user && (
-                            <p className="mt-3 text-sm text-[#64748B]">
+                            <p className="mt-3 text-sm text-text-secondary">
                                 You need to be logged in to generate API keys
                             </p>
                         )}
@@ -209,12 +209,12 @@ export const APIKeysPage: React.FC = () => {
                     {/* API Keys Section - Only visible when logged in */}
                     {user && (
                         <>
-                            <h2 className="text-2xl font-bold text-[#1E293B] mb-4">Your API Keys</h2>
+                            <h2 className="text-2xl font-bold text-text-primary mb-4">Your API Keys</h2>
 
                             {/* Info Banner */}
                             <div className="bg-blue-50 border-2 border-blue-200 rounded-lg p-4 mb-6">
                                 <div className="flex items-start gap-3">
-                                    <Key className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
+                                    <Key className="w-5 h-5 text-blue-600 shrink-0 mt-0.5" />
                                     <div>
                                         <h3 className="font-semibold text-blue-900 mb-1">Keep your API keys secure</h3>
                                         <p className="text-sm text-blue-800">
@@ -227,17 +227,17 @@ export const APIKeysPage: React.FC = () => {
                             {/* Loading State */}
                             {isLoading && (
                                 <div className="text-center py-12">
-                                    <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-[#6366F1]"></div>
-                                    <p className="mt-4 text-[#64748B]">Loading API keys...</p>
+                                    <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-brand"></div>
+                                    <p className="mt-4 text-text-secondary">Loading API keys...</p>
                                 </div>
                             )}
 
                             {/* Empty State */}
                             {!isLoading && apiKeys.length === 0 && (
-                                <div className="text-center py-12 bg-white rounded-lg border-2 border-[#000000] shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">
-                                    <Key className="w-12 h-12 text-[#64748B] mx-auto mb-4" />
-                                    <h3 className="text-lg font-bold text-[#1E293B] mb-2">No API Keys Yet</h3>
-                                    <p className="text-[#64748B] mb-4">Generate your first API key to get started with the widget.</p>
+                                <div className="text-center py-12 bg-white rounded-lg border-2 border-border-main shadow-neo-hover">
+                                    <Key className="w-12 h-12 text-text-secondary mx-auto mb-4" />
+                                    <h3 className="text-lg font-bold text-text-primary mb-2">No API Keys Yet</h3>
+                                    <p className="text-text-secondary mb-4">Generate your first API key to get started with the widget.</p>
                                 </div>
                             )}
 
@@ -247,17 +247,17 @@ export const APIKeysPage: React.FC = () => {
                                     {apiKeys.map((apiKey) => (
                                         <div
                                             key={apiKey.id}
-                                            className={`bg-white rounded-lg border-2 border-[#000000] shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] p-6 ${!apiKey.isActive ? 'opacity-60' : ''}`}
+                                            className={`bg-white rounded-lg border-2 border-border-main shadow-neo-hover p-6 ${!apiKey.isActive ? 'opacity-60' : ''}`}
                                         >
                                             <div className="mb-4 flex items-start justify-between">
                                                 <div>
-                                                    <h3 className="text-lg font-bold text-[#1E293B] mb-1">
+                                                    <h3 className="text-lg font-bold text-text-primary mb-1">
                                                         {apiKey.name}
                                                         {!apiKey.isActive && (
-                                                            <span className="ml-2 text-xs bg-red-100 text-red-800 px-2 py-1 rounded">Inactive</span>
+                                                            <span className="ml-2 text-sm bg-red-100 text-red-800 px-2 py-1 rounded">Inactive</span>
                                                         )}
                                                     </h3>
-                                                    <p className="text-sm text-[#64748B]">
+                                                    <p className="text-sm text-text-secondary">
                                                         Created {new Date(apiKey.createdAt).toLocaleDateString()}
                                                         {apiKey.lastUsedAt && ` • Last used ${new Date(apiKey.lastUsedAt).toLocaleDateString()}`}
                                                         {apiKey.usageCount > 0 && ` • ${apiKey.usageCount} uses`}
@@ -280,17 +280,17 @@ export const APIKeysPage: React.FC = () => {
                                                 </div>
                                                 <button
                                                     onClick={() => toggleKeyVisibility(apiKey.id)}
-                                                    className="p-3 bg-white border-2 border-[#000000] rounded-lg hover:bg-slate-50 transition-colors"
+                                                    className="p-3 bg-white border-2 border-border-main rounded-lg hover:bg-slate-50 transition-colors"
                                                 >
                                                     {showKey[apiKey.id] ? (
-                                                        <EyeOff className="w-5 h-5 text-[#64748B]" />
+                                                        <EyeOff className="w-5 h-5 text-text-secondary" />
                                                     ) : (
-                                                        <Eye className="w-5 h-5 text-[#64748B]" />
+                                                        <Eye className="w-5 h-5 text-text-secondary" />
                                                     )}
                                                 </button>
                                                 <button
                                                     onClick={() => copyToClipboard(apiKey.key)}
-                                                    className="p-3 bg-[#1E293B] text-white border-2 border-[#000000] rounded-lg hover:bg-[#374151] transition-colors"
+                                                    className="p-3 bg-text-primary text-white border-2 border-border-main rounded-lg hover:bg-[#374151] transition-colors"
                                                 >
                                                     <Copy className="w-5 h-5" />
                                                 </button>
@@ -303,17 +303,17 @@ export const APIKeysPage: React.FC = () => {
                     )}
 
                     {/* Documentation Link */}
-                    <div className="mt-8 p-6 bg-white rounded-lg border-2 border-[#000000] shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">
+                    <div className="mt-8 p-6 bg-white rounded-lg border-2 border-border-main shadow-neo-hover">
                         <div className="flex items-start gap-3">
-                            <BookOpen className="w-6 h-6 text-[#6366F1] flex-shrink-0" />
+                            <BookOpen className="w-6 h-6 text-brand shrink-0" />
                             <div className="flex-1">
-                                <h3 className="text-lg font-bold text-[#1E293B] mb-2">Need Help?</h3>
-                                <p className="text-[#64748B] mb-4">
+                                <h3 className="text-lg font-bold text-text-primary mb-2">Need Help?</h3>
+                                <p className="text-text-secondary mb-4">
                                     Check out our comprehensive widget documentation for advanced configuration options and troubleshooting.
                                 </p>
                                 <a
                                     href="/docs/widget"
-                                    className="inline-block px-6 py-2 bg-[#1E293B] text-white font-semibold rounded-lg hover:bg-[#374151] transition-colors"
+                                    className="inline-block px-6 py-2 bg-text-primary text-white font-semibold rounded-lg hover:bg-[#374151] transition-colors"
                                 >
                                     View Widget Docs
                                 </a>
@@ -326,9 +326,9 @@ export const APIKeysPage: React.FC = () => {
             {/* Name Modal */}
             {showNameModal && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
-                    <div className="bg-white rounded-lg border-2 border-[#000000] shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] p-6 max-w-md w-full">
-                        <h3 className="text-xl font-bold text-[#1E293B] mb-4">Name Your API Key</h3>
-                        <p className="text-sm text-[#64748B] mb-4">
+                    <div className="bg-white rounded-lg border-2 border-border-main shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] p-6 max-w-md w-full">
+                        <h3 className="text-xl font-bold text-text-primary mb-4">Name Your API Key</h3>
+                        <p className="text-sm text-text-secondary mb-4">
                             Give your API key a descriptive name to help you identify it later.
                         </p>
                         <input
@@ -336,21 +336,21 @@ export const APIKeysPage: React.FC = () => {
                             value={newKeyName}
                             onChange={(e) => setNewKeyName(e.target.value)}
                             placeholder="e.g., Production Widget Key"
-                            className="w-full px-4 py-2 border-2 border-slate-300 rounded-lg focus:ring-2 focus:ring-[#6366F1] focus:border-[#6366F1] outline-none mb-4"
+                            className="w-full px-4 py-2 border-2 border-slate-300 rounded-lg focus:ring-2 focus:ring-brand focus:border-brand outline-none mb-4"
                             autoFocus
                             onKeyPress={(e) => e.key === 'Enter' && handleConfirmGenerate()}
                         />
                         <div className="flex gap-3">
                             <button
                                 onClick={() => setShowNameModal(false)}
-                                className="flex-1 px-4 py-2 bg-white text-[#1E293B] border-2 border-[#000000] font-semibold rounded-lg hover:bg-slate-50 transition-colors"
+                                className="flex-1 px-4 py-2 bg-white text-text-primary border-2 border-border-main font-semibold rounded-lg hover:bg-slate-50 transition-colors"
                             >
                                 Cancel
                             </button>
                             <button
                                 onClick={handleConfirmGenerate}
                                 disabled={isGenerating || !newKeyName.trim()}
-                                className="flex-1 px-4 py-2 bg-[#6366F1] text-white font-semibold rounded-lg hover:bg-[#4F46E5] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                className="flex-1 px-4 py-2 bg-brand text-white font-semibold rounded-lg hover:bg-brand-hover transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                             >
                                 {isGenerating ? 'Generating...' : 'Generate'}
                             </button>

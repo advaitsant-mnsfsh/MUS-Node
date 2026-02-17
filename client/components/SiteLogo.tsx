@@ -50,7 +50,7 @@ export default function SiteLogo({ domain, size = 'medium', className = '' }: Si
     };
 
     const fontSize = {
-        tiny: 'text-xs',
+        tiny: 'text-sm',
         small: 'text-2xl',
         medium: 'text-3xl',
         large: 'text-5xl'

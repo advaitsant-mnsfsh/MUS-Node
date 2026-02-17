@@ -97,7 +97,7 @@ export const ScoreRing: React.FC<ScoreRingProps> = ({
         style={{ color, top: '40%', transform: 'translateY(-50%)' }}
       >
         <span className="font-bold text-xl leading-none">{scoreText}</span>
-        <span className="text-xs font-semibold leading-none">/10</span>
+        <span className="text-sm font-semibold leading-none">/10</span>
       </div>
     </div>
   );

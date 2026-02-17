@@ -116,7 +116,7 @@ export const ChangePasswordModal: React.FC<ChangePasswordModalProps> = ({ isOpen
     };
 
     return (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-md p-4 animate-in fade-in duration-200">
+        <div className="fixed inset-0 z-100 flex items-center justify-center bg-black/60 backdrop-blur-md p-4 animate-in fade-in duration-200 font-['DM_Sans']">
             <div className="bg-white border-2 border-black shadow-neo w-full max-w-md overflow-hidden animate-in zoom-in-95 duration-200 relative">
 
                 {/* Header */}
@@ -153,7 +153,7 @@ export const ChangePasswordModal: React.FC<ChangePasswordModalProps> = ({ isOpen
                         /* OTP Flow */
                         <div className="space-y-6">
                             {error && (
-                                <div className="p-3 bg-red-50 border-2 border-red-600/20 text-red-600 text-xs font-bold flex items-center gap-2">
+                                <div className="p-3 bg-red-50 border-2 border-red-600/20 text-red-600 text-sm font-bold flex items-center gap-2">
                                     <AlertCircle className="w-4 h-4 shrink-0" />
                                     {error}
                                 </div>
@@ -163,7 +163,7 @@ export const ChangePasswordModal: React.FC<ChangePasswordModalProps> = ({ isOpen
                                 <div className="space-y-6">
                                     <div className="p-4 bg-slate-50 border-l-4 border-black font-medium">
                                         <p className="text-sm text-slate-900 font-bold mb-1">Forgot your password?</p>
-                                        <p className="text-xs text-slate-600 leading-relaxed">
+                                        <p className="text-sm text-slate-600 leading-relaxed">
                                             We'll send a security code to <span className="text-black font-bold">{user?.email}</span>.
                                         </p>
                                     </div>
@@ -241,7 +241,7 @@ export const ChangePasswordModal: React.FC<ChangePasswordModalProps> = ({ isOpen
                         /* Regular password change form */
                         <form onSubmit={handleSubmit} className="space-y-6">
                             {error && (
-                                <div className="p-3 bg-red-50 border-2 border-red-600/20 text-red-600 text-xs font-bold flex items-center gap-2">
+                                <div className="p-3 bg-red-50 border-2 border-red-600/20 text-red-600 text-sm font-bold flex items-center gap-2">
                                     <AlertCircle className="w-4 h-4 shrink-0" />
                                     {error}
                                 </div>
@@ -255,7 +255,7 @@ export const ChangePasswordModal: React.FC<ChangePasswordModalProps> = ({ isOpen
                                     <button
                                         type="button"
                                         onClick={() => setIsOtpFlow(true)}
-                                        className="text-xs font-bold text-slate-500 hover:text-black hover:underline underline-offset-4"
+                                        className="text-sm font-bold text-slate-500 hover:text-black hover:underline underline-offset-4"
                                     >
                                         Forgot?
                                     </button>

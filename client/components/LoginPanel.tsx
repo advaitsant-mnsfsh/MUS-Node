@@ -178,8 +178,8 @@ export const LoginPanel: React.FC<LoginPanelProps> = ({ auditId, hideTitle = fal
             {/* Form */}
             {isLoginMode ? (
                 // LOGIN FORM
-                <form onSubmit={handleLogin} className="flex-grow flex flex-col">
-                    <div className="space-y-6 flex-grow">
+                <form onSubmit={handleLogin} className="grow flex flex-col">
+                    <div className="space-y-6 grow">
                         <div>
                             <label htmlFor="email" className="block text-sm font-semibold text-slate-900 mb-2 text-left">
                                 Business Email <span className="text-red-600">*</span>
@@ -213,7 +213,7 @@ export const LoginPanel: React.FC<LoginPanelProps> = ({ auditId, hideTitle = fal
                     <button
                         type="submit"
                         disabled={isLoading}
-                        className="w-full h-14 mt-8 bg-black hover:bg-slate-800 text-white border-2 border-black rounded-none shadow-neo hover:shadow-neo-hover active:translate-x-[1px] active:translate-y-[1px] active:shadow-none text-base font-bold transition-all disabled:opacity-70 disabled:cursor-not-allowed flex justify-center items-center gap-2"
+                        className="w-full h-14 mt-8 bg-black hover:bg-slate-800 text-white border-2 border-black rounded-none shadow-neo hover:shadow-neo-hover active:translate-x-px active:translate-y-px active:shadow-none text-base font-bold transition-all disabled:opacity-70 disabled:cursor-not-allowed flex justify-center items-center gap-2"
                     >
                         {isLoading ? (
                             <>
@@ -241,8 +241,8 @@ export const LoginPanel: React.FC<LoginPanelProps> = ({ auditId, hideTitle = fal
             ) : (
                 // SIGNUP FORM
                 step === 'email' ? (
-                    <form onSubmit={handleSignupStep1} className="flex-grow flex flex-col">
-                        <div className="space-y-6 flex-grow">
+                    <form onSubmit={handleSignupStep1} className="grow flex flex-col">
+                        <div className="space-y-6 grow">
                             <div>
                                 <label htmlFor="email" className="block text-sm font-semibold text-slate-900 mb-2 text-left">
                                     Business Email <span className="text-red-600">*</span>
@@ -259,14 +259,14 @@ export const LoginPanel: React.FC<LoginPanelProps> = ({ auditId, hideTitle = fal
                                         if (emailError) setEmailError(null);
                                     }}
                                 />
-                                {emailError && <p className="text-red-600 text-xs mt-1 font-bold">{emailError}</p>}
+                                {emailError && <p className="text-red-600 text-sm mt-1 font-bold">{emailError}</p>}
                             </div>
                         </div>
 
                         <button
                             type="submit"
                             disabled={isLoading}
-                            className="w-full h-14 mt-8 bg-black hover:bg-slate-800 text-white border-2 border-black rounded-none shadow-neo hover:shadow-neo-hover active:translate-x-[1px] active:translate-y-[1px] active:shadow-none text-base font-bold transition-all disabled:opacity-70 disabled:cursor-not-allowed flex justify-center items-center gap-2"
+                            className="w-full h-14 mt-8 bg-black hover:bg-slate-800 text-white border-2 border-black rounded-none shadow-neo hover:shadow-neo-hover active:translate-x-px active:translate-y-px active:shadow-none text-base font-bold transition-all disabled:opacity-70 disabled:cursor-not-allowed flex justify-center items-center gap-2"
                         >
                             {isLoading ? (
                                 <>
@@ -277,7 +277,7 @@ export const LoginPanel: React.FC<LoginPanelProps> = ({ auditId, hideTitle = fal
                                 'Continue to Signup'
                             )}
                         </button>
-                        <p className="text-center text-xs text-slate-500 mt-6 font-medium">
+                        <p className="text-center text-sm text-slate-500 mt-6 font-medium">
                             Step 1 of 3: Verification
                         </p>
 
@@ -296,8 +296,8 @@ export const LoginPanel: React.FC<LoginPanelProps> = ({ auditId, hideTitle = fal
                     </form>
                 ) : step === 'otp' ? (
                     // OTP VERIFICATION STEP
-                    <form onSubmit={handleSignupStep2} className="flex-grow flex flex-col">
-                        <div className="flex-grow flex flex-col justify-center">
+                    <form onSubmit={handleSignupStep2} className="grow flex flex-col">
+                        <div className="grow flex flex-col justify-center">
                             <div className="text-center">
                                 <label htmlFor="otp" className="block text-sm font-semibold text-slate-900 mb-4">
                                     Enter Verification Code sent to <span className="text-brand">{email}</span>
@@ -313,7 +313,7 @@ export const LoginPanel: React.FC<LoginPanelProps> = ({ auditId, hideTitle = fal
                                     value={otp}
                                     onChange={(e) => setOtp(e.target.value)}
                                 />
-                                <p className="mt-2 text-xs text-slate-500">
+                                <p className="mt-2 text-sm text-slate-500">
                                     Can't find it? Check your spam folder.
                                 </p>
                             </div>
@@ -322,7 +322,7 @@ export const LoginPanel: React.FC<LoginPanelProps> = ({ auditId, hideTitle = fal
                         <button
                             type="submit"
                             disabled={isLoading}
-                            className="w-full h-14 mt-6 bg-black hover:bg-slate-800 text-white border-2 border-black rounded-none shadow-neo hover:shadow-neo-hover active:translate-x-[1px] active:translate-y-[1px] active:shadow-none text-base font-bold transition-all disabled:opacity-70 disabled:cursor-not-allowed flex justify-center items-center gap-2"
+                            className="w-full h-14 mt-6 bg-black hover:bg-slate-800 text-white border-2 border-black rounded-none shadow-neo hover:shadow-neo-hover active:translate-x-px active:translate-y-px active:shadow-none text-base font-bold transition-all disabled:opacity-70 disabled:cursor-not-allowed flex justify-center items-center gap-2"
                         >
                             {isLoading ? (
                                 <>
@@ -333,7 +333,7 @@ export const LoginPanel: React.FC<LoginPanelProps> = ({ auditId, hideTitle = fal
                                 'Verify Code'
                             )}
                         </button>
-                        <p className="text-center text-xs text-slate-500 mt-4 font-medium">
+                        <p className="text-center text-sm text-slate-500 mt-4 font-medium">
                             Step 2 of 3: Security Check
                         </p>
                         <button
@@ -346,11 +346,11 @@ export const LoginPanel: React.FC<LoginPanelProps> = ({ auditId, hideTitle = fal
                     </form>
                 ) : (
                     // STEP 3: PASSWORD SETUP
-                    <form onSubmit={handleSignupStep3} className="flex-grow flex flex-col">
-                        <div className="space-y-6 flex-grow">
+                    <form onSubmit={handleSignupStep3} className="grow flex flex-col">
+                        <div className="space-y-6 grow">
                             <div className="p-4 bg-slate-50 border-l-4 border-brand mb-4">
                                 <p className="text-sm font-bold text-slate-800">Welcome to MUS!</p>
-                                <p className="text-xs text-slate-600">Final step: Secure your account with a password.</p>
+                                <p className="text-sm text-slate-600">Final step: Secure your account with a password.</p>
                             </div>
                             <div>
                                 <label htmlFor="pass" className="block text-sm font-semibold text-slate-900 mb-2 text-left">
@@ -387,7 +387,7 @@ export const LoginPanel: React.FC<LoginPanelProps> = ({ auditId, hideTitle = fal
                         <button
                             type="submit"
                             disabled={isLoading}
-                            className="w-full h-14 mt-8 bg-black hover:bg-slate-800 text-white border-2 border-black rounded-none shadow-neo hover:shadow-neo-hover active:translate-x-[1px] active:translate-y-[1px] active:shadow-none text-base font-bold transition-all disabled:opacity-70 disabled:cursor-not-allowed flex justify-center items-center gap-2"
+                            className="w-full h-14 mt-8 bg-black hover:bg-slate-800 text-white border-2 border-black rounded-none shadow-neo hover:shadow-neo-hover active:translate-x-px active:translate-y-px active:shadow-none text-base font-bold transition-all disabled:opacity-70 disabled:cursor-not-allowed flex justify-center items-center gap-2"
                         >
                             {isLoading ? (
                                 <>
@@ -398,7 +398,7 @@ export const LoginPanel: React.FC<LoginPanelProps> = ({ auditId, hideTitle = fal
                                 'Complete Registration'
                             )}
                         </button>
-                        <p className="text-center text-xs text-slate-500 mt-6 font-medium">
+                        <p className="text-center text-sm text-slate-500 mt-6 font-medium">
                             Step 3 of 3: Finalize
                         </p>
                     </form>

@@ -12,7 +12,7 @@ export const Footer: React.FC = () => {
                 <div className="flex flex-col items-center text-center space-y-4">
                     {/* Badge: A PRODUCT BY */}
                     <div className="inline-block bg-[#FEF08A] border-2 border-black px-3 py-1 shadow-neo-hover transform -rotate-2 hover:rotate-0 transition-transform duration-200 cursor-default">
-                        <p className="text-xs font-black tracking-widest text-black uppercase">A Product By</p>
+                        <p className="text-sm font-black tracking-widest text-black uppercase">A Product By</p>
                     </div>
 
                     {/* Name */}
