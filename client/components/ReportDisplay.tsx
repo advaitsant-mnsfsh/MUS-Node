@@ -198,7 +198,7 @@ export function ReportDisplay({
             <div className="bg-white rounded-2xl shadow-xl border border-slate-200 overflow-hidden">
                 {pdfError && <div className="m-4 p-4 bg-red-100 border border-red-400 text-red-700 rounded-lg">{pdfError}</div>}
 
-                {!isReportReady && <div className="p-8"><SkeletonLoader className="h-[100vh] w-full" /></div>}
+                {!isReportReady && <div className="p-8"><SkeletonLoader className="h-screen w-full" /></div>}
 
                 {isReportReady && (
                     <>
