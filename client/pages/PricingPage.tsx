@@ -76,7 +76,7 @@ export const PricingPage: React.FC = () => {
                                 }`}
                         >
                             {plan.highlighted && (
-                                <div className="inline-block px-3 py-1 bg-brand text-white text-xs font-bold rounded-full mb-4">
+                                <div className="inline-block px-3 py-1 bg-brand text-white text-sm font-bold rounded-full mb-4">
                                     MOST POPULAR
                                 </div>
                             )}

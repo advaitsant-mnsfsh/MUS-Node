@@ -171,7 +171,7 @@ export const URLInputForm: React.FC<URLInputFormProps> = ({
 
                 {/* PRIMARY QUEUE */}
                 <div className="bg-white p-5 rounded-lg border-2 border-border-main hover:shadow-neo">
-                  <h3 className="text-xs font-bold text-text-primary mb-4 flex items-center gap-2">
+                  <h3 className="text-sm font-bold text-text-primary mb-4 flex items-center gap-2">
                     <Globe className="w-4 h-4 text-brand" /> Your Website
                   </h3>
                   <CompetitorMultiInput
@@ -188,7 +188,7 @@ export const URLInputForm: React.FC<URLInputFormProps> = ({
 
                 {/* COMPETITOR QUEUE */}
                 <div className="bg-white p-5 rounded-lg border-2 border-border-main hover:shadow-neo">
-                  <h3 className="text-xs font-bold text-text-primary mb-4 flex items-center gap-2">
+                  <h3 className="text-sm font-bold text-text-primary mb-4 flex items-center gap-2">
                     <Swords className="w-4 h-4 text-[#EF4444]" /> Competitor Website
                   </h3>
                   <CompetitorMultiInput
@@ -214,7 +214,7 @@ export const URLInputForm: React.FC<URLInputFormProps> = ({
                   errorMsg={errorMsg}
                   setErrorMsg={setErrorMsg}
                 />
-                <p className="text-xs text-text-secondary">
+                <p className="text-sm text-text-secondary">
                   Alternatively, you can add screenshots of your website as well
                 </p>
               </div>
@@ -222,7 +222,7 @@ export const URLInputForm: React.FC<URLInputFormProps> = ({
 
             {/* Validation Error Message (Global) */}
             {errorMsg && !competitorMode && (
-              <div className="flex items-center gap-2 text-red-600 text-xs font-medium animate-in fade-in slide-in-from-top-1 px-1">
+              <div className="flex items-center gap-2 text-red-600 text-sm font-medium animate-in fade-in slide-in-from-top-1 px-1">
                 <X className="w-3 h-3" />
                 {errorMsg}
               </div>
@@ -235,7 +235,7 @@ export const URLInputForm: React.FC<URLInputFormProps> = ({
               <div className="flex flex-col gap-3">
 
                 {/* Compact Logo Option - Single Line */}
-                <div className="text-center text-xs text-text-secondary min-h-[40px] flex items-center justify-center">
+                <div className="text-center text-sm text-text-secondary min-h-[40px] flex items-center justify-center">
                   {!whiteLabelLogo ? (
                     <>
                       Want a shareable report with custom branding? {' '}

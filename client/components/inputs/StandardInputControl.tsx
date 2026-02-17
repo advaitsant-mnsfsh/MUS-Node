@@ -153,7 +153,7 @@ export const StandardInputControl: React.FC<StandardInputControlProps> = ({
 
             {/* Validation Error Message (Specific) */}
             {errorMsg && (
-                <div className="flex items-center gap-2 text-red-600 text-xs font-medium animate-in fade-in slide-in-from-top-1 px-1">
+                <div className="flex items-center gap-2 text-red-600 text-sm font-medium animate-in fade-in slide-in-from-top-1 px-1">
                     <X className="w-3 h-3" />
                     {errorMsg}
                 </div>
@@ -163,7 +163,7 @@ export const StandardInputControl: React.FC<StandardInputControlProps> = ({
             {queue.length > 0 && (
                 <div className="flex flex-wrap gap-2">
                     {queue.map((item: any, index: number) => (
-                        <div key={item.id} className="flex items-center gap-1.5 px-2.5 py-1.5 bg-white border-2 border-border-main rounded-md text-xs font-bold text-text-primary shadow-neo group/pill">
+                        <div key={item.id} className="flex items-center gap-1.5 px-2.5 py-1.5 bg-white border-2 border-border-main rounded-md text-sm font-bold text-text-primary shadow-neo group/pill">
                             {item.type === 'url' ? <Globe className="w-3 h-3 text-brand" /> : <FileImage className="w-3 h-3 text-[#10B981]" />}
 
                             {editingId === item.id ? (
@@ -179,6 +179,7 @@ export const StandardInputControl: React.FC<StandardInputControlProps> = ({
                                         }}
                                         className="w-[120px] bg-slate-50 border-b border-brand outline-none px-1 py-0"
                                     />
+                                    <p className="text-sm text-slate-400 mt-4 font-mono bg-slate-100 px-2 py-1 rounded">PNG, JPG (MAX. 5MB)</p>
                                     <button type="button" onClick={() => saveName(item.id)} className="text-brand hover:text-brand-hover">
                                         <Check className="w-3 h-3" />
                                     </button>

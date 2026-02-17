@@ -10,7 +10,7 @@ import {
 } from 'lucide-react';
 
 // --- TYPOGRAPHY CONSTANTS ---
-const LABEL_STYLE = "text-xs font-black text-black uppercase tracking-wider mb-2 flex items-center gap-2";
+const LABEL_STYLE = "text-sm font-black text-black uppercase tracking-wider mb-2 flex items-center gap-2";
 const BODY_STYLE = "text-sm leading-relaxed text-slate-800 font-medium";
 
 // Helper: Format ParameterName (camelCase -> Spaced Title)
@@ -88,7 +88,7 @@ const EditorialCard = ({
                     {/* Audit Type Pill (Text Only) - MOVED HERE */}
                     {auditType && (
                         <div className="flex items-center">
-                            <span className="text-xs font-black text-black whitespace-nowrap uppercase tracking-wide">
+                            <span className="text-sm font-black text-black whitespace-nowrap uppercase tracking-wide">
                                 {auditType}
                             </span>
                         </div>
@@ -102,7 +102,7 @@ const EditorialCard = ({
                 {/* Right: Confidence, Score & Toggle */}
                 <div className="flex items-center gap-3 shrink-0">
                     {/* Confidence Badge - Text Only, No Background */}
-                    <span className={`inline-block w-fit text-[10px] font-bold uppercase tracking-wider ${getConfidenceColor(confidence)}`}>
+                    <span className={`inline-block w-fit text-xs font-bold uppercase tracking-wider ${getConfidenceColor(confidence)}`}>
                         {confidence} Confidence
                     </span>
 
@@ -182,7 +182,7 @@ const EditorialCard = ({
                             <ul className="space-y-2 mt-2">
                                 {citations.map((cite, i) => (
                                     <li key={i} className="flex gap-3 text-sm text-slate-600 italic group">
-                                        <span className="not-italic font-black text-black bg-white border border-black w-5 h-5 flex items-center justify-center text-xs shadow-neo select-none">{i + 1}</span>
+                                        <span className="not-italic font-black text-black bg-white border border-black w-5 h-5 flex items-center justify-center text-sm shadow-neo select-none">{i + 1}</span>
                                         "{cite}"
                                     </li>
                                 ))}

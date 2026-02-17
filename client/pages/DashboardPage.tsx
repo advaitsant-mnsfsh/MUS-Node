@@ -108,7 +108,7 @@ const DashboardPage: React.FC = () => {
             failed: 'Failed'
         };
         return (
-            <span className={`px-3 py-1 text-xs font-semibold rounded-full border ${styles[status as keyof typeof styles]}`}>
+            <span className={`px-3 py-1 text-sm font-semibold rounded-full border ${styles[status as keyof typeof styles]}`}>
                 {labels[status as keyof typeof labels]}
             </span>
         );
@@ -251,7 +251,7 @@ const DashboardPage: React.FC = () => {
                                                     target="_blank"
                                                     rel="noopener noreferrer"
                                                     onClick={(e) => e.stopPropagation()}
-                                                    className="flex-shrink-0 text-slate-400 hover:text-brand transition-colors"
+                                                    className="shrink-0 text-slate-400 hover:text-brand transition-colors"
                                                     title="Visit Website"
                                                 >
                                                     <ExternalLink className="w-4 h-4 ml-0.5" />
@@ -269,7 +269,7 @@ const DashboardPage: React.FC = () => {
                                                     target="_blank"
                                                     rel="noopener noreferrer"
                                                     onClick={(e) => e.stopPropagation()}
-                                                    className="flex-shrink-0 text-slate-400 hover:text-brand transition-colors"
+                                                    className="shrink-0 text-slate-400 hover:text-brand transition-colors"
                                                     title="Visit Competitor"
                                                 >
                                                     <ExternalLink className="w-4 h-4 ml-0.5" />
@@ -279,14 +279,14 @@ const DashboardPage: React.FC = () => {
                                     </div>
 
                                     <div className="mb-4 space-y-1 opacity-60">
-                                        <p className="text-xs text-text-secondary truncate">{audit.url}</p>
+                                        <p className="text-sm text-text-secondary truncate">{audit.url}</p>
                                         {audit.competitorUrl && (
-                                            <p className="text-xs text-text-secondary truncate">{audit.competitorUrl}</p>
+                                            <p className="text-sm text-text-secondary truncate">{audit.competitorUrl}</p>
                                         )}
                                     </div>
 
                                     <div className="mt-auto pt-4 border-t border-slate-100 flex items-center justify-between">
-                                        <div className="flex items-center text-xs text-text-secondary font-medium uppercase tracking-wider">
+                                        <div className="flex items-center text-sm text-text-secondary font-medium uppercase tracking-wider">
                                             <Calendar className="w-3.5 h-3.5 mr-1.5 opacity-50" />
                                             {new Date(audit.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
                                         </div>
