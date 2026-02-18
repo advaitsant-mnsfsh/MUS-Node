@@ -28,14 +28,14 @@ export const performScrape = async (url: string, isMobile: boolean, isFirstPage:
             // CRITICAL SAFEGUARD: 
             // In Production (Railway/Vercel), launching local Chrome usually kills the container (OOM).
             // We MUST use a remote browser (Browserless, etc.) unless explicitly overridden.
-            if (process.env.NODE_ENV === 'production' && process.env.ALLOW_LOCAL_CHROME !== 'true') {
+            if ((process.env.NODE_ENV === 'production' && process.env.ALLOW_LOCAL_CHROME !== 'true') || process.env.DISABLE_LOCAL_FALLBACK === 'true') {
                 const hasValue = !!browserEndpoint;
                 const valueLength = browserEndpoint?.length || 0;
                 const errorDetail = hasValue
                     ? `Remote browser connection failed (Endpoint present but unreachable). Error: ${lastConnectError}. Check your PUPPETEER_BROWSER_ENDPOINT.`
                     : `PUPPETEER_BROWSER_ENDPOINT is missing or empty.`;
 
-                throw new Error(`Scraper Error: Local Puppeteer launch blocked in Production to prevent container OOM. ${errorDetail} (Endpoint found: ${hasValue}, Len: ${valueLength})`);
+                throw new Error(`Scraper Error: Local Puppeteer launch blocked to prevent container OOM (DISABLE_LOCAL_FALLBACK=${process.env.DISABLE_LOCAL_FALLBACK}). ${errorDetail} (Endpoint found: ${hasValue}, Len: ${valueLength})`);
             }
 
             console.log('[SCRAPE] Launching local browser...');

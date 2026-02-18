@@ -211,7 +211,17 @@ export class JobProcessor {
 
                     const startTime = Date.now();
                     try {
-                        const result = await performAnalysis(apiKeys, mode, analysisContext);
+                        // Create a timeout promise (240 seconds)
+                        const timeoutPromise = new Promise((_, reject) => {
+                            setTimeout(() => reject(new Error(`Analysis timed out after 240 seconds`)), 240000);
+                        });
+
+                        // Race the actual analysis against the timeout
+                        const result: any = await Promise.race([
+                            performAnalysis(apiKeys, mode, analysisContext),
+                            timeoutPromise
+                        ]);
+
                         const duration = Date.now() - startTime;
                         console.log(`[JobProcessor] ✅ EXPERT OK: ${mode} (${duration}ms)`);
 
@@ -221,7 +231,12 @@ export class JobProcessor {
                         return result;
                     } catch (error: any) {
                         console.error(`[JobProcessor] ❌ EXPERT FAILED: ${mode}:`, error.message);
-                        await JobService.updateProgress(jobId, `⚠️ ${expertName} failed: ${error.message.substring(0, 100)}`);
+
+                        const errorMessage = error.message.includes('timed out')
+                            ? `TIMEOUT: ${expertName} took too long (>240s).`
+                            : `⚠️ ${expertName} failed: ${error.message.substring(0, 100)}`;
+
+                        await JobService.updateProgress(jobId, errorMessage);
                         return { key: mode, data: null, error: error.message };
                     }
                 };
