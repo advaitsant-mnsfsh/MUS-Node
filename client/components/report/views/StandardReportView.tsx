@@ -30,8 +30,7 @@ export const StandardReportView: React.FC<StandardReportViewProps> = ({ report, 
         "Product Audit expert": product,
         "Visual Audit expert": visual,
         "Strategy Audit expert": strategy,
-        "Accessibility Audit expert": accessibility,
-        Top5ContextualIssues
+        "Accessibility Audit expert": accessibility
     } = report;
 
     const [activeTab, setActiveTab] = useState('All Parameters');

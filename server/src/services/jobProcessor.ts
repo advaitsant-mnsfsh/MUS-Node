@@ -211,7 +211,17 @@ export class JobProcessor {
 
                     const startTime = Date.now();
                     try {
-                        const result = await performAnalysis(apiKeys, mode, analysisContext);
+                        // Create a timeout promise (240 seconds)
+                        const timeoutPromise = new Promise((_, reject) => {
+                            setTimeout(() => reject(new Error(`Analysis timed out after 240 seconds`)), 240000);
+                        });
+
+                        // Race the actual analysis against the timeout
+                        const result: any = await Promise.race([
+                            performAnalysis(apiKeys, mode, analysisContext),
+                            timeoutPromise
+                        ]);
+
                         const duration = Date.now() - startTime;
                         console.log(`[JobProcessor] ✅ EXPERT OK: ${mode} (${duration}ms)`);
 
@@ -221,13 +231,18 @@ export class JobProcessor {
                         return result;
                     } catch (error: any) {
                         console.error(`[JobProcessor] ❌ EXPERT FAILED: ${mode}:`, error.message);
-                        await JobService.updateProgress(jobId, `⚠️ ${expertName} failed: ${error.message.substring(0, 100)}`);
+                        // Explicitly log if it was a timeout
+                        const errorMessage = error.message.includes('timed out')
+                            ? `TIMEOUT: ${expertName} took too long (>240s).`
+                            : `⚠️ ${expertName} failed: ${error.message.substring(0, 100)}`;
+
+                        await JobService.updateProgress(jobId, errorMessage);
                         return { key: mode, data: null, error: error.message };
                     }
                 };
 
                 const results: any[] = [];
-                const concurrency = 3;
+                const concurrency = 4; // User requested concurrency boost
 
                 for (let i = 0; i < modes.length; i += concurrency) {
                     const batch = modes.slice(i, i + concurrency);
@@ -241,52 +256,14 @@ export class JobProcessor {
                 });
 
                 // --- D. CONTEXTUAL IMPACT ANALYSIS ---
+                // [DISABLED] Per user request (Feature Removal) - 2026-02-18
+                console.log(`[JobProcessor] Skipping Contextual Impact Analysis (Disabled).`);
+
+                /* Feature Removed for Reliability/Speed
                 if (report['Strategy Audit expert']) {
-                    console.log(`[JobProcessor] Running Contextual Impact Analysis...`);
-                    await JobService.updateProgress(jobId, 'Analyzing issues for strategic impact...');
-                    try {
-                        const allIssues = [
-                            ...report['UX Audit expert']?.Top5CriticalUXIssues?.map((i: any) => ({ ...i, source: 'UX Audit' })) || [],
-                            ...report['Product Audit expert']?.Top5CriticalProductIssues?.map((i: any) => ({ ...i, source: 'Product Audit' })) || [],
-                            ...report['Visual Audit expert']?.Top5CriticalVisualIssues?.map((i: any) => ({ ...i, source: 'Visual Design' })) || [],
-                            ...report['Accessibility Audit expert']?.Top5CriticalAccessibilityIssues?.map((i: any) => ({ ...i, source: 'Accessibility Audit' })) || []
-                        ];
-
-                        if (allIssues.length > 0) {
-                            const strategyAudit = report['Strategy Audit expert'];
-                            const strategyContext = `
-- Website Purpose: ${strategyAudit.PurposeAnalysis?.PrimaryPurpose?.join(', ')}
-- Key Objectives: ${strategyAudit.PurposeAnalysis?.KeyObjectives}
-- Target Audience: ${strategyAudit.TargetAudience?.Primary?.join(', ')} (${strategyAudit.TargetAudience?.DemographicsPsychographics})
-- Website Type: ${strategyAudit.TargetAudience?.WebsiteType}`;
-
-                            const systemInstruction = `You are a Chief Product Strategist. Your task is to analyze a list of critical issues identified for a website, considering the site's strategic context. Re-rank these issues based on which ones have the most significant impact on the website's primary purpose and ability to serve its target audience.`;
-                            const contents = `
-### Strategic Context ###
-${strategyContext}
-### Your Task ###
-1. Review the strategic context and each issue in the provided JSON list.
-2. Select the TOP 5 issues that represent the most critical barriers to the website's success.
-3. Return ONLY these 5 issues, sorted from most to least critical.
-4. You MUST return the issues in the exact same JSON structure as they were provided, including all original fields.
-5. EXCLUSION CRITERIA: Do NOT select any issues primarily related to "Screen Reader Compatibility", "Missing Alt Text", or "Missing Form Labels".
-### Critical Issues List (JSON) ###
-${JSON.stringify(allIssues, null, 2)}`;
-
-                            const schemas = getSchemas();
-                            const rankResult = await callApi([primaryKey], systemInstruction, contents, {
-                                type: Type.ARRAY,
-                                items: schemas.criticalIssueSchema
-                            });
-
-                            report['Top5ContextualIssues'] = rankResult;
-                            await JobService.updateProgress(jobId, '✓ Contextual Analysis complete.', { 'Top5ContextualIssues': rankResult });
-                        }
-                    } catch (e: any) {
-                        console.error("[JobProcessor] Contextual Rank Failed:", e);
-                        await JobService.updateProgress(jobId, '\u26a0\ufe0f Contextual Analysis skipped due to error.');
-                    }
+                     ... (Code Removed) ...
                 }
+                */
             }
 
             // --- FINALIZATION ---

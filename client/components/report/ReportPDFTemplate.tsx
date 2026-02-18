@@ -14,7 +14,7 @@ interface ReportPDFTemplateProps {
 }
 
 export const ReportPDFTemplate: React.FC<ReportPDFTemplateProps> = ({ report, url, screenshots }) => {
-    const { "UX Audit expert": ux, "Product Audit expert": product, "Visual Audit expert": visual, "Strategy Audit expert": strategy, Top5ContextualIssues } = report;
+    const { "UX Audit expert": ux, "Product Audit expert": product, "Visual Audit expert": visual, "Strategy Audit expert": strategy } = report;
     const primaryScreenshot = screenshots.find(s => !s.isMobile);
     const primaryScreenshotSrc = primaryScreenshot?.url || (primaryScreenshot?.data ? `data:image/jpeg;base64,${primaryScreenshot.data}` : undefined);
 
@@ -25,9 +25,7 @@ export const ReportPDFTemplate: React.FC<ReportPDFTemplateProps> = ({ report, ur
     }, [ux, product, visual]);
 
     // Safety check for Top 5 Issues
-    const safeIssues = Top5ContextualIssues || [];
-    const firstIssue = safeIssues[0];
-    const remainingIssues = safeIssues.slice(1, 5);
+
 
     const cleanUrl = url.replace(/^https?:\/\//, '').replace(/\/$/, '');
 
@@ -83,20 +81,7 @@ export const ReportPDFTemplate: React.FC<ReportPDFTemplateProps> = ({ report, ur
             ) : (
                 <>
                     {/* --- TOP 5 ISSUES --- */}
-                    <div className="flex flex-col self-stretch gap-2">
-                        <div className="flex flex-col gap-2 break-inside-avoid pdf-item">
-                            <h2 className="text-[20px] font-bold text-slate-900 mb-6 pdf-section-title">
-                                Top 5 Impactful Issues
-                            </h2>
-                            {firstIssue ? <CriticalIssueCard issue={firstIssue} isPdf={true} /> : <SkeletonLoader className="h-40 w-full" />}
-                        </div>
 
-                        {remainingIssues.map((issue, index) => (
-                            <div key={index} className="break-inside-avoid pdf-item">
-                                <CriticalIssueCard issue={issue} isPdf={true} />
-                            </div>
-                        ))}
-                    </div>
 
                     {/* --- STRATEGY (Force Break) --- */}
                     {strategy && (

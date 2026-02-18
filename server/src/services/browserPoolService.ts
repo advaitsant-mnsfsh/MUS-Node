@@ -12,8 +12,9 @@ export class BrowserPoolService {
     static async acquireKey(): Promise<{ key: number; endpoint: string } | null> {
         // 1. Fetch available endpoints from DB and Env
         const secrets = await SecretService.getSecrets();
-        const browser1 = secrets['BROWSER_WS_ENDPOINT_PRIMARY'] || process.env.BROWSER_WS_ENDPOINT_PRIMARY;
-        const browser2 = secrets['BROWSER_WS_ENDPOINT_COMPETITOR'] || process.env.BROWSER_WS_ENDPOINT_COMPETITOR;
+
+        // Dynamic Concurrency Limit (Default 2)
+        const maxConcurrent = Number(secrets['MAX_CONCURRENT_JOBS'] || process.env.MAX_CONCURRENT_JOBS) || 2;
 
         // 2. Find which keys are currently "processing" in the queue
         const activeJobs = await db.select({
@@ -24,15 +25,23 @@ export class BrowserPoolService {
 
         const busyKeys = new Set(activeJobs.map(j => j.browser_key));
 
-        if (!busyKeys.has(1) && browser1) {
-            return { key: 1, endpoint: browser1 };
+        // 3. Iterate through available slots [1...maxConcurrent]
+        for (let i = 1; i <= maxConcurrent; i++) {
+            if (!busyKeys.has(i)) {
+                // Determine which endpoint to use for this key
+                // Priority: Specific key -> Global DB Secret -> Global Env Var
+                let endpoint = secrets[`BROWSER_WS_ENDPOINT_${i}`]
+                    || process.env[`BROWSER_WS_ENDPOINT_${i}`]
+                    || secrets['PUPPETEER_BROWSER_ENDPOINT']
+                    || process.env.PUPPETEER_BROWSER_ENDPOINT;
+
+                if (endpoint) {
+                    return { key: i, endpoint };
+                }
+            }
         }
 
-        if (!busyKeys.has(2) && browser2) {
-            return { key: 2, endpoint: browser2 };
-        }
-
-        return null; // Both busy or not configured
+        return null; // All keys busy or not configured
     }
 
     /**
