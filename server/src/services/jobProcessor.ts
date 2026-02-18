@@ -1,4 +1,5 @@
 import { db } from '../lib/db.js';
+// Reliability Fixes: Concurrency=4, Timeout=240s, Retry=3
 import { SecretService } from './secretService.js';
 import { JobService } from './jobService.js';
 import { Type } from '@google/genai';
