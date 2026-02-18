@@ -85,11 +85,11 @@ export const URLInputForm: React.FC<URLInputFormProps> = ({
       }
 
       if (finalPrimaryQueue.length === 0) {
-        setPrimaryError("Please add at least one URL or screenshot.");
+        setPrimaryError("Please add your website's URL or a screenshot.");
         return;
       }
       if (finalCompetitorQueue.length === 0) {
-        setCompetitorError("Please add at least one URL or screenshot.");
+        setCompetitorError("Please add the competitor's URL or a screenshot.");
         return;
       }
 

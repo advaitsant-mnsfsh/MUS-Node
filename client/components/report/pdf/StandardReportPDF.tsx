@@ -729,17 +729,7 @@ export const StandardReportPDF: React.FC<StandardReportPDFProps> = ({ report, ur
                         <Text style={styles.sectionSubtitle}>WCAG Compliance · Critical Issues · Best Practices</Text>
                     </View>
 
-                    {/* Critical Issues First */}
-                    {accessibility.Top5CriticalAccessibilityIssues && accessibility.Top5CriticalAccessibilityIssues.length > 0 && (
-                        <View style={{ marginBottom: 16 }}>
-                            <Text style={[styles.paramTitle, { marginBottom: 10, color: COLORS.redSolid }]}>
-                                ⚠ Critical Compliance Failures
-                            </Text>
-                            {accessibility.Top5CriticalAccessibilityIssues.map((issue, idx) => (
-                                <CriticalIssueCard key={idx} issue={issue} />
-                            ))}
-                        </View>
-                    )}
+
 
                     {/* All Parameters */}
                     {accessibilityParams.length > 0 && (

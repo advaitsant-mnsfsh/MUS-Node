@@ -97,7 +97,6 @@ export interface AccessibilityCompliance {
 
 export interface UXAudit {
   CategoryScore: number;
-  Top5CriticalUXIssues: CriticalIssue[];
   UsabilityHeuristics: UsabilityHeuristics;
   UsabilityMetrics: UsabilityMetrics;
   AccessibilityCompliance: AccessibilityCompliance;
@@ -122,7 +121,6 @@ export interface ConversionOptimization {
 
 export interface ProductAudit {
   CategoryScore: number;
-  Top5CriticalProductIssues: CriticalIssue[];
   MarketFitAndBusinessAlignment: MarketFitAndBusinessAlignment;
   UserRetentionAndEngagement: UserRetentionAndEngagement;
   ConversionOptimization: ConversionOptimization;
@@ -147,7 +145,6 @@ export interface ResponsivenessAndAdaptability {
 
 export interface VisualAudit {
   CategoryScore: number;
-  Top5CriticalVisualIssues: CriticalIssue[];
   UIConsistencyAndBranding: UIConsistencyAndBranding;
   AestheticAndEmotionalAppeal: AestheticAndEmotionalAppeal;
   ResponsivenessAndAdaptability: ResponsivenessAndAdaptability;
@@ -190,10 +187,10 @@ export interface StrategyAudit {
   TargetAudience: TargetAudienceData;
   UserPersonas: UserPersona[];
   // Scored Sections
-  TrustSignalsAndCredibility: { SectionScore: number; Parameters: ScoredParameter[] };
-  TargetAudienceAlignment: { SectionScore: number; Parameters: ScoredParameter[] };
-  CompetitiveDifferentiation: { SectionScore: number; Parameters: ScoredParameter[] };
-  CallToActionStrategy: { SectionScore: number; Parameters: ScoredParameter[] };
+  TrustSignalsAndCredibility?: { SectionScore: number; Parameters: ScoredParameter[] };
+  TargetAudienceAlignment?: { SectionScore: number; Parameters: ScoredParameter[] };
+  CompetitiveDifferentiation?: { SectionScore: number; Parameters: ScoredParameter[] };
+  CallToActionStrategy?: { SectionScore: number; Parameters: ScoredParameter[] };
 }
 // Accessibility Audit Types
 export interface AutomatedCompliance {
@@ -215,7 +212,6 @@ export interface AccessibilityAudit {
   CategoryScore: number;
   ComplianceScore?: number;
   RiskLevel?: 'Critical' | 'High' | 'Moderate' | 'Low';
-  Top5CriticalAccessibilityIssues: CriticalIssue[];
   AutomatedCompliance: AutomatedCompliance;
   ScreenReaderExperience: ScreenReaderExperience;
   VisualAccessibility: VisualAccessibility;

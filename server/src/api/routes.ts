@@ -3,6 +3,7 @@ import { db } from '../lib/db.js';
 import { auditJobs, leads } from '../db/schema.js';
 import { validateApiKey, optionalUserAuth, AuthenticatedRequest } from '../middleware/apiAuth.js';
 import { QueueService } from '../services/queueService.js';
+import { WorkerService } from '../services/workerService.js';
 import { eq, and, isNull, sql, asc, desc, inArray, or } from 'drizzle-orm';
 import crypto from 'crypto';
 import fs from 'fs';
@@ -109,9 +110,13 @@ router.post('/audit', optionalUserAuth, async (req: express.Request, res: expres
         }
 
         // 2. Add to Queue
-        const { position, queueType } = await QueueService.addJobToQueue(jobId, payload, authReq.user?.id);
+        const { queueId, position, queueType } = await QueueService.addJobToQueue(jobId, payload, authReq.user?.id);
 
         console.log(`[API] 🚀 New Audit Queued: ${jobId} (Position: ${position}, Mode: ${req.body.auditMode || 'standard'})`);
+
+        // 3. Proactively trigger worker on THIS instance to claim it immediately
+        // This ensures local testing uses local code and prints logs locally.
+        WorkerService.triggerJob(queueId, jobId);
 
         res.status(202).json({
             success: true,
@@ -152,7 +157,7 @@ router.get('/audit', async (req: express.Request, res: express.Response) => {
 
         let lastStatus = '';
         const sentDataKeys = new Set<string>();
-        const maxTime = 300000; // 5 minutes timeout
+        const maxTime = 900000; // 15 minutes timeout
         const startTime = Date.now();
 
         const checkStatus = async () => {
@@ -479,6 +484,34 @@ router.get('/admin/audits', async (req: express.Request, res: express.Response) 
         res.json({ success: true, audits: jobsWithLogs });
     } catch (e: any) {
         console.error("[Admin] Audit fetch error:", e);
+        res.status(500).json({ error: e.message });
+    }
+});
+
+// GET /api/v1/admin/audits/:jobId/report
+router.get('/admin/audits/:jobId/report', async (req, res) => {
+    const adminPass = req.headers['x-admin-password'];
+    if (adminPass !== '0000') {
+        return res.status(401).json({ error: 'Unauthorized admin access' });
+    }
+
+    const { jobId } = req.params;
+
+    try {
+        const [job] = await db.select({
+            report_data: auditJobs.report_data
+        })
+            .from(auditJobs)
+            .where(eq(auditJobs.id, jobId))
+            .limit(1);
+
+        if (!job) {
+            return res.status(404).json({ error: 'Job not found' });
+        }
+
+        res.json({ success: true, report_data: job.report_data });
+    } catch (e: any) {
+        console.error("[Admin] Report fetch error:", e);
         res.status(500).json({ error: e.message });
     }
 });

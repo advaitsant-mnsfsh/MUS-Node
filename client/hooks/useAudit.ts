@@ -41,10 +41,35 @@ export const useAudit = () => {
     const [whiteLabelLogo, setWhiteLabelLogo] = useState<string | null>(null);
     const [queuePosition, setQueuePosition] = useState<number>(0);
     const [queueType, setQueueType] = useState<string>('realtime');
+    const [isLongWait, setIsLongWait] = useState<boolean>(false);
 
     const lastLogTime = useRef<number>(Date.now());
+    const waitTimerRef = useRef<NodeJS.Timeout | null>(null);
 
     // --- EFFECTS ---
+
+    // 0. Long Wait Timer (210 seconds)
+    useEffect(() => {
+        if (isLoading && !isLongWait) {
+            // Start or Resume timer
+            const startTime = Date.now();
+            waitTimerRef.current = setInterval(() => {
+                const elapsed = (Date.now() - startTime) / 1000;
+                if (elapsed >= 210) { // 3.5 minutes
+                    console.log(`[useAudit] ⏳ Long wait detected (${Math.round(elapsed)}s). Triggering opt-in UI.`);
+                    setIsLongWait(true);
+                    if (waitTimerRef.current) clearInterval(waitTimerRef.current);
+                }
+            }, 5000);
+        } else if (!isLoading) {
+            if (waitTimerRef.current) clearInterval(waitTimerRef.current);
+            setIsLongWait(false);
+        }
+
+        return () => {
+            if (waitTimerRef.current) clearInterval(waitTimerRef.current);
+        };
+    }, [isLoading, isLongWait]);
 
     // 0. Sync with Global State on Load/Recovery
     useEffect(() => {
@@ -463,6 +488,7 @@ export const useAudit = () => {
         user,
         queuePosition,
         queueType,
+        isLongWait,
         handleAnalyze,
         handleRunNewAudit,
         handleEmailOptIn,

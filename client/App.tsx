@@ -56,6 +56,7 @@ const App: React.FC = () => {
         auditId,
         user,
         queuePosition,
+        isLongWait,
         handleAnalyze,
         handleRunNewAudit,
         handleEmailOptIn,
@@ -157,6 +158,7 @@ const App: React.FC = () => {
                     inputs={reportInputs}
                     isError={!!error}
                     queuePosition={queuePosition}
+                    isLongWait={isLongWait}
                     onEmailOptIn={handleEmailOptIn}
                     user={user}
                 />

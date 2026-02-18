@@ -321,18 +321,15 @@ export const StandardReportView: React.FC<StandardReportViewProps> = ({ report, 
                         </div>
 
                         {/* Section 4: Accessibility */}
-                        {accessibility && (
-                            <div id="section-accessibility-audit" className="scroll-mt-40">
-                                <div className="flex items-center gap-3 mb-6">
-                                    <div className="p-2 bg-blue-500 text-white border-2 border-black shadow-neo">
-                                        <Accessibility className="w-5 h-5" />
-                                    </div>
-                                    <h3 className="text-2xl font-black text-black uppercase">Accessibility</h3>
+                        <div id="section-accessibility-audit" className="scroll-mt-40">
+                            <div className="flex items-center gap-3 mb-6">
+                                <div className="p-2 bg-blue-500 text-white border-2 border-black shadow-neo">
+                                    <Accessibility className="w-5 h-5" />
                                 </div>
-                                <AccessibilityAuditView data={accessibility} />
+                                <h3 className="text-2xl font-black text-black uppercase">Accessibility</h3>
                             </div>
-                        )}
-
+                            <AccessibilityAuditView data={accessibility} />
+                        </div>
                     </div>
                 </div>
             </div>

@@ -1,0 +1,1062 @@
+{
+  "url": "https://mitwpu.edu.in/",
+  "screenshots": [
+    {
+      "url": "/uploads/d383058f-9efe-4ee7-8b2f-accb7be5e2eb/desktop.jpg",
+      "data": "",
+      "isMobile": false
+    },
+    {
+      "url": "/uploads/d383058f-9efe-4ee7-8b2f-accb7be5e2eb/mobile.jpg",
+      "data": "",
+      "isMobile": true
+    }
+  ],
+  "UX Audit expert": {
+    "CategoryScore": 6.5,
+    "UsabilityMetrics": {
+      "Parameters": [
+        {
+          "Score": 8,
+          "Analysis": "The website's conventional layout, clear navigation structure, and familiar UI patterns contribute to high learnability. New users can easily understand how to navigate and find information without extensive instruction. The use of standard university website elements further aids quick comprehension.",
+          "Citations": [
+            "Standard header navigation with clear labels",
+            "Organized content sections with distinct headings",
+            "Common carousel UI for 'Latest Happenings' and 'Student Testimonials'"
+          ],
+          "Confidence": "high",
+          "KeyFinding": "The website is highly learnable due to its conventional structure and clear content organization.",
+          "ImpactLevel": "low",
+          "ParameterName": "Learnability",
+          "Recommendation": "Maintain the current intuitive design and conventional UI patterns to ensure continued ease of learning for new visitors. Regularly test with first-time users to ensure the initial learning experience remains smooth."
+        },
+        {
+          "Score": 5,
+          "Analysis": "While key calls to action like 'Apply Now' are prominent, the reported 'Total Blocking Time' of 2,710 ms and 'Time to Interactive' of 10.4 s significantly hinder user efficiency. Slow interactivity means users experience delays before they can meaningfully interact with the page, leading to frustration and potential abandonment. This poor performance outweighs the ease of finding primary actions.",
+          "Citations": [
+            "Core Web Vitals: 'Total Blocking Time: 2,710 ms'",
+            "Core Web Vitals: 'Time to Interactive: 10.4 s'",
+            "Prominent 'Apply Now' and 'Download Brochure' buttons"
+          ],
+          "Confidence": "high",
+          "KeyFinding": "Poor loading and interactivity performance severely impede user efficiency despite clear calls to action.",
+          "ImpactLevel": "high",
+          "ParameterName": "Efficiency",
+          "Recommendation": "Prioritize performance optimization to drastically reduce Total Blocking Time and Time to Interactive. Focus on optimizing JavaScript execution, deferring non-critical resources, and improving server response times to ensure a snappier user experience."
+        },
+        {
+          "Score": 8,
+          "Analysis": "The consistent visual identity, predictable navigation patterns, and well-organized content contribute to good memorability. Users are likely to easily recall how to navigate the site and find previously accessed information upon return visits. The distinct branding and recurring elements aid recognition.",
+          "Citations": [
+            "Consistent branding and logo placement in header",
+            "Repetitive use of red and white color scheme",
+            "Standard layout for major content blocks throughout the homepage"
+          ],
+          "Confidence": "high",
+          "KeyFinding": "Consistent design and clear structure ensure the website is memorable for returning users.",
+          "ImpactLevel": "low",
+          "ParameterName": "Memorability",
+          "Recommendation": "Maintain the consistent design and information architecture that promotes memorability. Continue to use a strong and consistent brand identity throughout the site to reinforce user recall."
+        },
+        {
+          "Score": 6,
+          "Analysis": "Inferred user satisfaction is likely moderate; while the site offers a clean aesthetic and organized information, the significant performance issues (high TBT and TTI) could create frustration. Visual appeal and ease of navigation might be overshadowed by slow interactions, leading to a less satisfying overall experience. The clear content and calls to action are positive contributors.",
+          "Citations": [
+            "Clean visual layout and organized content sections",
+            "Core Web Vitals: 'Total Blocking Time: 2,710 ms'",
+            "Core Web Vitals: 'Time to Interactive: 10.4 s'"
+          ],
+          "Confidence": "medium",
+          "KeyFinding": "While aesthetically pleasing, performance bottlenecks likely detract from overall user satisfaction.",
+          "ImpactLevel": "medium",
+          "ParameterName": "Satisfaction",
+          "Recommendation": "Address the underlying performance issues to enhance the interactive experience, which is crucial for user satisfaction. Conduct user surveys or gather feedback to directly gauge user satisfaction and identify specific pain points."
+        },
+        {
+          "Score": 4,
+          "Analysis": "The 'Automated Accessibility Check' indicating 8 form inputs without corresponding labels presents a high potential for user errors, especially during data entry. Users may misunderstand the purpose of fields, leading to incorrect submissions or frustration. This significantly increases the likelihood of users encountering errors. Without interactive data, a precise error rate cannot be determined.",
+          "Citations": [
+            "Automated Accessibility Check: 'Form inputs without corresponding labels: 8'"
+          ],
+          "Confidence": "medium",
+          "KeyFinding": "Unlabeled form inputs are a critical flaw, significantly increasing the potential for user errors and frustrating the form completion process.",
+          "ImpactLevel": "high",
+          "ParameterName": "Error Rate",
+          "Recommendation": "Immediately implement clear and descriptive labels for all form inputs to guide users accurately. Utilize inline validation and provide real-time feedback to help users correct errors before submission, thereby significantly reducing the error rate."
+        }
+      ],
+      "SectionScore": 6.2
+    },
+    "UsabilityHeuristics": {
+      "Parameters": [
+        {
+          "Score": 5,
+          "Analysis": "The website lacks clear indicators for ongoing processes or the current location within the site structure. Users do not receive immediate feedback on whether an action is processing or which page they are currently viewing after navigation. This can lead to uncertainty and a fragmented user experience.",
+          "Citations": [
+            "Observed navigation bar without current page highlighting",
+            "Carousels (e.g., 'Latest Happenings', 'Student Testimonials') without explicit loading states"
+          ],
+          "Confidence": "high",
+          "KeyFinding": "Lack of clear system status indicators creates user uncertainty during interactions and navigation.",
+          "ImpactLevel": "medium",
+          "ParameterName": "Visibility of System Status",
+          "Recommendation": "Implement prominent loading indicators for dynamic content and clear visual cues (e.g., active state highlighting) in the navigation menu to indicate the current page. Provide feedback for user interactions such as form submissions or content filters."
+        },
+        {
+          "Score": 8,
+          "Analysis": "The website uses familiar language and concepts that align well with user expectations for an educational institution. Terminology like 'Programmes' and 'Admissions' are standard and easily understood. The visual design of icons in sections such as 'Why choose MIT-WPU' generally represents their associated concepts effectively.",
+          "Citations": [
+            "Navigation labels: 'Programmes', 'Admissions', 'Life@MIT-WPU'",
+            "Icons in 'Why choose MIT-WPU' section (e.g., globe for 'Interdisciplinary University', book for 'Learning Beyond Classrooms')"
+          ],
+          "Confidence": "high",
+          "KeyFinding": "The website effectively uses real-world metaphors and language, enhancing user understanding and reducing cognitive load.",
+          "ImpactLevel": "low",
+          "ParameterName": "Match between System and the Real World",
+          "Recommendation": "Maintain the current use of clear, conventional language and intuitive visual metaphors across the website. Regularly review content and iconography to ensure continued relevance and clarity for the target audience."
+        },
+        {
+          "Score": 7,
+          "Analysis": "The website offers a clear navigation structure and mechanisms like carousel arrows, providing users with basic control over their browsing experience. The presence of a floating 'Admission Enquiry' button and 'Chat with Student' offers immediate support. However, explicit undo or redo functionality, particularly for complex interactions, is not evident.",
+          "Citations": [
+            "Top navigation menu",
+            "Carousel navigation arrows (e.g., 'Latest Happenings', 'Student Testimonials')",
+            "Prominent 'Apply Now' button",
+            "Floating 'Chat with Student' button"
+          ],
+          "Confidence": "high",
+          "KeyFinding": "Users have adequate navigation control, but opportunities exist to enhance freedom through more advanced undo/redo capabilities.",
+          "ImpactLevel": "medium",
+          "ParameterName": "User Control and Freedom",
+          "Recommendation": "While current navigation and direct support are good, consider implementing 'undo' options for multi-step processes or form fills where applicable. Ensure all modal windows and pop-ups have clear and easily discoverable close mechanisms."
+        },
+        {
+          "Score": 7,
+          "Analysis": "The website generally maintains visual and functional consistency across the visible sections, adhering to brand guidelines with a consistent color palette and typography. Navigation elements are placed in predictable locations (header and footer). However, minor inconsistencies in button styling or information density can be observed.",
+          "Citations": [
+            "Consistent use of red and white brand colors",
+            "Standard header and footer layout across screenshots",
+            "Repeated button styles (e.g., 'View More')"
+          ],
+          "Confidence": "high",
+          "KeyFinding": "The website largely adheres to design standards and consistency, fostering a predictable user experience.",
+          "ImpactLevel": "medium",
+          "ParameterName": "Consistency and Standards",
+          "Recommendation": "Conduct a comprehensive review of all interactive elements to ensure uniform styling and behavior across the entire site. Establish and enforce stricter UI component guidelines to eliminate any remaining inconsistencies, especially regarding button styles and spacing."
+        },
+        {
+          "Score": 6,
+          "Analysis": "The clear structural organization and straightforward navigation help prevent some user errors by guiding them appropriately. However, without specific form interactions or complex data entry visible, it is difficult to assess proactive error prevention strategies like inline validation or warning messages. The accessibility audit revealed unlabeled form inputs, which are a common source of user error.",
+          "Citations": [
+            "Structured navigation menus",
+            "Absence of visible inline validation or warning messages",
+            "Automated Accessibility Check: 'Form inputs without corresponding labels: 8'"
+          ],
+          "Confidence": "medium",
+          "KeyFinding": "While basic navigation reduces errors, a significant risk of user error exists due to unlabeled form inputs and a lack of explicit error prevention.",
+          "ImpactLevel": "medium",
+          "ParameterName": "Error Prevention",
+          "Recommendation": "Implement proactive error prevention mechanisms, such as clear inline validation and helpful suggestions, for all forms and interactive inputs. Address the reported issue of unlabeled form inputs to prevent user confusion and submission errors."
+        },
+        {
+          "Score": 8,
+          "Analysis": "The website excels in displaying information prominently and organizing content into clearly labeled sections, minimizing the need for users to remember details. Persistent navigation bars and descriptive headings ensure that key options and content are always visible or easily discoverable. This design approach significantly aids user navigation and information retrieval.",
+          "Citations": [
+            "Persistent header and footer navigation menus",
+            "Descriptive section headings: 'Future-Ready Programmes', 'Latest Happenings', 'Student Testimonials'",
+            "Prominent calls to action (e.g., 'Apply Now')"
+          ],
+          "Confidence": "high",
+          "KeyFinding": "The site's design prioritizes recognition over recall, making information and navigation highly accessible.",
+          "ImpactLevel": "low",
+          "ParameterName": "Recognition rather than Recall",
+          "Recommendation": "Maintain the current approach of visible navigation and clear content labeling. Explore contextual help or tooltips for complex or less frequently used features to further reduce cognitive load."
+        },
+        {
+          "Score": 7,
+          "Analysis": "The website provides multiple entry points to key information, such as primary navigation, quick links, and prominent calls to action, accommodating both novice and experienced users. The 'Chat with Student' and 'Download Brochure' buttons offer efficient ways to engage. However, advanced features like keyboard shortcuts or personalization options are not apparent.",
+          "Citations": [
+            "Multiple links in header and footer",
+            "Prominent 'Apply Now' button",
+            "Floating 'Chat with Student' widget",
+            "Quick links to 'Download Brochure' and 'Virtual Tour'"
+          ],
+          "Confidence": "high",
+          "KeyFinding": "The website offers various methods for accessing information, improving efficiency, but lacks advanced flexibility features.",
+          "ImpactLevel": "medium",
+          "ParameterName": "Flexibility and Efficiency of Use",
+          "Recommendation": "Continue to offer diverse navigation pathways and quick access features. For future enhancements, consider adding keyboard shortcuts for frequent actions or personalization options for returning users to further boost efficiency."
+        },
+        {
+          "Score": 6,
+          "Analysis": "The overall design is clean with a good use of whitespace and a consistent brand color palette. However, some sections, like 'Why choose MIT-WPU' and 'Research', present dense blocks of text and multiple small icons, which can appear cluttered and reduce readability. This compromises the minimalist aspect of the design.",
+          "Citations": [
+            "Dominant white background with red accents",
+            "Dense text and icon layout in 'Why choose MIT-WPU' section",
+            "Extensive text content in the 'Research' section"
+          ],
+          "Confidence": "high",
+          "KeyFinding": "While generally clean, some sections are information-heavy, compromising the aesthetic and minimalist design principles.",
+          "ImpactLevel": "medium",
+          "ParameterName": "Aesthetic and Minimalist Design",
+          "Recommendation": "Review and refine information-dense sections by breaking down content into smaller, more digestible chunks. Employ stronger visual hierarchy, potentially using more white space or distinct visual separators, to improve readability and reduce perceived clutter."
+        },
+        {
+          "Score": 5,
+          "Analysis": "The website does not visibly offer specific error messages or diagnostic feedback to help users understand what went wrong or how to fix it. While general support channels ('Chat with Student', 'Contact Us') are available, they do not directly assist with immediate error recovery during interactions. This absence can lead to user frustration and abandonment.",
+          "Citations": [
+            "Absence of visible error messages in screenshots",
+            "General support options like 'Chat with Student' and 'Contact Us' in the footer"
+          ],
+          "Confidence": "medium",
+          "KeyFinding": "The site lacks explicit error recognition, diagnosis, and recovery mechanisms, potentially leaving users confused when issues arise.",
+          "ImpactLevel": "high",
+          "ParameterName": "Help users recognize, diagnose, and recover from errors",
+          "Recommendation": "Implement clear, concise, and actionable error messages for all form submissions and interactive elements. These messages should explain the error, suggest a solution, and be prominently displayed to guide users effectively."
+        },
+        {
+          "Score": 7,
+          "Analysis": "The website provides several avenues for help, including direct contact numbers, a chat widget, and a 'Contact Us' link in the footer. A 'Student Information' section is also present. While a dedicated, comprehensive FAQ or help documentation section isn't immediately prominent, the direct communication options are valuable. This offers both proactive and reactive support to users.",
+          "Citations": [
+            "Floating 'Chat with Student' widget",
+            "Contact numbers: '+91 2071177104', '+91 98814 92848'",
+            "'Contact Us' link in the footer",
+            "'Student Information' in header navigation"
+          ],
+          "Confidence": "high",
+          "KeyFinding": "Multiple support channels are available, providing good assistance, though a centralized documentation hub could be beneficial.",
+          "ImpactLevel": "medium",
+          "ParameterName": "Help and Documentation",
+          "Recommendation": "While direct support is strong, consider integrating a comprehensive, easily discoverable FAQ section within the main navigation. This would provide immediate answers to common questions, reducing the need for direct contact for routine queries."
+        }
+      ],
+      "SectionScore": 6.6
+    },
+    "AccessibilityCompliance": {
+      "Parameters": [
+        {
+          "Score": 6,
+          "Analysis": "The presence of semantic HTML5 elements and ARIA attributes suggests a foundational structure that should support keyboard navigation. However, without live interaction, it's impossible to verify the logical tab order, the presence of visible focus indicators for all interactive elements, or full operability using only a keyboard. Incomplete keyboard navigation significantly impacts users who cannot use a mouse.",
+          "Citations": [
+            "Automated Accessibility Check: 'Presence of semantic HTML5 elements (main, nav, header, etc.): Yes'",
+            "Automated Accessibility Check: 'Presence of ARIA attributes (roles, properties): Yes'"
+          ],
+          "Confidence": "medium",
+          "KeyFinding": "While semantic structure exists, the full extent of keyboard navigability, especially visible focus states and logical flow, requires further validation.",
+          "ImpactLevel": "high",
+          "ParameterName": "KeyboardNavigation",
+          "Recommendation": "Conduct a thorough manual audit of keyboard navigation to ensure all interactive elements are reachable, operable, and have clear visual focus indicators. Verify a logical tab order and ensure custom components are fully keyboard accessible."
+        },
+        {
+          "Score": 4,
+          "Analysis": "The automated check reveals critical issues with screen reader compatibility, specifically two images lacking descriptive alt text and eight form inputs without corresponding labels. Despite the presence of semantic HTML and ARIA attributes, these omissions create significant barriers for visually impaired users who rely on screen readers to understand content and interact with forms. This directly violates WCAG guidelines for perceivability and operability.",
+          "Citations": [
+            "Automated Accessibility Check: 'Images without descriptive alt text: 2'",
+            "Automated Accessibility Check: 'Form inputs without corresponding labels: 8'",
+            "Automated Accessibility Check: 'Presence of semantic HTML5 elements (main, nav, header, etc.): Yes'",
+            "Automated Accessibility Check: 'Presence of ARIA attributes (roles, properties): Yes'"
+          ],
+          "Confidence": "high",
+          "KeyFinding": "Lack of alt text and form labels critically hinders screen reader users despite some semantic structure.",
+          "ImpactLevel": "high",
+          "ParameterName": "ScreenReaderCompatibility",
+          "Recommendation": "Prioritize adding descriptive alt text to all informative images and ensuring every form input has a programmatically associated label. Perform thorough testing with actual screen readers to identify and rectify any other hidden compatibility issues."
+        },
+        {
+          "Score": 6,
+          "Analysis": "Most of the primary text (dark on white) appears to have sufficient contrast. However, some elements, such as the lighter grey text in the footer or specific red text on white backgrounds, may not meet WCAG contrast ratio",
+          "Confidence": "medium",
+          "ImpactLevel": "medium",
+          "ParameterName": "ColorContrast"
+        }
+      ],
+      "SectionScore": 6.6
+    }
+  },
+  "screenshotMimeType": "image/jpeg",
+  "Visual Audit expert": {
+    "CategoryScore": 7.5,
+    "OverallRecommendations": [
+      "Address critical performance bottlenecks, specifically the high Total Blocking Time (2,710ms) and Time to Interactive (10.4s), to significantly enhance overall responsiveness and user engagement.",
+      "Implement descriptive alt text for the 2 identified images and ensure all 8 form inputs have corresponding labels to drastically improve accessibility for users of assistive technologies.",
+      "Optimize white space in denser sections, particularly the footer, by increasing padding and line-height to improve readability and visual comfort.",
+      "Standardize the visual style of user-generated content, such as testimonial profile pictures, and external partner logos to ensure complete visual cohesion across the site.",
+      "Explore integrating more dynamic human-centric imagery and storytelling elements to foster a warmer emotional connection, complementing the existing professional and academic tone."
+    ],
+    "UIConsistencyAndBranding": {
+      "Parameters": [
+        {
+          "Score": 9,
+          "Analysis": "The university logo is prominently displayed in the header on both desktop and mobile, ensuring immediate brand recognition. The consistent use of the 'MIT-WPU' emblem throughout the site further reinforces its identity.",
+          "Citations": [
+            "Header logo 'MIT WORLD PEACE UNIVERSITY PUNE' on desktop and mobile screenshots",
+            "Dome icon next to logo and 'What's New' section"
+          ],
+          "Confidence": "high",
+          "KeyFinding": "Consistent and prominent logo placement ensures strong brand recognition.",
+          "ImpactLevel": "high",
+          "ParameterName": "Branding and Logo Usage",
+          "Recommendation": "Maintain current strong implementation of branding and logo usage. Explore subtle animations for the logo on hover to add a touch of modern interactivity."
+        },
+        {
+          "Score": 8,
+          "Analysis": "The website uses a consistent color palette dominated by red, dark blue/black, and white/light grey, effectively differentiating interactive elements and content sections. The red acts as a strong accent color for calls to action and highlights.",
+          "Citations": [
+            "Red used for 'Apply Now' button, 'Latest Happenings' dates, and hero banner background",
+            "Dark blue/black for navigation text and footer background",
+            "White/light grey for content cards and main background"
+          ],
+          "Confidence": "high",
+          "KeyFinding": "Consistent use of a defined color palette creates a cohesive visual experience.",
+          "ImpactLevel": "high",
+          "ParameterName": "Color Palette Consistency",
+          "Recommendation": "Continue consistent application of the established brand color palette. Consider introducing a slightly softer accent color or a gradient for key elements to add visual depth and refine the aesthetic."
+        },
+        {
+          "Score": 8,
+          "Analysis": "A consistent sans-serif font family is used across the site, maintaining clear visual hierarchy through varied font sizes and weights for headings and body text. This ensures readability and a professional appearance.",
+          "Citations": [
+            "Sans-serif font used for all text elements",
+            "Heading '43+ Years Legacy' is large and bold",
+            "Body text under 'Why choose MIT-WPU' is smaller and regular weight"
+          ],
+          "Confidence": "high",
+          "KeyFinding": "Consistent typography ensures readability and reinforces a professional tone.",
+          "ImpactLevel": "high",
+          "ParameterName": "Typography Consistency",
+          "Recommendation": "Maintain the current consistent typography. Periodically review font legibility and hierarchy across all screen sizes to ensure optimal reading experience, especially for longer content blocks."
+        },
+        {
+          "Score": 7,
+          "Analysis": "Icons generally follow a consistent flat, simplified style, contributing to a modern aesthetic. The main campus imagery is high-quality. However, varied styles in testimonial profile pictures slightly reduce overall visual cohesion.",
+          "Citations": [
+            "Flat, simplified icons used for 'Students Clubs' and 'Why choose MIT-WPU' sections",
+            "High-resolution campus images in hero section",
+            "Varied styles of profile pictures in 'Student Testimonials' section"
+          ],
+          "Confidence": "high",
+          "KeyFinding": "Minor inconsistencies in image and icon styles detract from perfect cohesion.",
+          "ImpactLevel": "medium",
+          "ParameterName": "Iconography and Imagery Cohesion",
+          "Recommendation": "Standardize the style of all visual elements, including user-submitted content like testimonial profile pictures, perhaps by applying a consistent filter or frame. Ensure all third-party logos are displayed with uniform padding and scaling."
+        },
+        {
+          "Score": 8,
+          "Analysis": "Key UI elements such as buttons, content cards, and navigation links exhibit consistent styling, color, and interaction patterns across the website. Call-to-action buttons are consistently red with white text.",
+          "Citations": [
+            "Red 'Apply Now' button with white text",
+            "Consistent card design with subtle shadows for 'Future-Ready Programmes' and 'Latest Happenings'",
+            "Navigation links have a consistent underline/highlight effect on hover (implied)"
+          ],
+          "Confidence": "high",
+          "KeyFinding": "Consistent UI elements provide a predictable and intuitive user experience.",
+          "ImpactLevel": "high",
+          "ParameterName": "UI Element Consistency",
+          "Recommendation": "Maintain the current high level of UI element consistency. Implement a design system to document and enforce these patterns for future updates and new components."
+        },
+        {
+          "Score": 8,
+          "Analysis": "The website successfully creates a strong, cohesive brand identity, clearly communicating academic excellence and professionalism. The consistent visual language, from logo to color scheme, reinforces the university's message effectively.",
+          "Citations": [
+            "Consistent logo, color palette, and font usage across sections",
+            "Repeated use of the dome icon as a brand identifier",
+            "Professional aesthetic reinforces academic branding"
+          ],
+          "Confidence": "high",
+          "KeyFinding": "The website maintains a strong and unified brand identity throughout its design.",
+          "ImpactLevel": "high",
+          "ParameterName": "Overall Brand Cohesion",
+          "Recommendation": "Maintain the strong overall brand cohesion. Regularly audit new content and design updates to ensure strict adherence to brand guidelines, preventing any future dilution of the established visual identity."
+        }
+      ],
+      "SectionScore": 8
+    },
+    "AestheticAndEmotionalAppeal": {
+      "Parameters": [
+        {
+          "Score": 8,
+          "Analysis": "The layout utilizes a clear grid system and effective use of headings, guiding the user's eye through the content logically. The hero section prominently captures attention, establishing a strong focal point.",
+          "Citations": [
+            "Large '43+ Years Legacy' heading dominates the hero section",
+            "Grid layout for 'Future-Ready Programmes' and 'Latest Happenings' sections",
+            "Distinct section titles like 'Best Placements' and 'Research'"
+          ],
+          "Confidence": "high",
+          "KeyFinding": "Clear visual hierarchy and structured layout facilitate content comprehension.",
+          "ImpactLevel": "high",
+          "ParameterName": "Visual Hierarchy and Layout",
+          "Recommendation": "Maintain the effective visual hierarchy and layout. Consider A/B testing different content block arrangements in less critical sections to optimize information consumption and engagement further."
+        },
+        {
+          "Score": 7,
+          "Analysis": "The design generally employs sufficient white space, preventing content from feeling overly cramped and enhancing readability. However, denser sections, like the footer, could benefit from more generous spacing to improve visual comfort.",
+          "Citations": [
+            "Generous padding around content cards (e.g., 'Future-Ready Programmes')",
+            "Clear spacing between major sections like 'Research' and 'Why choose MIT-WPU'",
+            "Footer area appears somewhat dense with less whitespace between columns"
+          ],
+          "Confidence": "high",
+          "KeyFinding": "While generally good, some areas are slightly dense, impacting visual comfort.",
+          "ImpactLevel": "medium",
+          "ParameterName": "Use of White Space",
+          "Recommendation": "Increase padding and line-height in content-heavy areas, especially the footer, to improve readability and visual breathing room. Conduct a spacing audit across all page templates."
+        },
+        {
+          "Score": 9,
+          "Analysis": "The hero image of the campus is high-resolution and impactful, setting a professional tone. Other illustrative images throughout the site are also of excellent quality, enhancing the visual appeal.",
+          "Citations": [
+            "High-resolution aerial campus view in the main hero section",
+            "Clear and professional images used in the 'Latest Happenings' section cards",
+            "No visible low-quality or pixelated images"
+          ],
+          "Confidence": "high",
+          "KeyFinding": "High-quality imagery significantly contributes to the site's professional aesthetic.",
+          "ImpactLevel": "high",
+          "ParameterName": "Image and Video Quality",
+          "Recommendation": "Maintain the current high standard for image quality. Explore integrating high-quality, short video clips in relevant sections (e.g., student life, campus tour) to enrich the visual storytelling."
+        },
+        {
+          "Score": 7,
+          "Analysis": "The website effectively conveys professionalism, academic prestige, and aspiration through its clean design and emphasis on statistics and achievements. However, the tone could be more engaging and foster a warmer emotional connection.",
+          "Citations": [
+            "Headline '43+ Years Legacy of Academic Excellence' projects heritage and quality",
+            "Statistics like '100+ Students Clubs' convey vibrant community",
+            "Formal campus imagery contributes to a professional but somewhat detached feeling"
+          ],
+          "Confidence": "medium",
+          "KeyFinding": "The site is professional but could enhance emotional connection with more human-centric content.",
+          "ImpactLevel": "medium",
+          "ParameterName": "Emotional Resonance",
+          "Recommendation": "Integrate more diverse imagery that includes students actively engaged in campus life, beyond formal poses, to evoke a stronger sense of community and personal growth. Consider storytelling elements to humanize the academic journey."
+        },
+        {
+          "Score": 7,
+          "Analysis": "The design features a contemporary aesthetic with flat elements, card-based layouts, and clean typography, aligning with modern web design trends. It feels current and functional, though not groundbreaking in its visual innovation.",
+          "Citations": [
+            "Use of card-based layouts for content sections like 'Future-Ready Programmes'",
+            "Clean sans-serif typography common in modern web design",
+            "Lack of complex animations or cutting-edge visual effects suggests solid but not groundbreaking modernity"
+          ],
+          "Confidence": "high",
+          "KeyFinding": "The design is modern and functional, but lacks unique visual innovation.",
+          "ImpactLevel": "medium",
+          "ParameterName": "Modernity and Innovation",
+          "Recommendation": "Explore incorporating subtle interactive elements, parallax scrolling, or advanced micro-interactions that align with modern design paradigms to elevate the site's innovative appeal without sacrificing usability."
+        },
+        {
+          "Score": 8,
+          "Analysis": "The identified animations, such as modal fades, carousel transitions, and lazy image loading, are subtle and serve functional purposes, enhancing user experience without causing distraction. They contribute to a smooth and polished interface.",
+          "Citations": [
+            "Presence of 'div#admissionModal.modal.fade' suggests smooth modal transitions",
+            "Multiple 'div.carousel-item' elements imply functional, non-disruptive content carousels",
+            "Use of 'img.img-fluid.lazyload' indicates performance-oriented image loading with subtle transitions"
+          ],
+          "Confidence": "high",
+          "KeyFinding": "Subtle and functional animations enhance the user experience effectively.",
+          "ImpactLevel": "medium",
+          "ParameterName": "Animation and Transitions Quality",
+          "Recommendation": "Maintain the current quality of animations and transitions, ensuring they remain subtle and purposeful. Regularly test animation performance across devices to prevent any lag or jankiness."
+        }
+      ],
+      "SectionScore": 7.7
+    },
+    "ResponsivenessAndAdaptability": {
+      "Parameters": [
+        {
+          "Score": 9,
+          "Analysis": "The website demonstrates excellent mobile optimization, with a responsive layout that adapts gracefully from desktop to mobile. The hamburger menu, stacked logo, reflowing content, and legible text ensure a seamless user experience on smaller screens.",
+          "Citations": [
+            "Header collapses into a hamburger menu on mobile",
+            "Logo and 'Since 1983' text are stacked on mobile",
+            "Hero section statistics and headline reflow to a single column layout on mobile",
+            "Content card '100+ Students Clubs' maintains its proportions and readability on mobile"
+          ],
+          "Confidence": "high",
+          "KeyFinding": "Excellent mobile adaptation ensures a positive experience across devices.",
+          "ImpactLevel": "high",
+          "ParameterName": "Mobile Optimization",
+          "Recommendation": "Maintain the high standard of mobile optimization. Continuously test responsiveness on new devices and screen sizes as they emerge to ensure ongoing optimal performance and display."
+        },
+        {
+          "Score": 0,
+          "Analysis": "Not applicable. Cross-browser compatibility cannot be assessed from static screenshots or provided text content alone. This requires live testing across various browsers and devices.",
+          "Citations": [
+            "Automated audit process does not include tools for cross-browser compatibility testing."
+          ],
+          "Confidence": "high",
+          "KeyFinding": "Assessment of cross-browser compatibility requires live testing, which was not performed.",
+          "ImpactLevel": "high",
+          "ParameterName": "Cross-Browser Compatibility",
+          "Recommendation": "Conduct comprehensive cross-browser and cross-device testing using tools like BrowserStack or LambdaTest to ensure consistent rendering and functionality across all major browsers. A detailed report of supported browsers should be maintained."
+        },
+        {
+          "Score": 6,
+          "Analysis": "While visual contrast and font sizes generally appear acceptable from screenshots, automated checks reveal significant issues: 2 images lack alt text and 8 form inputs are missing labels. The presence of semantic HTML and ARIA attributes is positive, but these specific omissions are critical.",
+          "Citations": [
+            "Automated Accessibility Check: 'Images without descriptive alt text: 2'",
+            "Automated Accessibility Check: 'Form inputs without corresponding labels: 8'",
+            "Good contrast observed for navigation links and body text against backgrounds"
+          ],
+          "Confidence": "high",
+          "KeyFinding": "Critical accessibility issues, particularly missing alt text and form labels, negatively impact usability for assistive technologies.",
+          "ImpactLevel": "high",
+          "ParameterName": "Accessibility (Visual aspects only)",
+          "Recommendation": "Immediately implement descriptive alt text for all images and ensure all form inputs have corresponding labels to significantly improve screen reader compatibility and overall accessibility. Conduct a full accessibility audit (WCAG) to identify and rectify all outstanding issues."
+        },
+        {
+          "Score": 5,
+          "Analysis": "Largest Contentful Paint (0.7s), Cumulative Layout Shift (0.001), and First Contentful Paint (0.4s) are excellent, indicating good initial visual stability. However, Total Blocking Time (2,710ms) and Time to Interactive (10.4s) are extremely poor, severely hindering interactivity and user responsiveness.",
+          "Citations": [
+            "Provided performance metrics: Largest Contentful Paint: 0.7s",
+            "Provided performance metrics: Cumulative Layout Shift: 0.001",
+            "Provided performance metrics: Total Blocking Time: 2,710ms",
+            "Provided performance metrics: Time to Interactive: 10.4s",
+            "Provided performance metrics: Speed Index: 3.7s"
+          ],
+          "Confidence": "high",
+          "KeyFinding": "Excellent visual loading metrics are severely undermined by poor interactivity and high blocking time.",
+          "ImpactLevel": "high",
+          "ParameterName": "ActualLoadTimeAndCoreWebVitals",
+          "Recommendation": "Prioritize optimization efforts to reduce Total Blocking Time and Time to Interactive. Investigate and optimize JavaScript execution, reduce third-party script impact, and implement code splitting to ensure the page becomes interactive much faster."
+        }
+      ],
+      "SectionScore": 6.7
+    }
+  },
+  "Product Audit expert": {
+    "CategoryScore": 7.1,
+    "ConversionOptimization": {
+      "Parameters": [
+        {
+          "Score": 6,
+          "Analysis": "The \"Apply Now\" button and sticky \"Admission Enquiry\" widget are visible and clear. However, within content-rich sections like program descriptions or research, specific contextual CTAs are often missing, requiring users to navigate back to global CTAs.",
+          "Citations": [
+            "Apply Now button in header",
+            "Admission Enquiry sticky widget",
+            "absence of CTAs within Future-Ready Programmes content"
+          ],
+          "Confidence": "high",
+          "KeyFinding": "Global CTAs are present, but contextual CTAs are lacking within specific content sections.",
+          "ImpactLevel": "high",
+          "ParameterName": "Call to Action (CTA) Effectiveness",
+          "Recommendation": "Strategically embed relevant CTAs (e.g., \"Learn More about this program,\" \"Apply for PhD,\" \"Contact Research Department\") within content sections to guide users seamlessly through their specific interest areas towards conversion."
+        },
+        {
+          "ParameterName": "Lead Capture Forms"
+        }
+      ],
+      "SectionScore": 6.4
+    },
+    "UserRetentionAndEngagement": {
+      "Parameters": [
+        {
+          "Score": 7,
+          "Analysis": "The \"Latest Happenings\" and \"What's New\" sections present a schedule of future events and publications, demonstrating active content planning. However, labeling upcoming events as \"Latest Happenings\" might confuse users expecting recently concluded news.",
+          "Citations": [
+            "Latest Happenings section with dates like 14 Feb'2026, 26 Jan'2026",
+            "What's New section with future dates"
+          ],
+          "Confidence": "high",
+          "KeyFinding": "Content is actively scheduled but labeling for \"latest\" news is misleading for future events.",
+          "ImpactLevel": "medium",
+          "ParameterName": "Content Freshness & Relevance",
+          "Recommendation": "Rename \"Latest Happenings\" to something like \"Upcoming Events\" or \"Event Calendar\" to accurately reflect the future-dated content. Ensure past events or news are also easily discoverable in a separate archive."
+        },
+        {
+          "Score": 6,
+          "Analysis": "The website offers useful interactive features like a \"Chat with Student\" and an AI Admission Assistant, providing immediate support. However, there's no evident personalization based on user browsing history or stated interests.",
+          "Citations": [
+            "Chat with Student button",
+            "Hey! I am Vidya... Your Admission Assistant widget",
+            "program search input"
+          ],
+          "Confidence": "high",
+          "KeyFinding": "Good initial interactive support, but lacks deeper personalization for a more engaging experience.",
+          "ImpactLevel": "medium",
+          "ParameterName": "Interactive Elements & Personalization",
+          "Recommendation": "Explore implementing basic personalization, such as dynamic content blocks that suggest relevant programs based on clicked links or search queries. Enhance the AI assistant to offer more tailored information based on user input."
+        },
+        {
+          "Score": 8,
+          "Analysis": "The site effectively uses student testimonials, large alumni and student body statistics, and \"Life@MIT-WPU\" visuals to build a strong sense of community and social proof. This helps prospective students envision themselves as part of the university.",
+          "Citations": [
+            "Student Testimonials section",
+            "25,000+ Students on Campus",
+            "100,000+ Global Alumni Network",
+            "Life@MIT-WPU section"
+          ],
+          "Confidence": "high",
+          "KeyFinding": "Strong evidence of community and positive social proof.",
+          "ImpactLevel": "high",
+          "ParameterName": "Community & Social Proof",
+          "Recommendation": "Maintain current implementation. Consider integrating more user-generated content, such as student blogs or social media feeds, to further showcase the vibrant community life in real-time."
+        },
+        {
+          "Score": 6,
+          "Analysis": "The navigation is comprehensive, with extensive menus in both the header and footer providing access to a vast amount of information. However, the sheer number of links, particularly in the footer, can be overwhelming and might lead to information overload.",
+          "Citations": [
+            "Header navigation bar with multiple dropdowns",
+            "extensive footer links (e.g., About Us section with 12 links, Programmes with 4)"
+          ],
+          "Confidence": "high",
+          "KeyFinding": "Information is extensively available, but the high density of navigation links may hinder intuitive discovery.",
+          "ImpactLevel": "medium",
+          "ParameterName": "Navigation & Information Architecture",
+          "Recommendation": "Consolidate or categorize footer links more effectively to reduce cognitive load, perhaps using accordions or a tiered structure for less critical information. Implement a robust internal search feature to aid discoverability."
+        },
+        {
+          "Score": 7,
+          "Analysis": "The website uses high-quality images of the campus, students, and notable figures. While \"Image Gallery\" and \"Video Gallery\" links exist, direct embedding of engaging video content on the homepage or key landing pages is limited.",
+          "Citations": [
+            "Hero image (aerial campus view)",
+            "img.img-fluid.lazyload elements",
+            "Image Gallery and Video Gallery links in the footer"
+          ],
+          "Confidence": "high",
+          "KeyFinding": "Good use of static imagery, but underutilizes embedded video for richer engagement on primary pages.",
+          "ImpactLevel": "medium",
+          "ParameterName": "Multimedia & Rich Content",
+          "Recommendation": "Integrate more embedded videos showcasing campus tours, student interviews, and research highlights directly into relevant homepage sections to immediately capture attention and convey information dynamically."
+        }
+      ],
+      "SectionScore": 6.8
+    },
+    "MarketFitAndBusinessAlignment": {
+      "Parameters": [
+        {
+          "Score": 9,
+          "Analysis": "The university effectively communicates its long-standing legacy, diverse program offerings, and a clear mission for \"Life Transformation\" immediately on the homepage. Key statistics regarding programs, students, and alumni further reinforce its value.",
+          "Citations": [
+            "43+ Years Legacy of Academic Excellence",
+            "A University for Life Transformation",
+            "150+ Future-ready Programmes",
+            "Why choose MIT-WPU, Pune? section"
+          ],
+          "Confidence": "high",
+          "KeyFinding": "Strong and immediate communication of core offerings and long-term vision.",
+          "ImpactLevel": "high",
+          "ParameterName": "Clarity of Value Proposition",
+          "Recommendation": "Maintain current implementation. Explore incorporating a concise, memorable tagline that encapsulates the \"Science and Spirituality\" unique selling proposition more overtly across key sections for stronger brand recall."
+        },
+        {
+          "Score": 8,
+          "Analysis": "The website clearly targets prospective students and their families through dedicated sections on programs, admissions, placements, and student life. Content like \"Future-Ready Programmes\" and \"Student Testimonials\" directly addresses typical student concerns.",
+          "Citations": [
+            "Future-Ready Programmes",
+            "Best Placements",
+            "Life@MIT-WPU",
+            "Student Testimonials",
+            "International Collaborations"
+          ],
+          "Confidence": "high",
+          "KeyFinding": "Content and structure are well-aligned with the primary target audience of prospective students.",
+          "ImpactLevel": "high",
+          "ParameterName": "Target Audience Identification",
+          "Recommendation": "Continue to refine content to speak directly to diverse segments within the target audience (e.g., international students, research scholars) with dedicated pages or personalized pathways. Implement analytics to understand audience sub-segments better."
+        },
+        {
+          "Score": 7,
+          "Analysis": "While the site highlights academic excellence, placements, and international ties, the unique \"World Peace University\" ethos and \"Science and Spirituality\" union are mentioned but not deeply integrated or demonstrated throughout the content to significantly differentiate. Many claims like \"interdisciplinary university\" are common.",
+          "Citations": [
+            "MIT World Peace University",
+            "union of Science and Spirituality in Why choose MIT-WPU",
+            "bullet points under Why choose MIT-WPU (e.g., Interdisciplinary University)"
+          ],
+          "Confidence": "medium",
+          "KeyFinding": "Core differentiators are stated but lack strong, pervasive evidence or distinct positioning against competitors.",
+          "ImpactLevel": "high",
+          "ParameterName": "Competitive Differentiation",
+          "Recommendation": "Develop specific content and case studies that vividly illustrate how the \"Science and Spirituality\" philosophy translates into unique educational experiences or student outcomes. Integrate this differentiator more visually and narratively across key pages."
+        },
+        {
+          "Score": 9,
+          "Analysis": "The website effectively serves as the central hub for attracting and converting prospective students, directly supporting the university's enrollment goals. It provides comprehensive information on programs and admissions, coupled with clear calls to action.",
+          "Citations": [
+            "Apply Now button",
+            "Admissions menu",
+            "Admission Enquiry widget",
+            "extensive program details"
+          ],
+          "Confidence": "high",
+          "KeyFinding": "Strong alignment between website content/functionality and the university's primary business objective of student enrollment.",
+          "ImpactLevel": "high",
+          "ParameterName": "Business Model Alignment",
+          "Recommendation": "Maintain the robust information architecture and clear pathways for admissions. Consider A/B testing different CTA placements and wording to continuously optimize the conversion funnel efficiency."
+        },
+        {
+          "Score": 7,
+          "Analysis": "The site references \"Future-Ready Programmes\" and modern research topics like AI, indicating an awareness of current educational trends. Its emphasis on interdisciplinary studies and international collaborations also aligns with contemporary demands. However, the site design itself feels somewhat traditional, not leveraging cutting-edge web trends or dynamic content experiences.",
+          "Citations": [
+            "Future-Ready Programmes",
+            "AI-Based Metaheuristics for Information Security and Digital Media under Research",
+            "Interdisciplinary University",
+            "International Collaboration in Why choose MIT-WPU"
+          ],
+          "Confidence": "medium",
+          "KeyFinding": "Content reflects awareness of modern trends, but presentation and design could be more adaptive.",
+          "ImpactLevel": "medium",
+          "ParameterName": "Market Trends & Adaptability",
+          "Recommendation": "Refresh the website design periodically to reflect modern web UI/UX trends and introduce more dynamic content blocks (e.g., interactive data visualizations for research). Actively highlight new programs or partnerships that directly address emerging market demands."
+        }
+      ],
+      "SectionScore": 8
+    }
+  },
+  "Top5ContextualIssues": [
+    {
+      "Issue": "Efficiency",
+      "Score": 5,
+      "source": "UX Audit",
+      "Analysis": "While key calls to action like 'Apply Now' are prominent, the reported 'Total Blocking Time' of 2,710 ms and 'Time to Interactive' of 10.4 s significantly hinder user efficiency. Slow interactivity means users experience delays before they can meaningfully interact with the page, leading to frustration and potential abandonment. This poor performance outweighs the ease of finding primary actions.",
+      "Citations": [
+        "Core Web Vitals: 'Total Blocking Time: 2,710 ms'",
+        "Core Web Vitals: 'Time to Interactive: 10.4 s'",
+        "Prominent 'Apply Now' and 'Download Brochure' buttons"
+      ],
+      "Confidence": "high",
+      "KeyFinding": "Poor loading and interactivity performance severely impede user efficiency despite clear calls to action.",
+      "ImpactLevel": "high",
+      "Recommendation": "Prioritize performance optimization to drastically reduce Total Blocking Time and Time to Interactive. Focus on optimizing JavaScript execution, deferring non-critical resources, and improving server response times to ensure a snappier user experience."
+    },
+    {
+      "Issue": "Help users recognize, diagnose, and recover from errors",
+      "Score": 5,
+      "source": "UX Audit",
+      "Analysis": "The website does not visibly offer specific error messages or diagnostic feedback to help users understand what went wrong or how to fix it. While general support channels ('Chat with Student', 'Contact Us') are available, they do not directly assist with immediate error recovery during interactions. This absence can lead to user frustration and abandonment.",
+      "Citations": [
+        "Absence of visible error messages in screenshots",
+        "General support options like 'Chat with Student' and 'Contact Us' in the footer"
+      ],
+      "Confidence": "medium",
+      "KeyFinding": "The site lacks explicit error recognition, diagnosis, and recovery mechanisms, potentially leaving users confused when issues arise.",
+      "ImpactLevel": "high",
+      "Recommendation": "Implement clear, concise, and actionable error messages for all form submissions and interactive elements. These messages should explain the error, suggest a solution, and be prominently displayed to guide users effectively."
+    },
+    {
+      "Issue": "ActualLoadTimeAndCoreWebVitals",
+      "Score": 5,
+      "source": "Visual Design",
+      "Analysis": "Largest Contentful Paint (0.7s), Cumulative Layout Shift (0.001), and First Contentful Paint (0.4s) are excellent, indicating good initial visual stability. However, Total Blocking Time (2,710ms) and Time to Interactive (10.4s) are extremely poor, severely hindering interactivity and user responsiveness.",
+      "Citations": [
+        "Provided performance metrics: Largest Contentful Paint: 0.7s",
+        "Provided performance metrics: Cumulative Layout Shift: 0.001",
+        "Provided performance metrics: Total Blocking Time: 2,710ms",
+        "Provided performance metrics: Time to Interactive: 10.4s",
+        "Provided performance metrics: Speed Index: 3.7s"
+      ],
+      "Confidence": "high",
+      "KeyFinding": "Excellent visual loading metrics are severely undermined by poor interactivity and high blocking time.",
+      "ImpactLevel": "high",
+      "Recommendation": "Prioritize optimization efforts to reduce Total Blocking Time and Time to Interactive. Investigate and optimize JavaScript execution, reduce third-party script impact, and implement code splitting to ensure the page becomes interactive much faster."
+    },
+    {
+      "Issue": "Visibility of System Status",
+      "Score": 5,
+      "source": "UX Audit",
+      "Analysis": "The website lacks clear indicators for ongoing processes or the current location within the site structure. Users do not receive immediate feedback on whether an action is processing or which page they are currently viewing after navigation. This can lead to uncertainty and a fragmented user experience.",
+      "Citations": [
+        "Observed navigation bar without current page highlighting",
+        "Carousels (e.g., 'Latest Happenings', 'Student Testimonials') without explicit loading states"
+      ],
+      "Confidence": "high",
+      "KeyFinding": "Lack of clear system status indicators creates user uncertainty during interactions and navigation.",
+      "ImpactLevel": "medium",
+      "Recommendation": "Implement prominent loading indicators for dynamic content and clear visual cues (e.g., active state highlighting) in the navigation menu to indicate the current page. Provide feedback for user interactions such as form submissions or content filters."
+    },
+    {
+      "Issue": "Cross-Browser Compatibility",
+      "Score": 0,
+      "source": "Visual Design",
+      "Analysis": "Not applicable. Cross-browser compatibility cannot be assessed from static screenshots or provided text content alone. This requires live testing across various browsers and devices.",
+      "Citations": [
+        "Automated audit process does not include tools for cross-browser compatibility testing."
+      ],
+      "Confidence": "high",
+      "KeyFinding": "Assessment of cross-browser compatibility requires live testing, which was not performed.",
+      "ImpactLevel": "high",
+      "Recommendation": "Conduct comprehensive cross-browser and cross-device testing using tools like BrowserStack or LambdaTest to ensure consistent rendering and functionality across all major browsers. A detailed report of supported browsers should be maintained."
+    }
+  ],
+  "Strategy Audit expert": {
+    "UserPersonas": [
+      {
+        "Age": 17,
+        "Name": "Priya Sharma",
+        "Location": "Mumbai, India",
+        "Occupation": "High School Student",
+        "UserNeedsBehavior": "Priya is looking for a reputable university with \"Future-ready Programmes\" that offer strong \"Best Placements\" and global exposure. She researches universities online, compares program structures, and looks for testimonials from current students to understand the campus culture. She is also interested in \"Life@MIT-WPU\" activities.",
+        "PainPointOpportunity": "Overwhelmed by too many program choices and unclear career paths after certain degrees. Wants clear, concise information about how specific programs lead to good job opportunities and what the actual student experience is like. An \"Apply Now\" button needs to be prominent and the application process straightforward."
+      },
+      {
+        "Age": 32,
+        "Name": "Dr. Arun Kumar",
+        "Location": "Bangalore, India",
+        "Occupation": "Junior Researcher",
+        "UserNeedsBehavior": "Arun is seeking a Ph.D. program or post-doctoral position with strong \"Research\" facilities and experienced \"PH.D GUIDES\". He needs to evaluate the institution's research output, \"RESEARCH PUBLICATIONS,\" and \"PATENTS.\" He's particularly interested in \"International Collaborations\" for potential research partnerships.",
+        "PainPointOpportunity": "Finding detailed information about specific research labs and faculty expertise can be challenging. Wants direct access to research project descriptions and contact details for relevant professors. Needs to understand funding opportunities and how the institution supports cutting-edge investigations to \"create solutions for critical world problems.\""
+      },
+      {
+        "Age": 48,
+        "Name": "Mrs. Anjali Singh",
+        "Location": "Delhi, India",
+        "Occupation": "Homemaker",
+        "UserNeedsBehavior": "Anjali is researching universities for her son, focusing on academic quality, \"43+ Years Legacy of Academic Excellence,\" safety, and future job prospects \"Top Recruiters\". She values the \"Why choose MIT-WPU\" section to understand the institution's values, infrastructure \"World-Class Infrastructure,\" and holistic development approach \"Life Transformation\". She also looks for contact information.",
+        "PainPointOpportunity": "Needs clear, trustworthy information about accreditation, student support, and financial aid options. Values testimonials from other parents or successful alumni. Might find it difficult to navigate academic jargon and wants simpler explanations of program benefits and campus facilities. The \"Chat with Student\" or direct phone number could be very useful."
+      }
+    ],
+    "DomainAnalysis": {
+      "Items": [
+        "Education",
+        "University",
+        "Research",
+        "Admissions",
+        "International Collaboration",
+        "Student Life",
+        "Placements",
+        "Academic Programs",
+        "Innovation",
+        "Campus Events",
+        "Faculty",
+        "Alumni",
+        "Governance (IQAC, UGC Approved)"
+      ],
+      "Confidence": "high"
+    },
+    "TargetAudience": {
+      "Primary": [
+        "Prospective Students (Undergraduate, Postgraduate, Ph.D.)",
+        "Parents",
+        "Researchers",
+        "Academics",
+        "Alumni",
+        "Industry Partners"
+      ],
+      "Confidence": "high",
+      "WebsiteType": "Educational Institution/University",
+      "MarketSegmentation": "High school students considering higher education, graduates seeking advanced degrees, individuals looking for professional diplomas/certifications, international students, researchers seeking collaboration, and industry looking for talent or partnerships.",
+      "DemographicsPsychographics": "Young adults (17-25) seeking higher education, often tech-savvy and career-oriented. Parents (40-60) seeking quality education and secure future for their children. Academics and researchers (30+) interested in collaborative research and intellectual development. Individuals from diverse national and international backgrounds, valuing peace, interdisciplinary learning, and global exposure."
+    },
+    "PurposeAnalysis": {
+      "Confidence": "high",
+      "KeyObjectives": "The interface aims to convert visitors into applicants by detailing diverse program options and showcasing excellent placement records. It also seeks to establish credibility by highlighting its 43+ year legacy, significant research contributions, and partnerships with international universities. Furthermore, it strives to foster a vibrant community by sharing student life experiences, testimonials, and campus happenings.",
+      "PrimaryPurpose": [
+        "To recruit prospective students for various academic programs (Undergraduate, Postgraduate, Ph.D., Diplomas & Certifications).",
+        "To inform the public about the institution's academic offerings, research achievements, and global collaborations.",
+        "To engage current students, faculty, and alumni with campus news and events."
+      ]
+    },
+    "ExecutiveSummary": "WHAT IS WORKING: The content strategy clearly highlights academic diversity and innovation, showcasing numerous future-ready programmes (Citation: \"Discover diverse, new-age programmes\"). The interface effectively communicates a strong legacy of academic excellence and global connections (Citation: \"43+ Years Legacy of Academic Excellence\", \"International Collaborations\"). Strong emphasis is placed on research contributions and their real-world impact (Citation: \"Pushing the frontiers of knowledge to create real-world impact\").\nWHAT IS NOT WORKING: The \"What's New\" section displays many future dates, which might confuse a user looking for current updates (Citation: \"13/03/2026\", \"21/02/2028\"). The chronological flow within the \"History & Legacy\" section appears repetitive with overlapping date ranges (Citation: \"2004-2014\" listed multiple times). The content strategy occasionally repeats the full institution name and location redundantly (Citation: \"MIT World Peace University (MIT-WPU), Pune\")."
+  },
+  "Accessibility Audit expert": {
+    "RiskLevel": "Critical",
+    "ManualChecks": [],
+    "PassedAudits": {
+      "Parameters": [
+        {
+          "Score": 8,
+          "Analysis": "The general color contrast between text and background elements meets WCAG standards for readability across most of the site, ensuring legibility for users without visual impairments. The primary content areas demonstrate strong contrast ratios.",
+          "Citations": [
+            "Visual inspection of screenshot text and backgrounds confirms compliance with WCAG 2.1 SC 1.4.3."
+          ],
+          "Confidence": "high",
+          "KeyFinding": "Compliant with WCAG 2.1 SC 1.4.3, ensuring most text has sufficient contrast for readability.",
+          "ImpactLevel": "Minor",
+          "ParameterName": "ColorContrast",
+          "Recommendation": "Maintain current implementation of color contrast for primary textual content. Periodically re-evaluate contrast for new content or design updates."
+        },
+        {
+          "Score": 7,
+          "Analysis": "The website's responsive design, as evidenced by the mobile screenshot, suggests that text resizing is likely handled, allowing content to reflow without loss of information. This supports users who require magnified text.",
+          "Citations": [
+            "Mobile screenshot indicates responsive design, implying compliance with WCAG 2.1 SC 1.4.4 (Resize text)."
+          ],
+          "Confidence": "medium",
+          "KeyFinding": "Compliant with WCAG 2.1 SC 1.4.4 through responsive design, supporting text resizing for users.",
+          "ImpactLevel": "Moderate",
+          "ParameterName": "ResizableText",
+          "Recommendation": "Maintain the responsive design approach to text sizing. Future-proof by ensuring all text remains resizable up to 200% without horizontal scrolling."
+        },
+        {
+          "Score": 8,
+          "Analysis": "The site utilizes semantic HTML5 elements (e.g., header, nav, main) and a visually coherent heading hierarchy. This provides clear structural context and improves navigation for screen reader users.",
+          "Citations": [
+            "Automated Accessibility Check: Presence of semantic HTML5 elements (main, nav, header, etc.): Yes, complies with WCAG 2.1 SC 1.3.1 and 2.4.6."
+          ],
+          "Confidence": "high",
+          "KeyFinding": "Compliant with WCAG 2.1 SC 1.3.1 and 2.4.6 by using semantic HTML and logical heading structure.",
+          "ImpactLevel": "Moderate",
+          "ParameterName": "HeadingsAndStructure",
+          "Recommendation": "Maintain current best practices for semantic HTML and heading structure. Implement automated checks to prevent future deviations from logical hierarchy."
+        },
+        {
+          "Score": 7,
+          "Analysis": "Most interactive elements on the page, including primary buttons and navigation links, have sufficient size and spacing to be easily activated by touch or mouse. This benefits users with motor impairments.",
+          "Citations": [
+            "Visual inspection of interactive elements on both desktop and mobile screenshots suggests compliance with WCAG 2.1 SC 2.5.5."
+          ],
+          "Confidence": "medium",
+          "KeyFinding": "Larger interactive elements are compliant with WCAG 2.1 SC 2.5.5, ensuring ease of activation.",
+          "ImpactLevel": "Moderate",
+          "ParameterName": "TouchTargetSize",
+          "Recommendation": "Maintain current spacing and sizing for interactive elements. Review new interactive components to ensure consistent adherence to WCAG 2.1 SC 2.5.5 target size requirements."
+        },
+        {
+          "Score": 7,
+          "Analysis": "The presence of ARIA attributes indicates efforts to enhance accessibility for complex UI components. When correctly applied, ARIA can significantly improve the screen reader experience.",
+          "Citations": [
+            "Automated Accessibility Check: Presence of ARIA attributes (roles, properties): Yes, indicates intent to comply with WCAG 2.1 SC 4.1.2."
+          ],
+          "Confidence": "medium",
+          "KeyFinding": "Compliant in the presence of ARIA attributes, which enhance accessibility when used correctly, aligning with WCAG 2.1 SC 4.1.2.",
+          "ImpactLevel": "Moderate",
+          "ParameterName": "ARIAUsage",
+          "Recommendation": "Maintain the use of ARIA attributes where appropriate to supplement native HTML semantics. Implement a robust testing process to ensure correct ARIA implementation and avoid conflicts."
+        }
+      ],
+      "SectionScore": 7.4
+    },
+    "CategoryScore": 6.33,
+    "NotApplicable": [],
+    "ComplianceScore": 55.55,
+    "AutomatedCompliance": {
+      "Parameters": [
+        {
+          "Score": 3,
+          "Analysis": "The automated audit identified 8 form inputs lacking proper labels. This significantly impairs usability for screen reader users, making it impossible to understand the purpose of input fields without visual context. This constitutes a severe barrier to completing forms, leading to high abandonment rates and legal risk. KeyFinding: 8 form inputs are missing associated labels.",
+          "Citations": [
+            "Automated Accessibility Check: Form inputs without corresponding labels: 8",
+            "WCAG 2.1 SC 3.3.2: Labels or Instructions"
+          ],
+          "Confidence": "high",
+          "KeyFinding": "8 form inputs lack proper programmatic labels, creating a critical accessibility barrier for screen reader users and those with cognitive disabilities.",
+          "ImpactLevel": "Critical",
+          "ParameterName": "FormLabels",
+          "Recommendation": "Implement explicit <label> elements for all form inputs, linked via the 'for' attribute to the input's 'id'. Alternatively, use 'aria-labelledby' or 'aria-label' attributes if visual labels cannot be used. This is a critical compliance fix required by WCAG 2.1 AA."
+        },
+        {
+          "Score": 7,
+          "Analysis": "Interactive elements, such as buttons and menu items, generally appear to have adequate spacing and size for touch interaction across both desktop and mobile views. However, some smaller text links, particularly in the footer, might present challenges for users with motor impairments or those on touch devices. KeyFinding: Most touch targets are adequately sized, but smaller footer links may be an issue.",
+          "Citations": [
+            "WCAG 2.1 SC 2.5.5: Target Size (Enhanced)",
+            "Screenshot analysis of interactive elements and footer links."
+          ],
+          "Confidence": "medium",
+          "KeyFinding": "While most interactive elements meet touch target size requirements, smaller links in the footer could be difficult to activate for some users.",
+          "ImpactLevel": "Moderate",
+          "ParameterName": "TouchTargetSize",
+          "Recommendation": "Review all interactive elements, especially smaller text links, to ensure a minimum touch target size of 44x44 CSS pixels. Increase padding or margin around smaller links to enhance their tappable area without altering visual size if needed. This improves usability for all users, particularly on mobile devices."
+        },
+        {
+          "Score": 7,
+          "Analysis": "The automated check confirmed the presence of ARIA attributes (roles, properties) on the website, indicating an intent to enhance accessibility. However, the report does not provide details on the correctness or appropriate implementation of these attributes. Incorrect ARIA usage can be more detrimental than no ARIA at all. KeyFinding: ARIA attributes are present but their correctness requires further validation.",
+          "Citations": [
+            "Automated Accessibility Check: Presence of ARIA attributes (roles, properties): Yes",
+            "WCAG 2.1 SC 4.1.2: Name, Role, Value"
+          ],
+          "Confidence": "medium",
+          "KeyFinding": "ARIA attributes are present, but their accurate application and adherence to best practices, especially concerning native semantics, need verification.",
+          "ImpactLevel": "Moderate",
+          "ParameterName": "ARIAUsage",
+          "Recommendation": "Conduct a thorough manual review of all ARIA implementations to ensure they are used correctly and do not conflict with native HTML semantics. Prioritize validation with screen readers to confirm proper interpretation and navigation. This is crucial for WCAG 2.1 AA compliance."
+        }
+      ],
+      "SectionScore": 5.67
+    },
+    "VisualAccessibility": {
+      "Parameters": [
+        {
+          "Score": 8,
+          "Analysis": "The website generally demonstrates good color contrast for main text content against its background, aiding legibility for most users. Headings and body text meet acceptable contrast ratios. However, some smaller text elements or text on complex background images might require a more detailed manual check to confirm full compliance. KeyFinding: Overall good color contrast, but specific elements need verification.",
+          "Citations": [
+            "Visual inspection of screenshot text and backgrounds.",
+            "WCAG 2.1 SC 1.4.3: Contrast (Minimum)"
+          ],
+          "Confidence": "high",
+          "KeyFinding": "Most textual content maintains good color contrast, ensuring legibility for users, but some edge cases require further inspection.",
+          "ImpactLevel": "Minor",
+          "ParameterName": "ColorContrast",
+          "Recommendation": "Maintain the current high-contrast design for primary content. Conduct a manual audit of all smaller text elements, especially those on colored backgrounds or images, to ensure they meet WCAG 2.1 AA contrast ratios (4.5:1 for normal text, 3:1 for large text). This future-proofs the design."
+        },
+        {
+          "Score": 7,
+          "Analysis": "The provision of a mobile screenshot suggests a responsive design, which often correlates with text that can be resized without loss of content or functionality. However, explicit testing for text resizing up to 200% without requiring horizontal scrolling is necessary for full assurance. Some text may be rendered as images, which would impede resizing. KeyFinding: Responsiveness suggests text resizing support, but direct testing is needed.",
+          "Citations": [
+            "Mobile screenshot indicates responsive design.",
+            "WCAG 2.1 SC 1.4.4: Resize text"
+          ],
+          "Confidence": "medium",
+          "KeyFinding": "The website's responsive nature implies support for text resizing, but explicit validation is required to confirm full compliance.",
+          "ImpactLevel": "Moderate",
+          "ParameterName": "ResizableText",
+          "Recommendation": "Conduct manual testing to ensure that text can be resized up to 200% via browser zoom settings without any loss of content or functionality, and without requiring horizontal scrolling. Verify that no critical text is rendered as images. This is a key WCAG 2.1 AA compliance point."
+        },
+        {
+          "Score": 6,
+          "Analysis": "The provided static screenshots do not allow for the observation of focus indicators on interactive elements. Without visible focus indicators, keyboard users and users with cognitive disabilities may not know which element has keyboard focus, severely hindering navigation and interaction. This is a common accessibility oversight. KeyFinding: Lack of visible focus indicators prevents proper navigation for keyboard users.",
+          "Citations": [
+            "Visual inspection of static screenshots (absence of dynamic focus states).",
+            "WCAG 2.1 SC 2.4.7: Focus Visible"
+          ],
+          "Confidence": "low",
+          "KeyFinding": "Focus indicators are not observable from the static images, posing a potential severe navigation barrier for keyboard-only users.",
+          "ImpactLevel": "Serious",
+          "ParameterName": "FocusIndicators",
+          "Recommendation": "Implement clear and visible focus indicators for all interactive elements (links, buttons, form fields) using CSS `:focus` styles. These indicators must be distinct from hover states and sufficiently contrasted against the background. This is a critical WCAG 2.1 AA compliance fix."
+        }
+      ],
+      "SectionScore": 7
+    },
+    "OverallRecommendations": [
+      "Prioritize fixing the 8 form inputs without labels to ensure basic form accessibility. This is a critical legal risk and a fundamental WCAG 2.1 AA requirement.",
+      "Address the 2 images missing alternative text to provide meaningful content to screen reader users, thereby improving content access and mitigating legal exposure.",
+      "Implement clear and consistent visual focus indicators for all interactive elements to support keyboard navigation and users with cognitive disabilities.",
+      "Conduct thorough manual testing for keyboard navigation across the entire site to verify logical tab order and absence of keyboard traps.",
+      "Perform a comprehensive audit of all ARIA attribute implementations to confirm correct usage and adherence to best practices, particularly for dynamic content and custom controls."
+    ],
+    "ScreenReaderExperience": {
+      "Parameters": [
+        {
+          "Score": 8,
+          "Analysis": "The website utilizes semantic HTML5 elements like `main`, `nav`, and `header`, which generally contributes to a logical document outline. Visually, headings appear hierarchical, suggesting a structured content flow for screen reader users. This strong semantic foundation aids navigation and content understanding. KeyFinding: Good use of semantic HTML and apparent heading hierarchy.",
+          "Citations": [
+            "Automated Accessibility Check: Presence of semantic HTML5 elements (main, nav, header, etc.): Yes",
+            "WCAG 2.1 SC 1.3.1: Info and Relationships",
+            "WCAG 2.1 SC 2.4.6: Headings and Labels"
+          ],
+          "Confidence": "high",
+          "KeyFinding": "The website demonstrates a well-structured content organization through the use of semantic HTML5 and a logical heading hierarchy.",
+          "ImpactLevel": "Moderate",
+          "ParameterName": "HeadingsAndStructure",
+          "Recommendation": "Maintain the current implementation of semantic HTML5 elements and ensure that the heading structure (h1-h6) consistently follows a logical, non-skipping hierarchy across all pages. Regularly audit content for proper heading usage as new pages are added. This aligns with WCAG 2.1 AA."
+        },
+        {
+          "Score": 5,
+          "Analysis": "The automated audit detected 2 images lacking descriptive alt text. While not a widespread issue across all images, these specific omissions create significant barriers for screen reader users who rely on alt text to understand image content and purpose. This is a clear violation of WCAG standards. KeyFinding: Two images are missing alternative text.",
+          "Citations": [
+            "Automated Accessibility Check: Images without descriptive alt text: 2",
+            "WCAG 2.1 SC 1.1.1: Non-text Content"
+          ],
+          "Confidence": "high",
+          "KeyFinding": "Two images are missing descriptive alternative text, which prevents screen reader users from accessing the visual information conveyed by these elements.",
+          "ImpactLevel": "Serious",
+          "ParameterName": "AlternativeText",
+          "Recommendation": "Identify and update the 2 images reported to be missing descriptive alt text. Ensure all informational images have concise and accurate alternative text, and decorative images have null alt text (`alt=\"\"`). Implement a process to review all new images for proper alt text. This is a compliance fix required by WCAG 2.1 AA."
+        },
+        {
+          "Score": 6,
+          "Analysis": "The website contains numerous interactive elements, including navigation links, carousels, and form inputs. While the specific tab order or potential for keyboard traps cannot be definitively assessed from the provided static data, the absence of explicit violations doesn't guarantee full keyboard accessibility. Manual testing is critical to confirm a logical and complete keyboard navigation path. KeyFinding: Keyboard navigation requires manual verification.",
+          "Citations": [
+            "WCAG 2.1 SC 2.1.1: Keyboard",
+            "WCAG 2.1 SC 2.1.2: No Keyboard Trap"
+          ],
+          "Confidence": "medium",
+          "KeyFinding": "The full extent of keyboard navigation capabilities, including logical tab order and absence of traps, cannot be confirmed without manual testing.",
+          "ImpactLevel": "Moderate",
+          "ParameterName": "KeyboardNavigation",
+          "Recommendation": "Conduct comprehensive manual keyboard-only testing to ensure all interactive elements are reachable and operable via keyboard. Verify a logical tab order and confirm there are no keyboard traps where users cannot navigate away from an element. This is a critical WCAG 2.1 AA requirement."
+        }
+      ],
+      "SectionScore": 6.33
+    }
+  }
+}

@@ -43,5 +43,14 @@ export const adminService = {
             }
         });
         return response.data;
+    },
+
+    async fetchAuditReport(password: string, jobId: string): Promise<any> {
+        const response = await axios.get(`${API_BASE_URL}/admin/audits/${jobId}/report`, {
+            headers: {
+                'x-admin-password': password
+            }
+        });
+        return response.data.report_data;
     }
 };

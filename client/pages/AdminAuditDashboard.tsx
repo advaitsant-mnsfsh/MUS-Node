@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { adminService, AdminAudit } from '../services/adminService';
 import { format } from 'date-fns';
-import { Activity, Shield, Terminal, Mail, Clock, RefreshCw, Copy, Check } from 'lucide-react';
+import { Activity, Shield, Terminal, Mail, Clock, RefreshCw, Copy, Check, Download } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 export const AdminAuditDashboard: React.FC = () => {
@@ -13,6 +13,7 @@ export const AdminAuditDashboard: React.FC = () => {
     const [isLoading, setIsLoading] = useState(false);
     const [lastRefresh, setLastRefresh] = useState<Date>(new Date());
     const [copiedId, setCopiedId] = useState<string | null>(null);
+    const [downloadingId, setDownloadingId] = useState<string | null>(null);
 
     // Search & Filter States
     const [searchTerm, setSearchTerm] = useState('');
@@ -24,6 +25,43 @@ export const AdminAuditDashboard: React.FC = () => {
         setCopiedId(text);
         toast.success('ID copied to clipboard');
         setTimeout(() => setCopiedId(null), 2000);
+    };
+
+    const downloadReport = async (audit: AdminAudit) => {
+        if (audit.status !== 'completed') {
+            toast.error('Report is not yet completed');
+            return;
+        }
+
+        setDownloadingId(audit.id);
+        const loadingToast = toast.loading('Fetching report data...');
+
+        try {
+            const reportData = await adminService.fetchAuditReport(password, audit.id);
+            if (!reportData) {
+                throw new Error('No report data found');
+            }
+
+            const dataStr = JSON.stringify(reportData, null, 2);
+            const dataBlob = new Blob([dataStr], { type: 'application/json' });
+            const url = window.URL.createObjectURL(dataBlob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `report_${audit.id}.json`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            window.URL.revokeObjectURL(url);
+
+            toast.dismiss(loadingToast);
+            toast.success('JSON downloaded successfully');
+        } catch (err) {
+            console.error('Failed to download JSON:', err);
+            toast.dismiss(loadingToast);
+            toast.error('Download failed / No data found');
+        } finally {
+            setDownloadingId(null);
+        }
     };
 
     const handleLogin = (e: React.FormEvent) => {
@@ -263,6 +301,17 @@ export const AdminAuditDashboard: React.FC = () => {
                                                 }`}>
                                                 {audit.status}
                                             </span>
+                                            {audit.status === 'completed' && (
+                                                <button
+                                                    onClick={() => downloadReport(audit)}
+                                                    disabled={downloadingId === audit.id}
+                                                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 hover:bg-indigo-500/20 transition-all font-bold tracking-wide disabled:opacity-50 disabled:cursor-not-allowed`}
+                                                    title="Download Report JSON"
+                                                >
+                                                    <Download className={`w-3.5 h-3.5 ${downloadingId === audit.id ? 'animate-bounce' : ''}`} />
+                                                    {downloadingId === audit.id ? 'FETCHING...' : 'RAW JSON'}
+                                                </button>
+                                            )}
                                         </div>
                                         <div className="flex items-center gap-6 text-sm text-slate-400">
                                             <div className="flex items-center gap-2"><Clock className="w-4 h-4" /> {format(new Date(audit.created_at), 'MMM d, HH:mm')}</div>

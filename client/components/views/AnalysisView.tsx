@@ -17,6 +17,7 @@ interface AnalysisViewProps {
     inputs?: AuditInput[];
     isError?: boolean;
     queuePosition?: number;
+    isLongWait?: boolean;
     onEmailOptIn?: (email?: string) => void;
     user?: any;
 }
@@ -33,6 +34,7 @@ export const AnalysisView: React.FC<AnalysisViewProps> = ({
     inputs,
     isError,
     queuePosition = 0,
+    isLongWait = false,
     onEmailOptIn,
     user
 }) => {
@@ -52,7 +54,7 @@ export const AnalysisView: React.FC<AnalysisViewProps> = ({
             <div className="flex flex-col items-center justify-center w-full h-full animate-in fade-in duration-500 py-12">
                 <div className="w-full max-w-md space-y-8 px-4">
                     {/* Queue Notice & Email Opt-in */}
-                    {queuePosition > 5 && !isError && (
+                    {(queuePosition > 5 || isLongWait) && !isError && (
                         <div className="bg-white border-2 border-slate-200 rounded-3xl p-8 shadow-2xl animate-in slide-in-from-bottom-8 duration-700">
                             <div className="flex items-center gap-4 mb-6">
                                 <div className="bg-indigo-600 p-2.5 rounded-xl shadow-lg shadow-indigo-600/20">
@@ -61,8 +63,16 @@ export const AnalysisView: React.FC<AnalysisViewProps> = ({
                                     </svg>
                                 </div>
                                 <div>
-                                    <h3 className="font-bold text-slate-900 text-lg">High Volume Detected</h3>
-                                    <p className="text-slate-500 text-sm">Your position in queue: <span className="text-indigo-600 font-bold">{queuePosition}</span></p>
+                                    <h3 className="font-bold text-slate-900 text-lg">
+                                        {isLongWait && queuePosition <= 5 ? "Taking a little longer..." : "High Volume Detected"}
+                                    </h3>
+                                    <p className="text-slate-500 text-sm">
+                                        {queuePosition > 0 ? (
+                                            <>Your position in queue: <span className="text-indigo-600 font-bold">{queuePosition}</span></>
+                                        ) : (
+                                            <>Generating deep insights...</>
+                                        )}
+                                    </p>
                                 </div>
                             </div>
 

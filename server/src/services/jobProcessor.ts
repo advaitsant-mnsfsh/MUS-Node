@@ -245,11 +245,41 @@ export class JobProcessor {
                     console.log(`[JobProcessor] Running Contextual Impact Analysis...`);
                     await JobService.updateProgress(jobId, 'Analyzing issues for strategic impact...');
                     try {
+                        // Helper to extract critical issues (Score <= 5) from any audit section
+                        const extractCriticalIssues = (auditData: any, source: string): any[] => {
+                            if (!auditData) return [];
+                            const issues: any[] = [];
+                            // Iterate over keys that might be sections (objects with 'Parameters' array)
+                            Object.keys(auditData).forEach(key => {
+                                const section = auditData[key];
+                                if (section && Array.isArray(section.Parameters)) {
+                                    section.Parameters.forEach((param: any) => {
+                                        // Capture issues with Low Score (<=5) OR High Impact
+                                        if ((typeof param.Score === 'number' && param.Score <= 5) ||
+                                            (param.ImpactLevel === 'Critical' || param.ImpactLevel === 'High')) {
+                                            issues.push({
+                                                Issue: param.ParameterName || 'Unknown Issue',
+                                                Score: param.Score,
+                                                ImpactLevel: param.ImpactLevel || 'High',
+                                                Analysis: param.Analysis || param.Description,
+                                                Recommendation: param.Recommendation,
+                                                Citations: param.Citations,
+                                                Confidence: param.Confidence,
+                                                KeyFinding: param.KeyFinding,
+                                                source: source
+                                            });
+                                        }
+                                    });
+                                }
+                            });
+                            return issues;
+                        };
+
                         const allIssues = [
-                            ...report['UX Audit expert']?.Top5CriticalUXIssues?.map((i: any) => ({ ...i, source: 'UX Audit' })) || [],
-                            ...report['Product Audit expert']?.Top5CriticalProductIssues?.map((i: any) => ({ ...i, source: 'Product Audit' })) || [],
-                            ...report['Visual Audit expert']?.Top5CriticalVisualIssues?.map((i: any) => ({ ...i, source: 'Visual Design' })) || [],
-                            ...report['Accessibility Audit expert']?.Top5CriticalAccessibilityIssues?.map((i: any) => ({ ...i, source: 'Accessibility Audit' })) || []
+                            ...extractCriticalIssues(report['UX Audit expert'], 'UX Audit'),
+                            ...extractCriticalIssues(report['Product Audit expert'], 'Product Audit'),
+                            ...extractCriticalIssues(report['Visual Audit expert'], 'Visual Design'),
+                            ...extractCriticalIssues(report['Accessibility Audit expert'], 'Accessibility Audit')
                         ];
 
                         if (allIssues.length > 0) {
