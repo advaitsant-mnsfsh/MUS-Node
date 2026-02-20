@@ -245,7 +245,7 @@ export const CompetitorReportView: React.FC<CompetitorReportViewProps> = ({
                             <span className="text-sm font-black text-black uppercase tracking-wider bg-blue-200 px-2 py-0.5 w-fit border border-black mb-1">Competitor Website</span>
                             <h3 className="text-xl font-bold text-black break-all text-right">{competitorUrl}</h3>
                         </div>
-                        <div className="bg-yellow-300 border-2 border-black p-2 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] -rotate-2">
+                        <div className="border-2 border-black shadow-neo overflow-hidden">
                             <SiteLogo domain={competitorUrl} size="small" className="shadow-none border-none rounded-none" />
                         </div>
                     </div>
