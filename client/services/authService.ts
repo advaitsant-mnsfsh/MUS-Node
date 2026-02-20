@@ -40,13 +40,6 @@ export async function signUp(email: string, password: string, data?: any): Promi
             return { session: null, error: error.message || 'Failed to sign up' };
         }
 
-        // Note: Better-auth might not return a session immediately if email verification is required
-        // But if it does (e.g. autoSignIn is on), we save it.
-        const token = (authData as any)?.token || (authData as any)?.session?.token;
-        if (token && authData?.user) {
-            saveSession(token, authData.user);
-        }
-
         return { session: authData, error: null };
     } catch (err: any) {
         console.error('[AuthService] 💥 Unexpected error signing up:', err);
@@ -119,7 +112,7 @@ export async function sendOtp(email: string, type: 'email-verification' | 'forge
  */
 export async function resetPasswordWithOtp(email: string, otp: string, newPassword: string): Promise<{ success: boolean; error: string | null }> {
     try {
-        const baseUrl = import.meta.env.VITE_BACKEND_URL || import.meta.env.VITE_API_URL || (import.meta.env.PROD ? 'https://mus-node-production.up.railway.app' : 'http://localhost:8080');
+        const baseUrl = "https://mus-node-production.up.railway.app";
         const response = await fetch(`${baseUrl}/api/auth/reset-password-with-otp`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },

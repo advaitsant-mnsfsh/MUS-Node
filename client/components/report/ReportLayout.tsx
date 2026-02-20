@@ -7,7 +7,7 @@ import { SkeletonLoader } from '../SkeletonLoader';
 import { AuthBlocker } from '../AuthBlocker';
 import { ReportRenderer } from './ReportRenderer';
 import { useGlobalAudit } from '../../contexts/AuditContext';
-import { ChevronLeft, Share2, Download, AlertCircle } from 'lucide-react';
+import { ChevronLeft, Share2, Download, AlertCircle, FileText, LayoutTemplate } from 'lucide-react';
 import SiteLogo from '../SiteLogo';
 
 interface ReportLayoutProps {
@@ -30,6 +30,8 @@ interface ReportLayoutProps {
 
     // Actions
     onGeneratePdf: () => void;
+    onGenerateAlternativePdf?: () => void;
+    onGenerateHybridPdf?: () => void; // New prop
     isPdfGenerating: boolean;
     onShareAudit: () => void;
     isSharing: boolean;
@@ -101,6 +103,8 @@ export const ReportLayout: React.FC<ReportLayoutProps> = ({
     competitorScreenshotSrc,
     pdfError,
     onGeneratePdf,
+    onGenerateAlternativePdf,
+    onGenerateHybridPdf,
     isPdfGenerating,
     onShareAudit,
     isSharing,
@@ -192,11 +196,34 @@ export const ReportLayout: React.FC<ReportLayoutProps> = ({
                                     onClick={onGeneratePdf}
                                     disabled={isPdfGenerating}
                                     className="w-10 h-10 flex items-center justify-center bg-white border-2 border-black text-black rounded-none shadow-neo hover:shadow-neo-hover hover:-translate-x-px hover:-translate-y-px transition-all active:shadow-none active:translate-x-0 active:translate-y-0 disabled:opacity-50"
-                                    title="Download PDF"
+                                    title="Download PDF (Detailed)"
                                 >
                                     <Download className="w-4 h-4 stroke-[3px]" />
                                 </button>
-                                {/* New Audit Button REMOVED */}
+
+                                {/* Alternative PDF Button (Summary Layout) */}
+                                {onGenerateAlternativePdf && (
+                                    <button
+                                        onClick={onGenerateAlternativePdf}
+                                        disabled={isPdfGenerating}
+                                        className="w-10 h-10 flex items-center justify-center bg-white border-2 border-black text-black rounded-none shadow-neo hover:shadow-neo-hover hover:-translate-x-px hover:-translate-y-px transition-all active:shadow-none active:translate-x-0 active:translate-y-0 disabled:opacity-50"
+                                        title="Download PDF (Summary Layout)"
+                                    >
+                                        <FileText className="w-4 h-4 stroke-[3px]" />
+                                    </button>
+                                )}
+
+                                {/* Hybrid PDF Button (Split Layout) */}
+                                {onGenerateHybridPdf && (
+                                    <button
+                                        onClick={onGenerateHybridPdf}
+                                        disabled={isPdfGenerating}
+                                        className="w-10 h-10 flex items-center justify-center bg-white border-2 border-black text-black rounded-none shadow-neo hover:shadow-neo-hover hover:-translate-x-px hover:-translate-y-px transition-all active:shadow-none active:translate-x-0 active:translate-y-0 disabled:opacity-50"
+                                        title="Download PDF (Hybrid Layout)"
+                                    >
+                                        <LayoutTemplate className="w-4 h-4 stroke-[3px]" />
+                                    </button>
+                                )}
                             </div>
                         </div>
 

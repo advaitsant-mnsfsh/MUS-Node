@@ -58,7 +58,7 @@ export const ReportContainer: React.FC<ReportContainerProps> = ({
     });
 
     // New React-PDF method (lightweight, text-selectable) - For Standard Reports
-    const { generateStandardPdf, isGenerating: isStandardPdfGenerating } = useStandardReportPdf({
+    const { generateStandardPdf, generateAlternativePdf, generateHybridPdf, isGenerating: isStandardPdfGenerating } = useStandardReportPdf({
         report,
         url,
         screenshots,
@@ -143,6 +143,8 @@ export const ReportContainer: React.FC<ReportContainerProps> = ({
             competitorScreenshotSrc={competitorScreenshotSrc}
             pdfError={pdfError}
             onGeneratePdf={generatePdf}
+            onGenerateAlternativePdf={!isCompetitorReport ? generateAlternativePdf : undefined}
+            onGenerateHybridPdf={!isCompetitorReport ? generateHybridPdf : undefined} // Only for standard reports
             isPdfGenerating={isPdfGenerating}
             onShareAudit={handleShareAudit}
             isSharing={isSharing}

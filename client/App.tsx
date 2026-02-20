@@ -1,4 +1,5 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 import { useAudit } from './hooks/useAudit';
 
 // --- VIEW COMPONENTS ---
@@ -70,40 +71,60 @@ const App: React.FC = () => {
         let title = "Analysis Failed";
         let message: React.ReactNode = (
             <div className="text-left text-red-700 mt-2 text-sm space-y-2">
-                <p>The analysis failed due to an unexpected technical issue. The full error from the backend is provided below for debugging:</p>
-                <pre className="whitespace-pre-wrap bg-red-50 p-2 rounded text-sm font-mono break-all">{error}</pre>
+                <p>Please try again. If the issue persists, please <Link to="/feedback" className="font-bold underline text-red-900 hover:text-red-950">give us a feedback here</Link>.</p>
+                <details className="mt-4 opacity-70">
+                    <summary className="cursor-pointer font-bold uppercase text-[10px]">Debug Details</summary>
+                    <pre className="whitespace-pre-wrap bg-red-50/50 p-2 rounded text-[11px] font-mono break-all mt-2 max-h-40 overflow-auto border border-red-200">{error}</pre>
+                </details>
             </div>
         );
 
-        if (error.includes('Failed to fetch')) {
+        // 1. Scraper / Puppeteer Error
+        if (error.toLowerCase().includes('scraper error') ||
+            error.toLowerCase().includes('puppeteer') ||
+            error.toLowerCase().includes('navigation failed') ||
+            error.toLowerCase().includes('access denied')) {
+            title = "Website Unreachable";
+            message = (
+                <div className="text-left text-red-700 mt-2 text-sm space-y-2">
+                    <p className="font-bold">Please try again with screenshots instead, as this website is not accessible to our automated agents.</p>
+                    <p>Some sites use anti-bot protection that prevents our analysis. To fix this, manually upload a screenshot of your site on the homepage.</p>
+                </div>
+            );
+        }
+        // 2. Timeout Error
+        else if (error.toLowerCase().includes('timed out') || error.toLowerCase().includes('timeout')) {
+            title = "Analysis Timed Out";
+            message = (
+                <div className="text-left text-red-700 mt-2 text-sm space-y-2">
+                    <p className="font-bold text-lg">Please refresh the page.</p>
+                    <p>Our AI experts took too long to respond. Refreshing usually resolves this by resuming the progress from the dashboard.</p>
+                </div>
+            );
+        }
+        // 3. Network / Connection Error
+        else if (error.includes('Failed to fetch') || error.includes('NetworkError')) {
             title = "Network Connection Error";
             message = (
                 <div className="text-left text-red-700 mt-2 text-sm space-y-2">
-                    <p>We couldn't connect to our analysis server. This is usually due to one of the following reasons:</p>
-                    <ul className="list-disc pl-5 space-y-1">
-                        <li>Your internet connection is unstable.</li>
-                        <li>A firewall or ad-blocker is blocking the connection.</li>
-                        <li>The server is currently sleeping/inactive (common on free tiers).</li>
-                    </ul>
-                    <p className="font-semibold pt-2">Troubleshooting Steps:</p>
-                    <ol className="list-decimal pl-5 space-y-1">
-                        <li>Check your internet connection.</li>
-                        <li>Disable ad-blockers for this page temporarily.</li>
-                        <li>Wait 30 seconds and try again (this often wakes up the server).</li>
-                    </ol>
+                    <p>We couldn't connect to our analysis server. Checking your internet or disabling ad-blockers often helps.</p>
+                    <button onClick={() => window.location.reload()} className="px-4 py-2 bg-red-600 text-white font-bold rounded mt-2 hover:bg-red-700 transition-colors">
+                        Refresh Page
+                    </button>
                 </div>
             );
-        } else if (error.includes('429')) {
-            title = "Server Busy";
-            message = <p className="text-sm mt-2">We are experiencing high traffic. Please wait a minute and try again.</p>;
-        } else if (error.includes('500') || error.includes('Server Error')) {
-            title = "Server Error";
-            message = <p className="text-sm mt-2">Something went wrong on our end. our team has been notified.</p>;
         }
 
         return (
-            <div className="mt-12 max-w-2xl mx-auto p-4 bg-red-100 border border-red-400 rounded-lg">
-                <h3 className="font-bold text-red-800 text-center">{title}</h3>
+            <div className="mt-8 max-w-2xl mx-auto p-6 bg-red-50 border-2 border-red-200 rounded-xl shadow-lg animate-in zoom-in-95 duration-200">
+                <div className="flex items-center gap-3 mb-3 border-b border-red-200 pb-3">
+                    <div className="bg-red-100 p-2 rounded-full">
+                        <svg className="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                    </div>
+                    <h3 className="font-black text-red-900 uppercase tracking-tight text-lg">{title}</h3>
+                </div>
                 {message}
             </div>
         );

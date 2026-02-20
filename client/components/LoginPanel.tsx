@@ -144,15 +144,30 @@ export const LoginPanel: React.FC<LoginPanelProps> = ({ auditId, hideTitle = fal
             return;
         }
 
-        // Create Lead
+        // 3. Log In with the NEW REAL password to get a confirmed session
+        const authService = await import('../services/authService');
+        const { session, error: loginError } = await authService.signIn(email, password);
+
+        if (loginError || !session) {
+            console.error('[LoginPanel] Final login failed:', loginError);
+            toast.error("Account created, but failed to log in automatically.");
+            setIsLoading(false);
+            return;
+        }
+
+        // 4. Create Lead
         await createLead({ email, name: email.split('@')[0], audit_url: window.location.href });
         await verifyLead(email);
 
-        // Transfer audit ownership
-        const authService = await import('../services/authService');
-        const session = await authService.getCurrentSession();
-        if (auditId && session?.user?.id) {
-            await transferAuditOwnership(auditId, session.user.id);
+        // 5. Transfer audit ownership
+        if (auditId && session.user) {
+            console.log(`[LoginPanel] 🔄 Transferring Audit ${auditId} to ${session.user.id}...`);
+            const { success, error: transferError } = await transferAuditOwnership(auditId, session.user.id);
+            if (success) {
+                toast.success('Report saved to your account!', { icon: '📊' });
+            } else {
+                console.error('[LoginPanel] Ownership transfer failed:', transferError);
+            }
         }
 
         setIsLoading(false);

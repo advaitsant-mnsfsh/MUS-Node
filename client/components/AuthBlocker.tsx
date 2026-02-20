@@ -208,16 +208,29 @@ export const AuthBlocker: React.FC<AuthBlockerProps> = ({ onUnlock, isUnlocked, 
             return;
         }
 
-        // Create Lead
+        // 3. Log In with the NEW REAL password to get a session
+        const authService = await import('../services/authService');
+        const { session, error: loginError } = await authService.signIn(email, password);
+
+        if (loginError || !session) {
+            console.error('[AuthBlocker] Final login failed:', loginError);
+            toast.error("Account created, but failed to log in automatically.");
+            setIsLoading(false);
+            return;
+        }
+
+        // 4. Create Lead
         await createLead({ email, name: email.split('@')[0], audit_url: auditUrl });
         await verifyLead(email);
 
-        // Transfer audit ownership
-        if (auditId) {
-            const authService = await import('../services/authService');
-            const session = await authService.getCurrentSession();
-            if (session?.user?.id) {
-                await transferAuditOwnership(auditId, session.user.id);
+        // 5. Transfer audit ownership (Now we have a confirmed session!)
+        if (auditId && session.user) {
+            console.log(`[AuthBlocker] 🔄 Transferring Audit ${auditId} to ${session.user.id}...`);
+            const { success, error: transferError } = await transferAuditOwnership(auditId, session.user.id);
+            if (success) {
+                toast.success('Report saved to your account!', { icon: '📊' });
+            } else {
+                console.error('[AuthBlocker] Ownership transfer failed:', transferError);
             }
         }
 

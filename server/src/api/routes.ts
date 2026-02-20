@@ -134,6 +134,49 @@ router.post('/audit', optionalUserAuth, async (req: express.Request, res: expres
     }
 });
 
+/**
+ * POST /api/v1/audit/claim
+ * Allows an authenticated user to claim an audit that was previously run as a guest.
+ */
+router.post('/audit/claim', optionalUserAuth, async (req: express.Request, res: express.Response) => {
+    const authReq = req as AuthenticatedRequest;
+    const user = authReq.user;
+    const { auditId } = req.body;
+
+    console.log(`[Audit-Claim] Request for Audit ID: ${auditId}, Authenticated User: ${user?.email || 'NONE'}`);
+
+    if (!user) {
+        return res.status(401).json({ success: false, error: 'Unauthorized: No active session found.' });
+    }
+
+    if (!auditId) {
+        return res.status(400).json({ success: false, error: 'Missing auditId' });
+    }
+
+    try {
+        // Ensure we only claim audits that don't already have an owner
+        const [updated] = await db.update(auditJobs)
+            .set({ user_id: user.id })
+            .where(and(
+                eq(auditJobs.id, auditId),
+                isNull(auditJobs.user_id)
+            ))
+            .returning({ id: auditJobs.id });
+
+        if (!updated) {
+            console.warn(`[Audit-Claim] ⚠️ Claim failed for ${auditId}. Either not found or already has an owner.`);
+            return res.status(404).json({ success: false, error: 'Audit not found or already claimed.' });
+        }
+
+        console.log(`[Audit-Claim] ✅ Audit ${auditId} successfully transferred to user ${user.email}`);
+        return res.json({ success: true });
+
+    } catch (e: any) {
+        console.error(`[Audit-Claim] 💥 Critical error:`, e);
+        return res.status(500).json({ success: false, error: e.message || 'Internal Server Error' });
+    }
+});
+
 // GET /api/v1/audit (Streaming Support)
 router.get('/audit', async (req: express.Request, res: express.Response) => {
     const { mode, jobId } = req.query;

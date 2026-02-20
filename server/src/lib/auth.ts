@@ -25,7 +25,7 @@ export const auth = betterAuth({
 
     emailAndPassword: {
         enabled: true,
-        // autoSignIn: false // We verify email first!
+        autoSignIn: false // We verify email first!
     },
 
     // 📧 Plugin: Email OTP (One-Time Password)
