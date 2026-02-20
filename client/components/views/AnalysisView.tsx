@@ -115,7 +115,7 @@ export const AnalysisView: React.FC<AnalysisViewProps> = ({
                         </div>
                     )}
 
-                    {isError && (
+                    {isError && !user && (
                         <div className="bg-white/50 backdrop-blur-sm border border-slate-100 rounded-3xl p-8 shadow-sm">
                             <LoginPanel auditId={auditId} />
                         </div>

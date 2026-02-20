@@ -125,25 +125,16 @@ export const ScanningPreview: React.FC<ScanningPreviewProps> = ({ screenshot, pr
                     ) : (
                         <div className={`w-full h-full ${isError ? 'bg-red-50' : 'bg-gradient-to-br from-slate-50 to-slate-100'} flex flex-col items-center justify-center p-6`}>
                             <div className="text-center">
-                                <div className="mt-0 flex items-center justify-center relative">
-                                    {/* Decorative Blur Effect */}
-                                    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-48 h-48 bg-brand/10 rounded-full blur-3xl animate-pulse" />
-
-                                    {/* Analysis Card */}
-                                    <div className="relative bg-white border-2 border-black p-8 md:p-12 shadow-neo animate-in zoom-in-95 duration-500 text-center">
-                                        <h2 className={`text-2xl md:text-3xl font-black ${isError ? 'text-red-700' : 'text-black'} mb-3 uppercase tracking-tight`}>
-                                            {isError ? 'Analysis Failed' : 'Analyzing your website'}
-                                        </h2>
-                                        <p className={`text-base font-bold ${isError ? 'text-red-500' : 'text-slate-500'} mb-0`}>
-                                            {isError ? 'We hit a technical snag. Check details below.' : 'This typically takes 2-3 minutes'}
-                                        </p>
-
-                                        {/* Spinner Icon */}
-                                        {!isError && (
-                                            <div className="mt-8 flex justify-center">
-                                                <div className="w-10 h-10 border-4 border-slate-100 border-t-brand rounded-full animate-spin" />
-                                            </div>
-                                        )}
+                                <div className="mt-0 flex items-center justify-center">
+                                    <div className={`inline-flex items-top gap-2 px-6 py-4 bg-white border-2 ${isError ? 'border-red-500 shadow-neo-red' : 'border-black shadow-neo'}`}>
+                                        <span className="text-sm font-bold text-text-primary text-center">
+                                            <h2 className={`text-xl md:text-2xl font-black ${isError ? 'text-red-700' : 'text-black'} mb-2 uppercase tracking-tight`}>
+                                                {isError ? 'Analysis Failed' : 'Analyzing your website'}
+                                            </h2>
+                                            <p className={`text-sm ${isError ? 'text-red-500' : 'text-slate-500'} mb-0`}>
+                                                {isError ? 'We hit a technical snag. Check details below.' : 'This typically takes 2-3 minutes'}
+                                            </p>
+                                        </span>
                                     </div>
                                 </div>
                             </div>
