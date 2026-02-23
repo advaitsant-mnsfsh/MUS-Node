@@ -10,9 +10,17 @@ interface WhiteLabelModalProps {
   initialLogo: string | null;
   title?: string;
   description?: string;
+  lockAspectRatio?: boolean;
 }
 
 const DEFAULT_ASPECT = 1 / 1;
+
+const ASPECT_RATIOS = [
+  { label: 'Square (1:1)', value: 1 / 1 },
+  { label: 'Landscape (4:3)', value: 4 / 3 },
+  { label: 'Banner (16:9)', value: 16 / 9 },
+  { label: 'Free', value: undefined },
+];
 
 function centerAspectCrop(
   mediaWidth: number,
@@ -40,12 +48,13 @@ export const WhiteLabelModal: React.FC<WhiteLabelModalProps> = ({
   onSave,
   initialLogo,
   title = "Upload Organization’s Logo",
-  description = "This logo will be used to whitelabel the report to make it shareable."
+  description = "This logo will be used to whitelabel the report to make it shareable.",
+  lockAspectRatio = false
 }) => {
   const [imageSrc, setImageSrc] = useState<string | null>(initialLogo);
   const [crop, setCrop] = useState<Crop>();
   const [completedCrop, setCompletedCrop] = useState<PixelCrop>();
-  const [aspect] = useState<number | undefined>(DEFAULT_ASPECT);
+  const [aspect, setAspect] = useState<number | undefined>(lockAspectRatio ? DEFAULT_ASPECT : undefined);
 
   const imgRef = useRef<HTMLImageElement>(null);
 
@@ -54,8 +63,9 @@ export const WhiteLabelModal: React.FC<WhiteLabelModalProps> = ({
       setImageSrc(initialLogo);
       setCrop(undefined);
       setCompletedCrop(undefined);
+      setAspect(lockAspectRatio ? DEFAULT_ASPECT : undefined);
     }
-  }, [isOpen, initialLogo]);
+  }, [isOpen, initialLogo, lockAspectRatio]);
 
   const onFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
@@ -70,6 +80,16 @@ export const WhiteLabelModal: React.FC<WhiteLabelModalProps> = ({
     const { width, height } = e.currentTarget;
     if (aspect) {
       setCrop(centerAspectCrop(width, height, aspect));
+    }
+  };
+
+  const handleAspectChange = (newAspect: number | undefined) => {
+    setAspect(newAspect);
+    if (imgRef.current && newAspect) {
+      const { width, height } = imgRef.current;
+      setCrop(centerAspectCrop(width, height, newAspect));
+    } else {
+      setCrop(undefined);
     }
   };
 
@@ -181,12 +201,32 @@ export const WhiteLabelModal: React.FC<WhiteLabelModalProps> = ({
               </div>
 
               <div className="bg-white p-4 rounded-lg border-2 border-border-main shadow-neo-sm">
-                <div className="flex items-center justify-between">
-                  <span className="text-sm font-bold text-text-primary flex items-center gap-2">
-                    <CropIcon className="w-4 h-4" />
-                    Crop Square (1:1):
-                  </span>
-                  <label className="cursor-pointer text-sm font-bold text-brand hover:text-brand-hover underline decoration-dotted underline-offset-2 flex items-center gap-1">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="text-sm font-bold text-text-primary flex items-center gap-2 mr-2">
+                      <CropIcon className="w-4 h-4" />
+                      Aspect Ratio:
+                    </span>
+                    {lockAspectRatio ? (
+                      <span className="px-3 py-1 bg-accent-yellow border-2 border-black text-xs font-bold rounded shadow-neo-sm">
+                        Fixed Square (1:1)
+                      </span>
+                    ) : (
+                      ASPECT_RATIOS.map((ratio) => (
+                        <button
+                          key={ratio.label}
+                          onClick={() => handleAspectChange(ratio.value)}
+                          className={`px-3 py-1 text-xs font-bold rounded border-2 transition-all ${aspect === ratio.value
+                              ? 'bg-accent-yellow border-black text-black shadow-neo-sm'
+                              : 'bg-white border-transparent text-slate-500 hover:border-black hover:text-black'
+                            }`}
+                        >
+                          {ratio.label}
+                        </button>
+                      ))
+                    )}
+                  </div>
+                  <label className="cursor-pointer text-sm font-bold text-brand hover:text-brand-hover underline decoration-dotted underline-offset-2 flex items-center gap-1 shrink-0">
                     Change Image
                     <input type="file" className="hidden" accept="image/*" onChange={onFileChange} />
                   </label>

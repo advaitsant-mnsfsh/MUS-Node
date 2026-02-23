@@ -484,6 +484,7 @@ const DashboardPage: React.FC = () => {
                 initialLogo={logoEditingAudit?.initialLogo || null}
                 title="Update Assessment Logo"
                 description="This logo will represent the project on your dashboard and in the report."
+                lockAspectRatio={true}
             />
         </div>
     );
