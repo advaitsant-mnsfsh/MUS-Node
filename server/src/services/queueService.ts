@@ -24,6 +24,14 @@ export class QueueService {
             payload: payload
         });
 
+        // 1.5 Update audit_jobs with opt-in offer status
+        if (queueType === 'email') {
+            const { auditJobs } = await import('../db/schema.js');
+            await db.update(auditJobs)
+                .set({ email_opt_in_offered: true })
+                .where(eq(auditJobs.id, jobId));
+        }
+
         console.log(`[QueueService] Job ${jobId} added to queue at position ${waitingCount + 1}`);
         return { queueId, position: waitingCount + 1, queueType };
     }

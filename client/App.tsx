@@ -20,13 +20,34 @@ class ErrorBoundary extends React.Component<{ children: React.ReactNode }, { has
     render() {
         if (this.state.hasError) {
             return (
-                <div className="min-h-screen flex items-center justify-center bg-red-50 p-4">
-                    <div className="max-w-xl w-full bg-white p-8 rounded-xl shadow-2xl border border-red-200">
-                        <h1 className="text-2xl font-bold text-red-800 mb-4">Application Crashed</h1>
-                        <p className="mb-4 text-gray-600">Something went wrong while rendering the UI.</p>
-                        <div className="bg-gray-100 p-4 rounded overflow-auto max-h-64 text-sm font-mono border border-gray-300">
-                            {this.state.error?.toString()}
+                <div className="min-h-screen flex items-center justify-center bg-[#FFFBF0] p-4 font-sans">
+                    <div className="max-w-xl w-full bg-white border-4 border-black p-10 shadow-[12px_12px_0px_0px_rgba(0,0,0,1)] relative">
+                        <div className="absolute top-0 left-0 w-full h-3 bg-red-500 border-b-4 border-black"></div>
+
+                        <div className="flex items-center gap-4 mb-6 mt-4">
+                            <div className="w-12 h-12 bg-red-500 border-2 border-black flex items-center justify-center shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
+                                <span className="text-white text-2xl font-black">!</span>
+                            </div>
+                            <h1 className="text-3xl md:text-4xl font-black text-black uppercase tracking-tighter leading-none">
+                                Application<br />Crashed
+                            </h1>
                         </div>
+
+                        <p className="mb-6 text-black font-bold text-lg leading-snug">
+                            Something went wrong while rendering the interface. Our team has been notified.
+                        </p>
+
+                        <div className="bg-[#FEFCE8] p-4 border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] overflow-auto max-h-64 text-xs font-mono text-black mb-8">
+                            <div className="font-black uppercase text-[10px] mb-2 opacity-50 border-b border-black/10 pb-1">Error Details</div>
+                            {this.state.error?.toString() || "Unknown Error"}
+                        </div>
+
+                        <button
+                            onClick={() => window.location.href = '/'}
+                            className="w-full py-4 bg-black text-white font-black uppercase tracking-widest text-sm hover:translate-x-1 hover:translate-y-1 hover:shadow-none transition-all shadow-[6px_6px_0px_0px_rgba(100,100,100,1)]"
+                        >
+                            Back to Home
+                        </button>
                     </div>
                 </div>
             );

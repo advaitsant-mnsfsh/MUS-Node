@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Loader2 } from 'lucide-react';
 import toast from 'react-hot-toast';
-import { signUp, signIn, sendOtp, verifyOtp, updateProfile } from '../services/authService';
+import { signUp, signIn, sendOtp, verifyOtp, resetPasswordWithOtp } from '../services/authService';
 import { createLead, verifyLead } from '../services/leadService';
 import { transferAuditOwnership } from '../services/auditStorage';
 
@@ -12,7 +12,7 @@ interface LoginPanelProps {
 
 export const LoginPanel: React.FC<LoginPanelProps> = ({ auditId, hideTitle = false }) => {
     const [isLoginMode, setIsLoginMode] = useState(false); // Toggle between Sign Up and Login
-    const [step, setStep] = useState<'email' | 'otp' | 'password'>('email'); // For Signup flow
+    const [step, setStep] = useState<'email' | 'otp' | 'password' | 'forgot-email' | 'forgot-otp' | 'forgot-reset'>('email'); // For various flows
     const [tempPassword] = useState(() => Math.random().toString(36).slice(-12) + 'A1!'); // Bridge password
 
     // Form State
@@ -59,6 +59,62 @@ export const LoginPanel: React.FC<LoginPanelProps> = ({ auditId, hideTitle = fal
             }
 
             toast.success('Welcome back!');
+        }
+    };
+
+    const handleForgotPasswordRequest = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!email) {
+            toast.error("Please enter your email.");
+            return;
+        }
+
+        setIsLoading(true);
+        const { error } = await sendOtp(email, 'forget-password');
+        setIsLoading(false);
+
+        if (error) {
+            toast.error(error);
+        } else {
+            toast.success('Security code sent to ' + email);
+            setStep('forgot-otp');
+        }
+    };
+
+    const handleForgotPasswordVerify = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!otp) return;
+        setStep('forgot-reset');
+    };
+
+    const handleForgotPasswordReset = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!password || !confirmPassword) {
+            toast.error("Please enter and confirm your password.");
+            return;
+        }
+        if (password !== confirmPassword) {
+            toast.error("Passwords do not match.");
+            return;
+        }
+        if (password.length < 8) {
+            toast.error("Password must be at least 8 characters.");
+            return;
+        }
+
+        setIsLoading(true);
+        const { success, error } = await resetPasswordWithOtp(email, otp, password);
+        setIsLoading(false);
+
+        if (success) {
+            toast.success('Password reset successfully! You can now log in.');
+            setIsLoginMode(true);
+            setStep('email');
+            setPassword('');
+            setConfirmPassword('');
+            setOtp('');
+        } else {
+            toast.error(error || "Failed to reset password");
         }
     };
 
@@ -175,7 +231,7 @@ export const LoginPanel: React.FC<LoginPanelProps> = ({ auditId, hideTitle = fal
     };
 
     return (
-        <div className="w-full max-w-md mx-auto px-6 pb-6 min-h-[540px] flex flex-col font-['DM_Sans']">
+        <div className="w-full max-w-md mx-auto px-6 pb-6 flex flex-col font-['DM_Sans']">
             {/* Header - Fixed Height */}
             {!hideTitle && (
                 <div className="h-24 flex flex-col justify-center mb-6 text-center md:text-left">
@@ -193,8 +249,8 @@ export const LoginPanel: React.FC<LoginPanelProps> = ({ auditId, hideTitle = fal
             {/* Form */}
             {isLoginMode ? (
                 // LOGIN FORM
-                <form onSubmit={handleLogin} className="grow flex flex-col">
-                    <div className="space-y-6 grow">
+                <form onSubmit={handleLogin} className="flex flex-col">
+                    <div className="space-y-6">
                         <div>
                             <label htmlFor="email" className="block text-sm font-semibold text-slate-900 mb-2 text-left">
                                 Business Email <span className="text-red-600">*</span>
@@ -210,9 +266,21 @@ export const LoginPanel: React.FC<LoginPanelProps> = ({ auditId, hideTitle = fal
                             />
                         </div>
                         <div>
-                            <label htmlFor="password" className="block text-sm font-semibold text-slate-900 mb-2 text-left">
-                                Password <span className="text-red-600">*</span>
-                            </label>
+                            <div className="flex justify-between items-baseline mb-2">
+                                <label htmlFor="password" className="block text-sm font-semibold text-slate-900 text-left">
+                                    Password <span className="text-red-600">*</span>
+                                </label>
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        setIsLoginMode(false);
+                                        setStep('forgot-email');
+                                    }}
+                                    className="text-xs font-bold text-slate-500 hover:text-black transition-colors"
+                                >
+                                    Forgot Password?
+                                </button>
+                            </div>
                             <input
                                 type="password"
                                 id="password"
@@ -228,7 +296,7 @@ export const LoginPanel: React.FC<LoginPanelProps> = ({ auditId, hideTitle = fal
                     <button
                         type="submit"
                         disabled={isLoading}
-                        className="w-full h-14 mt-8 bg-black hover:bg-slate-800 text-white border-2 border-black rounded-none shadow-neo hover:shadow-neo-hover active:translate-x-px active:translate-y-px active:shadow-none text-base font-bold transition-all disabled:opacity-70 disabled:cursor-not-allowed flex justify-center items-center gap-2"
+                        className="w-full h-14 mt-4 bg-black hover:bg-slate-800 text-white border-2 border-black rounded-none shadow-neo hover:shadow-neo-hover active:translate-x-px active:translate-y-px active:shadow-none text-base font-bold transition-all disabled:opacity-70 disabled:cursor-not-allowed flex justify-center items-center gap-2"
                     >
                         {isLoading ? (
                             <>
@@ -240,24 +308,125 @@ export const LoginPanel: React.FC<LoginPanelProps> = ({ auditId, hideTitle = fal
                         )}
                     </button>
 
-                    <div className="mt-auto pt-6 border-t-2 border-slate-100 text-center">
-                        <p className="text-sm text-slate-600 font-medium">
-                            Don't have an account?
-                            <button
-                                type="button"
-                                onClick={() => { setIsLoginMode(false); setStep('email'); }}
-                                className="text-black font-bold hover:underline decoration-2 underline-offset-2 ml-1"
-                            >
-                                Sign Up
-                            </button>
-                        </p>
+                </form>
+            ) : step === 'forgot-email' ? (
+                // FORGOT PASSWORD: EMAIL
+                <form onSubmit={handleForgotPasswordRequest} className="space-y-6">
+                    <div className="p-4 bg-indigo-50 border-l-4 border-indigo-600">
+                        <p className="text-sm font-bold text-slate-900">Reset Password</p>
+                        <p className="text-sm text-slate-600">Enter your business email and we'll send you a security code.</p>
                     </div>
+                    <div>
+                        <label htmlFor="email" className="block text-sm font-semibold text-slate-900 mb-2 text-left">
+                            Business Email
+                        </label>
+                        <input
+                            type="email"
+                            id="email"
+                            required
+                            className="w-full h-12 px-4 bg-white border-2 border-black rounded-none shadow-neo focus:outline-none focus:shadow-neo-hover transition-all text-base"
+                            placeholder="you@company.com"
+                            value={email}
+                            onChange={(e) => setEmail(e.target.value)}
+                        />
+                    </div>
+                    <button
+                        type="submit"
+                        disabled={isLoading}
+                        className="w-full h-14 bg-black text-white font-bold border-2 border-black shadow-neo hover:shadow-neo-hover active:translate-x-px active:translate-y-px active:shadow-none transition-all flex justify-center items-center gap-2"
+                    >
+                        {isLoading ? "Sending..." : "Send Reset Code"}
+                    </button>
+                    <button
+                        type="button"
+                        onClick={() => {
+                            setIsLoginMode(true);
+                            setStep('email');
+                        }}
+                        className="w-full text-sm text-slate-500 hover:text-black font-semibold underline underline-offset-4"
+                    >
+                        Back to Login
+                    </button>
+                </form>
+            ) : step === 'forgot-otp' ? (
+                // FORGOT PASSWORD: OTP
+                <form onSubmit={handleForgotPasswordVerify} className="space-y-6">
+                    <div className="text-center">
+                        <label htmlFor="otp" className="block text-sm font-semibold text-slate-900 mb-4">
+                            Verification Code for <br /><span className="text-brand">{email}</span>
+                        </label>
+                        <input
+                            type="text"
+                            id="otp"
+                            required
+                            autoFocus
+                            className="w-full h-16 px-4 bg-white border-2 border-black rounded-none shadow-neo text-center tracking-[0.5em] text-2xl font-mono"
+                            placeholder="------"
+                            maxLength={6}
+                            value={otp}
+                            onChange={(e) => setOtp(e.target.value)}
+                        />
+                    </div>
+                    <button
+                        type="submit"
+                        className="w-full h-14 bg-black text-white font-bold border-2 border-black shadow-neo hover:shadow-neo-hover active:translate-x-px active:translate-y-px active:shadow-none transition-all"
+                    >
+                        Confirm Security Code
+                    </button>
+                    <button
+                        type="button"
+                        onClick={() => setStep('forgot-email')}
+                        className="w-full text-sm text-slate-500 hover:text-black font-semibold underline underline-offset-4"
+                    >
+                        Resend or Change Email
+                    </button>
+                </form>
+            ) : step === 'forgot-reset' ? (
+                // FORGOT PASSWORD: NEW PASSWORD
+                <form onSubmit={handleForgotPasswordReset} className="space-y-6">
+                    <div className="p-4 bg-green-50 border-l-4 border-green-500">
+                        <p className="text-sm font-bold text-slate-900">Security Verified</p>
+                        <p className="text-sm text-slate-600">Now choose a new strong password for your account.</p>
+                    </div>
+                    <div>
+                        <label className="block text-sm font-semibold text-slate-900 mb-2 text-left">
+                            New Password
+                        </label>
+                        <input
+                            type="password"
+                            required
+                            minLength={8}
+                            className="w-full h-12 px-4 bg-white border-2 border-black rounded-none shadow-neo text-base"
+                            value={password}
+                            onChange={(e) => setPassword(e.target.value)}
+                        />
+                    </div>
+                    <div>
+                        <label className="block text-sm font-semibold text-slate-900 mb-2 text-left">
+                            Confirm New Password
+                        </label>
+                        <input
+                            type="password"
+                            required
+                            minLength={8}
+                            className="w-full h-12 px-4 bg-white border-2 border-black rounded-none shadow-neo text-base"
+                            value={confirmPassword}
+                            onChange={(e) => setConfirmPassword(e.target.value)}
+                        />
+                    </div>
+                    <button
+                        type="submit"
+                        disabled={isLoading}
+                        className="w-full h-14 bg-black text-white font-bold border-2 border-black shadow-neo hover:shadow-neo-hover active:translate-x-px active:translate-y-px active:shadow-none transition-all"
+                    >
+                        {isLoading ? "Saving..." : "Update Password & Login"}
+                    </button>
                 </form>
             ) : (
                 // SIGNUP FORM
                 step === 'email' ? (
-                    <form onSubmit={handleSignupStep1} className="grow flex flex-col">
-                        <div className="space-y-6 grow">
+                    <form onSubmit={handleSignupStep1} className="flex flex-col">
+                        <div className="space-y-6">
                             <div>
                                 <label htmlFor="email" className="block text-sm font-semibold text-slate-900 mb-2 text-left">
                                     Business Email <span className="text-red-600">*</span>
@@ -281,7 +450,7 @@ export const LoginPanel: React.FC<LoginPanelProps> = ({ auditId, hideTitle = fal
                         <button
                             type="submit"
                             disabled={isLoading}
-                            className="w-full h-14 mt-8 bg-black hover:bg-slate-800 text-white border-2 border-black rounded-none shadow-neo hover:shadow-neo-hover active:translate-x-px active:translate-y-px active:shadow-none text-base font-bold transition-all disabled:opacity-70 disabled:cursor-not-allowed flex justify-center items-center gap-2"
+                            className="w-full h-14 mt-4 bg-black hover:bg-slate-800 text-white border-2 border-black rounded-none shadow-neo hover:shadow-neo-hover active:translate-x-px active:translate-y-px active:shadow-none text-base font-bold transition-all disabled:opacity-70 disabled:cursor-not-allowed flex justify-center items-center gap-2"
                         >
                             {isLoading ? (
                                 <>
@@ -292,22 +461,10 @@ export const LoginPanel: React.FC<LoginPanelProps> = ({ auditId, hideTitle = fal
                                 'Continue to Signup'
                             )}
                         </button>
-                        <p className="text-center text-sm text-slate-500 mt-6 font-medium">
+                        <p className="text-center text-sm text-slate-500 mt-4 font-medium">
                             Step 1 of 3: Verification
                         </p>
 
-                        <div className="mt-auto pt-6 border-t-2 border-slate-100 text-center">
-                            <p className="text-sm text-slate-600 font-medium">
-                                Already have an account?
-                                <button
-                                    type="button"
-                                    onClick={() => setIsLoginMode(true)}
-                                    className="text-black font-bold hover:underline decoration-2 underline-offset-2 ml-1"
-                                >
-                                    Log In
-                                </button>
-                            </p>
-                        </div>
                     </form>
                 ) : step === 'otp' ? (
                     // OTP VERIFICATION STEP
@@ -337,7 +494,7 @@ export const LoginPanel: React.FC<LoginPanelProps> = ({ auditId, hideTitle = fal
                         <button
                             type="submit"
                             disabled={isLoading}
-                            className="w-full h-14 mt-6 bg-black hover:bg-slate-800 text-white border-2 border-black rounded-none shadow-neo hover:shadow-neo-hover active:translate-x-px active:translate-y-px active:shadow-none text-base font-bold transition-all disabled:opacity-70 disabled:cursor-not-allowed flex justify-center items-center gap-2"
+                            className="w-full h-14 mt-4 bg-black hover:bg-slate-800 text-white border-2 border-black rounded-none shadow-neo hover:shadow-neo-hover active:translate-x-px active:translate-y-px active:shadow-none text-base font-bold transition-all disabled:opacity-70 disabled:cursor-not-allowed flex justify-center items-center gap-2"
                         >
                             {isLoading ? (
                                 <>
@@ -402,7 +559,7 @@ export const LoginPanel: React.FC<LoginPanelProps> = ({ auditId, hideTitle = fal
                         <button
                             type="submit"
                             disabled={isLoading}
-                            className="w-full h-14 mt-8 bg-black hover:bg-slate-800 text-white border-2 border-black rounded-none shadow-neo hover:shadow-neo-hover active:translate-x-px active:translate-y-px active:shadow-none text-base font-bold transition-all disabled:opacity-70 disabled:cursor-not-allowed flex justify-center items-center gap-2"
+                            className="w-full h-14 mt-4 bg-black hover:bg-slate-800 text-white border-2 border-black rounded-none shadow-neo hover:shadow-neo-hover active:translate-x-px active:translate-y-px active:shadow-none text-base font-bold transition-all disabled:opacity-70 disabled:cursor-not-allowed flex justify-center items-center gap-2"
                         >
                             {isLoading ? (
                                 <>
@@ -413,12 +570,28 @@ export const LoginPanel: React.FC<LoginPanelProps> = ({ auditId, hideTitle = fal
                                 'Complete Registration'
                             )}
                         </button>
-                        <p className="text-center text-sm text-slate-500 mt-6 font-medium">
+                        <p className="text-center text-sm text-slate-500 mt-4 font-medium">
                             Step 3 of 3: Finalize
                         </p>
                     </form>
                 )
             )}
+            <div className={`mt-4 pt-4 border-t-2 border-slate-100 text-center ${step !== 'email' && !isLoginMode ? 'hidden' : ''}`}>
+                <p className="text-sm text-slate-600 font-medium">
+                    {isLoginMode ? "Don't have an account? " : "Already have an account? "}
+                    <button
+                        type="button"
+                        onClick={() => {
+                            setIsLoginMode(!isLoginMode);
+                            setStep('email');
+                            setEmailError(null);
+                        }}
+                        className="text-black font-bold hover:underline decoration-2 underline-offset-2 ml-1"
+                    >
+                        {isLoginMode ? "Sign Up" : "Log In"}
+                    </button>
+                </p>
+            </div>
         </div>
     );
 };

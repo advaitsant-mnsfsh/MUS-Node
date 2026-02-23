@@ -255,9 +255,17 @@ export const useAudit = () => {
                     }
 
                     if (job.inputs) {
-                        setReportInputs(job.inputs);
-                        if (job.inputs.length > 0) {
-                            const firstInput = job.inputs[0];
+                        let finalInputs = [...job.inputs];
+                        if (job.customName && finalInputs.length > 0) {
+                            finalInputs[0] = { ...finalInputs[0], customName: job.customName };
+                        }
+                        if (job.customFavicon && finalInputs.length > 0) {
+                            finalInputs[0] = { ...finalInputs[0], customFavicon: job.customFavicon };
+                        }
+                        setReportInputs(finalInputs);
+
+                        if (finalInputs.length > 0) {
+                            const firstInput = finalInputs[0];
                             setSubmittedUrl(firstInput.type === 'url' ? firstInput.url! : 'Manual Upload');
                         }
                     }
@@ -371,7 +379,6 @@ export const useAudit = () => {
             try {
                 for (const input of inputs) {
                     const filesData = await processFiles(input.files, input.file);
-
                     const cleanedInput = { ...input, file: undefined, files: undefined };
 
                     if (input.type === 'url') {
@@ -397,10 +404,15 @@ export const useAudit = () => {
                             setIsLoading(false);
                             return;
                         }
+
+                        const filesToProcess = input.files && input.files.length > 0 ? input.files : (input.file ? [input.file] : []);
+
                         processedInputs.push({
                             ...cleanedInput,
                             filesData: filesData,
-                            fileData: filesData[0]
+                            fileData: filesData[0],
+                            fileName: filesToProcess[0]?.name,
+                            fileNames: filesToProcess.map(f => f.name)
                         });
                     }
                 }
@@ -426,7 +438,7 @@ export const useAudit = () => {
                 setIsLoading(false);
             }
         }, 10);
-    }, [startAnalysis]);
+    }, [startAnalysis, whiteLabelLogo]);
 
     const handleRunNewAudit = useCallback(() => {
         setReport(null);

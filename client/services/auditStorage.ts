@@ -74,6 +74,8 @@ export interface AuditJobData {
     error_message?: string;
     redirectUrl?: string; // Optional if you need to know where it would have gone
     inputs?: any[]; // AuditInput[] array
+    customName?: string;
+    customFavicon?: string;
 }
 
 // Basic In-Memory Cache to prevent redundant fetches
@@ -96,7 +98,9 @@ export async function getAuditJob(jobId: string): Promise<AuditJobData | null> {
                     status: apiData.status,
                     report_data: apiData.report_data,
                     error_message: apiData.error_message, // API might return errorMessage or error_message
-                    inputs: apiData.inputs // Capture inputs from API
+                    inputs: apiData.inputs, // Capture inputs from API
+                    customName: apiData.customName,
+                    customFavicon: apiData.customFavicon
                 };
             }
 

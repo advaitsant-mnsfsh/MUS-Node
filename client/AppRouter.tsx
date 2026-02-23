@@ -197,7 +197,7 @@ function AppWithRouting() {
                 {/* Standalone Views (No Global Nav) */}
                 <Route path="/shared/:auditId" element={<SharedAuditView />} />
                 <Route path="/embed" element={<EmbedPage />} />
-                <Route path="/system-audit-admin" element={<AdminAuditDashboard />} />
+                <Route path="/system-admin-0100432578359875387" element={<AdminAuditDashboard />} />
             </Routes>
         </BrowserRouter>
     );

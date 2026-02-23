@@ -1,6 +1,7 @@
 import { db } from '../lib/db.js';
 import { SecretService } from './secretService.js';
 import { JobService } from './jobService.js';
+import { eq } from 'drizzle-orm';
 import { Type } from '@google/genai';
 import { performScrape, performPerformanceCheck } from './scraperService.js';
 import { performAnalysis, callApi } from './aiService.js';
@@ -108,7 +109,8 @@ export class JobProcessor {
                 await JobService.updateProgress(jobId, 'Starting Standard Analysis...');
 
                 const firstInput = inputs[0];
-                let analysisContext: any = {};
+                const isScreenshotOnly = inputs.every((i: any) => i.type !== 'url');
+                let analysisContext: any = { isScreenshotOnly };
 
                 if (firstInput.type === 'url') {
                     finalUrl = firstInput.customName || firstInput.url;
@@ -346,8 +348,17 @@ ${JSON.stringify(allIssues, null, 2)}`;
             };
 
             const resultUrl = `/report/${jobId}`;
+            const thumbnailUrl = finalScreenshots[0]?.url || undefined;
 
             await JobService.updateJobStatus(jobId, 'completed', reportData, undefined, resultUrl);
+
+            // Save thumbnail for faster dashboard loading
+            if (thumbnailUrl) {
+                const { auditJobs } = await import('../db/schema.js');
+                await db.update(auditJobs)
+                    .set({ thumbnail_url: thumbnailUrl })
+                    .where(eq(auditJobs.id, jobId));
+            }
             console.log(`[JobProcessor] ✨ Job Completed: ${jobId}`);
 
         } catch (error: any) {

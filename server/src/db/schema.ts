@@ -54,9 +54,11 @@ export const auditJobs = pgTable("audit_jobs", {
     input_data: jsonb("input_data").notNull(),
     audit_type: text("audit_type").default("standard").notNull(),
     email_opt_in: boolean("email_opt_in").default(false).notNull(),
+    email_opt_in_offered: boolean("email_opt_in_offered").default(false).notNull(),
     opt_in_email: text("opt_in_email"),
     result_url: text("result_url"),
     report_data: jsonb("report_data"),
+    thumbnail_url: text("thumbnail_url"),
     error_message: text("error_message"),
     created_at: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
     updated_at: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull()

@@ -137,13 +137,39 @@ export const getStrategySystemInstruction = () => `
   After completing the strategic analysis (Domain, Purpose, Target Audience), you MUST generate 3 realistic user personas based on your findings. Fill out all fields for each persona. For each persona, keep the \`UserNeedsBehavior\` and \`PainPointOpportunity\` descriptions to 3-4 concise sentences to ensure the report can be saved successfully.
 `;
 
-export const getAccessibilitySystemInstruction = (isMultiPage: boolean) => {
-    let specificInstructions = `You are a world-class **Accessibility Auditor** (CPACC/WebAIM Certified). Your task is to interpretation the provided automated Axe-Core audit data and combine it with visual/structural analysis to evaluate WCAG 2.1 AA compliance.
+export const getAccessibilitySystemInstruction = (isMultiPage: boolean, isScreenshotOnly: boolean = false) => {
+    const params = isScreenshotOnly
+        ? [
+            "ColorContrast",
+            "ResizableText",
+            "HeadingsAndStructure",
+            "FormLabels",
+            "TouchTargetSize"
+        ]
+        : [
+            "ColorContrast",
+            "ResizableText",
+            "FocusIndicators",
+            "HeadingsAndStructure",
+            "AlternativeText",
+            "KeyboardNavigation",
+            "FormLabels",
+            "TouchTargetSize",
+            "ARIAUsage"
+        ];
 
-    You MUST Populate the schema with a comprehensive list of parameters. DO NOT Summarize.
+    const mandatoryList = isScreenshotOnly
+        ? `1. **Visual Accessibility**:
+       - 'ColorContrast' (Legibility and contrast ratios)
+       - 'ResizableText' (Zoom capabilities and responsiveness)
 
-    MANDATORY PARAMETERS (Limit evaluation to these 9 key areas):
-    1. **Visual Accessibility**:
+    2. **Screen Reader Experience**:
+       - 'HeadingsAndStructure' (Logical hierarchy h1-h6, landmarks)
+
+    3. **AutomatedCompliance**:
+       - 'FormLabels' (Input labelling and instructions)
+       - 'TouchTargetSize' (Spacing and size for mobile/touch)`
+        : `1. **Visual Accessibility**:
        - 'ColorContrast' (Legibility and contrast ratios)
        - 'ResizableText' (Zoom capabilities and responsiveness)
        - 'FocusIndicators' (Visibility of focus states on interactive elements)
@@ -156,28 +182,27 @@ export const getAccessibilitySystemInstruction = (isMultiPage: boolean) => {
     3. **AutomatedCompliance**:
        - 'FormLabels' (Input labelling and instructions)
        - 'TouchTargetSize' (Spacing and size for mobile/touch)
-       - 'ARIAUsage' (Correct use of roles, states, and properties)
+       - 'ARIAUsage' (Correct use of roles, states, and properties)`;
+
+    let specificInstructions = `You are a world-class **Accessibility Auditor** (CPACC/WebAIM Certified). Your task is to interpretation the provided automated Axe-Core audit data and combine it with visual/structural analysis to evaluate WCAG 2.1 AA compliance.
+
+    You MUST Populate the schema with a comprehensive list of parameters. DO NOT Summarize.
+
+    MANDATORY PARAMETERS (Limit evaluation to these ${params.length} key areas):
+    ${mandatoryList}
 
     - **CRITICAL MAPPING**: Map any 'axeViolations' found to the most relevant parameter above.
-      - e.g. 'image-alt' faults -> 'AlternativeText'
+      - e.g. 'image-alt' faults -> ${isScreenshotOnly ? 'HeadingsAndStructure' : 'AlternativeText'}
       - e.g. 'label' faults -> 'FormLabels'
       - e.g. 'color-contrast' -> 'ColorContrast'
-    - Do NOT create new parameters for Axe rules. Integrate the findings into the Analysis of the 9 parameters above.
+    - Do NOT create new parameters for Axe rules. Integrate the findings into the Analysis of the ${params.length} parameters above.
     - If 'axeViolations' is empty, verify these parameters visually/manually.
     
     CARDINALITY LOCK (ACCESSIBILITY):
 
-You MUST evaluate EXACTLY these 9 parameters — no more, no fewer:
+You MUST evaluate EXACTLY these ${params.length} parameters — no more, no fewer:
 
-1. ColorContrast
-2. ResizableText
-3. FocusIndicators
-4. HeadingsAndStructure
-5. AlternativeText
-6. KeyboardNavigation
-7. FormLabels
-8. TouchTargetSize
-9. ARIAUsage
+${params.map((p, i) => `${i + 1}. ${p}`).join('\n')}
 
 Each must appear EXACTLY ONCE.
 Do NOT introduce WCAG levels, Axe rules, or variants as new parameters.

@@ -19,9 +19,14 @@ export interface AdminAudit {
     };
     created_at: string;
     email_opt_in: boolean;
+    email_opt_in_offered?: boolean;
     opt_in_email: string | null;
     user_name: string | null;
     user_email: string | null;
+    thumbnail_url?: string | null;
+    browser_key?: number | null;
+    priority?: number | null;
+    queue_position?: number | null;
     logs: AdminAuditLog[];
 }
 

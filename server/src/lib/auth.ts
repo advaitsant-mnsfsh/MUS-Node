@@ -236,7 +236,7 @@ export const auth = betterAuth({
 export async function sendReportReadyEmail(email: string, jobId: string, userName?: string | null) {
     const resendApiKey = process.env.RESEND_API_KEY || process.env.RESENT_API_KEY;
     const fromEmail = process.env.RESEND_FROM_EMAIL || 'onboarding@resend.dev';
-    const clientUrl = process.env.CLIENT_URL || 'http://localhost:5173';
+    const clientUrl = process.env.CLIENT_URL || 'https://mus-node.vercel.app';
 
     if (!resendApiKey) {
         console.error("[AUTH] ❌ RESEND_API_KEY is missing. Cannot send report email.");
@@ -251,32 +251,10 @@ export async function sendReportReadyEmail(email: string, jobId: string, userNam
         const reportUrl = `${clientUrl}/report/${jobId}`;
         const displayName = userName || 'there';
 
-        // Resolve logo paths for embedding
-        const serverRoot = process.cwd();
-        const logoPath = path.join(serverRoot, '..', 'client', 'public', 'logo.png');
-        const logoWhitePath = path.join(serverRoot, '..', 'client', 'public', 'logo-white.png');
-
-        const attachments = [];
-        if (fs.existsSync(logoPath)) {
-            attachments.push({
-                filename: 'logo.png',
-                content: fs.readFileSync(logoPath),
-                cid: 'brand_logo'
-            });
-        }
-        if (fs.existsSync(logoWhitePath)) {
-            attachments.push({
-                filename: 'logo-white.png',
-                content: fs.readFileSync(logoWhitePath),
-                cid: 'brand_logo_white'
-            });
-        }
-
         await resend.emails.send({
             from: fromEmail,
             to: email,
             subject: '🏆 Your UX Audit Report is Ready!',
-            attachments,
             html: `
                 <!DOCTYPE html>
                 <html>
@@ -308,9 +286,9 @@ export async function sendReportReadyEmail(email: string, jobId: string, userNam
                                 <table cellpadding="0" cellspacing="0" border="0" style="margin-bottom: 32px;">
                                     <tr>
                                         <td align="center">
-                                            <img src="cid:brand_logo" alt="MyUXScore" class="light-logo" style="height: 48px; width: auto; max-width: 100%; display: block;" />
+                                            <img src="${clientUrl}/logo.png" alt="MyUXScore" class="light-logo" style="height: 48px; width: auto; max-width: 100%; display: block;" />
                                             <div class="dark-logo" style="display: none; max-height: 0; overflow: hidden;">
-                                                <img src="cid:brand_logo_white" alt="MyUXScore" style="height: 48px; width: auto; max-width: 100%; display: block;" />
+                                                <img src="${clientUrl}/logo-white.png" alt="MyUXScore" style="height: 48px; width: auto; max-width: 100%; display: block;" />
                                             </div>
                                         </td>
                                     </tr>

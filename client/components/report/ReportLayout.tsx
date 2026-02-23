@@ -43,41 +43,44 @@ interface ReportLayoutProps {
 const UrlPillGroup = ({ inputs, fallbackUrl, label }: { inputs?: AuditInput[], fallbackUrl?: string, label?: string }) => {
     // 1. Determine Main URL to show
     const mainInput = inputs && inputs.length > 0 ? inputs[0] : null;
-    const mainUrlDisplay = mainInput
-        ? (mainInput.url?.replace(/^https?:\/\//, '').replace(/\/$/, '') || (mainInput.file ? mainInput.file.name : 'Uploaded File'))
-        : (fallbackUrl?.replace(/^https?:\/\//, '').replace(/\/$/, '') || 'Analyzed Site');
+    const isUpload = mainInput?.type === 'upload';
 
-    // 2. Determine "More" count
+    const mainUrlDisplay = mainInput
+        ? (mainInput.customName || mainInput.url?.replace(/^https?:\/\//, '')?.replace(/\/$/, '') || (mainInput.fileName || mainInput.file?.name || 'Uploaded File'))
+        : (fallbackUrl?.replace(/^https?:\/\//, '')?.replace(/\/$/, '') || 'Analyzed Site');
+
+    // 2. Determine "More" count / Total count
     const moreCount = inputs && inputs.length > 1 ? inputs.length - 1 : 0;
+    const totalCount = inputs?.length || 0;
 
     return (
         <div className="flex items-center gap-2">
             {/* Main URL Pill */}
             <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-white border-2 border-black shadow-neo-sm text-sm font-bold text-black min-w-0" title={mainUrlDisplay}>
-                <SiteLogo domain={mainUrlDisplay} size="tiny" className="shadow-none border-none p-0 rounded-none bg-transparent" />
+                <SiteLogo domain={mainInput?.url || mainUrlDisplay} size="tiny" className="shadow-none border-none p-0 rounded-none bg-transparent" customIcon={mainInput?.customFavicon} />
                 <span className="truncate max-w-[120px] md:max-w-[200px] font-mono text-sm tracking-tight">
                     {mainUrlDisplay}
                 </span>
             </div>
 
-            {/* "+N More" with Tooltip */}
-            {moreCount > 0 && (
+            {/* "+N More" or Total Count with Tooltip */}
+            {((isUpload && totalCount > 0) || (!isUpload && moreCount > 0)) && (
                 <div className="relative group cursor-pointer ml-1">
                     <span className="text-sm font-black text-brand hover:underline decoration-2 underline-offset-2 whitespace-nowrap">
-                        +{moreCount} more
+                        {isUpload ? `${totalCount} item${totalCount > 1 ? 's' : ''}` : `+${moreCount} more`}
                     </span>
 
                     {/* Tooltip Dropdown */}
-                    <div className="absolute top-full left-0 mt-2 w-64 bg-white border-2 border-black shadow-neo p-3 z-50 hidden group-hover:block animate-in fade-in slide-in-from-top-1">
-                        <div className="text-sm font-bold text-slate-400 uppercase tracking-wider mb-2 border-b border-slate-200 pb-1">
-                            Analyzed URLs ({inputs?.length})
+                    <div className="absolute top-full left-0 mt-2 w-72 bg-white border-2 border-black shadow-neo p-3 z-50 hidden group-hover:block animate-in fade-in slide-in-from-top-1">
+                        <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2 border-b border-slate-200 pb-1">
+                            {isUpload ? `Uploaded Screenshot${totalCount > 1 ? 's' : ''}` : `Analyzed URLs (${totalCount})`}
                         </div>
                         <div className="flex flex-col gap-2 max-h-48 overflow-y-auto">
-                            {inputs?.slice(1).map((input, idx) => (
-                                <div key={idx} className="flex items-center gap-2 text-sm font-medium text-slate-700 truncate">
-                                    <div className="w-1.5 h-1.5 bg-black rounded-full shrink-0"></div>
-                                    <span className="truncate font-mono">
-                                        {input.url?.replace(/^https?:\/\//, '').replace(/\/$/, '') || input.file?.name}
+                            {(isUpload ? inputs : inputs?.slice(1))?.map((input, idx) => (
+                                <div key={idx} className="flex items-start gap-2 text-xs font-medium text-slate-700">
+                                    <div className="w-1.5 h-1.5 bg-brand rounded-full shrink-0 mt-1.5"></div>
+                                    <span className="font-mono break-all pb-1 border-b border-slate-50 last:border-0 w-full">
+                                        {input.url?.replace(/^https?:\/\//, '')?.replace(/\/$/, '') || input.fileName || input.file?.name || 'Screenshot'}
                                     </span>
                                 </div>
                             ))}

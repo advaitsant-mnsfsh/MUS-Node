@@ -9,7 +9,6 @@ export const FeedbackPage: React.FC = () => {
     const [submitted, setSubmitted] = useState(false);
 
     const [formData, setFormData] = useState({
-        teamNumber: '',
         jobId: '',
         websiteUrl: '',
         errorDetails: ''
@@ -84,20 +83,6 @@ export const FeedbackPage: React.FC = () => {
                         </div>
                     </div>
 
-                    {/* Team Number */}
-                    <div className="space-y-2">
-                        <label htmlFor="teamNumber" className="block text-sm font-black uppercase tracking-widest text-black">Team Number</label>
-                        <input
-                            id="teamNumber"
-                            type="text"
-                            required
-                            value={formData.teamNumber}
-                            onChange={(e) => setFormData({ ...formData, teamNumber: e.target.value })}
-                            className="w-full px-4 py-4 bg-white border-4 border-black text-black font-bold focus:outline-none focus:ring-4 focus:ring-brand/20"
-                            placeholder="Team 1"
-                        />
-                    </div>
-
                     {/* Job ID */}
                     <div className="space-y-2">
                         <label htmlFor="jobId" className="block text-sm font-black uppercase tracking-widest text-black">Audit / Job ID (Optional)</label>
@@ -112,7 +97,7 @@ export const FeedbackPage: React.FC = () => {
                     </div>
 
                     {/* Website URL */}
-                    <div className="space-y-2">
+                    <div className="space-y-2 md:col-span-2">
                         <label htmlFor="websiteUrl" className="block text-sm font-black uppercase tracking-widest text-black">Website URL (Optional)</label>
                         <input
                             id="websiteUrl"

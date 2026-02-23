@@ -73,6 +73,29 @@ export const CompetitorReportView: React.FC<CompetitorReportViewProps> = ({
 
     const [activeTab, setActiveTab] = useState<'UX' | 'Product' | 'Visual' | 'Strategy' | 'Accessibility'>('UX');
 
+    const getDisplayName = (urlStr: string) => {
+        if (!urlStr || urlStr === 'Your Website' || urlStr === 'Competitor Website' || urlStr === 'Primary URL' || urlStr === 'Competitor URL' || urlStr === 'Manual Upload') {
+            return urlStr;
+        }
+        let hostname = '';
+        try {
+            // Handle cases with protocol
+            if (urlStr.includes('://')) {
+                hostname = new URL(urlStr).hostname;
+            } else {
+                hostname = urlStr.split('/')[0];
+            }
+            hostname = hostname.replace(/^www\./, '');
+        } catch (e) {
+            hostname = urlStr.replace(/^https?:\/\//, '').replace(/^www\./, '').split('/')[0];
+        }
+
+        if (hostname && hostname.length > 0) {
+            return hostname.charAt(0).toUpperCase() + hostname.slice(1);
+        }
+        return hostname;
+    };
+
     // --- Helper Components (Brutalism Styled) ---
 
     const StrengthCard = ({ title, description }: { title: string, description: string, impact: string }) => (
@@ -223,7 +246,7 @@ export const CompetitorReportView: React.FC<CompetitorReportViewProps> = ({
                         </div>
                         <div className="flex flex-col">
                             <span className="text-sm font-black text-black uppercase tracking-wider bg-amber-200 px-2 py-0.5 w-fit border border-black mb-1">Primary Website</span>
-                            <h3 className="text-xl font-bold text-black break-all">{primaryUrl}</h3>
+                            <h3 className="text-xl font-bold text-black break-all">{getDisplayName(primaryUrl)}</h3>
                         </div>
                     </div>
                     {/* Primary Screenshot Area */}
@@ -243,7 +266,7 @@ export const CompetitorReportView: React.FC<CompetitorReportViewProps> = ({
                     <div className="flex items-center gap-3 mb-2 justify-end">
                         <div className="flex flex-col items-end">
                             <span className="text-sm font-black text-black uppercase tracking-wider bg-blue-200 px-2 py-0.5 w-fit border border-black mb-1">Competitor Website</span>
-                            <h3 className="text-xl font-bold text-black break-all text-right">{competitorUrl}</h3>
+                            <h3 className="text-xl font-bold text-black break-all text-right">{getDisplayName(competitorUrl)}</h3>
                         </div>
                         <div className="border-2 border-black shadow-neo overflow-hidden">
                             <SiteLogo domain={competitorUrl} size="small" className="shadow-none border-none rounded-none" />

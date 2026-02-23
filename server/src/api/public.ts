@@ -88,6 +88,8 @@ router.get('/jobs/:jobId', async (req, res) => {
             report_data: job.report_data,
             errorMessage: job.error_message,
             inputs: (job.input_data as any)?.inputs || job.input_data,
+            customName: (job.input_data as any)?.customName,
+            customFavicon: (job.input_data as any)?.customFavicon,
             created_at: job.created_at,
             updated_at: job.updated_at
         });

@@ -335,7 +335,7 @@ export const AlternativeReportPDF: React.FC<AlternativeReportPDFProps> = ({ repo
     const summary = parseExecutiveSummary(strategy?.ExecutiveSummary);
 
     return (
-        <Document title={`UX Audit Report - ${url.replace(/^https?:\/\//, '').replace(/\/$/, '')} (Alt)`}>
+        <Document title={`UX Audit Report - ${url?.replace(/^https?:\/\//, '')?.replace(/\/$/, '') || 'Analyzed Site'} (Alt)`}>
             <Page size="A4" style={styles.page}>
                 {/* Header */}
                 <View style={styles.headerRow}>

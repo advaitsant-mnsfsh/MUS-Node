@@ -171,7 +171,7 @@ export function StrategyAuditDisplay({ audit, isPdf = false, forcePageBreak = fa
                                     </div>
 
                                     <ul className="space-y-3">
-                                        {DomainAnalysis?.Items?.map((item, i) => (
+                                        {DomainAnalysis?.Items?.slice(0, 9).map((item, i) => (
                                             <li key={i} className="flex gap-3 text-sm text-slate-800 font-medium leading-relaxed group">
                                                 <span className="font-black text-black bg-accent-yellow border border-black w-5 h-5 flex items-center justify-center text-sm shadow-neo">{i + 1}</span>
                                                 <span>{item}</span>

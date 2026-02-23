@@ -48,8 +48,12 @@ export interface AuditInput {
   files?: File[]; // For multiple uploads
   fileData?: string; // Base64 (Service)
   filesData?: string[]; // Array of Base64 strings (Service)
+  fileName?: string; // Original filename
+  fileNames?: string[]; // Original filenames
   id: string; // Unique ID for React lists
   role?: 'primary' | 'competitor';
+  customName?: string; // User-defined name
+  customFavicon?: string; // Base64 custom favicon
 }
 
 export type ImpactLevel = 'High' | 'Medium' | 'Low';

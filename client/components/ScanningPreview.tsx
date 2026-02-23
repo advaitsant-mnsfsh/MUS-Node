@@ -59,7 +59,7 @@ export const ScanningPreview: React.FC<ScanningPreviewProps> = ({ screenshot, pr
     }, [inputs, url, isError]);
 
     return (
-        <div className="relative w-full max-w-4xl mx-auto pl-0 md:pl-8">
+        <div className="relative w-full max-w-4xl mx-auto">
             {/* Browser Frame Container */}
             <div className="relative">
                 {/* Browser Chrome (Top Bar) */}

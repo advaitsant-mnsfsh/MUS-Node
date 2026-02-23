@@ -29,7 +29,7 @@ export const ReportPDFTemplate: React.FC<ReportPDFTemplateProps> = ({ report, ur
     const firstIssue = safeIssues[0];
     const remainingIssues = safeIssues.slice(1, 5);
 
-    const cleanUrl = url.replace(/^https?:\/\//, '').replace(/\/$/, '');
+    const cleanUrl = url?.replace(/^https?:\/\//, '')?.replace(/\/$/, '') || 'Analyzed Site';
 
     return (
         <div className="flex flex-col bg-white p-6 gap-5 font-['DM_Sans'] text-slate-900 leading-normal relative">

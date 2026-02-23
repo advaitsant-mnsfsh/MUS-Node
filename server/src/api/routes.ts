@@ -462,6 +462,8 @@ router.get('/admin/audits', async (req: express.Request, res: express.Response) 
             }
         }
 
+        const { auditQueue } = await import('../db/schema.js');
+
         const query = db.select({
             id: auditJobs.id,
             status: auditJobs.status,
@@ -469,12 +471,26 @@ router.get('/admin/audits', async (req: express.Request, res: express.Response) 
             input_data: auditJobs.input_data,
             created_at: auditJobs.created_at,
             email_opt_in: auditJobs.email_opt_in,
+            email_opt_in_offered: auditJobs.email_opt_in_offered,
             opt_in_email: auditJobs.opt_in_email,
+            thumbnail_url: auditJobs.thumbnail_url,
             user_name: userTable.name,
             user_email: userTable.email,
+            browser_key: auditQueue.browser_key,
+            priority: auditQueue.priority,
+            queue_position: sql<number>`(
+                SELECT count(*) + 1
+                FROM ${auditQueue} aq2
+                WHERE aq2.status = 'waiting'
+                AND (
+                    aq2.priority > ${auditQueue.priority}
+                    OR (aq2.priority = ${auditQueue.priority} AND aq2.created_at < ${auditQueue.created_at})
+                )
+            )`.as('queue_position'),
         })
             .from(auditJobs)
-            .leftJoin(userTable, eq(auditJobs.user_id, userTable.id));
+            .leftJoin(userTable, eq(auditJobs.user_id, userTable.id))
+            .leftJoin(auditQueue, eq(auditJobs.id, auditQueue.job_id));
 
         if (conditions.length > 0) {
             query.where(and(...conditions));

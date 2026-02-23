@@ -890,7 +890,7 @@ export const StandardReportPDF: React.FC<StandardReportPDFProps> = ({ report, ur
 
     const primaryScreenshot = screenshots.find(s => !s.isMobile) || screenshots[0];
     const screenshotSrc = resolveImageSrc(primaryScreenshot);
-    const cleanUrl = url.replace(/^https?:\/\//, '').replace(/\/$/, '');
+    const cleanUrl = url?.replace(/^https?:\/\//, '')?.replace(/\/$/, '') || 'Analyzed Site';
 
     const overallScore = useMemo(() => {
         const scores = [ux?.CategoryScore, product?.CategoryScore, visual?.CategoryScore, accessibility?.CategoryScore]

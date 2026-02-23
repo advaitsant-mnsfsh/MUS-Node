@@ -294,6 +294,28 @@ export const AdminAuditDashboard: React.FC = () => {
                                                     {copiedId === audit.id ? <Check className="w-3.5 h-3.5 text-emerald-500" /> : <Copy className="w-3.5 h-3.5" />}
                                                 </button>
                                             </div>
+
+                                            {/* Queue Position for Pending */}
+                                            {audit.status === 'pending' && audit.queue_position && (
+                                                <span className="px-3 py-1.5 rounded-lg bg-orange-500/10 text-orange-500 border border-orange-500/20 font-bold animate-pulse">
+                                                    #{audit.queue_position} IN QUEUE
+                                                </span>
+                                            )}
+
+                                            {/* Browserless Monitor for Active */}
+                                            {audit.browser_key && audit.status === 'processing' && (
+                                                <span className="px-3 py-1.5 rounded-lg bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-bold">
+                                                    INSTANCE: B{audit.browser_key}
+                                                </span>
+                                            )}
+
+                                            {/* Priority indicator if relevant */}
+                                            {audit.priority !== undefined && audit.priority !== 0 && (audit.status === 'pending' || audit.status === 'processing') && (
+                                                <span className="px-3 py-1.5 rounded-lg bg-slate-800 text-slate-400 border border-slate-700/50 font-mono text-[10px]">
+                                                    PRI: {audit.priority}
+                                                </span>
+                                            )}
+
                                             <span className={`px-3 py-1.5 rounded-lg border uppercase font-bold tracking-wider ${audit.status === 'completed' ? 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20' :
                                                 audit.status === 'processing' ? 'bg-indigo-500/10 text-indigo-500 border-indigo-500/20' :
                                                     audit.status === 'failed' ? 'bg-rose-500/10 text-rose-500 border-rose-500/20' :
@@ -313,11 +335,19 @@ export const AdminAuditDashboard: React.FC = () => {
                                                 </button>
                                             )}
                                         </div>
-                                        <div className="flex items-center gap-6 text-sm text-slate-400">
-                                            <div className="flex items-center gap-2"><Clock className="w-4 h-4" /> {format(new Date(audit.created_at), 'MMM d, HH:mm')}</div>
+                                        <div className="flex items-center gap-4 text-sm font-bold uppercase tracking-tighter">
+                                            <div className="flex items-center gap-2 text-slate-500"><Clock className="w-4 h-4" /> {format(new Date(audit.created_at), 'MMM d, HH:mm')}</div>
+
+                                            {/* Email Notifications & Opt-ins */}
+                                            {audit.email_opt_in_offered && (
+                                                <div className="flex items-center gap-2 text-slate-400 bg-slate-800 px-2.5 py-1 rounded-md border border-slate-700/50">
+                                                    OFFER SENT
+                                                </div>
+                                            )}
+
                                             {audit.email_opt_in && (
-                                                <div className="flex items-center gap-2 text-indigo-400 bg-indigo-500/5 px-2.5 py-1 rounded-md border border-indigo-500/10">
-                                                    <Mail className="w-4 h-4" /> Opt-in
+                                                <div className="flex items-center gap-2 text-indigo-400 bg-indigo-500/5 px-2.5 py-1 rounded-md border border-indigo-500/20 shadow-[0_0_10px_rgba(99,102,241,0.1)]">
+                                                    <Mail className="w-4 h-4" /> USER OPTED-IN
                                                 </div>
                                             )}
                                         </div>
@@ -359,10 +389,7 @@ export const AdminAuditDashboard: React.FC = () => {
                                             <div className="flex items-center gap-6 pt-2 border-t border-slate-800/50">
                                                 <div>
                                                     <div className="text-[10px] text-slate-500 uppercase tracking-widest mb-1 font-bold">Initiator</div>
-                                                    <div className="text-white flex items-center gap-2">
-                                                        <div className="w-12 h-12 bg-linear-to-br from-purple-100 to-blue-100 rounded-lg border-2 border-black flex items-center justify-center shadow-neo">
-                                                            {(audit.user_name || 'G')[0]}
-                                                        </div>
+                                                    <div className="text-white font-medium">
                                                         {audit.user_name || 'Guest User'}
                                                     </div>
                                                 </div>
@@ -498,7 +525,9 @@ const SiteDisplay: React.FC<{ inputs: Array<{ url: string; device?: string; cust
                 onMouseLeave={() => setShowAll(false)}
             >
                 <div className="flex items-center gap-2 flex-1 min-w-0">
-                    <span className="truncate">{inputs[0].customName || inputs[0].url}</span>
+                    <span className="truncate">
+                        {(inputs[0].customName || inputs[0].url) || 'UPLOADED SCREENSHOT'}
+                    </span>
                     {inputs.length > 1 && (
                         <span className="bg-indigo-500/20 text-indigo-400 px-1.5 py-0.5 rounded text-[10px] font-bold shrink-0">
                             +{inputs.length - 1}

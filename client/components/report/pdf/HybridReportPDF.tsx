@@ -516,7 +516,7 @@ export const HybridReportPDF: React.FC<HybridReportPDFProps> = ({ report, url, s
     ];
 
     return (
-        <Document title={`UX Audit Report - ${url.replace(/^https?:\/\//, '').replace(/\/$/, '')} (Hybrid)`}>
+        <Document title={`UX Audit Report - ${url?.replace(/^https?:\/\//, '')?.replace(/\/$/, '') || 'Analyzed Site'} (Hybrid)`}>
             <Page size="A4" style={styles.page}>
                 {/* NEW HEADER */}
                 <View style={styles.newHeaderContainer}>
@@ -536,7 +536,7 @@ export const HybridReportPDF: React.FC<HybridReportPDFProps> = ({ report, url, s
                     <View style={styles.newHeaderBottom}>
                         <View style={styles.headerLeft}>
                             <Text style={styles.headerLabel}>Deep assessment</Text>
-                            <Text style={styles.headerUrl}>{url.replace(/^https?:\/\//, '').replace(/\/$/, '')}</Text>
+                            <Text style={styles.headerUrl}>{url?.replace(/^https?:\/\//, '')?.replace(/\/$/, '') || 'Analyzed Site'}</Text>
                         </View>
                         <View style={styles.headerRight}>
                             <Text style={styles.headerDate}>{formatDate()}</Text>

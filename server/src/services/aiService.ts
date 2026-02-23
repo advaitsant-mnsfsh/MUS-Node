@@ -189,7 +189,8 @@ export const performAnalysis = async (apiKeys: string[], mode: string, body: any
         } else if (mode === 'analyze-visual') {
             systemInstruction = getVisualSystemInstruction(mobileCaptureSucceeded, isMultiPage);
         } else if (mode === 'analyze-accessibility') {
-            systemInstruction = getAccessibilitySystemInstruction(isMultiPage);
+            const { isScreenshotOnly } = body;
+            systemInstruction = getAccessibilitySystemInstruction(isMultiPage, !!isScreenshotOnly);
             if (axeViolations) {
                 contextPrompt += `\n### Automated Axe-Core Accessibility Violations ###\n${JSON.stringify(axeViolations, null, 2)}\n`;
             }
