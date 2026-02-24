@@ -575,6 +575,28 @@ router.get('/admin/audits/:jobId/report', async (req, res) => {
     }
 });
 
+// GET /api/v1/admin/beta-enquiries
+router.get('/admin/beta-enquiries', async (req, res) => {
+    const adminPass = req.headers['x-admin-password'] || req.query.pass;
+    if (adminPass !== '0000') {
+        return res.status(401).json({ error: 'Unauthorized admin access' });
+    }
+
+    try {
+        const { betaEnquiries } = await import('../db/schema.js');
+        const { desc } = await import('drizzle-orm');
+
+        const enquiries = await db.select()
+            .from(betaEnquiries)
+            .orderBy(desc(betaEnquiries.created_at));
+
+        res.json({ success: true, enquiries });
+    } catch (e: any) {
+        console.error("[Admin] Beta enquiries fetch error:", e);
+        res.status(500).json({ error: e.message });
+    }
+});
+
 // POST /api/v1/leads
 router.post('/leads', async (req, res) => {
     try {

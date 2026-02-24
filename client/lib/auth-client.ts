@@ -5,8 +5,15 @@ const getBaseURL = () => {
     // Priority 1: Explicitly set Backend/API URLs (usually for advanced dev)
     if (import.meta.env.VITE_AUTH_BACKEND_URL) return import.meta.env.VITE_AUTH_BACKEND_URL;
 
-    // Priority 2: Universal Railway Backend (Default)
-    // This ensures signups and logins happen on the same DB regardless of where you run the frontend.
+    // Priority 2: Local Development Detection
+    if (typeof window !== 'undefined') {
+        const host = window.location.hostname;
+        if (host === 'localhost' || host === '127.0.0.1' || host.endsWith('.localhost')) {
+            return "http://localhost:8080";
+        }
+    }
+
+    // Priority 3: Universal Railway Backend (Default)
     return "https://mus-node-production.up.railway.app";
 }
 

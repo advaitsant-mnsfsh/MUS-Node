@@ -85,6 +85,29 @@ import apiKeysRoutes from './routes/apiKeys.js';
 import authRoutes from './routes/auth.js';
 import userRoutes from './routes/user.js';
 
+const betaAuthMiddleware = (req: any, res: any, next: any) => {
+    const host = req.get('host') || '';
+    const isBetaSubdomain = host.startsWith('beta.');
+
+    // Skip protection for verification and waitlist endpoints
+    if (req.path === '/api/public/verify-beta' || req.path === '/api/public/beta-waitlist') {
+        return next();
+    }
+
+    if (isBetaSubdomain) {
+        const cookies = req.get('Cookie') || '';
+        const isAuthorized = cookies.includes('beta_authorized=true');
+
+        if (!isAuthorized) {
+            console.log(`[Beta Guard] Unauthorized access blocked from host: ${host}`);
+            return res.status(403).json({ error: 'Beta access required' });
+        }
+    }
+    next();
+};
+
+app.use(betaAuthMiddleware);
+
 app.use('/api', authRoutes);
 app.use('/api/user', userRoutes);
 app.use('/api/v1', apiRoutes);

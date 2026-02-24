@@ -17,6 +17,7 @@ import { FeedbackPage } from './pages/FeedbackPage';
 import { getSharedAudit } from './services/auditStorage';
 import { AnalysisReport, Screenshot, AuditInput } from './types';
 import { Layout } from './components/Layout';
+import { BetaGuard } from './components/auth/BetaGuard';
 
 // Wrapper for Layout to use with Outlet
 const LayoutWrapper = () => (
@@ -180,24 +181,26 @@ function AppWithRouting() {
     return (
         <BrowserRouter>
             <Toaster position="top-center" />
-            <Routes>
-                {/* Main Application with Global Layout */}
-                <Route element={<LayoutWrapper />}>
-                    <Route path="/" element={<App />} />
-                    <Route path="/analysis/:auditId" element={<App />} />
-                    <Route path="/report/:auditId" element={<App />} />
-                    <Route path="/dashboard" element={<DashboardPage />} />
-                    <Route path="/api-keys" element={<APIKeysPage />} />
-                    <Route path="/login" element={<App />} />
-                    <Route path="/about" element={<AboutPage />} />
-                    <Route path="/pricing" element={<PricingPage />} />
-                    <Route path="/feedback" element={<FeedbackPage />} />
-                </Route>
+            <BetaGuard>
+                <Routes>
+                    {/* Main Application with Global Layout */}
+                    <Route element={<LayoutWrapper />}>
+                        <Route path="/" element={<App />} />
+                        <Route path="/analysis/:auditId" element={<App />} />
+                        <Route path="/report/:auditId" element={<App />} />
+                        <Route path="/dashboard" element={<DashboardPage />} />
+                        <Route path="/api-keys" element={<APIKeysPage />} />
+                        <Route path="/login" element={<App />} />
+                        <Route path="/about" element={<AboutPage />} />
+                        <Route path="/pricing" element={<PricingPage />} />
+                        <Route path="/feedback" element={<FeedbackPage />} />
+                    </Route>
 
-                <Route path="/shared/:auditId" element={<SharedAuditView />} />
-                <Route path="/embed" element={<EmbedPage />} />
-                <Route path="/dashb204727-295257950-9257507594824597" element={<AdminAuditDashboard />} />
-            </Routes>
+                    <Route path="/shared/:auditId" element={<SharedAuditView />} />
+                    <Route path="/embed" element={<EmbedPage />} />
+                    <Route path="/dashb204727-295257950-9257507594824597" element={<AdminAuditDashboard />} />
+                </Routes>
+            </BetaGuard>
         </BrowserRouter>
     );
 }

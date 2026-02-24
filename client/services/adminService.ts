@@ -57,5 +57,14 @@ export const adminService = {
             }
         });
         return response.data.report_data;
+    },
+
+    async fetchBetaEnquiries(password: string): Promise<any[]> {
+        const response = await axios.get(`${API_BASE_URL}/admin/beta-enquiries`, {
+            headers: {
+                'x-admin-password': password
+            }
+        });
+        return response.data.enquiries;
     }
 };

@@ -9,7 +9,8 @@ export const AdminAuditDashboard: React.FC = () => {
     const [password, setPassword] = useState('');
     const [audits, setAudits] = useState<AdminAudit[]>([]);
     const [feedback, setFeedback] = useState<any[]>([]);
-    const [activeTab, setActiveTab] = useState<'audits' | 'feedback'>('audits');
+    const [betaEnquiries, setBetaEnquiries] = useState<any[]>([]);
+    const [activeTab, setActiveTab] = useState<'audits' | 'feedback' | 'beta'>('audits');
     const [isLoading, setIsLoading] = useState(false);
     const [lastRefresh, setLastRefresh] = useState<Date>(new Date());
     const [copiedId, setCopiedId] = useState<string | null>(null);
@@ -102,9 +103,12 @@ export const AdminAuditDashboard: React.FC = () => {
                 };
                 const data = await adminService.fetchAudits(password, params);
                 setAudits(data);
-            } else {
+            } else if (activeTab === 'feedback') {
                 const data = await adminService.fetchFeedback(password);
                 setFeedback(data);
+            } else if (activeTab === 'beta') {
+                const data = await adminService.fetchBetaEnquiries(password);
+                setBetaEnquiries(data);
             }
             setLastRefresh(new Date());
         } catch (err) {
@@ -196,6 +200,13 @@ export const AdminAuditDashboard: React.FC = () => {
                             >
                                 <Mail className="w-4 h-4" />
                                 User Feedback
+                            </button>
+                            <button
+                                onClick={() => setActiveTab('beta')}
+                                className={`px-6 py-2 rounded-lg text-sm font-bold transition-all flex items-center gap-2 ${activeTab === 'beta' ? 'bg-indigo-600 text-white shadow-lg' : 'text-slate-500 hover:text-slate-300'}`}
+                            >
+                                <Shield className="w-4 h-4" />
+                                Beta Enquiries
                             </button>
                         </div>
                     </div>
@@ -450,7 +461,7 @@ export const AdminAuditDashboard: React.FC = () => {
                             </div>
                         )}
                     </div>
-                ) : (
+                ) : activeTab === 'feedback' ? (
                     /* Feedback View */
                     <div className="grid grid-cols-1 gap-6">
                         {feedback.map((item, i) => (
@@ -507,6 +518,56 @@ export const AdminAuditDashboard: React.FC = () => {
                                 No user feedback has been recorded yet.
                             </div>
                         )}
+                    </div>
+                ) : (
+                    /* Beta Enquiries View */
+                    <div className="grid grid-cols-1 gap-6">
+                        <div className="bg-slate-900/40 border border-slate-800 rounded-3xl overflow-hidden">
+                            <table className="w-full text-left border-collapse">
+                                <thead>
+                                    <tr className="bg-slate-950/50 border-b border-slate-800">
+                                        <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-slate-500">Email Address</th>
+                                        <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-slate-500">Status</th>
+                                        <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-slate-500">Created At</th>
+                                        <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-slate-500 text-right">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {betaEnquiries.map((enquiry) => (
+                                        <tr key={enquiry.id} className="border-b border-slate-800/50 hover:bg-slate-800/20 transition-colors">
+                                            <td className="px-6 py-4 font-medium text-white">{enquiry.email}</td>
+                                            <td className="px-6 py-4">
+                                                <span className={`px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-widest border ${enquiry.status === 'pending'
+                                                        ? 'bg-amber-500/10 text-amber-500 border-amber-500/20'
+                                                        : 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20'
+                                                    }`}>
+                                                    {enquiry.status}
+                                                </span>
+                                            </td>
+                                            <td className="px-6 py-4 text-sm text-slate-400 font-mono">
+                                                {format(new Date(enquiry.created_at), 'MMM d, yyyy HH:mm')}
+                                            </td>
+                                            <td className="px-6 py-4 text-right">
+                                                <button
+                                                    onClick={() => copyToClipboard(enquiry.email)}
+                                                    className="p-2 bg-slate-800 hover:bg-slate-700 rounded-lg text-slate-400 hover:text-white transition-all"
+                                                    title="Copy Email"
+                                                >
+                                                    <Copy className="w-4 h-4" />
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                    {betaEnquiries.length === 0 && (
+                                        <tr>
+                                            <td colSpan={4} className="px-6 py-20 text-center text-slate-500 italic">
+                                                No beta enquiries found.
+                                            </td>
+                                        </tr>
+                                    )}
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                 )}
             </main>

@@ -137,3 +137,10 @@ export const browserUsageLogs = pgTable("browser_usage_logs", {
     action: text("action").notNull(), // 'acquired', 'released'
     timestamp: timestamp("timestamp", { withTimezone: true }).defaultNow().notNull()
 });
+
+export const betaEnquiries = pgTable("beta_enquiries", {
+    id: text("id").primaryKey(),
+    email: text("email").notNull().unique(),
+    status: text("status").default('pending').notNull(), // 'pending', 'notified'
+    created_at: timestamp("created_at", { withTimezone: true }).defaultNow().notNull()
+});

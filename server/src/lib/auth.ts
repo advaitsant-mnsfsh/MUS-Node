@@ -6,8 +6,11 @@ import { emailOTP, bearer } from "better-auth/plugins";
 import fs from 'node:fs';
 import path from 'node:path';
 
+const getClientUrl = () => process.env.CLIENT_URL_MAIN || process.env.CLIENT_URL || 'https://mus-node.vercel.app';
+const getBetterAuthUrl = () => process.env.BETTER_AUTH_URL_MAIN || process.env.BETTER_AUTH_URL;
+
 export const auth = betterAuth({
-    baseURL: process.env.BETTER_AUTH_URL, // e.g. https://mus-node-production.up.railway.app
+    baseURL: getBetterAuthUrl(), // e.g. https://mus-node-production.up.railway.app
     secret: process.env.BETTER_AUTH_SECRET,
     debug: true,
     database: drizzleAdapter(db, {
@@ -110,10 +113,10 @@ export const auth = betterAuth({
                                                 <tr>
                                                     <td align="center">
                                                         <!-- Light mode logo -->
-                                                        <img src="${process.env.CLIENT_URL || 'https://mus-node.vercel.app'}/logo.png" alt="MyUXScore" class="light-logo" style="height: 48px; width: auto; max-width: 100%; display: block;" />
+                                                        <img src="${getClientUrl()}/logo.png" alt="MyUXScore" class="light-logo" style="height: 48px; width: auto; max-width: 100%; display: block;" />
                                                         <!-- Dark mode logo -->
                                                         <div class="dark-logo" style="display: none; max-height: 0; overflow: hidden;">
-                                                            <img src="${process.env.CLIENT_URL || 'https://mus-node.vercel.app'}/logo-white.png" alt="MyUXScore" style="height: 48px; width: auto; max-width: 100%; display: block;" />
+                                                            <img src="${getClientUrl()}/logo-white.png" alt="MyUXScore" style="height: 48px; width: auto; max-width: 100%; display: block;" />
                                                         </div>
                                                     </td>
                                                 </tr>
@@ -198,17 +201,24 @@ export const auth = betterAuth({
     // 🔒 Security & Cookie Config
     trustedOrigins: [
         process.env.CLIENT_URL || "http://localhost:5173",
-        "http://localhost:3000",
+        process.env.CLIENT_URL_MAIN,
+        "https://beta.myuxscore.com",
+        "https://myuxscore.com",
         "http://localhost:5173",
+        "http://beta.localhost:5173",
+        "http://127.0.0.1:5173",
+        "http://beta.127.0.0.1:5173",
+        "http://localhost:3000",
         "http://localhost:5174",
         "http://localhost:8080",
         "https://mus-node.vercel.app",
         "https://mus-node-client-ui.vercel.app",
         "https://mus-node-production.up.railway.app",
-        // Add wildcards for Vercel preview branches
+        // Wildcards (Check if supported by Better-Auth version)
+        "https://beta.*",
         "https://*-advait-sants-projects.vercel.app",
         "https://*-monsoonfish.vercel.app"
-    ],
+    ].filter(Boolean) as string[],
     cookies: {
         sessionToken: {
             name: 'better-auth.session_token', // Explicit cookie name
@@ -236,7 +246,7 @@ export const auth = betterAuth({
 export async function sendReportReadyEmail(email: string, jobId: string, userName?: string | null) {
     const resendApiKey = process.env.RESEND_API_KEY || process.env.RESENT_API_KEY;
     const fromEmail = process.env.RESEND_FROM_EMAIL || 'onboarding@resend.dev';
-    const clientUrl = process.env.CLIENT_URL || 'https://mus-node.vercel.app';
+    const clientUrl = getClientUrl();
 
     if (!resendApiKey) {
         console.error("[AUTH] ❌ RESEND_API_KEY is missing. Cannot send report email.");

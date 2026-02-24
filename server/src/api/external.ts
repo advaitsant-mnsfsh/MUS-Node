@@ -32,8 +32,15 @@ router.post('/audit', async (req, res) => {
         });
 
         // 3. Construct Redirect URL
-        // Priority: 1. CLIENT_URL env var 2. Request Origin (if trusted) 3. Localhost
-        const frontendBaseUrl = process.env.CLIENT_URL || origin || 'http://localhost:5173';
+        // Support multiple client URLs
+        const clientUrls = [process.env.CLIENT_URL_MAIN, process.env.CLIENT_URL].filter(Boolean);
+        let frontendBaseUrl = clientUrls[0] || origin || 'http://localhost:5173';
+
+        // If the origin is one of our trusted client URLs, use it to maintain domain consistency
+        if (origin && clientUrls.includes(origin)) {
+            frontendBaseUrl = origin;
+        }
+
         const redirectUrl = `${frontendBaseUrl}/report/${job.id}`;
 
         // 4. Process Job Directly (Bypass Queue for No-Redis setup)
@@ -80,7 +87,13 @@ router.get('/audit/:jobId', async (req, res) => {
         }
 
         // Use result_url from database if available, otherwise generate it
-        const frontendBaseUrl = process.env.CLIENT_URL || origin || 'http://localhost:5173';
+        const clientUrls = [process.env.CLIENT_URL_MAIN, process.env.CLIENT_URL].filter(Boolean);
+        let frontendBaseUrl = clientUrls[0] || origin || 'http://localhost:5173';
+
+        if (origin && clientUrls.includes(origin)) {
+            frontendBaseUrl = origin;
+        }
+
         const resultUrl = job.result_url || `${frontendBaseUrl}/report/${job.id}`;
 
         res.json({

@@ -3,6 +3,47 @@ import { JobService } from '../services/jobService.js';
 
 const router = Router();
 
+// POST /api/public/verify-beta
+router.post('/verify-beta', (req, res) => {
+    const { code } = req.body;
+    const correctCode = process.env.BETA_AUTH_CODE;
+
+    if (!correctCode) {
+        console.error('[Beta Auth] BETA_AUTH_CODE not set in environment');
+        return res.status(500).json({ message: 'Server configuration error' });
+    }
+
+    if (code === correctCode) {
+        res.setHeader('Set-Cookie', `beta_authorized=true; Path=/; Max-Age=${30 * 24 * 60 * 60}; SameSite=Lax`);
+        return res.json({ success: true });
+    }
+
+    return res.status(401).json({ message: 'Invalid beta access code' });
+});
+
+// POST /api/public/beta-waitlist
+router.post('/beta-waitlist', async (req, res) => {
+    try {
+        const { email } = req.body;
+        if (!email || !email.includes('@')) {
+            return res.status(400).json({ message: 'Valid email is required' });
+        }
+
+        const { db } = await import('../lib/db.js');
+        const { betaEnquiries } = await import('../db/schema.js');
+
+        await db.insert(betaEnquiries).values({
+            id: Math.random().toString(36).substring(2, 11) + Date.now().toString(36),
+            email: email.toLowerCase().trim()
+        }).onConflictDoNothing();
+
+        res.json({ success: true });
+    } catch (error: any) {
+        console.error('Beta Waitlist Error:', error);
+        res.status(500).json({ message: 'Internal Server Error' });
+    }
+});
+
 // Test endpoint to verify router is working
 router.get('/test', (req, res) => {
     res.json({ message: 'Public API is working!' });
