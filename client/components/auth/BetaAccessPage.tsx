@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Logo } from '../Logo';
 import toast from 'react-hot-toast';
+import { getBackendUrl } from '../../services/config';
 
 interface BetaAccessPageProps {
     onAuthorized: () => void;
@@ -20,7 +21,7 @@ export const BetaAccessPage: React.FC<BetaAccessPageProps> = ({ onAuthorized }) 
 
         setIsSubmitting(true);
         try {
-            const response = await fetch('/api/public/verify-beta', {
+            const response = await fetch(`${getBackendUrl()}/api/public/verify-beta`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ code: code.trim() })
@@ -45,7 +46,7 @@ export const BetaAccessPage: React.FC<BetaAccessPageProps> = ({ onAuthorized }) 
 
         setIsWaitlistSubmitting(true);
         try {
-            const response = await fetch('/api/public/beta-waitlist', {
+            const response = await fetch(`${getBackendUrl()}/api/public/beta-waitlist`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ email: waitlistEmail.trim() })
