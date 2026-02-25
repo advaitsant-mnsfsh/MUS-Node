@@ -43,12 +43,11 @@ const EditorialCard = ({
 }) => {
     const [isOpen, setIsOpen] = useState(false); // Default to collapsed as requested "collaps and close"
 
-    // Normalize confidence for text color only (no background)
-    const getConfidenceColor = (conf: string) => {
+    const getConfidenceBadgeStyle = (conf: string) => {
         const c = conf.toLowerCase();
-        if (c === 'high') return 'text-emerald-600';
-        if (c === 'medium') return 'text-amber-600';
-        return 'text-red-600';
+        if (c === 'high') return 'bg-[#EAF3EA] text-[#1E8A42]';
+        if (c === 'medium') return 'bg-amber-100 text-amber-700';
+        return 'bg-red-100 text-red-700';
     };
 
     // Get score background and shadow based on score (0-100 scale)
@@ -76,7 +75,7 @@ const EditorialCard = ({
     const displayScore = Math.round(score * 10);
 
     return (
-        <div className={`flex flex-col bg-white border-2 border-black overflow-hidden shadow-neo transition-all hover:shadow-neo-hover hover:translate-y-px hover:translate-x-px duration-200 ${isOpen ? 'ring-0' : ''}`}>
+        <div className={`flex flex-col bg-white border-2 border-black overflow-hidden shadow-[0px_0px_0px_0px_#CAD5E0] duration-200 ${isOpen ? 'ring-0' : ''}`}>
 
             {/* --- HEADER (Always Visible) --- */}
             <div
@@ -85,14 +84,22 @@ const EditorialCard = ({
             >
                 {/* Left: Title & Audit Type */}
                 <div className="flex flex-col gap-2 flex-1 min-w-0">
-                    {/* Audit Type Pill (Text Only) - MOVED HERE */}
-                    {auditType && (
-                        <div className="flex items-center">
-                            <span className="text-sm font-black text-black whitespace-nowrap uppercase tracking-wide">
+                    {/* Top Badges */}
+                    <div className="flex items-center gap-3">
+                        {auditType && (
+                            <span className="bg-[#F1F1F1] text-black px-3 py-1 rounded-full text-[11px] sm:text-xs font-bold tracking-wider uppercase whitespace-nowrap">
                                 {auditType}
                             </span>
-                        </div>
-                    )}
+                        )}
+                        {(auditType && confidence) && (
+                            <div className="w-px h-4 bg-slate-300 shrink-0"></div>
+                        )}
+                        {confidence && (
+                            <span className={`px-3 py-1 rounded-full text-[11px] sm:text-xs font-bold tracking-wider uppercase whitespace-nowrap ${getConfidenceBadgeStyle(confidence)}`}>
+                                {confidence} CONFIDENCE
+                            </span>
+                        )}
+                    </div>
                     <h3 className="text-lg font-black text-black leading-tight pr-4">
                         {title}
                     </h3>
@@ -101,10 +108,7 @@ const EditorialCard = ({
 
                 {/* Right: Confidence, Score & Toggle */}
                 <div className="flex items-center gap-3 shrink-0">
-                    {/* Confidence Badge - Text Only, No Background */}
-                    <span className={`inline-block w-fit text-xs font-bold uppercase tracking-wider ${getConfidenceColor(confidence)}`}>
-                        {confidence} Confidence
-                    </span>
+
 
                     {/* Score Pill (Colored Background Based on Score) */}
                     <div className={`flex items-center justify-center px-3 py-1.5 text-black min-w-[70px] border-2 border-black ${getScoreStyle(score).bg} ${getScoreStyle(score).shadow}`}>
@@ -122,16 +126,13 @@ const EditorialCard = ({
 
             {/* --- COLLAPSIBLE CONTENT --- */}
             {isOpen && (
-                <div className="px-6 pb-6 pt-0 flex flex-col gap-6 animate-in slide-in-from-top-2 duration-200 border-t-2 border-black">
-
-                    {/* Divider (Spacer) */}
-                    <div className="h-0 w-full mt-6"></div>
+                <div className="px-6 pb-6 pt-6 flex flex-col gap-6 animate-in slide-in-from-top-2 duration-200 border-t-2 border-slate-200">
 
                     {/* Overview */}
-                    <div>
+                    <div className="relative">
                         <div className={LABEL_STYLE}>
-                            <div className="p-1 bg-black text-white">
-                                <FileText className="w-3 h-3" />
+                            <div className="p-1 text-slate-600 ">
+                                <FileText className="w-4 h-4" />
                             </div>
                             Overview
                         </div>
@@ -144,10 +145,10 @@ const EditorialCard = ({
                     <div className="grid grid-cols-1 md:grid-cols-2 -mx-6 border-y border-slate-200">
 
                         {/* Observation */}
-                        <div className="p-6 border-b md:border-b-0 md:border-r border-slate-200 bg-slate-100">
+                        <div className="p-6 border-b md:border-b-0 md:border-r border-slate-200 bg-[#F9FAFC]">
                             <div className={LABEL_STYLE}>
-                                <div className="p-1 bg-blue-500 text-white border border-black">
-                                    <Target className="w-3 h-3" />
+                                <div className="p-1 text-slate-600 ">
+                                    <Target className="w-4 h-4" />
                                 </div>
                                 Observation
                             </div>
@@ -157,10 +158,10 @@ const EditorialCard = ({
                         </div>
 
                         {/* Recommendation */}
-                        <div className="p-6 bg-slate-100">
+                        <div className="p-6 bg-[#F9FAFC]">
                             <div className={LABEL_STYLE}>
-                                <div className="p-1 bg-accent-yellow text-black border border-black">
-                                    <Lightbulb className="w-3 h-3" />
+                                <div className="p-1 text-slate-600 ">
+                                    <Lightbulb className="w-4 h-4" />
                                 </div>
                                 Recommendation
                             </div>
@@ -174,15 +175,15 @@ const EditorialCard = ({
                     {citations && citations.length > 0 && (
                         <div>
                             <div className={LABEL_STYLE}>
-                                <div className="p-1 bg-slate-200 text-slate-600 border border-black">
-                                    <Quote className="w-3 h-3" />
+                                <div className="p-1 text-slate-600 ">
+                                    <Quote className="w-4 h-4" />
                                 </div>
                                 Citation
                             </div>
                             <ul className="space-y-2 mt-2">
                                 {citations.map((cite, i) => (
                                     <li key={i} className="flex gap-3 text-sm text-slate-600 italic group">
-                                        <span className="not-italic font-black text-black bg-white border border-black w-5 h-5 flex items-center justify-center text-sm shadow-neo select-none">{i + 1}</span>
+                                        <span className="not-italic font-medium text-black bg-white border border-slate-300 w-5 h-5 flex items-center justify-center text-xs shadow-[1px_1px_0px_0px_#CAD5E0] select-none">{i + 1}</span>
                                         "{cite}"
                                     </li>
                                 ))}

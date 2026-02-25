@@ -226,7 +226,7 @@ export const CompetitorReportView: React.FC<CompetitorReportViewProps> = ({
     };
 
     return (
-        <div className="font-['DM_Sans'] space-y-12 pb-12">
+        <div className="font-['DM_Sans'] space-y-12 pb-12 bg-page-bg">
 
             {/* 1. TOP SECTION: HEAD-TO-HEAD PREVIEW */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-0 border-2 border-black shadow-neo bg-white relative mr-2">

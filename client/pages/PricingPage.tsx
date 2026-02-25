@@ -1,111 +1,90 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
-import { useAuth } from '../contexts/AuthContext';
-import { Check } from 'lucide-react';
+import PricingHero from '../components/pricing/PricingHero';
+import PricingCard from '../components/pricing/PricingCard';
+import ComparisonTable from '../components/pricing/ComparisonTable';
+import FAQSection from '../components/pricing/FAQSection';
+import PricingCTA from '../components/pricing/PricingCTA';
+import PricingFooter from '../components/pricing/PricingFooter';
 
-export const PricingPage: React.FC = () => {
-    const { user } = useAuth();
-
+const PricingPage: React.FC = () => {
     const plans = [
         {
-            name: 'Free',
-            price: '$0',
-            period: 'forever',
+            title: "Begin",
+            price: "$0",
+            description: "For professionals looking to try our auditing tools",
+            buttonText: "Get Free Audit",
             features: [
-                '1 audit per month',
-                'Basic UX analysis',
-                'Standard report',
-                'Email support'
-            ],
-            cta: 'Get Started',
-            highlighted: false
+                "1 audit per month",
+                "Basic UX analysis",
+                "Standard report",
+                "Email support"
+            ]
         },
         {
-            name: 'Pro',
-            price: '$29',
-            period: 'per month',
+            title: "Grow",
+            price: "$29",
+            description: "For independents and small agencies.",
+            buttonText: "Start Trial",
+            isHighlighted: true,
+            badge: "Most Popular",
             features: [
-                '10 audits per month',
-                'Advanced UX analysis',
-                'Detailed reports',
-                'Competitor analysis',
-                'Custom branding',
-                'Priority support'
-            ],
-            cta: 'Start Pro Trial',
-            highlighted: true
+                "10 audits per month",
+                "Advanced UX analysis",
+                "Detailed reports",
+                "Competitor analysis",
+                "Custom branding",
+                "Report Sharing"
+            ]
         },
         {
-            name: 'Enterprise',
-            price: 'Custom',
-            period: 'contact us',
+            title: "Scale",
+            price: "Prices Tailored for you :)",
+            description: "For global teams that require a suite of auditing, compliance and support",
+            buttonText: "Contact Us",
             features: [
-                'Unlimited audits',
-                'API access',
-                'White-label solution',
-                'Custom integrations',
-                'Dedicated support',
-                'SLA guarantee'
-            ],
-            cta: 'Contact Sales',
-            highlighted: false
+                "Unlimited audits",
+                "API access",
+                "White-label solution",
+                "Custom integrations",
+                "Dedicated support",
+                "SLA guarantee"
+            ]
         }
+
     ];
 
     return (
-        <div className="min-h-[calc(100vh-5rem)] bg-page-bg font-['DM_Sans']">
-            <div className="max-w-7xl mx-auto px-4 py-16">
-                {/* Header */}
-                <div className="text-center mb-16">
-                    <h1 className="text-5xl font-bold text-text-primary mb-6">
-                        Simple, Transparent Pricing
-                    </h1>
-                    <p className="text-xl text-text-secondary max-w-2xl mx-auto">
-                        Choose the plan that fits your needs. All plans include our AI-powered UX analysis.
-                    </p>
-                </div>
+        <div className="min-h-screen bg-[#FFFEF9] font-sans relative overflow-x-hidden">
+            <PricingHero />
 
-                {/* Pricing Cards */}
-                <div className="grid md:grid-cols-3 gap-8 mb-12">
-                    {plans.map((plan) => (
-                        <div
-                            key={plan.name}
-                            className={`bg-white p-8 rounded-lg border-2 transition-all ${plan.highlighted
-                                ? 'border-brand shadow-[4px_4px_0px_0px_var(--color-brand)] scale-105'
-                                : 'border-border-main shadow-neo-hover'
-                                }`}
-                        >
-                            {plan.highlighted && (
-                                <div className="inline-block px-3 py-1 bg-brand text-white text-sm font-bold rounded-full mb-4">
-                                    MOST POPULAR
-                                </div>
-                            )}
-                            <h3 className="text-2xl font-bold text-text-primary mb-2">{plan.name}</h3>
-                            <div className="mb-6">
-                                <span className="text-4xl font-bold text-text-primary">{plan.price}</span>
-                                <span className="text-text-secondary ml-2">{plan.period}</span>
-                            </div>
-                            <ul className="space-y-3 mb-8">
-                                {plan.features.map((feature) => (
-                                    <li key={feature} className="flex items-start gap-2">
-                                        <Check className="w-5 h-5 text-brand shrink-0 mt-0.5" />
-                                        <span className="text-text-secondary">{feature}</span>
-                                    </li>
-                                ))}
-                            </ul>
-                            <Link
-                                to={user ? '/' : '/login'}
-                                className={`block w-full px-6 py-3 font-bold text-center rounded-lg border-2 transition-all ${plan.highlighted
-                                    ? 'bg-brand text-white border-brand hover:bg-brand-hover'
-                                    : 'bg-white text-text-primary border-border-main hover:bg-slate-50'
-                                    }`}
-                            >
-                                {plan.cta}
-                            </Link>
-                        </div>
+            {/* Inter-Section Decorative Rings */}
+            <img
+                src="/ring-left-center.png"
+                alt=""
+                className="absolute top-[400px] left-0 w-[60px] md:w-[80px] h-auto pointer-events-none select-none z-0"
+            />
+            <img
+                src="/ring-right-center.png"
+                alt=""
+                className="absolute top-[550px] right-0 w-[60px] md:w-[80px] h-auto pointer-events-none select-none z-0"
+            />
+
+            <div className="w-full max-w-[1440px] mx-auto px-4 lg:px-[140px] mt-12 relative z-10">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    {plans.map((plan, index) => (
+                        <PricingCard key={index} {...plan} />
                     ))}
                 </div>
             </div>
+
+
+            <ComparisonTable />
+
+            <FAQSection />
+
+            <PricingCTA />
+
+            <PricingFooter />
         </div>
     );
 };

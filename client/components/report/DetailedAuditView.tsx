@@ -68,10 +68,10 @@ export function DetailedAuditView({ auditData, auditType, isPdf = false, forcePa
     const [firstSection, ...remainingSections] = sections;
 
     // ✅ PDF Spacing Constants
-    const mainGap = isPdf ? "gap-2" : "gap-2";
+    const mainGap = isPdf ? "gap-2" : "gap-3";
     const headerWrapperGap = isPdf ? "gap-0" : "gap-0"; // Tightened gap between Main Title and First Subtitle
-    const cardGap = isPdf ? "gap-0" : "gap-2"; // Tighter cards for PDF
-    const sectionMargin = isPdf ? "mb-2" : "mb-2"; // Use user's preferred margin
+    const cardGap = isPdf ? "gap-0" : "gap-3"; // Tighter cards for PDF
+    const sectionMargin = isPdf ? "mb-2" : "mb-0"; // Use user's preferred margin
 
     // Split parameters for the first section to allow breaking
     const firstParams = firstSection?.data?.Parameters || [];
