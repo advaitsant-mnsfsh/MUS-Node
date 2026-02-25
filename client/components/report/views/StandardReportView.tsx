@@ -275,7 +275,7 @@ export const StandardReportView: React.FC<StandardReportViewProps> = ({ report, 
                                                 : 'bg-transparent text-slate-500 border-slate-100 hover:bg-slate-100 hover:text-black hover:border-black'
                                                 }`}
                                         >
-                                            <Icon className={`w-4 h-4 ${isActive ? 'text-white' : 'text-slate-500'}`} />
+                                            <Icon className={`w-4 h-4 ${isActive ? 'text-black' : 'text-slate-500'}`} />
                                             {tab.label}
                                         </button>
                                     );
