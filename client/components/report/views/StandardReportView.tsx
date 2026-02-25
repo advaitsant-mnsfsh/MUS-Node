@@ -35,6 +35,8 @@ export const StandardReportView: React.FC<StandardReportViewProps> = ({ report, 
     } = report;
 
     const [activeTab, setActiveTab] = useState('All Parameters');
+    const isClickScrolling = React.useRef(false);
+    const scrollTimeout = React.useRef<ReturnType<typeof setTimeout> | null>(null);
     console.log('[StandardReportView] Active Tab:', activeTab);
     console.log('[StandardReportView] UX Data:', ux ? Object.keys(ux) : 'Missing');
 
@@ -79,7 +81,13 @@ export const StandardReportView: React.FC<StandardReportViewProps> = ({ report, 
     // --- SCROLL SPY LOGIC ---
     // 1. Click Handler: Smooth scroll to section
     const handleTabClick = (tabId: string) => {
+        isClickScrolling.current = true;
         setActiveTab(tabId);
+
+        if (scrollTimeout.current) clearTimeout(scrollTimeout.current);
+        scrollTimeout.current = setTimeout(() => {
+            isClickScrolling.current = false;
+        }, 1000); // Wait for smooth scroll to finish
 
         // Handle "All Parameters" (Top of the list / Default view)
         if (tabId === 'All Parameters') {
@@ -117,6 +125,8 @@ export const StandardReportView: React.FC<StandardReportViewProps> = ({ report, 
     // 2. Scroll Listener: Update active tab based on viewport
     React.useEffect(() => {
         const handleScroll = () => {
+            if (isClickScrolling.current) return;
+
             // Optimization: Don't check on every single pixel, but fairly often is needed for responsiveness
             // Use a higher offset to trigger the change earlier as the user scrolls down
             const scrollPosition = window.scrollY + 300;
