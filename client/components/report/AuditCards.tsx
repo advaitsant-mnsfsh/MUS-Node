@@ -91,14 +91,6 @@ const EditorialCard = ({
                                 {auditType}
                             </span>
                         )}
-                        {(auditType && confidence) && (
-                            <div className="w-px h-4 bg-slate-300 shrink-0"></div>
-                        )}
-                        {confidence && (
-                            <span className={`px-3 py-1 rounded-full text-[11px] sm:text-xs font-bold tracking-wider uppercase whitespace-nowrap ${getConfidenceBadgeStyle(confidence)}`}>
-                                {confidence} CONFIDENCE
-                            </span>
-                        )}
                     </div>
                     <h3 className="text-lg font-black text-black leading-tight pr-4">
                         {title}
@@ -126,7 +118,16 @@ const EditorialCard = ({
 
             {/* --- COLLAPSIBLE CONTENT --- */}
             {isOpen && (
-                <div className="px-6 pb-6 pt-6 flex flex-col gap-6 animate-in slide-in-from-top-2 duration-200 border-t-2 border-slate-200">
+                <div className="px-6 pb-6 pt-6 flex flex-col gap-6 animate-in slide-in-from-top-2 duration-200 border-t-2 border-slate-200 relative">
+
+                    {/* Confidence Pill - Absolute Bottom Right (Saved space) */}
+                    {confidence && (
+                        <div className="absolute bottom-6 right-6 pointer-events-none">
+                            <span className={`px-3 py-1.5 rounded-full text-[10px] font-bold tracking-wider uppercase whitespace-nowrap border border-black/5 shadow-sm ${getConfidenceBadgeStyle(confidence)}`}>
+                                {confidence} CONFIDENCE
+                            </span>
+                        </div>
+                    )}
 
                     {/* Overview */}
                     <div className="relative">

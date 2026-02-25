@@ -204,7 +204,7 @@ export const ReportLayout: React.FC<ReportLayoutProps> = ({
                                     <Download className="w-4 h-4 stroke-[3px]" />
                                 </button>
 
-                                {/* Alternative PDF Button (Summary Layout) */}
+                                {/* Alternative PDF Button (Summary Layout) - HIDDEN FOR NOW
                                 {onGenerateAlternativePdf && (
                                     <button
                                         onClick={onGenerateAlternativePdf}
@@ -215,8 +215,9 @@ export const ReportLayout: React.FC<ReportLayoutProps> = ({
                                         <FileText className="w-4 h-4 stroke-[3px]" />
                                     </button>
                                 )}
+                                */}
 
-                                {/* Hybrid PDF Button (Split Layout) */}
+                                {/* Hybrid PDF Button (Split Layout) - HIDDEN FOR NOW
                                 {onGenerateHybridPdf && (
                                     <button
                                         onClick={onGenerateHybridPdf}
@@ -227,6 +228,7 @@ export const ReportLayout: React.FC<ReportLayoutProps> = ({
                                         <LayoutTemplate className="w-4 h-4 stroke-[3px]" />
                                     </button>
                                 )}
+                                */}
                             </div>
                         </div>
 

@@ -503,9 +503,10 @@ const styles = StyleSheet.create({
     },
     thumbnailImg: {
         width: '100%',
-        height: '100%',
+        height: 'auto',
+        minHeight: '100%',
         objectFit: 'cover',
-        objectPosition: 'top', // Reset to top
+        objectPosition: 'top left', // Reset to top left
     },
 
 

@@ -234,7 +234,7 @@ export const StandardReportView: React.FC<StandardReportViewProps> = ({ report, 
                                 {primaryScreenshotSrc ? (
                                     <img
                                         src={primaryScreenshotSrc}
-                                        className="w-full h-full object-cover object-top transition-transform duration-700 hover:scale-105"
+                                        className="w-full h-auto min-h-full object-cover object-left-top transition-transform duration-700 hover:scale-105"
                                         alt="Analyzed Page Preview"
                                         onError={handleImageError}
                                     />
