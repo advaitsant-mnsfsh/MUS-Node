@@ -165,7 +165,7 @@ export const StandardReportView: React.FC<StandardReportViewProps> = ({ report, 
 
     return (
         <>
-            <div className="font-['DM_Sans']">
+            <div className="font-['DM_Sans'] bg-page-bg">
 
                 {/* 1. TOP SECTION: Executive Summary & Preview (Card Style) */}
                 <div className="flex flex-col animate-in fade-in slide-in-from-bottom-4 mb-12 mx-4 md:mx-8">
@@ -255,14 +255,14 @@ export const StandardReportView: React.FC<StandardReportViewProps> = ({ report, 
                 <div className="pt-2">
 
                     {/* Header & Tabs - Sticky */}
-                    <div className={`sticky ${stickyTopClass} z-20 bg-page-bg border-2 border-black py-4 shadow-sm px-6 lg:px-8 mb-12 mx-4 md:mx-8 transition-all duration-300`}>
+                    <div className={`sticky ${stickyTopClass} z-20 bg-white border-2 border-black py-4 shadow-sm px-6 lg:px-8 mb-12 mx-4 md:mx-8 transition-all duration-300`}>
                         <div className="flex flex-col md:flex-row items-center justify-between gap-6">
                             <div>
                                 <h3 className="text-2xl font-black text-black uppercase">Score Breakdown</h3>
                                 {/* <p className="text-slate-600 font-bold text-sm">Detailed parameter analysis.</p> */}
                             </div>
 
-                            <nav className="flex space-x-2 bg-page-bg overflow-x-auto no-scrollbar max-w-full p-1">
+                            <nav className="flex space-x-2 bg-white overflow-x-auto no-scrollbar max-w-full p-1">
                                 {TABS.map((tab) => {
                                     const Icon = tab.icon;
                                     const isActive = activeTab === tab.id;
@@ -271,8 +271,8 @@ export const StandardReportView: React.FC<StandardReportViewProps> = ({ report, 
                                             key={tab.id}
                                             onClick={() => handleTabClick(tab.id)}
                                             className={`flex items-center gap-2 whitespace-nowrap py-2.5 px-5 font-bold text-sm transition-all border-2 ${isActive
-                                                ? 'bg-brand text-white border-black shadow-neo -translate-y-[2px]'
-                                                : 'bg-transparent text-slate-500 border-transparent hover:bg-slate-100 hover:text-black hover:border-black'
+                                                ? 'bg-accent-yellow  text-black border-black shadow-neo -translate-y-[2px]'
+                                                : 'bg-transparent text-slate-500 border-slate-100 hover:bg-slate-100 hover:text-black hover:border-black'
                                                 }`}
                                         >
                                             <Icon className={`w-4 h-4 ${isActive ? 'text-white' : 'text-slate-500'}`} />

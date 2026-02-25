@@ -8,16 +8,33 @@ const FAQSection = () => {
     const [openIndex, setOpenIndex] = useState<number | null>(4);
 
     const faqs = [
-        { question: "Why conduct a UX audit?" },
-        { question: "When would be the best time to perform an audit and why?" },
-        { question: "Can I use this on a live site?" },
-        { question: "What types of digital products are suitable for a UX audit?" },
+        {
+            question: "Why conduct a UX audit?",
+            answerDetail: "A UX audit is conducted to systematically assess the strengths and weaknesses of your digital product’s user experience. An audit helps you identify usability issues, enhance accessibility, and get actionable recommendations from experts, to ensure that your product aligns with your user needs and business goals while improving overall satisfaction and engagement."
+        },
+        {
+            question: "When would be the best time to perform an audit and why?",
+            answerDetail: "The best time to perform an audit is during the early stages of a project, post-major updates, or before a significant redesign. This allows for proactive identification of issues, ensuring a solid foundation for usability and accessibility as the project evolves."
+        },
+        {
+            question: "Can I use this on a live site?",
+            answerHeader: "Yes.",
+            answerDetail: "Our audit is non-intrusive. We analyze the DOM (code structure) and the visual render. We do not track your users, we do not slow down your site, and we do not break anything. We simply observe and score."
+        },
+        {
+            question: "What types of digital products are suitable for a UX audit?",
+            answerDetail: "Any digital product across domains such as healthcare, fintech, edtech, cybersecurity, travel & hospitality, agritech, government & non-profits, etc. are suitable for getting a UX audit."
+        },
         {
             question: "Will this replace my design team?",
             answerHeader: "No. It will stop them from arguing.",
             answerDetail: "Designers waste hours debating subjective preferences. We give them objective data so they can skip the debate and focus on solving the problem. We are not the artist; we are the spellcheck for their logic."
         },
-        { question: "What exactly do I get in the report?" }
+        {
+            question: "What exactly do I get in the report?",
+            answerHeader: "A list of what is broken, ranked by how much it costs you.",
+            answerDetail: "You don't get a philosophical essay. You get a prioritized roadmap of friction points—rated by severity—so your dev team knows exactly what to fix first to stop the revenue bleeding."
+        }
     ];
 
     return (
@@ -51,16 +68,24 @@ const FAQSection = () => {
                                     </span>
                                 </button>
 
-                                {isOpen && faq.answerHeader && (
-                                    <div className="pl-14 pb-10 max-w-2xl animate-in fade-in slide-in-from-top-2 duration-300">
-                                        <p className="text-xl font-bold text-gray-800 mb-3">
-                                            {faq.answerHeader}
-                                        </p>
-                                        <p className="text-base text-gray-500 leading-relaxed font-medium">
-                                            {faq.answerDetail}
-                                        </p>
+                                <div
+                                    className={`grid transition-all duration-300 ease-in-out ${isOpen ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0'}`}
+                                >
+                                    <div className="overflow-hidden">
+                                        <div className="pl-14 pb-10 max-w-2xl">
+                                            {faq.answerHeader && (
+                                                <p className="text-xl font-bold text-gray-800 mb-3">
+                                                    {faq.answerHeader}
+                                                </p>
+                                            )}
+                                            {faq.answerDetail && (
+                                                <p className="text-base text-gray-500 leading-relaxed font-medium">
+                                                    {faq.answerDetail}
+                                                </p>
+                                            )}
+                                        </div>
                                     </div>
-                                )}
+                                </div>
                             </div>
                         );
                     })}
