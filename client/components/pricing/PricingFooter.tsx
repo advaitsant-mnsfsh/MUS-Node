@@ -7,8 +7,8 @@ import { ArrowUpRight } from 'lucide-react';
  */
 const PricingFooter = () => {
     return (
-        <footer className="relative bg-[#F4D067] w-full max-w-[1440px] mx-auto h-[520px] pt-[70px] flex flex-col gap-[84px] overflow-hidden">
-            <div className="w-full px-8 lg:px-[144px] relative z-10 flex flex-col md:flex-row gap-[164px]">
+        <footer className="relative bg-[#F4D067] w-full h-[520px] pt-[70px] flex flex-col gap-[84px] overflow-hidden">
+            <div className="w-full max-w-[1440px] mx-auto px-8 lg:px-[144px] relative z-10 flex flex-col md:flex-row gap-[164px]">
                 {/* Logo / Tagline Column */}
                 <div className="w-full md:w-[509px] shrink-0">
                     <div className="space-y-1">
