@@ -450,13 +450,13 @@ const DashboardPage: React.FC = () => {
 
                                     <div className="mb-4 space-y-1 opacity-60">
                                         <div>
-                                            <p className={`text-sm text-text-secondary break-all ${(audit.url === 'Manual Upload' || audit.url === 'Unknown' || audit.url === 'Uploaded Image') ? 'font-mono' : ''}`}>
+                                            <p className={`text-sm text-text-secondary line-clamp-2 break-all ${(audit.url === 'Manual Upload' || audit.url === 'Unknown' || audit.url === 'Uploaded Image') ? 'font-mono' : ''}`} title={getDisplaySubtitle(audit.url, audit)}>
                                                 {getDisplaySubtitle(audit.url, audit)}
                                             </p>
                                         </div>
                                         {audit.competitorUrl && (
                                             <div>
-                                                <p className={`text-sm text-text-secondary break-all ${(audit.competitorUrl === 'Manual Upload' || audit.competitorUrl === 'Unknown' || audit.competitorUrl === 'Uploaded Image') ? 'font-mono' : ''}`}>
+                                                <p className={`text-sm text-text-secondary line-clamp-2 break-all ${(audit.competitorUrl === 'Manual Upload' || audit.competitorUrl === 'Unknown' || audit.competitorUrl === 'Uploaded Image') ? 'font-mono' : ''}`} title={getDisplaySubtitle(audit.competitorUrl, audit)}>
                                                     {getDisplaySubtitle(audit.competitorUrl, audit)}
                                                 </p>
                                             </div>
