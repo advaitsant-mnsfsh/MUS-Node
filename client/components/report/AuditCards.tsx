@@ -43,12 +43,11 @@ const EditorialCard = ({
 }) => {
     const [isOpen, setIsOpen] = useState(false); // Default to collapsed as requested "collaps and close"
 
-    // Normalize confidence for text color only (no background)
-    const getConfidenceColor = (conf: string) => {
+    const getConfidenceBadgeStyle = (conf: string) => {
         const c = conf.toLowerCase();
-        if (c === 'high') return 'text-emerald-600';
-        if (c === 'medium') return 'text-amber-600';
-        return 'text-red-600';
+        if (c === 'high') return 'bg-[#EAF3EA] text-[#1E8A42]';
+        if (c === 'medium') return 'bg-amber-100 text-amber-700';
+        return 'bg-red-100 text-red-700';
     };
 
     // Get score background and shadow based on score (0-100 scale)
@@ -85,14 +84,22 @@ const EditorialCard = ({
             >
                 {/* Left: Title & Audit Type */}
                 <div className="flex flex-col gap-2 flex-1 min-w-0">
-                    {/* Audit Type Pill (Text Only) - MOVED HERE */}
-                    {auditType && (
-                        <div className="flex items-center">
-                            <span className="text-sm font-black text-black whitespace-nowrap uppercase tracking-wide">
+                    {/* Top Badges */}
+                    <div className="flex items-center gap-3">
+                        {auditType && (
+                            <span className="bg-[#F1F1F1] text-black px-3 py-1 rounded-full text-[11px] sm:text-xs font-bold tracking-wider uppercase whitespace-nowrap">
                                 {auditType}
                             </span>
-                        </div>
-                    )}
+                        )}
+                        {(auditType && confidence) && (
+                            <div className="w-px h-4 bg-slate-300 shrink-0"></div>
+                        )}
+                        {confidence && (
+                            <span className={`px-3 py-1 rounded-full text-[11px] sm:text-xs font-bold tracking-wider uppercase whitespace-nowrap ${getConfidenceBadgeStyle(confidence)}`}>
+                                {confidence} CONFIDENCE
+                            </span>
+                        )}
+                    </div>
                     <h3 className="text-lg font-black text-black leading-tight pr-4">
                         {title}
                     </h3>
@@ -123,13 +130,6 @@ const EditorialCard = ({
 
                     {/* Overview */}
                     <div className="relative">
-                        {/* Confidence Badge - Moved Here */}
-                        <div className="flex justify-end mb-2">
-                            <span className={`inline-block px-2 py-0.5 text-[12px] mr-4 font-bold uppercase tracking-wider border border-current ${getConfidenceColor(confidence)}`}>
-                                {confidence} Confidence
-                            </span>
-                        </div>
-
                         <div className={LABEL_STYLE}>
                             <div className="p-1 text-slate-600 ">
                                 <FileText className="w-4 h-4" />
