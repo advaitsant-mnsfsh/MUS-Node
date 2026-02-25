@@ -37,7 +37,7 @@ export const GlobalNavbar: React.FC = () => {
                         <Link
                             to="/"
                             className={`text-sm font-bold transition-colors ${isActive('/')
-                                ? 'text-[#FBC130]'
+                                ? 'text-brand'
                                 : 'text-text-secondary hover:text-text-primary'
                                 }`}
                         >
@@ -49,7 +49,7 @@ export const GlobalNavbar: React.FC = () => {
                             <Link
                                 to="/dashboard"
                                 className={`text-sm font-semibold transition-colors ${isActive('/dashboard')
-                                    ? 'text-[#FBC130]'
+                                    ? 'text-brand'
                                     : 'text-text-secondary hover:text-text-primary'
                                     }`}
                             >
@@ -61,7 +61,7 @@ export const GlobalNavbar: React.FC = () => {
                         <Link
                             to="/about"
                             className={`text-sm font-semibold transition-colors ${isActive('/about')
-                                ? 'text-[#FBC130]'
+                                ? 'text-brand'
                                 : 'text-text-secondary hover:text-text-primary'
                                 }`}
                         >
@@ -72,7 +72,7 @@ export const GlobalNavbar: React.FC = () => {
                         <Link
                             to="/api-keys"
                             className={`text-sm font-semibold transition-colors ${isActive('/api-keys')
-                                ? 'text-[#FBC130]'
+                                ? 'text-brand'
                                 : 'text-text-secondary hover:text-text-primary'
                                 }`}
                         >
@@ -83,7 +83,7 @@ export const GlobalNavbar: React.FC = () => {
                         <Link
                             to="/pricing"
                             className={`text-sm font-semibold transition-colors ${isActive('/pricing')
-                                ? 'text-[#FBC130]'
+                                ? 'text-brand'
                                 : 'text-text-secondary hover:text-text-primary'
                                 }`}
                         >
@@ -95,7 +95,7 @@ export const GlobalNavbar: React.FC = () => {
                             <Link
                                 to="/feedback"
                                 className={`text-sm font-semibold transition-colors ${isActive('/feedback')
-                                    ? 'text-[#FBC130]'
+                                    ? 'text-brand'
                                     : 'text-text-secondary hover:text-text-primary'
                                     }`}
                             >
