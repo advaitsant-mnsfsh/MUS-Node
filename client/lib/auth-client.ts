@@ -3,7 +3,14 @@ import { emailOTPClient } from "better-auth/client/plugins"
 
 const getBaseURL = () => {
     // Priority 1: Explicitly set Backend/API URLs (usually for advanced dev)
-    if (import.meta.env.VITE_AUTH_BACKEND_URL) return import.meta.env.VITE_AUTH_BACKEND_URL;
+    let envUrl = import.meta.env.VITE_AUTH_BACKEND_URL || import.meta.env.VITE_API_URL || import.meta.env.VITE_BACKEND_URL;
+    if (envUrl) {
+        if (envUrl.endsWith('/')) envUrl = envUrl.slice(0, -1);
+        if (!envUrl.startsWith('http://') && !envUrl.startsWith('https://')) {
+            envUrl = `https://${envUrl}`;
+        }
+        return envUrl;
+    }
 
     // Priority 2: Local Development Detection
     if (typeof window !== 'undefined') {
@@ -14,7 +21,7 @@ const getBaseURL = () => {
     }
 
     // Priority 3: Universal Railway Backend (Default)
-    return "https://mus-node-production.up.railway.app";
+    return "https://api.myuxscore.com";
 }
 
 export const authClient = createAuthClient({

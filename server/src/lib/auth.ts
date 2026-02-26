@@ -10,7 +10,7 @@ const getClientUrl = () => process.env.CLIENT_URL_MAIN || process.env.CLIENT_URL
 const getBetterAuthUrl = () => process.env.BETTER_AUTH_URL_MAIN || process.env.BETTER_AUTH_URL;
 
 export const auth = betterAuth({
-    baseURL: getBetterAuthUrl(), // e.g. https://mus-node-production.up.railway.app
+    baseURL: getBetterAuthUrl(), // e.g. https://api.myuxscore.com
     secret: process.env.BETTER_AUTH_SECRET,
     debug: true,
     database: drizzleAdapter(db, {
@@ -213,7 +213,7 @@ export const auth = betterAuth({
         "http://localhost:8080",
         "https://mus-node.vercel.app",
         "https://mus-node-client-ui.vercel.app",
-        "https://mus-node-production.up.railway.app",
+        "https://api.myuxscore.com",
         // Wildcards (Check if supported by Better-Auth version)
         "https://beta.*",
         "https://*-advait-sants-projects.vercel.app",
