@@ -27,6 +27,15 @@ export const BetaAccessPage: React.FC<BetaAccessPageProps> = ({ onAuthorized }) 
             });
 
             if (response.ok) {
+                const data = await response.json();
+
+                // Store the access type for Google Analytics separation
+                if (data.type) {
+                    localStorage.setItem('mus_auth_type', data.type);
+                } else {
+                    localStorage.setItem('mus_auth_type', 'beta');
+                }
+
                 toast.success('Access Granted!');
                 onAuthorized();
             } else {

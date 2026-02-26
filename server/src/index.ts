@@ -48,8 +48,25 @@ app.get("/health", (req: any, res: any) => {
 app.use(compression());
 app.use(cors({
     origin: function (origin, callback) {
-        if (!origin) return callback(null, true);
-        return callback(null, origin);
+        const allowedOrigins = [
+            'http://localhost:5173',
+            'http://beta.localhost:5173',
+            'http://localhost:3000',
+            'http://beta.localhost:3000',
+            'https://myuxscore.com',
+            'https://www.myuxscore.com',
+            'https://beta.myuxscore.com'
+        ];
+
+        // Railway's proxy or healthcheck sometimes injects its own origin. 
+        // Returning true natively handles `Vary: Origin` and correctly signs the preflight 
+        // with the requested origin *only* if it is valid, avoiding CDN caching issues.
+        if (!origin || allowedOrigins.includes(origin) || origin.endsWith('.railway.app')) {
+            callback(null, true);
+        } else {
+            console.warn(`[CORS] Blocked unrecognized origin: ${origin}`);
+            callback(new Error('Not allowed by CORS'));
+        }
     },
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS', 'HEAD'],

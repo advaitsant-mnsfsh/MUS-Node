@@ -27,11 +27,11 @@ export const getBackendUrl = () => {
             return envUrl;
         }
 
-        console.log(`[Config] 🏠 Using Hardcoded Production: https://mus-node-production.up.railway.app`);
+        console.log(`[Config] 🏠 Using Hardcoded Production: https://mus-node-production.railway.app`);
     }
 
     // Static Production URL (as final fallback)
-    return 'https://mus-node-production.up.railway.app';
+    return 'https://mus-node-production.railway.app';
 };
 
 export const getBaseUrlForStatic = () => {

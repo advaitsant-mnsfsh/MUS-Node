@@ -6,19 +6,24 @@ const router = Router();
 // POST /api/public/verify-beta
 router.post('/verify-beta', (req, res) => {
     const { code } = req.body;
-    const correctCode = process.env.BETA_AUTH_CODE;
+    const betaCode = process.env.BETA_AUTH_CODE;
+    const adminCode = process.env.ADMIN_AUTH_CODE;
 
-    if (!correctCode) {
-        console.error('[Beta Auth] BETA_AUTH_CODE not set in environment');
+    if (!betaCode && !adminCode) {
+        console.error('[Beta Auth] BETA_AUTH_CODE and ADMIN_AUTH_CODE not set in environment');
         return res.status(500).json({ message: 'Server configuration error' });
     }
 
-    if (code === correctCode) {
+    if (code === betaCode || (adminCode && code === adminCode)) {
+        const type = (adminCode && code === adminCode) ? 'admin' : 'beta';
+
+        // Use the same auth cookie for both to retain core application flow logic
         res.setHeader('Set-Cookie', `beta_authorized=true; Path=/; Max-Age=${30 * 24 * 60 * 60}; SameSite=Lax`);
-        return res.json({ success: true });
+
+        return res.json({ success: true, type });
     }
 
-    return res.status(401).json({ message: 'Invalid beta access code' });
+    return res.status(401).json({ message: 'Invalid access code' });
 });
 
 // POST /api/public/beta-waitlist
