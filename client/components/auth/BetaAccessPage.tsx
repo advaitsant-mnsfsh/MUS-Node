@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import { Logo } from '../Logo';
 import toast from 'react-hot-toast';
 import { getBackendUrl } from '../../services/config';
 
@@ -65,84 +64,111 @@ export const BetaAccessPage: React.FC<BetaAccessPageProps> = ({ onAuthorized }) 
     };
 
     return (
-        <div className="min-h-screen bg-[#FFFBF0] text-black flex flex-col items-center justify-center p-4 font-sans selection:bg-yellow-300">
-            {/* Brutalist Background Pattern */}
-            <div className="fixed inset-0 pointer-events-none opacity-[0.03]"
-                style={{ backgroundImage: 'radial-gradient(#000 1px, transparent 1px)', backgroundSize: '20px 20px' }}>
-            </div>
-
-            <div className="w-full max-w-md relative z-10">
-                <div className="bg-white border-4 border-black p-8 md:p-10 relative transition-all animate-in fade-in zoom-in-95 duration-300">
-                    {/* Top Accent Bar */}
-                    <div className="absolute top-0 left-0 w-full h-3 bg-indigo-600 border-b-4 border-black"></div>
-
-                    <div className="flex justify-center mb-8 mt-4 animate-in fade-in slide-in-from-bottom-2 duration-500">
-                        <Logo className="scale-110" />
+        <div className="min-h-screen bg-white text-black flex flex-col font-sans bg-[radial-gradient(#E5E7EB_1px,transparent_1px)] bg-[size:32px_32px]">
+            <main className="flex-grow flex items-center justify-center w-full max-w-7xl mx-auto px-8 pt-20 pb-12 lg:pt-32 lg:pb-16">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-8 w-full lg:items-stretch">
+                    <div className="flex flex-col justify-between py-2 md:py-0">
+                        <div>
+                            <img src="/logo.png" alt="MyUXScore Logo" className="h-12 md:h-14 lg:h-[64px] w-auto object-contain mb-3 lg:mb-4" />
+                            <div className="space-y-2">
+                                <h1 className="text-7xl lg:text-[100px] font-black uppercase leading-[0.85] tracking-tighter">
+                                    BETA<br />
+                                    <span className="bg-[#FFC107] px-4 mt-2 inline-block shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] border-2 border-black">ACCESS</span>
+                                </h1>
+                            </div>
+                            <p className="text-xl lg:text-2xl font-medium text-zinc-600 max-w-md leading-relaxed mt-6">
+                                Experience the next evolution of user experience measurement. Professional-grade insights powered by our proprietary framework.
+                            </p>
+                        </div>
+                        <div className="flex items-center gap-4 pt-10 mt-auto">
+                            <div className="flex -space-x-3">
+                                <div className="w-12 h-12 rounded-full border-2 border-black bg-zinc-100 flex items-center justify-center overflow-hidden">
+                                    <div className="w-full h-full bg-zinc-200"></div>
+                                </div>
+                                <div className="w-12 h-12 rounded-full border-2 border-black bg-zinc-200 flex items-center justify-center overflow-hidden">
+                                    <div className="w-full h-full bg-zinc-300"></div>
+                                </div>
+                                <div className="w-12 h-12 rounded-full border-2 border-black bg-[#FFC107] flex items-center justify-center text-xs font-black">
+                                    1K+
+                                </div>
+                            </div>
+                            <p className="text-[10px] font-black text-zinc-400 uppercase tracking-[0.2em]">Trusted by 1,000+ UX Designers</p>
+                        </div>
                     </div>
 
-                    <div className="text-center mb-10">
-                        <div className="inline-block px-3 py-1 bg-yellow-300 border-2 border-black font-black uppercase text-[10px] tracking-widest mb-4">
-                            Private Entry
+                    <div className="flex justify-start lg:justify-end relative">
+                        <div className="absolute -top-12 -right-4 lg:-right-8 z-20 w-32 h-32 bg-white rounded-full border-4 border-black shadow-[10px_10px_0px_0px_rgba(0,0,0,1)] flex items-center justify-center text-center p-4">
+                            <span className="text-[#6366f1] text-[11px] font-bold uppercase leading-tight tracking-tighter">
+                                Strictly Limited Capacity
+                            </span>
                         </div>
-                        <h1 className="text-4xl font-black uppercase tracking-tighter mb-3 leading-none italic">
-                            Beta Access
-                        </h1>
-                        <p className="text-black font-bold text-sm leading-snug max-w-[280px] mx-auto opacity-80">
-                            Enter your exclusive access code to unlock the Beta Access to MyUXScore.
-                        </p>
-                    </div>
-
-                    <form onSubmit={handleSubmit} className="space-y-6">
-                        <div className="relative group">
-                            <label className="block text-[10px] font-black uppercase tracking-[0.2em] mb-2 ml-1">Access Code</label>
-                            <input
-                                type="text"
-                                value={code}
-                                onChange={(e) => setCode(e.target.value)}
-                                placeholder="---- ---- ----"
-                                className="w-full bg-[#FEFCE8] border-4 border-black px-6 py-5 text-center text-xl tracking-[0.3em] font-black focus:outline-none focus:bg-white transition-all placeholder:text-black/20"
-                                disabled={isSubmitting}
-                                autoFocus
-                            />
+                        <div className="w-full max-w-md bg-white border-4 border-black shadow-[10px_10px_0px_0px_rgba(0,0,0,1)] overflow-hidden relative">
+                            <div className="h-2 w-full bg-[#6366f1] border-b-4 border-black"></div>
+                            <div className="p-8 lg:p-12">
+                                <div className="mb-10">
+                                    <h2 className="text-3xl font-black uppercase tracking-tight mb-2">Claim Entry</h2>
+                                    <p className="text-sm font-medium text-zinc-500">Enter your unique invitation code to begin.</p>
+                                </div>
+                                <form className="space-y-8" onSubmit={handleSubmit}>
+                                    <div>
+                                        <label className="block uppercase font-black text-[11px] tracking-[0.2em] mb-3 text-black">Access Code</label>
+                                        <input
+                                            className="w-full p-5 text-xl font-mono font-bold bg-white border-4 border-black focus:ring-0 focus:border-black focus:outline-none placeholder-zinc-200"
+                                            placeholder="UX-000-000-000"
+                                            type="text"
+                                            value={code}
+                                            onChange={(e) => setCode(e.target.value)}
+                                            disabled={isSubmitting}
+                                        />
+                                    </div>
+                                    <button
+                                        type="submit"
+                                        disabled={isSubmitting}
+                                        className="w-full bg-[#FFC107] text-black p-6 font-black text-xl uppercase tracking-widest flex items-center justify-center gap-4 border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-1 hover:translate-y-1 hover:shadow-none transition-all disabled:hover:translate-x-0 disabled:hover:translate-y-0 disabled:hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]"
+                                    >
+                                        {isSubmitting ? 'Verifying...' : 'Grant Access'}
+                                        {!isSubmitting && (
+                                            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="3">
+                                                <path strokeLinecap="round" strokeLinejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                                            </svg>
+                                        )}
+                                    </button>
+                                </form>
+                                <div className="mt-10 pt-8 border-t-2 border-zinc-100 flex flex-col items-start gap-3">
+                                    <span className="text-[10px] font-black text-zinc-400 uppercase tracking-[0.2em]">No invitation code?</span>
+                                    <button
+                                        onClick={() => setShowWaitlist(true)}
+                                        className="inline-flex items-center gap-2 text-black font-black text-sm uppercase group underline underline-offset-8 decoration-2"
+                                    >
+                                        Join the waitlist
+                                        <svg className="w-4 h-4 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="3">
+                                            <path strokeLinecap="round" strokeLinejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                                        </svg>
+                                    </button>
+                                </div>
+                            </div>
                         </div>
-
-                        <button
-                            type="submit"
-                            disabled={isSubmitting || !code.trim()}
-                            className="w-full bg-black text-white font-black uppercase tracking-widest py-5 border-4 border-black hover:bg-neutral-900 transition-all flex items-center justify-center gap-3 active:scale-[0.98]"
-                        >
-                            {isSubmitting ? (
-                                <div className="w-6 h-6 border-4 border-white/20 border-t-white rounded-full animate-spin"></div>
-                            ) : (
-                                <>
-                                    <span>Grant Access</span>
-                                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M14 5l7 7m0 0l-7 7m7-7H3" />
-                                    </svg>
-                                </>
-                            )}
-                        </button>
-                    </form>
-
-                    <div className="mt-10 flex flex-col items-center justify-center gap-3 border-t-2 border-black/5 pt-6">
-                        <p className="text-[10px] uppercase font-black tracking-widest text-black/50 text-center leading-relaxed">
-                            Don't have an access code yet?<br />
-                            <button
-                                type="button"
-                                onClick={() => setShowWaitlist(true)}
-                                className="text-black hover:underline underline-offset-4 decoration-2 decoration-yellow-400 transition-all"
-                            >
-                                Join the waitlist now
-                            </button>
-                        </p>
                     </div>
                 </div>
-            </div>
+            </main>
+
+            <footer className="p-10 w-full max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center text-[10px] font-black uppercase tracking-[0.2em] text-zinc-400 gap-6">
+                <div className="flex items-center gap-4">
+                    <span>© 2024 MYUXSCORE</span>
+                    <span className="w-1 h-1 bg-zinc-300 rounded-full"></span>
+                    <span>Version 0.4.2-BETA</span>
+                </div>
+                <div className="flex gap-8">
+                    <a className="hover:text-black transition-colors" href="#">Security</a>
+                    <a className="hover:text-black transition-colors" href="#">Privacy</a>
+                    <a className="hover:text-black transition-colors" href="#">Terms</a>
+                </div>
+            </footer>
 
             {/* Waitlist Modal */}
             {showWaitlist && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
-                    <div className="w-full max-w-sm bg-white border-4 border-black p-8 shadow-[12px_12px_0px_0px_rgba(0,0,0,1)] relative animate-in zoom-in-95 duration-200">
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-white/80 backdrop-blur-sm animate-in fade-in duration-200">
+                    <div className="w-full max-w-sm bg-white border-4 border-black p-8 shadow-[10px_10px_0px_0px_rgba(0,0,0,1)] relative animate-in zoom-in-95 duration-200">
                         <button
                             onClick={() => {
                                 setShowWaitlist(false);
@@ -157,8 +183,8 @@ export const BetaAccessPage: React.FC<BetaAccessPageProps> = ({ onAuthorized }) 
 
                         {!waitlistSuccess ? (
                             <>
-                                <h3 className="text-2xl font-black uppercase tracking-tight mb-4 italic">Join the Waitlist</h3>
-                                <p className="text-sm font-bold mb-6 opacity-70">Be the first to know when we open more beta slots.</p>
+                                <h3 className="text-2xl font-black uppercase tracking-tight mb-4">Join the Waitlist</h3>
+                                <p className="text-sm font-medium mb-6 text-zinc-500">Be the first to know when we open more beta slots.</p>
                                 <form onSubmit={handleWaitlistSubmit} className="space-y-4">
                                     <div>
                                         <input
@@ -167,13 +193,13 @@ export const BetaAccessPage: React.FC<BetaAccessPageProps> = ({ onAuthorized }) 
                                             onChange={(e) => setWaitlistEmail(e.target.value)}
                                             placeholder="your@email.com"
                                             required
-                                            className="w-full bg-[#FEFCE8] border-4 border-black px-4 py-3 font-bold focus:outline-none"
+                                            className="w-full bg-white border-4 border-black px-4 py-3 font-bold focus:outline-none placeholder-zinc-200"
                                         />
                                     </div>
                                     <button
                                         type="submit"
                                         disabled={isWaitlistSubmitting}
-                                        className="w-full bg-yellow-300 text-black font-black uppercase tracking-widest py-3 border-4 border-black hover:bg-yellow-400 transition-all active:scale-[0.98]"
+                                        className="w-full bg-[#FFC107] text-black font-black uppercase tracking-widest py-4 border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-1 hover:translate-y-1 hover:shadow-none transition-all disabled:opacity-50 disabled:hover:translate-x-0 disabled:hover:translate-y-0 disabled:hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]"
                                     >
                                         {isWaitlistSubmitting ? "Sending..." : "Notify Me"}
                                     </button>
@@ -181,13 +207,13 @@ export const BetaAccessPage: React.FC<BetaAccessPageProps> = ({ onAuthorized }) 
                             </>
                         ) : (
                             <div className="text-center py-4">
-                                <div className="w-16 h-16 bg-green-100 border-4 border-green-600 rounded-full flex items-center justify-center mx-auto mb-6">
-                                    <svg className="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <div className="w-16 h-16 bg-white border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] rounded-full flex items-center justify-center mx-auto mb-6">
+                                    <svg className="w-8 h-8 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="4" d="M5 13l4 4L19 7" />
                                     </svg>
                                 </div>
-                                <h3 className="text-2xl font-black uppercase mb-3 text-green-700">You're In!</h3>
-                                <p className="font-bold text-sm leading-relaxed">
+                                <h3 className="text-2xl font-black uppercase mb-3">You're In!</h3>
+                                <p className="font-bold text-sm leading-relaxed text-zinc-600">
                                     We've added you to the waitlist.<br />You'll be notified as soon as there's an update.
                                 </p>
                             </div>
