@@ -186,6 +186,7 @@ function AppWithRouting() {
                     {/* Main Application with Global Layout */}
                     <Route element={<LayoutWrapper />}>
                         <Route path="/" element={<App />} />
+                        <Route path="/analysis" element={<App />} />
                         <Route path="/analysis/:auditId" element={<App />} />
                         <Route path="/report/:auditId" element={<App />} />
                         <Route path="/dashboard" element={<DashboardPage />} />

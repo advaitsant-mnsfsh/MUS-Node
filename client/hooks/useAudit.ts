@@ -128,7 +128,7 @@ export const useAudit = () => {
             setPerformanceError(errorMessage);
         },
         onJobCreated: (id: string) => {
-            navigate(`/analysis/${id}`, { state: { newAudit: true } });
+            navigate(`/analysis/${id}`, { state: { newAudit: true }, replace: true });
         },
         onQueueUpdate: (position: number, type: string) => {
             setQueuePosition(position);
@@ -350,6 +350,9 @@ export const useAudit = () => {
         const firstInput = inputs[0];
         setSubmittedUrl(firstInput.type === 'url' ? firstInput.url! : 'Manual Upload');
         setReportInputs(inputs);
+
+        // Optimistic Navigation
+        navigate('/analysis');
 
         // If it's an uploaded screenshot, show it immediately
         if (firstInput.type === 'upload' && (firstInput.file || firstInput.files?.length)) {
