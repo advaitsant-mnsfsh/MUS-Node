@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import toast from 'react-hot-toast';
 import { Send, AlertCircle, CheckCircle2 } from 'lucide-react';
+import { getBackendUrl } from '../services/config';
 
 export const FeedbackPage: React.FC = () => {
     const { user } = useAuth();
@@ -25,7 +26,8 @@ export const FeedbackPage: React.FC = () => {
         };
 
         try {
-            const response = await fetch(`${import.meta.env.VITE_BACKEND_URL || import.meta.env.VITE_API_URL || ''}/api/v1/feedback`, {
+            const apiUrl = getBackendUrl();
+            const response = await fetch(`${apiUrl}/api/v1/feedback`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

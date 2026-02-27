@@ -1,5 +1,5 @@
-import { authClient } from '../lib/auth-client';
 import { authenticatedFetch } from '../lib/authenticatedFetch';
+import { getBackendUrl } from './config';
 
 export interface UserAudit {
     id: string;
@@ -12,8 +12,7 @@ export interface UserAudit {
     thumbnail_url?: string | null;
 }
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080';
-
+const API_URL = getBackendUrl();
 let auditsCache: Promise<UserAudit[]> | null = null;
 
 /**

@@ -1,6 +1,7 @@
 import React, { useMemo } from 'react';
 import { Document, Page, Text, View, StyleSheet, Image, Svg, Path } from '@react-pdf/renderer';
 import { AnalysisReport, Screenshot } from '../../../types';
+import { getBaseUrlForStatic } from '../../../services/config';
 
 // --- DESIGN TOKENS ---
 const COLORS = {
@@ -489,8 +490,7 @@ export const HybridReportPDF: React.FC<HybridReportPDFProps> = ({ report, url, s
         if (!img.url) return null;
         let finalUrl = img.url;
         if (!img.url.startsWith('http') && !img.url.startsWith('data:')) {
-            const backendUrl = import.meta.env.VITE_BACKEND_URL || import.meta.env.VITE_API_URL || '';
-            const baseUrl = backendUrl.endsWith('/') ? backendUrl.slice(0, -1) : backendUrl;
+            const baseUrl = getBaseUrlForStatic();
             finalUrl = `${baseUrl}${img.url.startsWith('/') ? img.url : `/${img.url}`}`;
         }
         return finalUrl;

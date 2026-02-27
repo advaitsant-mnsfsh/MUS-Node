@@ -1,6 +1,7 @@
 import React, { useMemo } from 'react';
 import { Document, Page, Text, View, StyleSheet, Image, Svg, Path, Font } from '@react-pdf/renderer';
 import { AnalysisReport, Screenshot, ScoredParameter } from '../../../types';
+import { getBaseUrlForStatic } from '../../../services/config';
 
 // --- DESIGN TOKENS (Matching Web Report) ---
 const COLORS = {
@@ -673,7 +674,7 @@ const formatDate = () => {
             default: return "th";
         }
     };
-    return `${day}${suffix(day)} ${month} ${year}`;
+    return `${day}${suffix(day)} ${month} ${year} `;
 };
 
 const HalfGauge = ({ score, size = 110, strokeWidth = 14, fontSize = 24 }: { score: number, size?: number, strokeWidth?: number, fontSize?: number }) => {
@@ -683,7 +684,7 @@ const HalfGauge = ({ score, size = 110, strokeWidth = 14, fontSize = 24 }: { sco
     const cappedScore = Math.max(0, Math.min(10, score));
 
     // Background Track (180deg sweep)
-    const trackPath = `M ${strokeWidth / 2} ${cy} A ${r} ${r} 0 0 1 ${size - strokeWidth / 2} ${cy}`;
+    const trackPath = `M ${strokeWidth / 2} ${cy} A ${r} ${r} 0 0 1 ${size - strokeWidth / 2} ${cy} `;
 
     // Progress Arc (Angle PI to 0)
     const angle = Math.PI - (cappedScore / 10) * Math.PI;
@@ -691,7 +692,7 @@ const HalfGauge = ({ score, size = 110, strokeWidth = 14, fontSize = 24 }: { sco
     const endY = cy - r * Math.sin(angle);
 
     // Large arc flag is 0 for semi-circles since angle <= PI
-    const progressPath = `M ${strokeWidth / 2} ${cy} A ${r} ${r} 0 0 1 ${endX} ${endY}`;
+    const progressPath = `M ${strokeWidth / 2} ${cy} A ${r} ${r} 0 0 1 ${endX} ${endY} `;
     const { color } = getScoreInfo(score);
 
     return (
@@ -877,13 +878,20 @@ export const StandardReportPDF: React.FC<StandardReportPDFProps> = ({ report, ur
 
     const resolveImageSrc = (img: Screenshot | undefined) => {
         if (!img) return null;
-        if (img.data) return `data:image/jpeg;base64,${img.data}`;
+        if (img.data) return `data: image / jpeg; base64, ${img.data} `;
         if (!img.url) return null;
 
         let finalUrl = img.url;
         if (!img.url.startsWith('http') && !img.url.startsWith('data:')) {
-            const backendUrl = import.meta.env.VITE_BACKEND_URL || import.meta.env.VITE_API_URL || '';
-            const baseUrl = backendUrl.endsWith('/') ? backendUrl.slice(0, -1) : backendUrl;
+            // Must dynamically import or require if this gets tricky, but we can assume we'll just use the same logic
+            // Oh wait, getBaseUrlForStatic needs to be imported:
+            // Let's just fix it by declaring a simple check here since getBaseUrlForStatic relies on window which might not be available in PDF renderer if it runs server side, but this is client side React PDF so window exists.
+            let baseUrl = import.meta.env.VITE_BACKEND_URL || import.meta.env.VITE_API_URL || (import.meta.env.PROD ? 'https://api.myuxscore.com' : 'http://localhost:3000');
+            if (baseUrl.endsWith('/')) baseUrl = baseUrl.slice(0, -1);
+            if (baseUrl.endsWith('/api/v1')) baseUrl = baseUrl.slice(0, -7);
+            else if (baseUrl.endsWith('/api')) baseUrl = baseUrl.slice(0, -4);
+            if (!baseUrl.startsWith('http://') && !baseUrl.startsWith('https://')) baseUrl = `https://${baseUrl}`;
+
             finalUrl = `${baseUrl}${img.url.startsWith('/') ? img.url : `/${img.url}`}`;
         }
         return finalUrl;
@@ -1266,7 +1274,7 @@ export const StandardReportPDF: React.FC<StandardReportPDFProps> = ({ report, ur
             )}
 
             {/* PAGE 6+: ACCESSIBILITY AUDIT */}
-            {accessibility && (
+            {accessibilityParams.length > 0 && (
                 <Page size="A4" style={styles.page}>
                     <View style={styles.newHeaderContainer}>
                         <View style={styles.newHeaderTop}>

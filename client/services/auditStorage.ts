@@ -12,8 +12,9 @@ export interface SharedAuditData {
 }
 
 // Backend URL logic
-const backendUrl = import.meta.env.VITE_BACKEND_URL || import.meta.env.VITE_API_URL || (import.meta.env.PROD ? 'https://mus-node-production.up.railway.app' : 'http://localhost:8080');
+import { getBackendUrl } from './config';
 
+const backendUrl = getBackendUrl();
 /**
  * Save audit data (Unified Flow)
  * Since every audit is now a 'job' in the backend, this is mostly a pass-through
