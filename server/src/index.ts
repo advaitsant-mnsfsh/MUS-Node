@@ -61,7 +61,7 @@ app.use(cors({
         // Railway's proxy or healthcheck sometimes injects its own origin. 
         // Returning true natively handles `Vary: Origin` and correctly signs the preflight 
         // with the requested origin *only* if it is valid, avoiding CDN caching issues.
-        if (!origin || allowedOrigins.includes(origin) || origin.endsWith('.railway.app')) {
+        if (!origin || allowedOrigins.includes(origin) || origin.endsWith('.railway.app') || origin.endsWith('.vercel.app')) {
             callback(null, true);
         } else {
             console.warn(`[CORS] Blocked unrecognized origin: ${origin}`);
