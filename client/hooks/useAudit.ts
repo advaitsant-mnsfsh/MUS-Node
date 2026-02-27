@@ -354,8 +354,8 @@ export const useAudit = () => {
         setSubmittedUrl(firstInput.type === 'url' ? firstInput.url! : 'Manual Upload');
         setReportInputs(inputs);
 
-        // Optimistic Navigation
-        navigate('/analysis');
+        // Optimistic Navigation (without remounting React)
+        window.history.pushState({}, '', '/analysis');
 
         // If it's an uploaded screenshot, show it immediately
         if (firstInput.type === 'upload' && (firstInput.file || firstInput.files?.length)) {
