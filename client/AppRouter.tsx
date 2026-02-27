@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { BrowserRouter, Routes, Route, useParams, Outlet } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, useParams, Outlet, useLocation } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import App from './App';
+import { trackPageView } from './lib/analytics';
 import EmbedPage from './pages/EmbedPage';
 import DashboardPage from './pages/DashboardPage';
 import APIKeysPage from './pages/APIKeysPage';
@@ -25,6 +26,17 @@ const LayoutWrapper = () => (
         <Outlet />
     </Layout>
 );
+
+// Global Analytics Listener
+const AnalyticsTracker = () => {
+    const location = useLocation();
+
+    useEffect(() => {
+        trackPageView(location.pathname);
+    }, [location.pathname]);
+
+    return null;
+};
 
 // Shared Audit View Component
 function SharedAuditView() {
@@ -180,6 +192,7 @@ function SharedAuditView() {
 function AppWithRouting() {
     return (
         <BrowserRouter>
+            <AnalyticsTracker />
             <Toaster position="top-center" />
             <BetaGuard>
                 <Routes>

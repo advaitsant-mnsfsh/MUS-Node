@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import toast from 'react-hot-toast';
 import { getBackendUrl } from '../../services/config';
+import { setUserTypeProperty } from '../../lib/analytics';
 
 interface BetaAccessPageProps {
     onAuthorized: () => void;
@@ -35,6 +36,9 @@ export const BetaAccessPage: React.FC<BetaAccessPageProps> = ({ onAuthorized }) 
                 } else {
                     localStorage.setItem('mus_auth_type', 'beta');
                 }
+
+                // Immediately set GA user property for current session
+                setUserTypeProperty();
 
                 toast.success('Access Granted!');
                 onAuthorized();

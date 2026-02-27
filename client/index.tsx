@@ -4,6 +4,10 @@ import ReactDOM from 'react-dom/client';
 import AppRouter from './AppRouter';
 import { AuthProvider } from './contexts/AuthContext';
 import { AuditProvider } from './contexts/AuditContext';
+import { initGA } from './lib/analytics';
+
+// Initialize Google Analytics safely once
+initGA();
 
 const rootElement = document.getElementById('root');
 if (!rootElement) {
