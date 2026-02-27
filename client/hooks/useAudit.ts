@@ -208,6 +208,9 @@ export const useAudit = () => {
     // 3. Main Data Loading / Resume Logic
     useEffect(() => {
         if (!auditId) {
+            // Let optimistic navigation to /analysis bypass the reset
+            if (location.pathname === '/analysis') return;
+
             if (report || isLoading || error) {
                 setReport(null);
                 setScreenshots([]);
