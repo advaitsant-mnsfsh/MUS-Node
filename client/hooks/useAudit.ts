@@ -209,7 +209,9 @@ export const useAudit = () => {
     useEffect(() => {
         if (!auditId) {
             // Let optimistic navigation to /analysis bypass the reset
-            if (location.pathname === '/analysis') return;
+            // We use window.location because history.pushState updates it instantly
+            // before react-router's useLocation hook realizes it
+            if (window.location.pathname === '/analysis') return;
 
             if (report || isLoading || error) {
                 setReport(null);
