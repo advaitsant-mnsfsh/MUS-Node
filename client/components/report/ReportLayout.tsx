@@ -177,8 +177,8 @@ export const ReportLayout: React.FC<ReportLayoutProps> = ({
                             <div className="flex items-center gap-2 md:gap-3 shrink-0">
                                 {/* White Label Logo */}
                                 {whiteLabelLogo && (
-                                    <div className="w-10 h-10 flex shrink-0 items-center justify-center bg-white border-2 border-black shadow-neo overflow-hidden" title="Organization Logo">
-                                        <img src={whiteLabelLogo} alt="Logo" className="w-full h-full object-contain p-1" />
+                                    <div className="h-10 w-auto max-w-[150px] flex shrink-0 items-center justify-center bg-white border-2 border-black shadow-neo px-2" title="Organization Logo">
+                                        <img src={whiteLabelLogo} alt="Logo" className="max-h-full max-w-full object-contain object-left" />
                                     </div>
                                 )}
 
