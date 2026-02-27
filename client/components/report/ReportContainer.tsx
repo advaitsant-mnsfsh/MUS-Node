@@ -8,6 +8,7 @@ import { useCompetitorReportPdf } from '../../hooks/useCompetitorReportPdf';
 import { ASSETS } from './constants';
 import toast from 'react-hot-toast';
 import { ReportLayout } from './ReportLayout';
+import { getBaseUrlForStatic } from '../../services/config';
 
 interface ReportContainerProps {
     report: AnalysisReport | null;
@@ -111,8 +112,9 @@ export const ReportContainer: React.FC<ReportContainerProps> = ({
     const getScreenshotSrc = (s: Screenshot | undefined) => {
         if (!s) return undefined;
         if (s.url && s.url.startsWith('/uploads')) {
-            const backendUrl = import.meta.env.VITE_BACKEND_URL || import.meta.env.VITE_API_URL || (import.meta.env.PROD ? 'https://mus-node-production.up.railway.app' : 'http://localhost:8080');
-            return `${backendUrl}${s.url}`;
+            const backendUrl = getBaseUrlForStatic();
+            const subPath = s.url.startsWith('/') ? s.url : `/${s.url}`;
+            return `${backendUrl}${subPath}`;
         }
         if (s.url) return s.url;
         if (s.data) return `data:image/jpeg;base64,${s.data}`;

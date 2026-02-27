@@ -1,5 +1,6 @@
 import React from 'react';
 import { AuditInput } from '../types';
+import { getBaseUrlForStatic } from '../services/config';
 
 interface ScanningPreviewProps {
     screenshot: string | null;
@@ -97,8 +98,9 @@ export const ScanningPreview: React.FC<ScanningPreviewProps> = ({ screenshot, pr
                                 src={(() => {
                                     if (screenshot.startsWith('data:')) return screenshot;
                                     if (screenshot.startsWith('/uploads')) {
-                                        const backendUrl = import.meta.env.VITE_BACKEND_URL || import.meta.env.VITE_API_URL || (import.meta.env.PROD ? 'https://mus-node-production.up.railway.app' : 'http://localhost:3000');
-                                        return `${backendUrl}${screenshot}`;
+                                        const backendUrl = getBaseUrlForStatic();
+                                        const subPath = screenshot.startsWith('/') ? screenshot : `/${screenshot}`;
+                                        return `${backendUrl}${subPath}`;
                                     }
                                     return `data:image/png;base64,${screenshot}`;
                                 })()}
