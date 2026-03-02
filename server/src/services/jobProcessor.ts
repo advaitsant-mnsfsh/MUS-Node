@@ -1,4 +1,5 @@
 import { db } from '../lib/db.js';
+import { auditJobs } from '../db/schema.js';
 import { SecretService } from './secretService.js';
 import { JobService } from './jobService.js';
 import { eq } from 'drizzle-orm';
@@ -19,6 +20,7 @@ export class JobProcessor {
             const inputDataRaw = job.input_data as any;
             const inputs = Array.isArray(inputDataRaw) ? inputDataRaw : (inputDataRaw?.inputs || []);
             const auditMode = Array.isArray(inputDataRaw) ? 'standard' : (inputDataRaw?.auditMode || 'standard');
+            const whiteLabelLogo = Array.isArray(inputDataRaw) ? null : (inputDataRaw?.whiteLabelLogo || null);
 
             // --- STANDARD/COMPETITOR AUDIT FLOW ---
 
@@ -202,8 +204,7 @@ export class JobProcessor {
                     }
                 }
 
-                // Run Experts
-                console.log(`[JobProcessor] Running experts...`);
+                console.log(`[JobProcessor] Running experts... Logo Status: ${whiteLabelLogo ? (whiteLabelLogo.startsWith('data:') ? 'Base64' : 'URL') : 'None'}`);
                 const modes = ['analyze-ux', 'analyze-product', 'analyze-visual', 'analyze-strategy', 'analyze-accessibility'];
 
                 const runExpertWithTimeout = async (mode: string) => {
@@ -339,20 +340,56 @@ ${JSON.stringify(allIssues, null, 2)}`;
             // --- FINALIZATION ---
             console.log(`[JobProcessor] Job ${jobId} completed. Finalizing...`);
 
+            let finalWhiteLabelLogoUrl = whiteLabelLogo;
+            if (whiteLabelLogo && whiteLabelLogo.startsWith('data:')) {
+                try {
+                    console.log(`[JobProcessor] 📤 Detected Base64 Whitelabel Logo. Saving to permanent storage...`);
+                    const { ImageService } = await import('./imageService.js');
+                    finalWhiteLabelLogoUrl = await ImageService.saveImage(jobId, 'whitelabel.png', whiteLabelLogo);
+                    console.log(`[JobProcessor] ✅ Saved Whitelabel logo: ${finalWhiteLabelLogoUrl}`);
+                } catch (e) {
+                    console.error('[JobProcessor] ❌ Failed to save whitelabel logo:', e);
+                }
+            } else if (whiteLabelLogo) {
+                console.log(`[JobProcessor] ℹ️ Whitelabel logo already processed or external: ${whiteLabelLogo}`);
+            }
+
+            // --- PERSIST SAVED LOGO TO DB ---
+            // Update input_data to replace Base64 with permanent path
+            if (finalWhiteLabelLogoUrl && finalWhiteLabelLogoUrl !== whiteLabelLogo) {
+                try {
+                    console.log(`[JobProcessor] 💾 Persisting permanent logo path to input_data...`);
+                    const inputs = (job.input_data as any)?.inputs || job.input_data;
+                    const newInputData = {
+                        ...(job.input_data as any || {}),
+                        whiteLabelLogo: finalWhiteLabelLogoUrl
+                    };
+
+                    await db.update(auditJobs)
+                        .set({ input_data: newInputData })
+                        .where(eq(auditJobs.id, jobId));
+                } catch (dbError) {
+                    console.warn(`[JobProcessor] ⚠️ Failed to update input_data with permanent logo:`, dbError);
+                }
+            }
+
             const reportData = {
                 url: finalUrl,
                 competitorUrl: auditMode === 'competitor' ? (inputs.find((i: any) => i.role === 'competitor') || inputs[1])?.url : undefined,
                 screenshots: finalScreenshots,
                 screenshotMimeType: finalMimeType,
+                whiteLabelLogo: finalWhiteLabelLogoUrl || whiteLabelLogo,
                 ...report
             };
 
             const resultUrl = `/report/${jobId}`;
             const thumbnailUrl = finalScreenshots[0]?.url || undefined;
 
+            // --- ✨ FINAL COMPLETION SIGNAL ---
+            // We do this LAST to ensure terminal logs match the DB status timing
             await JobService.updateJobStatus(jobId, 'completed', reportData, undefined, resultUrl);
 
-            // Save thumbnail for faster dashboard loading
+            console.log(`[JobProcessor] ✨ Job Completed: ${jobId}`);
             if (thumbnailUrl) {
                 const { auditJobs } = await import('../db/schema.js');
                 await db.update(auditJobs)

@@ -19,12 +19,23 @@ export default function SiteLogo({ domain, size = 'medium', className = '', cust
     const [imageError, setImageError] = useState(false);
 
     useEffect(() => {
-        if (customIcon) {
+        let finalIcon = customIcon;
+        if (finalIcon && finalIcon.startsWith('/uploads/')) {
+            const backendUrl = import.meta.env.VITE_BACKEND_URL || 'http://localhost:8080';
+            finalIcon = `${backendUrl}${finalIcon}`;
+        }
+
+        if (finalIcon) {
             setLogoSource('custom');
         } else {
             setLogoSource('google');
         }
     }, [customIcon]);
+
+    // Use a wrapper for the source to handle the resolution in render too
+    const resolvedCustomIcon = customIcon && customIcon.startsWith('/uploads/')
+        ? `${import.meta.env.VITE_BACKEND_URL || 'http://localhost:8080'}${customIcon}`
+        : customIcon;
 
     // Extract clean domain (remove www, protocols, paths)
     const getCleanDomain = (rawDomain: string) => {
@@ -101,7 +112,7 @@ export default function SiteLogo({ domain, size = 'medium', className = '', cust
         return (
             <div className={`${sizeClasses[size]} ${className} rounded-lg overflow-hidden bg-white shadow-md flex items-center justify-center shrink-0`}>
                 <img
-                    src={customIcon}
+                    src={resolvedCustomIcon as string}
                     alt="Custom logo"
                     className={`w-full h-full object-contain ${size === 'tiny' ? 'p-0.5' : 'p-2'}`}
                     onError={() => {

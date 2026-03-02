@@ -326,7 +326,11 @@ const DashboardPage: React.FC = () => {
                                     {audit.competitorUrl ? (
                                         <div className="flex items-center justify-center w-full h-full gap-4">
                                             <div className="flex-1 flex items-center justify-center">
-                                                <SiteLogo domain={audit.url} size="medium" customIcon={audit.inputData?.customFavicon} />
+                                                <SiteLogo
+                                                    domain={audit.url}
+                                                    size="medium"
+                                                    customIcon={audit.inputData?.customFavicon || (audit.url === 'Manual Upload' || audit.url === 'Uploaded Image' ? audit.inputData?.whiteLabelLogo : null)}
+                                                />
                                             </div>
                                             <div className="w-px h-24 bg-border-main"></div>
                                             <div className="flex-1 flex items-center justify-center">
@@ -335,14 +339,18 @@ const DashboardPage: React.FC = () => {
                                         </div>
                                     ) : (
                                         <div className="relative group/logo">
-                                            <SiteLogo domain={audit.url} size="large" customIcon={audit.inputData?.customFavicon} />
+                                            <SiteLogo
+                                                domain={audit.url}
+                                                size="large"
+                                                customIcon={audit.inputData?.customFavicon || (audit.url === 'Manual Upload' || audit.url === 'Uploaded Image' ? audit.inputData?.whiteLabelLogo : null)}
+                                            />
                                             {(audit.url === 'Manual Upload' || audit.url === 'Unknown' || audit.url === 'Uploaded Image') && (
                                                 <button
                                                     onClick={(e) => {
                                                         e.stopPropagation();
                                                         setLogoEditingAudit({
                                                             id: audit.id,
-                                                            initialLogo: audit.inputData?.customFavicon || null
+                                                            initialLogo: audit.inputData?.customFavicon || audit.inputData?.whiteLabelLogo || null
                                                         });
                                                     }}
                                                     className="absolute inset-0 bg-black/40 text-white flex items-center justify-center opacity-0 group-hover/logo:opacity-100 transition-opacity rounded-lg"

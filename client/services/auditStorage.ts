@@ -55,13 +55,20 @@ export async function getSharedAudit(auditId: string): Promise<SharedAuditData |
         });
     }
 
+    // Fix relative URL for whiteLabelLogo
+    let rawLogo = job.whiteLabelLogo || report.whiteLabelLogo || null;
+    let finalLogoUrl = rawLogo;
+    if (finalLogoUrl && finalLogoUrl.startsWith('/uploads/')) {
+        finalLogoUrl = `${backendUrl}${finalLogoUrl}`;
+    }
+
     return {
         id: job.id,
         url: report.url || 'Unknown URL',
         report: report,
         screenshots: screenshots,
         screenshotMimeType: report.screenshotMimeType || 'image/jpeg',
-        whiteLabelLogo: null,
+        whiteLabelLogo: finalLogoUrl,
         createdAt: new Date().toISOString(),
         inputs: job.inputs || []
     };
@@ -77,6 +84,7 @@ export interface AuditJobData {
     inputs?: any[]; // AuditInput[] array
     customName?: string;
     customFavicon?: string;
+    whiteLabelLogo?: string | null;
 }
 
 // Basic In-Memory Cache to prevent redundant fetches
@@ -94,14 +102,41 @@ export async function getAuditJob(jobId: string): Promise<AuditJobData | null> {
             const response = await fetch(`${backendUrl}/api/public/jobs/${jobId}`);
             if (response.ok) {
                 const apiData = await response.json();
+
+                // Format relative URLs from backend
+                let finalWhiteLabelLogo = apiData.whiteLabelLogo;
+                if (finalWhiteLabelLogo && finalWhiteLabelLogo.startsWith('/uploads/')) {
+                    finalWhiteLabelLogo = `${backendUrl}${finalWhiteLabelLogo}`;
+                }
+
+                if (apiData.report_data) {
+                    // Fix whitelabel logo inside report_data
+                    if (apiData.report_data.whiteLabelLogo && apiData.report_data.whiteLabelLogo.startsWith('/uploads/')) {
+                        apiData.report_data.whiteLabelLogo = `${backendUrl}${apiData.report_data.whiteLabelLogo}`;
+                    }
+
+                    // Fix screenshots inside report_data
+                    if (Array.isArray(apiData.report_data.screenshots)) {
+                        apiData.report_data.screenshots = apiData.report_data.screenshots.map((s: any) => {
+                            if (s.url && s.url.startsWith('/uploads/')) {
+                                return { ...s, url: `${backendUrl}${s.url}` };
+                            }
+                            return s;
+                        });
+                    }
+                }
+
+                console.log(`[AuditStorage] 🔍 Job ${jobId} fetched. Logo: ${finalWhiteLabelLogo || 'None'}`);
+
                 return {
                     id: apiData.id,
                     status: apiData.status,
                     report_data: apiData.report_data,
-                    error_message: apiData.error_message, // API might return errorMessage or error_message
-                    inputs: apiData.inputs, // Capture inputs from API
+                    error_message: apiData.error_message,
+                    inputs: apiData.inputs,
                     customName: apiData.customName,
-                    customFavicon: apiData.customFavicon
+                    customFavicon: apiData.customFavicon,
+                    whiteLabelLogo: finalWhiteLabelLogo
                 };
             }
 

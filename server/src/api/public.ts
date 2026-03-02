@@ -128,7 +128,7 @@ router.get('/jobs/:jobId', async (req, res) => {
         }
 
         // Return basic status and report_data (including logs) even during processing
-        res.json({
+        const responseData = {
             id: job.id,
             status: job.status,
             report_data: job.report_data,
@@ -136,10 +136,17 @@ router.get('/jobs/:jobId', async (req, res) => {
             inputs: (job.input_data as any)?.inputs || job.input_data,
             customName: (job.input_data as any)?.customName,
             customFavicon: (job.input_data as any)?.customFavicon,
+            whiteLabelLogo: (job.report_data as any)?.whiteLabelLogo || (job.input_data as any)?.whiteLabelLogo,
             created_at: job.created_at,
             updated_at: job.updated_at
-        });
+        };
 
+        const hasInputLogo = !!(job.input_data as any)?.whiteLabelLogo;
+        const hasReportLogo = !!(job.report_data as any)?.whiteLabelLogo;
+        const logoStatus = hasReportLogo ? 'Present (Report)' : (hasInputLogo ? 'Present (Input)' : 'Missing');
+
+        console.log(`[Public API] Delivering Job ${jobId}. Status: ${job.status}. Logo: ${logoStatus}`);
+        res.json(responseData);
         return;
 
     } catch (error: any) {

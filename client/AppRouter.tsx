@@ -79,7 +79,9 @@ function SharedAuditView() {
                         setUrl(job.report_data?.url || 'Analyzed Site'); // Fallback
                         setScreenshots(job.report_data?.screenshots || []);
                         setInputs(job.inputs || []);
-                        setWhiteLabelLogo(job.report_data?.whiteLabelLogo || (job as any).input_data?.whiteLabelLogo || null);
+                        const finalLogo = job.report_data?.whiteLabelLogo || job.whiteLabelLogo || null;
+                        console.log(`[SharedView] 🏷️ Resolved Logo: ${finalLogo || 'None'}`);
+                        setWhiteLabelLogo(finalLogo);
                         setJobStatus('completed');
                         setLoading(false);
                         return; // Done

@@ -200,7 +200,7 @@ export const useAudit = () => {
             setProgress(95);
         },
         onClose: () => { }
-    }), [navigate, location.pathname, auditId]);
+    }), [navigate, location.pathname, auditId, whiteLabelLogo, user]);
 
 
     const lastAuditId = useRef<string | undefined>(undefined);
@@ -240,9 +240,9 @@ export const useAudit = () => {
                 const jobFromState = location.state?.job;
                 let job = jobFromState || null;
 
-                if (!isNewAudit && !job) {
+                if (!isNewAudit && (!job || !job.report_data)) {
                     setIsFetchingReport(true);
-                    job = await getAuditJob(auditId);
+                    job = await getAuditJob(auditId) || job;
                     setIsFetchingReport(false);
                 }
 
@@ -250,13 +250,20 @@ export const useAudit = () => {
                     const reportData = job.report_data;
                     if (reportData) {
                         setReport(reportData);
-                        if (reportData.screenshots) setScreenshots(reportData.screenshots);
+                        if (reportData.screenshots) {
+                            console.log(`[useAudit] 🖼️ Loading ${reportData.screenshots.length} screenshots from report_data`);
+                            setScreenshots(reportData.screenshots);
+                        }
                         if (reportData.screenshotMimeType) setScreenshotMimeType(reportData.screenshotMimeType);
-                        if (reportData.whiteLabelLogo) setWhiteLabelLogo(reportData.whiteLabelLogo);
+                        if (reportData.whiteLabelLogo) {
+                            console.log(`[useAudit] 🏷️ Found whitelabel in report_data: ${reportData.whiteLabelLogo}`);
+                            setWhiteLabelLogo(reportData.whiteLabelLogo);
+                        }
                     }
 
-                    if (job.input_data && (job.input_data as any).whiteLabelLogo) {
-                        setWhiteLabelLogo((job.input_data as any).whiteLabelLogo);
+                    if (job.whiteLabelLogo) {
+                        console.log(`[useAudit] 🏷️ Found top-level whitelabel logo: ${job.whiteLabelLogo}`);
+                        setWhiteLabelLogo(job.whiteLabelLogo);
                     }
 
                     if (job.inputs) {
@@ -344,7 +351,7 @@ export const useAudit = () => {
         setTargetProgress(0);
 
         analyzeWebsiteStream({ inputs, auditMode, whiteLabelLogo }, getStreamCallbacks(false));
-    }, [getStreamCallbacks]);
+    }, [getStreamCallbacks, whiteLabelLogo]);
 
     const handleAnalyze = useCallback((inputs: AuditInput[], auditMode: 'standard' | 'competitor' = 'standard') => {
         // --- 1. INSTANT UI PIVOT ---
@@ -460,6 +467,7 @@ export const useAudit = () => {
         setTargetProgress(0);
         setIsLoading(false);
         setQueuePosition(0);
+        setWhiteLabelLogo(null);
         navigate('/');
     }, [navigate]);
 
