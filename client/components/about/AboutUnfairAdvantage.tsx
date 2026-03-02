@@ -241,12 +241,21 @@ const AboutUnfairAdvantage: React.FC = () => {
     const [animKey1, setAnimKey1] = useState(0);
     const [animKey2, setAnimKey2] = useState(0);
     const [animKey3, setAnimKey3] = useState(0);
+
+    // Animation locks to prevent hover spamming ("Let it finish" approach)
+    const [isAnimating1, setIsAnimating1] = useState(false);
+    const [isAnimating2, setIsAnimating2] = useState(false);
+    const [isAnimating3, setIsAnimating3] = useState(false);
+
     const containerRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
         const observer = new IntersectionObserver((entries) => {
-            if (entries[0].isIntersecting) {
+            if (entries[0].isIntersecting && !inView) {
                 setInView(true);
+                // Lock the first animation play
+                setIsAnimating1(true);
+                setTimeout(() => setIsAnimating1(false), 2500);
             }
         }, { threshold: 0.4 });
 
@@ -255,7 +264,28 @@ const AboutUnfairAdvantage: React.FC = () => {
         }
 
         return () => observer.disconnect();
-    }, []);
+    }, [inView]);
+
+    const handleHover1 = () => {
+        if (isAnimating1) return;
+        setIsAnimating1(true);
+        setAnimKey1(k => k + 1);
+        setTimeout(() => setIsAnimating1(false), 2500);
+    };
+
+    const handleHover2 = () => {
+        if (isAnimating2) return;
+        setIsAnimating2(true);
+        setAnimKey2(k => k + 1);
+        setTimeout(() => setIsAnimating2(false), 1500);
+    };
+
+    const handleHover3 = () => {
+        if (isAnimating3) return;
+        setIsAnimating3(true);
+        setAnimKey3(k => k + 1);
+        setTimeout(() => setIsAnimating3(false), 3600);
+    };
 
     return (
         <section className="relative w-full bg-[#FFFEF9] py-20 px-6 font-['DM_Sans']">
@@ -286,10 +316,10 @@ const AboutUnfairAdvantage: React.FC = () => {
                         </p>
                     </div>
 
-                    {/* Right: Animation Box — hover remounts meters (no reverse) */}
+                    {/* Right: Animation Box — hover remounts meters (locked until animation finishes) */}
                     <motion.div
                         className="flex-1 self-stretch flex items-center justify-center bg-[#FBD24E] min-h-[500px] md:min-h-[600px] rounded-sm py-12 px-2"
-                        onMouseEnter={() => setAnimKey1(k => k + 1)}
+                        onMouseEnter={handleHover1}
                     >
                         <div key={animKey1} className="flex w-full max-w-[32rem] mx-auto items-center">
                             <AnimatedMeter title="YOU" numbers={YOU_NUMBERS} texts={YOU_TEXTS} isYou={true} inView={inView} />
@@ -324,7 +354,7 @@ const AboutUnfairAdvantage: React.FC = () => {
                     </div>
 
                     {/* Right: Animation Box (Image Overlay) */}
-                    <AdvantageTwoAnimation key={animKey2} onMouseEnter={() => setAnimKey2(k => k + 1)} />
+                    <AdvantageTwoAnimation key={animKey2} onMouseEnter={handleHover2} />
                 </div>
 
                 {/* Advantage 3 Container */}
@@ -349,7 +379,7 @@ const AboutUnfairAdvantage: React.FC = () => {
                     </div>
 
                     {/* Right: Animation Box (Interactive Widget) */}
-                    <AdvantageThreeAnimation key={animKey3} onMouseEnter={() => setAnimKey3(k => k + 1)} />
+                    <AdvantageThreeAnimation key={animKey3} onMouseEnter={handleHover3} />
                 </div>
             </div>
         </section>
