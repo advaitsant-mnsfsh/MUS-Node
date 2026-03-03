@@ -187,7 +187,7 @@ const AboutScrollAnimation: React.FC = () => {
                     initial={{ opacity: 0, scale: 0.8, y: 30 }}
                     whileInView={{ opacity: 1, scale: 1, y: 0 }}
                     viewport={{ once: true, margin: "-100px" }}
-                    transition={{ duration: 0.8, ease: "easeOut", delay: 0.4 }}
+                    transition={{ duration: 0.8, ease: "easeOut", delay: 0.0 }}
                 >
                     <p className="text-[0.95rem] md:text-[1.5rem] font-semibold text-[#2A2A2A]">users keep dropping...</p>
                     <div className="w-24 h-24 md:w-[5rem] md:h-[5rem]">
@@ -398,7 +398,7 @@ const AboutScrollAnimation: React.FC = () => {
                         viewport={{ once: true, margin: '-60px' }}
                         transition={{ duration: 0.6, ease: [0.34, 1.56, 0.64, 1], delay: 0.1 }}
                     >
-                        <div className="relative border border-[#A6A6A6] bg-white p-[0.70313rem] flex flex-col items-start gap-[0.35156rem] shadow-[0px_4px_15px_rgba(0,0,0,0.03)]">
+                        <div className="relative border border-[#A6A6A6] bg-white p-[0.70313rem] flex flex-col items-start gap-[0.35156rem] shadow-[2px_2px_0px_rgba(26,26,26,0.15)]">
                             <div className="absolute -top-[13px] right-[-8px] border border-[#A6A6A6] bg-[#FCF8F8] px-2 py-0.5 whitespace-nowrap z-30">
                                 <span className="font-bold text-[0.85rem] text-[#D86E6E]">40<span className="font-normal text-[0.6rem] text-[#A6A6A6]"> /100</span></span>
                             </div>
@@ -429,7 +429,7 @@ const AboutScrollAnimation: React.FC = () => {
                         viewport={{ once: true, margin: '-60px' }}
                         transition={{ duration: 0.9, ease: [0.25, 0.46, 0.45, 0.94], delay: 0.2 }}
                     >
-                        <div className="relative border-[1.5px] border-[#444] bg-white p-[1.125rem] flex flex-col items-start gap-[0.5625rem] shadow-[0px_4px_25px_rgba(0,0,0,0.06)]">
+                        <div className="relative border-[1.5px] border-[#444] bg-white p-[1.125rem] flex flex-col items-start gap-[0.5625rem] shadow-[2px_2px_0px_rgba(26,26,26,0.15)]">
                             <div className="absolute -top-[16px] right-[-10px] border-[1.5px] border-[#444] bg-[#FEFBF2] px-3 py-0.5 whitespace-nowrap z-30 shadow-sm">
                                 <span className="font-bold text-[1.1rem] text-[#CAB34B]">70<span className="font-normal text-[0.7rem] text-[#888]"> /100</span></span>
                             </div>
@@ -463,7 +463,7 @@ const AboutScrollAnimation: React.FC = () => {
                         viewport={{ once: true, margin: '-40px' }}
                         transition={{ duration: 0.6, ease: [0.34, 1.56, 0.64, 1], delay: 0.3 }}
                     >
-                        <div className="relative border border-[#D5D5D5] bg-white p-[0.5625rem] flex flex-col items-start gap-[0.28125rem] opacity-70 scale-95 origin-top-left">
+                        <div className="relative border border-[#D5D5D5] bg-white p-[0.5625rem] flex flex-col items-start gap-[0.28125rem] opacity-70 scale-95 origin-top-left shadow-[2px_2px_0px_rgba(26,26,26,0.15)]">
                             <div className="absolute -top-[11px] right-[-6px] border border-[#D5D5D5] bg-[#F5FCF5] px-1.5 py-0 whitespace-nowrap z-30">
                                 <span className="font-bold text-[0.75rem] text-[#7EC27E]">90<span className="font-normal text-[0.55rem] text-[#A6A6A6]"> /100</span></span>
                             </div>
@@ -487,7 +487,7 @@ const AboutScrollAnimation: React.FC = () => {
                         viewport={{ once: true, margin: '-40px' }}
                         transition={{ duration: 0.6, ease: [0.34, 1.56, 0.64, 1], delay: 0.25 }}
                     >
-                        <div className="relative border border-[#D5D5D5] bg-white p-[0.5625rem] flex flex-col items-start gap-[0.28125rem] opacity-60">
+                        <div className="relative border border-[#D5D5D5] bg-white p-[0.5625rem] flex flex-col items-start gap-[0.28125rem] opacity-60 shadow-[2px_2px_0px_rgba(26,26,26,0.15)]">
                             <div className="absolute -top-[11px] right-[-6px] border border-[#D5D5D5] bg-[#FCF5F5] px-1.5 py-0 whitespace-nowrap z-30">
                                 <span className="font-bold text-[0.75rem] text-[#D88A8A]">50<span className="font-normal text-[0.55rem] text-[#A6A6A6]"> /100</span></span>
                             </div>
@@ -513,7 +513,7 @@ const AboutScrollAnimation: React.FC = () => {
                         viewport={{ once: true, margin: '-40px' }}
                         transition={{ duration: 0.5, ease: [0.34, 1.56, 0.64, 1], delay: 0.4 }}
                     >
-                        <div className="relative border border-[#E5E5E5] bg-white/50 p-[0.5rem] flex flex-col items-start gap-[0.25rem] opacity-40">
+                        <div className="relative border border-[#E5E5E5] bg-white/50 p-[0.5rem] flex flex-col items-start gap-[0.25rem] opacity-40 shadow-[1px_1px_0px_rgba(26,26,26,0.15)]">
                             <div className="absolute -top-[10px] right-[-6px] border border-[#E5E5E5] bg-[#FCFAF5] px-1.5 py-0 whitespace-nowrap z-30">
                                 <span className="font-bold text-[0.65rem] text-[#D8C78A]">60<span className="font-normal text-[0.5rem] text-[#A6A6A6]"> /100</span></span>
                             </div>
