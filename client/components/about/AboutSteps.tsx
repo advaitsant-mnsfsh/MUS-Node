@@ -3,7 +3,7 @@ import { Globe, Plus, Image as ImageIcon, Box, Zap, Settings, Accessibility, Pal
 
 const AboutSteps: React.FC = () => {
     return (
-        <section className="relative w-full bg-[#FFFEF9] py-20 px-6 font-['DM_Sans'] overflow-hidden">
+        <section className="relative w-full bg-[#FFFEF9] pb-20 px-6 font-['DM_Sans'] overflow-hidden">
             {/* Decorative Right Ring image (between steps 3 and 4) */}
             {/* The exported PNG is exactly 123px wide (the clipped crescent), so we just set natural width against the right edge */}
             <img
@@ -28,13 +28,13 @@ const AboutSteps: React.FC = () => {
                     <div className="flex flex-col md:flex-row justify-center items-start w-full gap-[2rem] md:gap-[8.8125rem] relative z-10 flex-1">
                         {/* Left: Input Card Mockup */}
                         <div className="flex flex-col items-end gap-[0.625rem] w-full md:w-[37rem] pt-[1.375rem] shrink-0">
-                            <div className="w-full max-w-[500px] bg-white border border-black rounded-sm shadow-[4px_4px_0px_#000] p-6 flex flex-col gap-4">
-                                <div className="flex items-center gap-2 border border-black/20 rounded p-3 w-full">
-                                    <span className="text-sm text-gray-400 font-medium">www.yourwebsite.com</span>
+                            <div className="w-full max-w-[500px] bg-white border border-black rounded-sm shadow-[2px_2px_0px_#000] p-6 flex flex-col gap-4">
+                                <div className="flex items-center gap-2 border border-black rounded-md p-3 w-full shadow-[3px_3px_0px_rgba(0,0,0,0.5)] bg-white">
+                                    <span className="text-[15px] text-[#1A1A1A] font-medium ml-2 font-['DM_Sans']">www.yourwebsite.com</span>
                                     <div className="ml-auto flex items-center gap-3">
-                                        <ImageIcon className="w-5 h-5 text-black/60" />
-                                        <div className="w-6 h-6 border border-black/20 rounded flex items-center justify-center">
-                                            <Plus className="w-4 h-4 text-black/60" />
+                                        <ImageIcon className="w-5 h-5 text-black" />
+                                        <div className="w-7 h-7 border border-black/40 rounded flex items-center justify-center">
+                                            <Plus className="w-4 h-4 text-black/80" />
                                         </div>
                                     </div>
                                 </div>

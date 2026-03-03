@@ -86,7 +86,7 @@ const AdvantageTwoAnimation = ({ onMouseEnter }: { onMouseEnter?: () => void }) 
     }, []);
 
     return (
-        <div ref={containerRef} onMouseEnter={onMouseEnter} className="flex-1 self-stretch flex items-end justify-start bg-[#FBD24E] min-h-[500px] md:min-h-[600px] rounded-sm relative overflow-hidden pt-[4rem]">
+        <div ref={containerRef} onMouseEnter={onMouseEnter} className="flex-1 w-full md:w-[50%] self-stretch flex items-end justify-start bg-[#FBD24E] min-h-[494px] rounded-sm relative overflow-hidden pt-[4rem]">
             {/* Image container holds proportion to let badge sit relative to it */}
             <div className="relative w-[90%] md:w-[85%] flex justify-start items-end">
 
@@ -145,7 +145,7 @@ const AdvantageThreeAnimation = ({ onMouseEnter }: { onMouseEnter?: () => void }
     }, [step]);
 
     return (
-        <div ref={containerRef} onMouseEnter={onMouseEnter} className="flex-1 self-stretch flex items-center justify-center bg-[#FBD24E] min-h-[500px] md:min-h-[600px] rounded-sm relative overflow-hidden">
+        <div ref={containerRef} onMouseEnter={onMouseEnter} className="flex-1 w-full md:w-[50%] self-stretch flex items-center justify-center bg-[#FBD24E] min-h-[494px] rounded-sm relative overflow-hidden">
             {/* Animation Container */}
             <div className="relative w-full max-w-[40rem] aspect-[4/3] mx-auto flex items-center justify-center">
 
@@ -188,7 +188,7 @@ const AdvantageThreeAnimation = ({ onMouseEnter }: { onMouseEnter?: () => void }
                 </div>
 
                 <div
-                    className={`absolute z-20 flex flex-col items-start transition-all duration-1000 ease-in-out origin-center w-[32.80406rem]
+                    className={`absolute z-20 flex flex-col items-start transition-all duration-1000 ease-in-out origin-center w-[28.80406rem]
                     ${step === 0
                             ? '-translate-x-[80%] scale-100 opacity-100 bg-white rounded-[1.2rem] border-[2px] border-[#1A1A1A] p-[1.65888rem] gap-[0.82944rem] shadow-[0_20px_80px_rgba(0,0,0,0.15)] mt-0'
                             : step === 1
@@ -296,7 +296,7 @@ const AboutUnfairAdvantage: React.FC = () => {
                 </h2>
 
                 {/* Advantage 1 Container */}
-                <div className="flex flex-col md:flex-row w-full gap-8 md:gap-12 items-stretch" ref={containerRef}>
+                <div className="flex flex-col md:flex-row w-full max-w-6xl min-h-[514px] p-[10px] justify-between items-center gap-8 md:gap-12 mx-auto" ref={containerRef}>
                     {/* Left: Text Content */}
                     <div className="flex flex-col justify-center items-start gap-[3rem] p-0 md:p-[3rem_1.5rem] flex-1 self-stretch">
 
@@ -318,7 +318,7 @@ const AboutUnfairAdvantage: React.FC = () => {
 
                     {/* Right: Animation Box — hover remounts meters (locked until animation finishes) */}
                     <motion.div
-                        className="flex-1 self-stretch flex items-center justify-center bg-[#FBD24E] min-h-[500px] md:min-h-[600px] rounded-sm py-12 px-2"
+                        className="flex-1 w-full md:w-[50%] self-stretch flex items-center justify-center bg-[#FBD24E] min-h-[494px] rounded-sm py-12 px-2"
                         onMouseEnter={handleHover1}
                     >
                         <div key={animKey1} className="flex w-full max-w-[32rem] mx-auto items-center">
@@ -333,7 +333,7 @@ const AboutUnfairAdvantage: React.FC = () => {
                 </div>
 
                 {/* Advantage 2 Container */}
-                <div className="flex flex-col md:flex-row w-full gap-8 md:gap-12 items-stretch mt-8 md:mt-12">
+                <div className="flex flex-col md:flex-row w-full max-w-[72rem] min-h-[514px] p-[10px] justify-between items-center gap-8 md:gap-12 mt-8 md:mt-12 mx-auto">
                     {/* Left: Text Content */}
                     <div className="flex flex-col justify-center items-start gap-[3rem] p-0 md:p-[3rem_1.5rem] flex-1 self-stretch">
 
@@ -358,7 +358,7 @@ const AboutUnfairAdvantage: React.FC = () => {
                 </div>
 
                 {/* Advantage 3 Container */}
-                <div className="flex flex-col md:flex-row w-full gap-8 md:gap-12 items-stretch mt-8 md:mt-12">
+                <div className="flex flex-col md:flex-row w-full max-w-6xl min-h-[514px] p-[10px] justify-between items-center gap-8 md:gap-12 mt-8 md:mt-12 mx-auto">
                     {/* Left: Text Content */}
                     <div className="flex flex-col justify-center items-start gap-[3rem] p-0 md:p-[3rem_1.5rem] flex-1 self-stretch">
 
