@@ -9,7 +9,19 @@ interface Props {
 }
 
 export const AccessibilityAuditView: React.FC<Props> = ({ data, isPdf = false }) => {
-    if (!data) return <SkeletonLoader className="h-96 w-full" />;
+    // If data is completely missing, show "Unavailable" instead of infinite skeleton
+    if (!data || Object.keys(data).length === 0) {
+        return (
+            <div className="flex flex-col items-center justify-center p-12 border-2 border-dashed border-slate-300 bg-slate-50 rounded-lg">
+                <p className="text-slate-900 font-bold text-lg mb-2">Accessibility Analysis Unavailable</p>
+                <p className="text-slate-600 text-sm text-center max-w-md">
+                    The detailed accessibility data could not be generated for this report.
+                    <br /><br />
+                    <span className="font-bold">Recommendation:</span> Please re-run the audit to attempt analysis again.
+                </p>
+            </div>
+        );
+    }
 
     const sections = [
         { title: 'Automated Compliance (WCAG)', data: data.AutomatedCompliance },
@@ -22,7 +34,6 @@ export const AccessibilityAuditView: React.FC<Props> = ({ data, isPdf = false })
         ...(data.AutomatedCompliance?.Parameters || []),
         ...(data.ScreenReaderExperience?.Parameters || []),
         ...(data.VisualAccessibility?.Parameters || []),
-        ...(data.Top5CriticalAccessibilityIssues?.map(i => ({ ParameterName: i.Issue, Score: 0 })) || [])
     ].filter(p => (p.Score !== undefined && p.Score < 10) || (p as any).Score === undefined);
 
     const uniqueViolations = new Set(allFailures.map(f => f.ParameterName || (f as any).ParameterName)).size;
@@ -38,17 +49,7 @@ export const AccessibilityAuditView: React.FC<Props> = ({ data, isPdf = false })
 
 
 
-            {/* Critical Issues Section */}
-            {data.Top5CriticalAccessibilityIssues?.length > 0 && (
-                <div className={`mb-4 ${isPdf ? 'break-inside-avoid pdf-item' : ''}`}>
-                    <AuditSubSectionHeader title="Critical Compliance Failures" className="mb-4" isPdf={isPdf} />
-                    <div className={`flex flex-col self-stretch ${cardGap}`}>
-                        {data.Top5CriticalAccessibilityIssues.map((issue, idx) => (
-                            <CriticalIssueCard key={idx} issue={{ ...issue, source: 'Axe-Core Detection' }} isPdf={isPdf} />
-                        ))}
-                    </div>
-                </div>
-            )}
+
 
             {/* Detailed Sections (Failures) */}
             {sections.map((section) => (

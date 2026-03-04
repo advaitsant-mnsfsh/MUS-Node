@@ -92,8 +92,8 @@ function UserPersonasDisplay({ personas, isPdf = false }: { personas?: StrategyA
                                         Age {p.Age}
                                     </span>
                                 </div>
-                                <div className="text-xs text-slate-600 font-bold truncate uppercase tracking-tight" title={p.Occupation}>{p.Occupation}</div>
-                                <div className="text-xs text-slate-500 font-medium truncate">{p.Location}</div>
+                                <div className="text-sm text-slate-600 font-bold truncate uppercase tracking-tight" title={p.Occupation}>{p.Occupation}</div>
+                                <div className="text-sm text-slate-500 font-medium truncate">{p.Location}</div>
                             </div>
                         </div>
 
@@ -171,9 +171,9 @@ export function StrategyAuditDisplay({ audit, isPdf = false, forcePageBreak = fa
                                     </div>
 
                                     <ul className="space-y-3">
-                                        {DomainAnalysis?.Items?.map((item, i) => (
+                                        {DomainAnalysis?.Items?.slice(0, 9).map((item, i) => (
                                             <li key={i} className="flex gap-3 text-sm text-slate-800 font-medium leading-relaxed group">
-                                                <span className="font-black text-black bg-accent-yellow border border-black w-5 h-5 flex items-center justify-center text-xs shadow-neo">{i + 1}</span>
+                                                <span className="font-black text-black bg-accent-yellow border border-black w-5 h-5 flex items-center justify-center text-sm shadow-neo">{i + 1}</span>
                                                 <span>{item}</span>
                                             </li>
                                         ))}
@@ -238,7 +238,7 @@ export function StrategyAuditDisplay({ audit, isPdf = false, forcePageBreak = fa
                                 </div>
 
                                 <div className="mb-6">
-                                    <span className="inline-flex items-center gap-2 px-3 py-1 bg-white border-2 border-black shadow-neo-hover text-xs font-bold text-black">
+                                    <span className="inline-flex items-center gap-2 px-3 py-1 bg-white border-2 border-black shadow-neo-hover text-sm font-bold text-black">
                                         <span className="text-slate-500 font-bold uppercase tracking-wider text-[10px]">Type:</span>
                                         {TargetAudience.WebsiteType}
                                     </span>

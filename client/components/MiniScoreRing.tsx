@@ -22,7 +22,7 @@ export const MiniScoreRing: React.FC<MiniScoreRingProps> = ({
     if (s >= 5) return '#f97316'; // orange-500
     return '#dc2626'; // red-600
   };
-  
+
   const color = getScoreColor(cappedScore);
   const scoreText = Math.round(score);
 
@@ -59,7 +59,7 @@ export const MiniScoreRing: React.FC<MiniScoreRingProps> = ({
         style={{ color, top: '40%', transform: 'translateY(-50%)' }}
       >
         <span className="font-bold text-base leading-none">{scoreText}</span>
-        <span className="text-xs font-semibold leading-none">/10</span>
+        <span className="text-sm font-semibold leading-none">/10</span>
       </div>
     </div>
   );

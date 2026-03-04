@@ -3,6 +3,7 @@ import { db } from '../lib/db.js';
 import { auditJobs, leads } from '../db/schema.js';
 import { validateApiKey, optionalUserAuth, AuthenticatedRequest } from '../middleware/apiAuth.js';
 import { QueueService } from '../services/queueService.js';
+import { WorkerService } from '../services/workerService.js';
 import { eq, and, isNull, sql, asc, desc, inArray, or } from 'drizzle-orm';
 import crypto from 'crypto';
 import fs from 'fs';
@@ -109,9 +110,13 @@ router.post('/audit', optionalUserAuth, async (req: express.Request, res: expres
         }
 
         // 2. Add to Queue
-        const { position, queueType } = await QueueService.addJobToQueue(jobId, payload, authReq.user?.id);
+        const { queueId, position, queueType } = await QueueService.addJobToQueue(jobId, payload, authReq.user?.id);
 
         console.log(`[API] 🚀 New Audit Queued: ${jobId} (Position: ${position}, Mode: ${req.body.auditMode || 'standard'})`);
+
+        // 3. Proactively trigger worker on THIS instance to claim it immediately
+        // This ensures local testing uses local code and prints logs locally.
+        WorkerService.triggerJob(queueId, jobId);
 
         res.status(202).json({
             success: true,
@@ -126,6 +131,49 @@ router.post('/audit', optionalUserAuth, async (req: express.Request, res: expres
     } catch (error: any) {
         console.error("API Error:", error);
         res.status(500).json({ error: error.message });
+    }
+});
+
+/**
+ * POST /api/v1/audit/claim
+ * Allows an authenticated user to claim an audit that was previously run as a guest.
+ */
+router.post('/audit/claim', optionalUserAuth, async (req: express.Request, res: express.Response) => {
+    const authReq = req as AuthenticatedRequest;
+    const user = authReq.user;
+    const { auditId } = req.body;
+
+    console.log(`[Audit-Claim] Request for Audit ID: ${auditId}, Authenticated User: ${user?.email || 'NONE'}`);
+
+    if (!user) {
+        return res.status(401).json({ success: false, error: 'Unauthorized: No active session found.' });
+    }
+
+    if (!auditId) {
+        return res.status(400).json({ success: false, error: 'Missing auditId' });
+    }
+
+    try {
+        // Ensure we only claim audits that don't already have an owner
+        const [updated] = await db.update(auditJobs)
+            .set({ user_id: user.id })
+            .where(and(
+                eq(auditJobs.id, auditId),
+                isNull(auditJobs.user_id)
+            ))
+            .returning({ id: auditJobs.id });
+
+        if (!updated) {
+            console.warn(`[Audit-Claim] ⚠️ Claim failed for ${auditId}. Either not found or already has an owner.`);
+            return res.status(404).json({ success: false, error: 'Audit not found or already claimed.' });
+        }
+
+        console.log(`[Audit-Claim] ✅ Audit ${auditId} successfully transferred to user ${user.email}`);
+        return res.json({ success: true });
+
+    } catch (e: any) {
+        console.error(`[Audit-Claim] 💥 Critical error:`, e);
+        return res.status(500).json({ success: false, error: e.message || 'Internal Server Error' });
     }
 });
 
@@ -152,7 +200,7 @@ router.get('/audit', async (req: express.Request, res: express.Response) => {
 
         let lastStatus = '';
         const sentDataKeys = new Set<string>();
-        const maxTime = 300000; // 5 minutes timeout
+        const maxTime = 900000; // 15 minutes timeout
         const startTime = Date.now();
 
         const checkStatus = async () => {
@@ -414,6 +462,8 @@ router.get('/admin/audits', async (req: express.Request, res: express.Response) 
             }
         }
 
+        const { auditQueue } = await import('../db/schema.js');
+
         const query = db.select({
             id: auditJobs.id,
             status: auditJobs.status,
@@ -421,12 +471,26 @@ router.get('/admin/audits', async (req: express.Request, res: express.Response) 
             input_data: auditJobs.input_data,
             created_at: auditJobs.created_at,
             email_opt_in: auditJobs.email_opt_in,
+            email_opt_in_offered: auditJobs.email_opt_in_offered,
             opt_in_email: auditJobs.opt_in_email,
+            thumbnail_url: auditJobs.thumbnail_url,
             user_name: userTable.name,
             user_email: userTable.email,
+            browser_key: auditQueue.browser_key,
+            priority: auditQueue.priority,
+            queue_position: sql<number>`(
+                SELECT count(*) + 1
+                FROM ${auditQueue} aq2
+                WHERE aq2.status = 'waiting'
+                AND (
+                    aq2.priority > ${auditQueue.priority}
+                    OR (aq2.priority = ${auditQueue.priority} AND aq2.created_at < ${auditQueue.created_at})
+                )
+            )`.as('queue_position'),
         })
             .from(auditJobs)
-            .leftJoin(userTable, eq(auditJobs.user_id, userTable.id));
+            .leftJoin(userTable, eq(auditJobs.user_id, userTable.id))
+            .leftJoin(auditQueue, eq(auditJobs.id, auditQueue.job_id));
 
         if (conditions.length > 0) {
             query.where(and(...conditions));
@@ -479,6 +543,56 @@ router.get('/admin/audits', async (req: express.Request, res: express.Response) 
         res.json({ success: true, audits: jobsWithLogs });
     } catch (e: any) {
         console.error("[Admin] Audit fetch error:", e);
+        res.status(500).json({ error: e.message });
+    }
+});
+
+// GET /api/v1/admin/audits/:jobId/report
+router.get('/admin/audits/:jobId/report', async (req, res) => {
+    const adminPass = req.headers['x-admin-password'];
+    if (adminPass !== '0000') {
+        return res.status(401).json({ error: 'Unauthorized admin access' });
+    }
+
+    const { jobId } = req.params;
+
+    try {
+        const [job] = await db.select({
+            report_data: auditJobs.report_data
+        })
+            .from(auditJobs)
+            .where(eq(auditJobs.id, jobId))
+            .limit(1);
+
+        if (!job) {
+            return res.status(404).json({ error: 'Job not found' });
+        }
+
+        res.json({ success: true, report_data: job.report_data });
+    } catch (e: any) {
+        console.error("[Admin] Report fetch error:", e);
+        res.status(500).json({ error: e.message });
+    }
+});
+
+// GET /api/v1/admin/beta-enquiries
+router.get('/admin/beta-enquiries', async (req, res) => {
+    const adminPass = req.headers['x-admin-password'] || req.query.pass;
+    if (adminPass !== '0000') {
+        return res.status(401).json({ error: 'Unauthorized admin access' });
+    }
+
+    try {
+        const { betaEnquiries } = await import('../db/schema.js');
+        const { desc } = await import('drizzle-orm');
+
+        const enquiries = await db.select()
+            .from(betaEnquiries)
+            .orderBy(desc(betaEnquiries.created_at));
+
+        res.json({ success: true, enquiries });
+    } catch (e: any) {
+        console.error("[Admin] Beta enquiries fetch error:", e);
         res.status(500).json({ error: e.message });
     }
 });

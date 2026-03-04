@@ -1,19 +1,41 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { Image as ImageIcon } from 'lucide-react';
 
 interface SiteLogoProps {
     domain: string;
     size?: 'tiny' | 'small' | 'medium' | 'large';
     className?: string;
+    customIcon?: string | null;
 }
 
 /**
  * SiteLogo component - displays site logo/favicon with fallbacks
- * 1. Uses Google Favicon Service (fast and reliable)
- * 2. Falls back to letter circle with domain-based color
+ * 1. Uses customIcon if provided (base64 or URL)
+ * 2. Uses Google Favicon Service (fast and reliable)
+ * 3. Falls back to letter circle with domain-based color
  */
-export default function SiteLogo({ domain, size = 'medium', className = '' }: SiteLogoProps) {
-    const [logoSource, setLogoSource] = useState<'google' | 'fallback'>('google'); // Skip Clearbit to avoid DNS issues
+export default function SiteLogo({ domain, size = 'medium', className = '', customIcon }: SiteLogoProps) {
+    const [logoSource, setLogoSource] = useState<'custom' | 'google' | 'fallback'>(customIcon ? 'custom' : 'google');
     const [imageError, setImageError] = useState(false);
+
+    useEffect(() => {
+        let finalIcon = customIcon;
+        if (finalIcon && finalIcon.startsWith('/uploads/')) {
+            const backendUrl = import.meta.env.VITE_BACKEND_URL || 'http://localhost:8080';
+            finalIcon = `${backendUrl}${finalIcon}`;
+        }
+
+        if (finalIcon) {
+            setLogoSource('custom');
+        } else {
+            setLogoSource('google');
+        }
+    }, [customIcon]);
+
+    // Use a wrapper for the source to handle the resolution in render too
+    const resolvedCustomIcon = customIcon && customIcon.startsWith('/uploads/')
+        ? `${import.meta.env.VITE_BACKEND_URL || 'http://localhost:8080'}${customIcon}`
+        : customIcon;
 
     // Extract clean domain (remove www, protocols, paths)
     const getCleanDomain = (rawDomain: string) => {
@@ -50,7 +72,7 @@ export default function SiteLogo({ domain, size = 'medium', className = '' }: Si
     };
 
     const fontSize = {
-        tiny: 'text-xs',
+        tiny: 'text-sm',
         small: 'text-2xl',
         medium: 'text-3xl',
         large: 'text-5xl'
@@ -85,8 +107,33 @@ export default function SiteLogo({ domain, size = 'medium', className = '' }: Si
         setImageError(true);
     };
 
+    // Render custom logo first if available
+    if (logoSource === 'custom' && customIcon) {
+        return (
+            <div className={`${sizeClasses[size]} ${className} rounded-lg overflow-hidden bg-white shadow-md flex items-center justify-center shrink-0`}>
+                <img
+                    src={resolvedCustomIcon as string}
+                    alt="Custom logo"
+                    className={`w-full h-full object-contain ${size === 'tiny' ? 'p-0.5' : 'p-2'}`}
+                    onError={() => {
+                        setLogoSource('google');
+                    }}
+                />
+            </div>
+        );
+    }
+
     // Render letter circle fallback
     if (logoSource === 'fallback' || imageError || !isValidDomain) {
+        if (domain === 'Manual Upload' || domain === 'Uploaded Image') {
+            return (
+                <div
+                    className={`${sizeClasses[size]} ${className} rounded-lg flex items-center justify-center bg-brand text-white shadow-md`}
+                >
+                    <ImageIcon className={size === 'tiny' ? 'w-4 h-4' : size === 'small' ? 'w-8 h-8' : size === 'medium' ? 'w-10 h-10' : 'w-16 h-16'} />
+                </div>
+            )
+        }
         return (
             <div
                 className={`${sizeClasses[size]} ${className} rounded-lg flex items-center justify-center font-bold text-white shadow-md`}

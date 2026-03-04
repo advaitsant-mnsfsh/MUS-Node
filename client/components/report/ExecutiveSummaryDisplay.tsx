@@ -20,37 +20,35 @@ export const ExecutiveSummaryDisplay: React.FC<ExecutiveSummaryDisplayProps> = (
         let raw = safeText;
 
         // Try to split by known headers
-        // AI usually outputs: "WHAT IS WORKING: ... WHAT IS NOT WORKING: ..."
-        // Regex to find "WHAT IS WORKING:" (case insensitive) and everything after until "WHAT IS NOT WORKING:"
         const workingMatch = safeText.match(/WHAT IS WORKING:([\s\S]*?)(?=WHAT IS NOT WORKING:|$)/i);
         const notWorkingMatch = safeText.match(/WHAT IS NOT WORKING:([\s\S]*?)$/i);
 
         if (workingMatch || notWorkingMatch) {
-            // Helper to clean and split content into sentences/points
             const extractPoints = (sectionText: string) => {
                 if (!sectionText) return [];
-                // Split by newlines first if available
-                let lines = sectionText.split(/\n/).map(l => l.trim()).filter(l => l.length > 5);
 
-                if (lines.length <= 1) {
-                    // Split by "), " pattern
-                    const points = sectionText.split(/\),\s*(?=[A-Z])/);
-                    return points.map(p => {
-                        let clean = p.trim();
-                        if (!clean.endsWith(')') && clean.includes('(Citation:')) clean += ')';
-                        return clean;
-                    });
+                // 1. Try splitting by explicit newlines or bullet characters
+                let points = sectionText
+                    .split(/\n|(?=[\u2022\u25CF\u25CB\u25AA\u25AB\u2043\u2013\u2014])/)
+                    .map(p => p.trim().replace(/^[\u2022\u25CF\u25CB\u25AA\u25AB\u2043\u2013\u2014\-\*]\s*/, ''))
+                    .filter(p => p.length > 5);
+
+                // 2. If it's a block of text, split by the citation closure pattern
+                if (points.length <= 1) {
+                    // This regex splits after a closing parenthesis followed by a space and an uppercase letter
+                    // e.g., ... (Citation: "..."). Next point starts here.
+                    const sentenceLikePoints = sectionText.split(/(?<=\)\.?)\s+(?=[A-Z])/);
+                    if (sentenceLikePoints.length > 1) {
+                        points = sentenceLikePoints.map(p => p.trim());
+                    }
                 }
-                return lines;
+
+                return points.filter(p => p.length > 0);
             };
 
-            if (workingMatch && workingMatch[1]) {
-                working = extractPoints(workingMatch[1]);
-            }
-            if (notWorkingMatch && notWorkingMatch[1]) {
-                notWorking = extractPoints(notWorkingMatch[1]);
-            }
-            raw = ''; // We successfully parsed
+            if (workingMatch && workingMatch[1]) working = extractPoints(workingMatch[1]);
+            if (notWorkingMatch && notWorkingMatch[1]) notWorking = extractPoints(notWorkingMatch[1]);
+            raw = '';
         }
 
         return { working, notWorking, raw };
@@ -59,34 +57,67 @@ export const ExecutiveSummaryDisplay: React.FC<ExecutiveSummaryDisplayProps> = (
     const { working, notWorking, raw } = parseSummary(summaryText);
 
     // --- RENDER HELPERS ---
-    // Neo-Brutalist Style: Simple list with bold headers
+    const Point = ({ content }: { content: string }) => {
+        // Regex to extract citation: (Citation: "...")
+        const citationRegex = /\(Citation:\s*(.*?)\)\.?$/i;
+        const match = content.match(citationRegex);
+
+        if (match) {
+            const textPart = content.replace(match[0], '').trim();
+            const citation = match[1].replace(/^["']|["']$/g, ''); // Strip quotes
+
+            return (
+                <div className="space-y-1">
+                    <div className="flex items-start gap-3">
+                        <span className="mt-2 w-1.5 h-1.5 rounded-full bg-slate-400 shrink-0" />
+                        <p className="text-slate-800 font-medium text-[15px] leading-relaxed">
+                            {textPart}
+                        </p>
+                    </div>
+                    <div className="pl-4.5">
+                        <span className="inline-block text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-0.5">Citation:</span>
+                        <p className="text-[13px] text-slate-500 italic bg-slate-50 border-l-2 border-slate-200 pl-2 py-0.5">
+                            "{citation}"
+                        </p>
+                    </div>
+                </div>
+            );
+        }
+
+        return (
+            <div className="flex items-start gap-3">
+                <span className="mt-2 w-1.5 h-1.5 rounded-full bg-slate-400 shrink-0" />
+                <p className="text-slate-800 font-normal text-[15px] leading-relaxed">
+                    {content}
+                </p>
+            </div>
+        );
+    };
+
     const Section = ({ title, items, type }: { title: string, items: string[], type: 'working' | 'notWorking' }) => {
         if (items.length === 0) return null;
 
         const isWorking = type === 'working';
-        const badgeClass = isWorking ? 'bg-[#FEF08A]' : 'bg-[#FECACA]'; // Yellow-200 or Red-200
+        const badgeClass = isWorking ? 'bg-[#FEF08A]' : 'bg-[#FFCFCE]';
 
         return (
-            <div className="mb-8 last:mb-0 break-inside-avoid pdf-item">
-                <div className={`inline-block border-2 border-black shadow-neo px-3 py-1 mb-4 ${badgeClass}`}>
-                    <h4 className="font-extrabold text-sm uppercase tracking-wide text-black">{title}</h4>
+            <div className="mb-10 last:mb-0 break-inside-avoid pdf-item">
+                <div className={`inline-block border-2 border-black shadow-neo px-4 py-1.5 mb-6 ${badgeClass}`}>
+                    <h4 className="font-extrabold text-[13px] uppercase tracking-wider text-black">{title}</h4>
                 </div>
-                <ul className="space-y-3 pl-1">
+                <div className="space-y-6">
                     {items.map((item, i) => (
-                        <li key={i} className="text-slate-800 font-normal text-base leading-relaxed">
-                            {item.replace(/^\W+/, '')}
-                        </li>
+                        <Point key={i} content={item} />
                     ))}
-                </ul>
+                </div>
             </div>
         );
     };
 
     if (raw) {
-        // Fallback layout if parsing failed
         return (
-            <div className="flex flex-col gap-6 pl-6 border-l-4 border-black break-inside-avoid pdf-item">
-                <div className="prose prose-slate max-w-none text-slate-900 font-medium leading-relaxed">
+            <div className="flex flex-col gap-6 pl-8 border-l-4 border-slate-300 break-inside-avoid pdf-item">
+                <div className="text-slate-800 font-medium text-base leading-relaxed">
                     {raw}
                 </div>
             </div>
@@ -95,8 +126,7 @@ export const ExecutiveSummaryDisplay: React.FC<ExecutiveSummaryDisplayProps> = (
 
     return (
         <div className={`flex flex-col gap-2 break-inside-avoid pdf-item ${!isPdf ? 'animate-in fade-in slide-in-from-bottom-2' : ''}`}>
-            {/* Content with Thick Left Border */}
-            <div className="pl-8 border-l-4 border-[#475569]">
+            <div className="pl-8 border-l-4 border-slate-300">
                 <Section title="What Is Working" items={working} type="working" />
                 <Section title="What Is Not Working" items={notWorking} type="notWorking" />
             </div>

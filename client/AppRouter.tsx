@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { BrowserRouter, Routes, Route, useParams, Outlet } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, useParams, Outlet, useLocation } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import App from './App';
+import { trackPageView } from './lib/analytics';
 import EmbedPage from './pages/EmbedPage';
 import DashboardPage from './pages/DashboardPage';
 import APIKeysPage from './pages/APIKeysPage';
@@ -17,6 +18,7 @@ import { FeedbackPage } from './pages/FeedbackPage';
 import { getSharedAudit } from './services/auditStorage';
 import { AnalysisReport, Screenshot, AuditInput } from './types';
 import { Layout } from './components/Layout';
+import { BetaGuard } from './components/auth/BetaGuard';
 
 // Wrapper for Layout to use with Outlet
 const LayoutWrapper = () => (
@@ -24,6 +26,17 @@ const LayoutWrapper = () => (
         <Outlet />
     </Layout>
 );
+
+// Global Analytics Listener
+const AnalyticsTracker = () => {
+    const location = useLocation();
+
+    useEffect(() => {
+        trackPageView(location.pathname);
+    }, [location.pathname]);
+
+    return null;
+};
 
 // Shared Audit View Component
 function SharedAuditView() {
@@ -66,7 +79,9 @@ function SharedAuditView() {
                         setUrl(job.report_data?.url || 'Analyzed Site'); // Fallback
                         setScreenshots(job.report_data?.screenshots || []);
                         setInputs(job.inputs || []);
-                        setWhiteLabelLogo(job.report_data?.whiteLabelLogo || (job as any).input_data?.whiteLabelLogo || null);
+                        const finalLogo = job.report_data?.whiteLabelLogo || job.whiteLabelLogo || null;
+                        console.log(`[SharedView] 🏷️ Resolved Logo: ${finalLogo || 'None'}`);
+                        setWhiteLabelLogo(finalLogo);
                         setJobStatus('completed');
                         setLoading(false);
                         return; // Done
@@ -179,26 +194,29 @@ function SharedAuditView() {
 function AppWithRouting() {
     return (
         <BrowserRouter>
+            <AnalyticsTracker />
             <Toaster position="top-center" />
-            <Routes>
-                {/* Main Application with Global Layout */}
-                <Route element={<LayoutWrapper />}>
-                    <Route path="/" element={<App />} />
-                    <Route path="/analysis/:auditId" element={<App />} />
-                    <Route path="/report/:auditId" element={<App />} />
-                    <Route path="/dashboard" element={<DashboardPage />} />
-                    <Route path="/api-keys" element={<APIKeysPage />} />
-                    <Route path="/login" element={<App />} />
-                    <Route path="/about" element={<AboutPage />} />
-                    <Route path="/pricing" element={<PricingPage />} />
-                    <Route path="/feedback" element={<FeedbackPage />} />
-                </Route>
+            <BetaGuard>
+                <Routes>
+                    {/* Main Application with Global Layout */}
+                    <Route element={<LayoutWrapper />}>
+                        <Route path="/" element={<App />} />
+                        <Route path="/analysis" element={<App />} />
+                        <Route path="/analysis/:auditId" element={<App />} />
+                        <Route path="/report/:auditId" element={<App />} />
+                        <Route path="/dashboard" element={<DashboardPage />} />
+                        <Route path="/api-keys" element={<APIKeysPage />} />
+                        <Route path="/login" element={<App />} />
+                        <Route path="/about" element={<AboutPage />} />
+                        <Route path="/pricing" element={<PricingPage />} />
+                        <Route path="/feedback" element={<FeedbackPage />} />
+                    </Route>
 
-                {/* Standalone Views (No Global Nav) */}
-                <Route path="/shared/:auditId" element={<SharedAuditView />} />
-                <Route path="/embed" element={<EmbedPage />} />
-                <Route path="/system-audit-admin" element={<AdminAuditDashboard />} />
-            </Routes>
+                    <Route path="/shared/:auditId" element={<SharedAuditView />} />
+                    <Route path="/embed" element={<EmbedPage />} />
+                    <Route path="/dashb204727-295257950-9257507594824597" element={<AdminAuditDashboard />} />
+                </Routes>
+            </BetaGuard>
         </BrowserRouter>
     );
 }

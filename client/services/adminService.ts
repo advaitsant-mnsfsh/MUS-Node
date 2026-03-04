@@ -19,9 +19,14 @@ export interface AdminAudit {
     };
     created_at: string;
     email_opt_in: boolean;
+    email_opt_in_offered?: boolean;
     opt_in_email: string | null;
     user_name: string | null;
     user_email: string | null;
+    thumbnail_url?: string | null;
+    browser_key?: number | null;
+    priority?: number | null;
+    queue_position?: number | null;
     logs: AdminAuditLog[];
 }
 
@@ -43,5 +48,23 @@ export const adminService = {
             }
         });
         return response.data;
+    },
+
+    async fetchAuditReport(password: string, jobId: string): Promise<any> {
+        const response = await axios.get(`${API_BASE_URL}/admin/audits/${jobId}/report`, {
+            headers: {
+                'x-admin-password': password
+            }
+        });
+        return response.data.report_data;
+    },
+
+    async fetchBetaEnquiries(password: string): Promise<any[]> {
+        const response = await axios.get(`${API_BASE_URL}/admin/beta-enquiries`, {
+            headers: {
+                'x-admin-password': password
+            }
+        });
+        return response.data.enquiries;
     }
 };

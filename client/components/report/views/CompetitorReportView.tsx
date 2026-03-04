@@ -73,6 +73,29 @@ export const CompetitorReportView: React.FC<CompetitorReportViewProps> = ({
 
     const [activeTab, setActiveTab] = useState<'UX' | 'Product' | 'Visual' | 'Strategy' | 'Accessibility'>('UX');
 
+    const getDisplayName = (urlStr: string) => {
+        if (!urlStr || urlStr === 'Your Website' || urlStr === 'Competitor Website' || urlStr === 'Primary URL' || urlStr === 'Competitor URL' || urlStr === 'Manual Upload') {
+            return urlStr;
+        }
+        let hostname = '';
+        try {
+            // Handle cases with protocol
+            if (urlStr.includes('://')) {
+                hostname = new URL(urlStr).hostname;
+            } else {
+                hostname = urlStr.split('/')[0];
+            }
+            hostname = hostname.replace(/^www\./, '');
+        } catch (e) {
+            hostname = urlStr.replace(/^https?:\/\//, '').replace(/^www\./, '').split('/')[0];
+        }
+
+        if (hostname && hostname.length > 0) {
+            return hostname.charAt(0).toUpperCase() + hostname.slice(1);
+        }
+        return hostname;
+    };
+
     // --- Helper Components (Brutalism Styled) ---
 
     const StrengthCard = ({ title, description }: { title: string, description: string, impact: string }) => (
@@ -149,7 +172,7 @@ export const CompetitorReportView: React.FC<CompetitorReportViewProps> = ({
                     <table className="w-full text-left border-collapse">
                         <thead>
                             <tr className="bg-transparent">
-                                <th className={`p-5 w-1/4 sticky ${stickyTopClass} z-10 bg-slate-100 shadow-[inset_0_-2px_0_black] text-xs font-black text-black uppercase tracking-wider`}>Parameter</th>
+                                <th className={`p-5 w-1/4 sticky ${stickyTopClass} z-10 bg-slate-100 shadow-[inset_0_-2px_0_black] text-sm font-black text-black uppercase tracking-wider`}>Parameter</th>
                                 <th className={`p-5 w-24 text-center sticky ${stickyTopClass} z-10 bg-slate-100 shadow-[inset_0_-2px_0_black]`}>
                                     <div className="flex items-center justify-center">
                                         <SiteLogo domain={primaryUrl} size="tiny" className="shadow-neo-sm" />
@@ -160,7 +183,7 @@ export const CompetitorReportView: React.FC<CompetitorReportViewProps> = ({
                                         <SiteLogo domain={competitorUrl} size="tiny" className="shadow-neo-sm" />
                                     </div>
                                 </th>
-                                <th className={`p-5 min-w-[300px] sticky ${stickyTopClass} z-10 bg-slate-100 shadow-[inset_0_-2px_0_black] text-xs font-black text-black uppercase tracking-wider`}>Observations</th>
+                                <th className={`p-5 min-w-[300px] sticky ${stickyTopClass} z-10 bg-slate-100 shadow-[inset_0_-2px_0_black] text-sm font-black text-black uppercase tracking-wider`}>Observations</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y-2 divide-black">
@@ -203,7 +226,7 @@ export const CompetitorReportView: React.FC<CompetitorReportViewProps> = ({
     };
 
     return (
-        <div className="font-['DM_Sans'] space-y-12 pb-12">
+        <div className="font-['DM_Sans'] space-y-12 pb-12 bg-page-bg">
 
             {/* 1. TOP SECTION: HEAD-TO-HEAD PREVIEW */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-0 border-2 border-black shadow-neo bg-white relative mr-2">
@@ -222,8 +245,8 @@ export const CompetitorReportView: React.FC<CompetitorReportViewProps> = ({
                             <SiteLogo domain={primaryUrl} size="small" className="shadow-none border-none rounded-none" />
                         </div>
                         <div className="flex flex-col">
-                            <span className="text-xs font-black text-black uppercase tracking-wider bg-amber-200 px-2 py-0.5 w-fit border border-black mb-1">Primary Website</span>
-                            <h3 className="text-xl font-bold text-black break-all">{primaryUrl}</h3>
+                            <span className="text-sm font-black text-black uppercase tracking-wider bg-amber-200 px-2 py-0.5 w-fit border border-black mb-1">Primary Website</span>
+                            <h3 className="text-xl font-bold text-black break-all">{getDisplayName(primaryUrl)}</h3>
                         </div>
                     </div>
                     {/* Primary Screenshot Area */}
@@ -242,8 +265,8 @@ export const CompetitorReportView: React.FC<CompetitorReportViewProps> = ({
                 <div className="bg-page-bg p-6 md:p-8 flex flex-col gap-4">
                     <div className="flex items-center gap-3 mb-2 justify-end">
                         <div className="flex flex-col items-end">
-                            <span className="text-xs font-black text-black uppercase tracking-wider bg-blue-200 px-2 py-0.5 w-fit border border-black mb-1">Competitor Website</span>
-                            <h3 className="text-xl font-bold text-black break-all text-right">{competitorUrl}</h3>
+                            <span className="text-sm font-black text-black uppercase tracking-wider bg-blue-200 px-2 py-0.5 w-fit border border-black mb-1">Competitor Website</span>
+                            <h3 className="text-xl font-bold text-black break-all text-right">{getDisplayName(competitorUrl)}</h3>
                         </div>
                         <div className="border-2 border-black shadow-neo overflow-hidden">
                             <SiteLogo domain={competitorUrl} size="small" className="shadow-none border-none rounded-none" />

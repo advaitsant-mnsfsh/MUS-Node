@@ -16,7 +16,7 @@ export const LandingHero: React.FC = () => {
             <div className="relative z-10 flex flex-col items-center">
                 {/* AI Badge */}
                 <div className="inline-block mb-6">
-                    <span className="inline-flex items-center gap-2 px-3 py-1.5 bg-accent-pink text-white text-[10px] sm:text-[length:--text-tiny] font-bold tracking-widest rounded-full border-2 border-border-main shadow-neo uppercase">
+                    <span className="inline-flex items-center gap-2 px-3 py-1.5 bg-accent-pink text-white text-sm sm:text-sm font-bold tracking-widest rounded-full border-2 border-border-main shadow-neo uppercase">
                         ⚡ Powered by AI and Humans
                     </span>
                 </div>

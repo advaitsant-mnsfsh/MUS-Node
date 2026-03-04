@@ -208,16 +208,29 @@ export const AuthBlocker: React.FC<AuthBlockerProps> = ({ onUnlock, isUnlocked, 
             return;
         }
 
-        // Create Lead
+        // 3. Log In with the NEW REAL password to get a session
+        const authService = await import('../services/authService');
+        const { session, error: loginError } = await authService.signIn(email, password);
+
+        if (loginError || !session) {
+            console.error('[AuthBlocker] Final login failed:', loginError);
+            toast.error("Account created, but failed to log in automatically.");
+            setIsLoading(false);
+            return;
+        }
+
+        // 4. Create Lead
         await createLead({ email, name: email.split('@')[0], audit_url: auditUrl });
         await verifyLead(email);
 
-        // Transfer audit ownership
-        if (auditId) {
-            const authService = await import('../services/authService');
-            const session = await authService.getCurrentSession();
-            if (session?.user?.id) {
-                await transferAuditOwnership(auditId, session.user.id);
+        // 5. Transfer audit ownership (Now we have a confirmed session!)
+        if (auditId && session.user) {
+            console.log(`[AuthBlocker] 🔄 Transferring Audit ${auditId} to ${session.user.id}...`);
+            const { success, error: transferError } = await transferAuditOwnership(auditId, session.user.id);
+            if (success) {
+                toast.success('Report saved to your account!', { icon: '📊' });
+            } else {
+                console.error('[AuthBlocker] Ownership transfer failed:', transferError);
             }
         }
 
@@ -288,7 +301,7 @@ export const AuthBlocker: React.FC<AuthBlockerProps> = ({ onUnlock, isUnlocked, 
                                         setIsLoginMode(false);
                                         setStep('forgot-email');
                                     }}
-                                    className="text-xs font-bold text-slate-500 hover:text-black hover:underline"
+                                    className="text-sm font-bold text-slate-500 hover:text-black hover:underline"
                                 >
                                     Forgot Password?
                                 </button>
@@ -326,7 +339,7 @@ export const AuthBlocker: React.FC<AuthBlockerProps> = ({ onUnlock, isUnlocked, 
                     <form onSubmit={handleForgotPasswordRequest} className="space-y-6">
                         <div className="p-4 bg-brand/5 border-l-4 border-brand">
                             <p className="text-sm font-bold text-slate-900">Reset Password</p>
-                            <p className="text-xs text-slate-600">Enter your business email and we'll send you a security code.</p>
+                            <p className="text-sm text-slate-600">Enter your business email and we'll send you a security code.</p>
                         </div>
                         <div>
                             <label htmlFor="email" className="block text-sm font-semibold text-slate-900 mb-2">
@@ -398,7 +411,7 @@ export const AuthBlocker: React.FC<AuthBlockerProps> = ({ onUnlock, isUnlocked, 
                     <form onSubmit={handleForgotPasswordReset} className="space-y-6">
                         <div className="p-4 bg-green-50 border-l-4 border-green-500">
                             <p className="text-sm font-bold text-slate-900">Security Verified</p>
-                            <p className="text-xs text-slate-600">Now choose a new strong password for your account.</p>
+                            <p className="text-sm text-slate-600">Now choose a new strong password for your account.</p>
                         </div>
                         <div>
                             <label className="block text-sm font-semibold text-slate-900 mb-2">
@@ -454,7 +467,7 @@ export const AuthBlocker: React.FC<AuthBlockerProps> = ({ onUnlock, isUnlocked, 
                                     if (emailError) setEmailError(null);
                                 }}
                             />
-                            {emailError && <p className="text-red-600 text-xs mt-1 font-bold">{emailError}</p>}
+                            {emailError && <p className="text-red-600 text-sm mt-1 font-bold">{emailError}</p>}
                         </div>
                         <button
                             type="submit"
@@ -473,7 +486,7 @@ export const AuthBlocker: React.FC<AuthBlockerProps> = ({ onUnlock, isUnlocked, 
                                 'Continue to Signup'
                             )}
                         </button>
-                        <p className="text-center text-xs text-slate-500 mt-6 font-medium">
+                        <p className="text-center text-sm text-slate-500 mt-6 font-medium">
                             Step 1 of 3: Verification
                         </p>
                     </form>
@@ -495,7 +508,7 @@ export const AuthBlocker: React.FC<AuthBlockerProps> = ({ onUnlock, isUnlocked, 
                                 value={otp}
                                 onChange={(e) => setOtp(e.target.value)}
                             />
-                            <p className="mt-2 text-xs text-slate-500">
+                            <p className="mt-2 text-sm text-slate-500">
                                 Can't find it? Check your spam folder.
                             </p>
                         </div>
@@ -516,7 +529,7 @@ export const AuthBlocker: React.FC<AuthBlockerProps> = ({ onUnlock, isUnlocked, 
                                 'Verify Code'
                             )}
                         </button>
-                        <p className="text-center text-xs text-slate-500 mt-4 font-medium">
+                        <p className="text-center text-sm text-slate-500 mt-4 font-medium">
                             Step 2 of 3: Security Check
                         </p>
                         <button
@@ -532,7 +545,7 @@ export const AuthBlocker: React.FC<AuthBlockerProps> = ({ onUnlock, isUnlocked, 
                     <form onSubmit={handleSignupStep3} className="space-y-6">
                         <div className="p-4 bg-slate-50 border-l-4 border-brand mb-4">
                             <p className="text-sm font-bold text-slate-800">Welcome to MUS!</p>
-                            <p className="text-xs text-slate-600">Final step: Secure your account with a password.</p>
+                            <p className="text-sm text-slate-600">Final step: Secure your account with a password.</p>
                         </div>
                         <div>
                             <label htmlFor="pass" className="block text-sm font-semibold text-slate-900 mb-2">
@@ -582,7 +595,7 @@ export const AuthBlocker: React.FC<AuthBlockerProps> = ({ onUnlock, isUnlocked, 
                                 'Complete Registration'
                             )}
                         </button>
-                        <p className="text-center text-xs text-slate-500 mt-6 font-medium">
+                        <p className="text-center text-sm text-slate-500 mt-6 font-medium">
                             Step 3 of 3: Finalize
                         </p>
                     </form>

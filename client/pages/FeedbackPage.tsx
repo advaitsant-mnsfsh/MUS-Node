@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import toast from 'react-hot-toast';
 import { Send, AlertCircle, CheckCircle2 } from 'lucide-react';
+import { getBackendUrl } from '../services/config';
 
 export const FeedbackPage: React.FC = () => {
     const { user } = useAuth();
@@ -9,7 +10,6 @@ export const FeedbackPage: React.FC = () => {
     const [submitted, setSubmitted] = useState(false);
 
     const [formData, setFormData] = useState({
-        teamNumber: '',
         jobId: '',
         websiteUrl: '',
         errorDetails: ''
@@ -26,7 +26,8 @@ export const FeedbackPage: React.FC = () => {
         };
 
         try {
-            const response = await fetch(`${import.meta.env.VITE_BACKEND_URL || import.meta.env.VITE_API_URL || ''}/api/v1/feedback`, {
+            const apiUrl = getBackendUrl();
+            const response = await fetch(`${apiUrl}/api/v1/feedback`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -78,29 +79,15 @@ export const FeedbackPage: React.FC = () => {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                     {/* User Email (Info Only) */}
                     <div className="space-y-2">
-                        <label className="block text-xs font-black uppercase tracking-widest text-slate-500">Your Email</label>
+                        <label className="block text-sm font-black uppercase tracking-widest text-slate-500">Your Email</label>
                         <div className="w-full px-4 py-4 bg-slate-50 border-2 border-slate-200 text-slate-500 font-bold">
                             {user?.email || 'Loading...'}
                         </div>
                     </div>
 
-                    {/* Team Number */}
-                    <div className="space-y-2">
-                        <label htmlFor="teamNumber" className="block text-xs font-black uppercase tracking-widest text-black">Team Number</label>
-                        <input
-                            id="teamNumber"
-                            type="text"
-                            required
-                            value={formData.teamNumber}
-                            onChange={(e) => setFormData({ ...formData, teamNumber: e.target.value })}
-                            className="w-full px-4 py-4 bg-white border-4 border-black text-black font-bold focus:outline-none focus:ring-4 focus:ring-brand/20"
-                            placeholder="Team 1"
-                        />
-                    </div>
-
                     {/* Job ID */}
                     <div className="space-y-2">
-                        <label htmlFor="jobId" className="block text-xs font-black uppercase tracking-widest text-black">Audit / Job ID (Optional)</label>
+                        <label htmlFor="jobId" className="block text-sm font-black uppercase tracking-widest text-black">Audit / Job ID (Optional)</label>
                         <input
                             id="jobId"
                             type="text"
@@ -112,8 +99,8 @@ export const FeedbackPage: React.FC = () => {
                     </div>
 
                     {/* Website URL */}
-                    <div className="space-y-2">
-                        <label htmlFor="websiteUrl" className="block text-xs font-black uppercase tracking-widest text-black">Website URL (Optional)</label>
+                    <div className="space-y-2 md:col-span-2">
+                        <label htmlFor="websiteUrl" className="block text-sm font-black uppercase tracking-widest text-black">Website URL (Optional)</label>
                         <input
                             id="websiteUrl"
                             type="text"
@@ -127,7 +114,7 @@ export const FeedbackPage: React.FC = () => {
 
                 {/* Error Details */}
                 <div className="space-y-2">
-                    <label htmlFor="errorDetails" className="block text-xs font-black uppercase tracking-widest text-black">Error Details / Comments</label>
+                    <label htmlFor="errorDetails" className="block text-sm font-black uppercase tracking-widest text-black">Error Details / Comments</label>
                     <textarea
                         id="errorDetails"
                         required

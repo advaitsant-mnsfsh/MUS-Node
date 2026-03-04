@@ -70,7 +70,7 @@ export const SplitLayout: React.FC<SplitLayoutProps> = ({
         <div className="h-[calc(100vh-5rem)] bg-page-bg overflow-hidden">
             <div className="grid lg:grid-cols-2 gap-0 h-full">
                 {/* Left Side: Scanning Preview */}
-                <div className="bg-page-bg flex items-center justify-center p-4 lg:p-8 border-r-2 border-border-main">
+                <div className="bg-page-bg flex items-center justify-center p-4 border-r-2 border-border-main">
                     <ScanningPreview
                         screenshot={screenshot || null}
                         progress={progress}

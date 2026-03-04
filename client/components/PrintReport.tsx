@@ -4,8 +4,10 @@ import { AnalysisReport, Screenshot } from '../types';
 import { SkeletonLoader } from './SkeletonLoader';
 import { ReportPDFTemplate } from './report/ReportPDFTemplate';
 
+import { getBackendUrl } from '../services/config';
+
 // --- Backend API Details ---
-const backendUrl = import.meta.env.VITE_BACKEND_URL || import.meta.env.VITE_API_URL || (import.meta.env.PROD ? 'https://mus-node-production.up.railway.app' : 'http://localhost:8080');
+const backendUrl = getBackendUrl();
 // -----------------------------
 
 interface PrintReportProps {

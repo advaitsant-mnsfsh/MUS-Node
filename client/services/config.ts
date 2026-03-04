@@ -21,17 +21,26 @@ export const getBackendUrl = () => {
             return origin;
         }
 
-        const envUrl = import.meta.env.VITE_BACKEND_URL || import.meta.env.VITE_API_URL;
+        let envUrl = import.meta.env.VITE_BACKEND_URL || import.meta.env.VITE_API_URL;
         if (envUrl) {
+            // Strip trailing slash if present
+            if (envUrl.endsWith('/')) {
+                envUrl = envUrl.slice(0, -1);
+            }
+            // Add https if protocol is missing
+            if (!envUrl.startsWith('http://') && !envUrl.startsWith('https://')) {
+                envUrl = `https://${envUrl}`;
+            }
+
             console.log(`[Config] 🛠️ Using Environment Backend: ${envUrl}`);
             return envUrl;
         }
 
-        console.log(`[Config] 🏠 Using Hardcoded Production: https://mus-node-production.up.railway.app`);
+        console.log(`[Config] 🏠 Using Hardcoded Production: https://api.myuxscore.com`);
     }
 
     // Static Production URL (as final fallback)
-    return 'https://mus-node-production.up.railway.app';
+    return 'https://api.myuxscore.com';
 };
 
 export const getBaseUrlForStatic = () => {

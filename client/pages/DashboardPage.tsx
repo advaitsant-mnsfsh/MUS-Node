@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import { FileText, Calendar, ExternalLink, Loader2 } from 'lucide-react';
-import { getUserAudits, calculateOverallScore, extractUrl, extractCompetitorUrl, getScreenshotUrl, UserAudit } from '../services/userAuditsService';
+import { FileText, Calendar, ExternalLink, Loader2, Pencil, Check, X, Image as ImageIcon } from 'lucide-react';
+import { getUserAudits, calculateOverallScore, extractUrl, extractCompetitorUrl, getScreenshotUrl, UserAudit, updateAudit } from '../services/userAuditsService';
 import { getUserAPIKeys, APIKey } from '../services/apiKeysService';
 import SiteLogo from '../components/SiteLogo';
+import { WhiteLabelModal } from '../components/WhiteLabelModal';
+import { toast } from 'react-hot-toast';
 
 interface DisplayAudit {
     id: string;
@@ -14,6 +16,8 @@ interface DisplayAudit {
     status: 'completed' | 'processing' | 'failed' | 'pending';
     score?: number;
     screenshotUrl?: string;
+    auditMode: 'standard' | 'competitor';
+    inputData: any;
 }
 
 const DashboardPage: React.FC = () => {
@@ -21,7 +25,11 @@ const DashboardPage: React.FC = () => {
     const [filteredAudits, setFilteredAudits] = useState<DisplayAudit[]>([]);
     const [apiKeys, setApiKeys] = useState<APIKey[]>([]);
     const [selectedFilter, setSelectedFilter] = useState<'all' | 'direct' | string>('all'); // 'all', 'direct', or api_key_id
+    const [typeFilter, setTypeFilter] = useState<'all' | 'standard' | 'competitor'>('all');
     const [loading, setLoading] = useState(true);
+    const [editingAuditId, setEditingAuditId] = useState<string | null>(null);
+    const [editingName, setEditingName] = useState('');
+    const [logoEditingAudit, setLogoEditingAudit] = useState<{ id: string, initialLogo: string | null } | null>(null);
     const navigate = useNavigate();
 
     useEffect(() => {
@@ -59,13 +67,24 @@ const DashboardPage: React.FC = () => {
                 if (status !== 'completed') return false;
 
                 // Handle API Key filtering
-                if (selectedFilter === 'all') return true;
-                if (selectedFilter === 'direct') return !audit.api_key_id;
-                return audit.api_key_id === selectedFilter;
+                let matchesKey = true;
+                if (selectedFilter === 'all') matchesKey = true;
+                else if (selectedFilter === 'direct') matchesKey = !audit.api_key_id;
+                else matchesKey = audit.api_key_id === selectedFilter;
+
+                // Handle Type filtering
+                let matchesType = true;
+                const auditMode = Array.isArray(audit.input_data) ? 'standard' : (audit.input_data.auditMode || 'standard');
+                if (typeFilter !== 'all') {
+                    matchesType = auditMode === typeFilter;
+                }
+
+                return matchesKey && matchesType;
             })
             .map((audit: UserAudit) => {
                 const url = extractUrl(audit.input_data);
                 const competitorUrl = extractCompetitorUrl(audit.input_data);
+                const auditMode = Array.isArray(audit.input_data) ? 'standard' : (audit.input_data.auditMode || 'standard');
 
                 return {
                     id: audit.id,
@@ -73,45 +92,118 @@ const DashboardPage: React.FC = () => {
                     competitorUrl: competitorUrl,
                     createdAt: audit.created_at,
                     status: (audit.status?.toLowerCase() || 'pending') as any,
-                    // Score and Screenshot are null since we don't fetch report_data in the list
                     score: undefined,
-                    screenshotUrl: undefined
+                    screenshotUrl: undefined,
+                    auditMode: auditMode,
+                    inputData: audit.input_data
                 };
             });
 
         setFilteredAudits(displayAudits);
-    }, [allAudits, selectedFilter]);
+    }, [allAudits, selectedFilter, typeFilter]);
 
     const getSafeHostname = (urlStr: string) => {
         if (!urlStr || urlStr === 'Manual Upload' || urlStr === 'Unknown' || urlStr === 'Uploaded Image') {
             return urlStr;
         }
+        let hostname = '';
         try {
-            return new URL(urlStr).hostname;
+            hostname = new URL(urlStr).hostname;
+            hostname = hostname.replace(/^www\./, '');
         } catch (e) {
+            hostname = urlStr.replace(/^https?:\/\//, '').replace(/^www\./, '').split('/')[0];
+        }
+
+        if (hostname && hostname.length > 0) {
+            return hostname.charAt(0).toUpperCase() + hostname.slice(1);
+        }
+        return hostname;
+    };
+
+    const getDisplayUrl = (urlStr: string) => {
+        if (!urlStr || urlStr === 'Manual Upload' || urlStr === 'Unknown' || urlStr === 'Uploaded Image') {
             return urlStr;
+        }
+        return urlStr.replace(/^https?:\/\//, '').replace(/^www\./, '').replace(/\/$/, '');
+    };
+
+    const getDisplaySubtitle = (urlStr: string, audit?: DisplayAudit) => {
+        if (!urlStr || urlStr === 'Manual Upload' || urlStr === 'Unknown' || urlStr === 'Uploaded Image') {
+            if (audit) {
+                const fileName = getAuditFileName(urlStr, audit);
+                if (fileName) return fileName;
+            }
+            return 'Uploaded Screenshot';
+        }
+        return urlStr;
+    };
+
+    const getAuditFileName = (urlStr: string, audit: DisplayAudit) => {
+        if (!urlStr || urlStr === 'Manual Upload' || urlStr === 'Unknown' || urlStr === 'Uploaded Image') {
+            if (audit?.inputData) {
+                const inputs = Array.isArray(audit.inputData) ? audit.inputData : audit.inputData.inputs;
+                if (inputs && inputs.length > 0) {
+                    const uploadInput = inputs.find((i: any) => i.type === 'upload');
+                    if (uploadInput?.fileName) return uploadInput.fileName;
+                }
+            }
+        }
+        return null;
+    };
+
+    const getAuditTypeBadge = (mode: string) => {
+        const styles = {
+            standard: 'bg-emerald-100 text-emerald-800 border-emerald-200',
+            competitor: 'bg-indigo-100 text-indigo-800 border-indigo-200'
+        };
+        const labels = {
+            standard: 'Standard',
+            competitor: 'Competitor'
+        };
+        return (
+            <span className={`px-3 py-1 text-sm font-semibold rounded-full border uppercase tracking-wider ${styles[mode as keyof typeof styles]}`}>
+                {labels[mode as keyof typeof labels]}
+            </span>
+        );
+    };
+
+    const handleRename = async (auditId: string) => {
+        if (!editingName.trim()) return;
+        const success = await updateAudit(auditId, { customName: editingName.trim() });
+        if (success) {
+            toast.success('Audit renamed successfully');
+            setAllAudits(prev => prev.map(a => {
+                if (a.id !== auditId) return a;
+                const inputData = a.input_data;
+                const newInputData = Array.isArray(inputData)
+                    ? { inputs: inputData, customName: editingName.trim() }
+                    : { ...(inputData as any), customName: editingName.trim() };
+                return { ...a, input_data: newInputData };
+            }));
+            setEditingAuditId(null);
+        } else {
+            toast.error('Failed to rename audit');
         }
     };
 
-    const getStatusBadge = (status: string) => {
+    const handleUpdateFavicon = async (logoData: string) => {
+        if (!logoEditingAudit) return;
 
-        const styles = {
-            completed: 'bg-green-100 text-green-800 border-green-200',
-            processing: 'bg-yellow-100 text-yellow-800 border-yellow-200',
-            pending: 'bg-blue-100 text-blue-800 border-blue-200',
-            failed: 'bg-red-100 text-red-800 border-red-200'
-        };
-        const labels = {
-            completed: 'Completed',
-            processing: 'Processing',
-            pending: 'Pending',
-            failed: 'Failed'
-        };
-        return (
-            <span className={`px-3 py-1 text-xs font-semibold rounded-full border ${styles[status as keyof typeof styles]}`}>
-                {labels[status as keyof typeof labels]}
-            </span>
-        );
+        const success = await updateAudit(logoEditingAudit.id, { customFavicon: logoData });
+        if (success) {
+            toast.success('Logo updated successfully');
+            setAllAudits(prev => prev.map(a => {
+                if (a.id !== logoEditingAudit.id) return a;
+                const inputData = a.input_data;
+                const newInputData = Array.isArray(inputData)
+                    ? { inputs: inputData, customFavicon: logoData }
+                    : { ...(inputData as any), customFavicon: logoData };
+                return { ...a, input_data: newInputData };
+            }));
+        } else {
+            toast.error('Failed to update logo');
+        }
+        setLogoEditingAudit(null);
     };
 
     return (
@@ -131,46 +223,67 @@ const DashboardPage: React.FC = () => {
                     </Link>
                 </div>
 
-                {/* Filter Chips - Only show if user has API keys */}
-                {apiKeys.length > 0 && (
-                    <div className="mb-6 flex flex-wrap gap-2">
-                        {/* All Audits */}
-                        <button
-                            onClick={() => setSelectedFilter('all')}
-                            className={`px-4 py-2 rounded-full text-sm font-semibold transition-all border-2 border-border-main ${selectedFilter === 'all'
-                                ? 'bg-brand text-white shadow-neo'
-                                : 'bg-white text-text-primary hover:bg-gray-50'
-                                }`}
-                        >
-                            All Audits
-                        </button>
-
-                        {/* Direct Audits */}
-                        <button
-                            onClick={() => setSelectedFilter('direct')}
-                            className={`px-4 py-2 rounded-full text-sm font-semibold transition-all border-2 border-border-main ${selectedFilter === 'direct'
-                                ? 'bg-brand text-white shadow-neo'
-                                : 'bg-white text-text-primary hover:bg-gray-50'
-                                }`}
-                        >
-                            Direct
-                        </button>
-
-                        {/* API Key Filters */}
-                        {apiKeys.map(apiKey => (
+                {/* Filter Chips */}
+                <div className="mb-8 space-y-4">
+                    {/* Audit Type Filter */}
+                    <div className="flex flex-wrap gap-2">
+                        <span className="w-full text-xs font-bold text-text-secondary uppercase tracking-widest mb-1">Assessment Type</span>
+                        {['all', 'standard', 'competitor'].map((type) => (
                             <button
-                                key={apiKey.id}
-                                onClick={() => setSelectedFilter(apiKey.id)}
-                                className={`px-4 py-2 rounded-full text-sm font-semibold transition-all border-2 border-border-main ${selectedFilter === apiKey.id
+                                key={type}
+                                onClick={() => setTypeFilter(type as any)}
+                                className={`px-4 py-2 rounded-full text-sm font-semibold transition-all border-2 border-border-main ${typeFilter === type
                                     ? 'bg-brand text-white shadow-neo'
                                     : 'bg-white text-text-primary hover:bg-gray-50'
                                     }`}
                             >
-                                {apiKey.name}
+                                {type === 'all' ? 'All Types' : type.charAt(0).toUpperCase() + type.slice(1)}
                             </button>
                         ))}
                     </div>
-                )}
+
+                    {/* API Key Filter - Only show if user has API keys */}
+                    {apiKeys.length > 0 && (
+                        <div className="flex flex-wrap gap-2">
+                            <span className="w-full text-xs font-bold text-text-secondary uppercase tracking-widest mb-1">Source Filter</span>
+                            {/* All Audits */}
+                            <button
+                                onClick={() => setSelectedFilter('all')}
+                                className={`px-4 py-2 rounded-full text-sm font-semibold transition-all border-2 border-border-main ${selectedFilter === 'all'
+                                    ? 'bg-brand text-white shadow-neo'
+                                    : 'bg-white text-text-primary hover:bg-gray-50'
+                                    }`}
+                            >
+                                All Sources
+                            </button>
+
+                            {/* Direct Audits */}
+                            <button
+                                onClick={() => setSelectedFilter('direct')}
+                                className={`px-4 py-2 rounded-full text-sm font-semibold transition-all border-2 border-border-main ${selectedFilter === 'direct'
+                                    ? 'bg-brand text-white shadow-neo'
+                                    : 'bg-white text-text-primary hover:bg-gray-50'
+                                    }`}
+                            >
+                                Web Direct
+                            </button>
+
+                            {/* API Key Filters */}
+                            {apiKeys.map(apiKey => (
+                                <button
+                                    key={apiKey.id}
+                                    onClick={() => setSelectedFilter(apiKey.id)}
+                                    className={`px-4 py-2 rounded-full text-sm font-semibold transition-all border-2 border-border-main ${selectedFilter === apiKey.id
+                                        ? 'bg-brand text-white shadow-neo'
+                                        : 'bg-white text-text-primary hover:bg-gray-50'
+                                        }`}
+                                >
+                                    {apiKey.name}
+                                </button>
+                            ))}
+                        </div>
+                    )}
+                </div>
 
                 {/* Loading State */}
                 {loading && (
@@ -213,7 +326,11 @@ const DashboardPage: React.FC = () => {
                                     {audit.competitorUrl ? (
                                         <div className="flex items-center justify-center w-full h-full gap-4">
                                             <div className="flex-1 flex items-center justify-center">
-                                                <SiteLogo domain={audit.url} size="medium" />
+                                                <SiteLogo
+                                                    domain={audit.url}
+                                                    size="medium"
+                                                    customIcon={audit.inputData?.customFavicon || (audit.url === 'Manual Upload' || audit.url === 'Uploaded Image' ? audit.inputData?.whiteLabelLogo : null)}
+                                                />
                                             </div>
                                             <div className="w-px h-24 bg-border-main"></div>
                                             <div className="flex-1 flex items-center justify-center">
@@ -221,7 +338,27 @@ const DashboardPage: React.FC = () => {
                                             </div>
                                         </div>
                                     ) : (
-                                        <SiteLogo domain={audit.url} size="large" />
+                                        <div className="relative group/logo">
+                                            <SiteLogo
+                                                domain={audit.url}
+                                                size="large"
+                                                customIcon={audit.inputData?.customFavicon || (audit.url === 'Manual Upload' || audit.url === 'Uploaded Image' ? audit.inputData?.whiteLabelLogo : null)}
+                                            />
+                                            {(audit.url === 'Manual Upload' || audit.url === 'Unknown' || audit.url === 'Uploaded Image') && (
+                                                <button
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        setLogoEditingAudit({
+                                                            id: audit.id,
+                                                            initialLogo: audit.inputData?.customFavicon || audit.inputData?.whiteLabelLogo || null
+                                                        });
+                                                    }}
+                                                    className="absolute inset-0 bg-black/40 text-white flex items-center justify-center opacity-0 group-hover/logo:opacity-100 transition-opacity rounded-lg"
+                                                >
+                                                    <ImageIcon className="w-8 h-8" />
+                                                </button>
+                                            )}
+                                        </div>
                                     )}
                                     {audit.score && (
                                         <div className="absolute bottom-3 right-3 bg-white px-3 py-1 rounded-full border-2 border-border-main shadow-sm">
@@ -230,9 +367,8 @@ const DashboardPage: React.FC = () => {
                                     )}
                                 </div>
 
-                                {/* Card Content */}
                                 <div
-                                    className="p-5 flex flex-col flex-1"
+                                    className="p-5 flex flex-col flex-1 relative"
                                     onMouseEnter={async () => {
                                         try {
                                             const { getAuditJob } = await import('../services/auditStorage');
@@ -240,57 +376,107 @@ const DashboardPage: React.FC = () => {
                                         } catch (e) { }
                                     }}
                                 >
-                                    <div className="space-y-1 mb-4">
-                                        <div className="flex items-center gap-1.5">
-                                            <h3 className="text-lg font-bold text-text-primary truncate group-hover:text-brand transition-colors">
-                                                {getSafeHostname(audit.url)}
-                                            </h3>
-                                            {audit.url !== 'Manual Upload' && audit.url !== 'Unknown' && (
-                                                <a
-                                                    href={audit.url}
-                                                    target="_blank"
-                                                    rel="noopener noreferrer"
-                                                    onClick={(e) => e.stopPropagation()}
-                                                    className="flex-shrink-0 text-slate-400 hover:text-brand transition-colors"
-                                                    title="Visit Website"
-                                                >
-                                                    <ExternalLink className="w-4 h-4 ml-0.5" />
-                                                </a>
+                                    {/* Content removed from here and moved to bottom */}
+                                    <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 mb-4 min-w-0">
+                                        <div className="flex items-center gap-1.5 min-w-0">
+                                            {editingAuditId === audit.id ? (
+                                                <div className="flex items-center gap-2 w-full" onClick={(e) => e.stopPropagation()}>
+                                                    <input
+                                                        type="text"
+                                                        value={editingName}
+                                                        onChange={(e) => setEditingName(e.target.value)}
+                                                        className="px-2 py-1 text-lg font-bold border-2 border-brand rounded outline-none w-full"
+                                                        autoFocus
+                                                        onKeyDown={(e) => {
+                                                            if (e.key === 'Enter') handleRename(audit.id);
+                                                            if (e.key === 'Escape') setEditingAuditId(null);
+                                                        }}
+                                                    />
+                                                    <button onClick={() => handleRename(audit.id)} className="text-emerald-600 hover:text-emerald-700">
+                                                        <Check className="w-5 h-5" />
+                                                    </button>
+                                                    <button onClick={() => setEditingAuditId(null)} className="text-rose-600 hover:text-rose-700">
+                                                        <X className="w-5 h-5" />
+                                                    </button>
+                                                </div>
+                                            ) : (
+                                                <>
+                                                    <h3 className="text-lg font-bold text-text-primary truncate group-hover:text-brand transition-colors">
+                                                        {audit.inputData?.customName || getSafeHostname(audit.url)}
+                                                    </h3>
+                                                    {(audit.url === 'Manual Upload' || audit.url === 'Unknown' || audit.url === 'Uploaded Image') && (
+                                                        <button
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                setEditingAuditId(audit.id);
+                                                                setEditingName(audit.inputData?.customName || 'Manual Upload');
+                                                            }}
+                                                            className="p-1 opacity-0 group-hover:opacity-100 transition-opacity text-slate-400 hover:text-brand"
+                                                        >
+                                                            <Pencil className="w-3.5 h-3.5" />
+                                                        </button>
+                                                    )}
+                                                    {audit.url !== 'Manual Upload' && audit.url !== 'Unknown' && audit.url !== 'Uploaded Image' && (
+                                                        <a
+                                                            href={audit.url}
+                                                            target="_blank"
+                                                            rel="noopener noreferrer"
+                                                            onClick={(e) => e.stopPropagation()}
+                                                            className="shrink-0 text-slate-400 hover:text-brand transition-colors"
+                                                            title="Visit Website"
+                                                        >
+                                                            <ExternalLink className="w-4 h-4 ml-0.5" />
+                                                        </a>
+                                                    )}
+                                                </>
                                             )}
                                         </div>
 
                                         {audit.competitorUrl && (
-                                            <div className="flex items-center gap-1.5">
-                                                <h3 className="text-lg font-bold text-text-primary truncate group-hover:text-brand transition-colors">
-                                                    vs {getSafeHostname(audit.competitorUrl)}
-                                                </h3>
-                                                <a
-                                                    href={audit.competitorUrl}
-                                                    target="_blank"
-                                                    rel="noopener noreferrer"
-                                                    onClick={(e) => e.stopPropagation()}
-                                                    className="flex-shrink-0 text-slate-400 hover:text-brand transition-colors"
-                                                    title="Visit Competitor"
-                                                >
-                                                    <ExternalLink className="w-4 h-4 ml-0.5" />
-                                                </a>
+                                            <div className="flex items-center gap-2 min-w-0">
+                                                <span className="text-text-secondary font-bold">vs</span>
+                                                <div className="flex items-center gap-1.5 min-w-0">
+                                                    <h3 className="text-lg font-bold text-text-primary truncate group-hover:text-brand transition-colors">
+                                                        {getSafeHostname(audit.competitorUrl)}
+                                                    </h3>
+                                                    {audit.competitorUrl !== 'Manual Upload' && (
+                                                        <a
+                                                            href={audit.competitorUrl}
+                                                            target="_blank"
+                                                            rel="noopener noreferrer"
+                                                            onClick={(e) => e.stopPropagation()}
+                                                            className="shrink-0 text-slate-400 hover:text-brand transition-colors"
+                                                            title="Visit Competitor"
+                                                        >
+                                                            <ExternalLink className="w-4 h-4 ml-0.5" />
+                                                        </a>
+                                                    )}
+                                                </div>
                                             </div>
                                         )}
                                     </div>
 
                                     <div className="mb-4 space-y-1 opacity-60">
-                                        <p className="text-xs text-text-secondary truncate">{audit.url}</p>
+                                        <div>
+                                            <p className={`text-sm text-text-secondary line-clamp-2 break-all ${(audit.url === 'Manual Upload' || audit.url === 'Unknown' || audit.url === 'Uploaded Image') ? 'font-mono' : ''}`} title={getDisplaySubtitle(audit.url, audit)}>
+                                                {getDisplaySubtitle(audit.url, audit)}
+                                            </p>
+                                        </div>
                                         {audit.competitorUrl && (
-                                            <p className="text-xs text-text-secondary truncate">{audit.competitorUrl}</p>
+                                            <div>
+                                                <p className={`text-sm text-text-secondary line-clamp-2 break-all ${(audit.competitorUrl === 'Manual Upload' || audit.competitorUrl === 'Unknown' || audit.competitorUrl === 'Uploaded Image') ? 'font-mono' : ''}`} title={getDisplaySubtitle(audit.competitorUrl, audit)}>
+                                                    {getDisplaySubtitle(audit.competitorUrl, audit)}
+                                                </p>
+                                            </div>
                                         )}
                                     </div>
 
                                     <div className="mt-auto pt-4 border-t border-slate-100 flex items-center justify-between">
-                                        <div className="flex items-center text-xs text-text-secondary font-medium uppercase tracking-wider">
+                                        <div className="flex items-center text-sm text-text-secondary font-medium uppercase tracking-wider">
                                             <Calendar className="w-3.5 h-3.5 mr-1.5 opacity-50" />
                                             {new Date(audit.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
                                         </div>
-                                        {getStatusBadge(audit.status)}
+                                        {getAuditTypeBadge(audit.auditMode)}
                                     </div>
                                 </div>
                             </div>
@@ -298,7 +484,17 @@ const DashboardPage: React.FC = () => {
                     </div>
                 )}
             </div>
-        </div >
+
+            <WhiteLabelModal
+                isOpen={!!logoEditingAudit}
+                onClose={() => setLogoEditingAudit(null)}
+                onSave={handleUpdateFavicon}
+                initialLogo={logoEditingAudit?.initialLogo || null}
+                title="Update Assessment Logo"
+                description="This logo will represent the project on your dashboard and in the report."
+                lockAspectRatio={true}
+            />
+        </div>
     );
 };
 

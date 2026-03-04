@@ -1,5 +1,5 @@
-import { authClient } from '../lib/auth-client';
 import { authenticatedFetch } from '../lib/authenticatedFetch';
+import { getBackendUrl } from './config';
 
 export interface UserAudit {
     id: string;
@@ -8,11 +8,11 @@ export interface UserAudit {
     input_data: any;
     report_data?: any; // Optional - not fetched on dashboard for performance
     error_message?: string;
-    api_key_id?: string | null; // API key used for this audit (null = direct website audit)
+    api_key_id?: string | null;
+    thumbnail_url?: string | null;
 }
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080';
-
+const API_URL = getBackendUrl();
 let auditsCache: Promise<UserAudit[]> | null = null;
 
 /**
@@ -163,4 +163,23 @@ export function getScreenshotUrl(reportData: any): string | null {
     // Fallback to any screenshot
     const anyScreenshot = reportData.screenshots[0];
     return anyScreenshot?.url || anyScreenshot?.publicUrl || null;
+}
+/**
+ * Update an audit's metadata
+ */
+export async function updateAudit(auditId: string, updates: Record<string, any>): Promise<boolean> {
+    try {
+        const response = await authenticatedFetch(`${API_URL}/api/user/audits/${auditId}`, {
+            method: 'PATCH',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(updates)
+        });
+
+        return response.ok;
+    } catch (err) {
+        console.error('[updateAudit] Error:', err);
+        return false;
+    }
 }

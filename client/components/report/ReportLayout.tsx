@@ -7,7 +7,7 @@ import { SkeletonLoader } from '../SkeletonLoader';
 import { AuthBlocker } from '../AuthBlocker';
 import { ReportRenderer } from './ReportRenderer';
 import { useGlobalAudit } from '../../contexts/AuditContext';
-import { ChevronLeft, Share2, Download, AlertCircle } from 'lucide-react';
+import { ChevronLeft, Share2, Download, AlertCircle, FileText, LayoutTemplate } from 'lucide-react';
 import SiteLogo from '../SiteLogo';
 
 interface ReportLayoutProps {
@@ -30,6 +30,8 @@ interface ReportLayoutProps {
 
     // Actions
     onGeneratePdf: () => void;
+    onGenerateAlternativePdf?: () => void;
+    onGenerateHybridPdf?: () => void; // New prop
     isPdfGenerating: boolean;
     onShareAudit: () => void;
     isSharing: boolean;
@@ -41,41 +43,44 @@ interface ReportLayoutProps {
 const UrlPillGroup = ({ inputs, fallbackUrl, label }: { inputs?: AuditInput[], fallbackUrl?: string, label?: string }) => {
     // 1. Determine Main URL to show
     const mainInput = inputs && inputs.length > 0 ? inputs[0] : null;
-    const mainUrlDisplay = mainInput
-        ? (mainInput.url?.replace(/^https?:\/\//, '').replace(/\/$/, '') || (mainInput.file ? mainInput.file.name : 'Uploaded File'))
-        : (fallbackUrl?.replace(/^https?:\/\//, '').replace(/\/$/, '') || 'Analyzed Site');
+    const isUpload = mainInput?.type === 'upload';
 
-    // 2. Determine "More" count
+    const mainUrlDisplay = mainInput
+        ? (mainInput.customName || mainInput.url?.replace(/^https?:\/\//, '')?.replace(/\/$/, '') || (mainInput.fileName || mainInput.file?.name || 'Uploaded File'))
+        : (fallbackUrl?.replace(/^https?:\/\//, '')?.replace(/\/$/, '') || 'Analyzed Site');
+
+    // 2. Determine "More" count / Total count
     const moreCount = inputs && inputs.length > 1 ? inputs.length - 1 : 0;
+    const totalCount = inputs?.length || 0;
 
     return (
         <div className="flex items-center gap-2">
             {/* Main URL Pill */}
             <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-white border-2 border-black shadow-neo-sm text-sm font-bold text-black min-w-0" title={mainUrlDisplay}>
-                <SiteLogo domain={mainUrlDisplay} size="tiny" className="shadow-none border-none p-0 rounded-none bg-transparent" />
-                <span className="truncate max-w-[120px] md:max-w-[200px] font-mono text-xs tracking-tight">
+                <SiteLogo domain={mainInput?.url || mainUrlDisplay} size="tiny" className="shadow-none border-none p-0 rounded-none bg-transparent" customIcon={mainInput?.customFavicon} />
+                <span className="truncate max-w-[120px] md:max-w-[200px] font-mono text-sm tracking-tight">
                     {mainUrlDisplay}
                 </span>
             </div>
 
-            {/* "+N More" with Tooltip */}
-            {moreCount > 0 && (
+            {/* "+N More" or Total Count with Tooltip */}
+            {((isUpload && totalCount > 0) || (!isUpload && moreCount > 0)) && (
                 <div className="relative group cursor-pointer ml-1">
-                    <span className="text-xs font-black text-brand hover:underline decoration-2 underline-offset-2 whitespace-nowrap">
-                        +{moreCount} more
+                    <span className="text-sm font-black text-brand hover:underline decoration-2 underline-offset-2 whitespace-nowrap">
+                        {isUpload ? `${totalCount} item${totalCount > 1 ? 's' : ''}` : `+${moreCount} more`}
                     </span>
 
                     {/* Tooltip Dropdown */}
-                    <div className="absolute top-full left-0 mt-2 w-64 bg-white border-2 border-black shadow-neo p-3 z-50 hidden group-hover:block animate-in fade-in slide-in-from-top-1">
-                        <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2 border-b border-slate-200 pb-1">
-                            Analyzed URLs ({inputs?.length})
+                    <div className="absolute top-full left-0 mt-2 w-72 bg-white border-2 border-black shadow-neo p-3 z-50 hidden group-hover:block animate-in fade-in slide-in-from-top-1">
+                        <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2 border-b border-slate-200 pb-1">
+                            {isUpload ? `Uploaded Screenshot${totalCount > 1 ? 's' : ''}` : `Analyzed URLs (${totalCount})`}
                         </div>
                         <div className="flex flex-col gap-2 max-h-48 overflow-y-auto">
-                            {inputs?.slice(1).map((input, idx) => (
-                                <div key={idx} className="flex items-center gap-2 text-xs font-medium text-slate-700 truncate">
-                                    <div className="w-1.5 h-1.5 bg-black rounded-full shrink-0"></div>
-                                    <span className="truncate font-mono">
-                                        {input.url?.replace(/^https?:\/\//, '').replace(/\/$/, '') || input.file?.name}
+                            {(isUpload ? inputs : inputs?.slice(1))?.map((input, idx) => (
+                                <div key={idx} className="flex items-start gap-2 text-xs font-medium text-slate-700">
+                                    <div className="w-1.5 h-1.5 bg-brand rounded-full shrink-0 mt-1.5"></div>
+                                    <span className="font-mono break-all pb-1 border-b border-slate-50 last:border-0 w-full">
+                                        {input.url?.replace(/^https?:\/\//, '')?.replace(/\/$/, '') || input.fileName || input.file?.name || 'Screenshot'}
                                     </span>
                                 </div>
                             ))}
@@ -101,6 +106,8 @@ export const ReportLayout: React.FC<ReportLayoutProps> = ({
     competitorScreenshotSrc,
     pdfError,
     onGeneratePdf,
+    onGenerateAlternativePdf,
+    onGenerateHybridPdf,
     isPdfGenerating,
     onShareAudit,
     isSharing,
@@ -144,7 +151,7 @@ export const ReportLayout: React.FC<ReportLayoutProps> = ({
                                 <div className="h-8 w-0.5 bg-black mx-2 hidden sm:block"></div>
 
                                 <div className="flex flex-wrap items-center gap-2 md:gap-3 min-w-0">
-                                    <span className="text-black font-black text-xs uppercase tracking-wider hidden lg:inline">Audit Report for</span>
+                                    <span className="text-black font-black text-sm uppercase tracking-wider hidden lg:inline">Audit Report for</span>
 
                                     {/* URL DISPLAY LOGIC */}
                                     {auditMode === 'competitor' ? (
@@ -154,7 +161,7 @@ export const ReportLayout: React.FC<ReportLayoutProps> = ({
                                             <UrlPillGroup inputs={primaryInputs} fallbackUrl={url} />
 
                                             {/* VS Separator */}
-                                            <span className="font-black text-slate-400 text-xs px-1">vs</span>
+                                            <span className="font-black text-slate-400 text-sm px-1">vs</span>
 
                                             {/* Competitor Group */}
                                             <UrlPillGroup inputs={competitorInputs} fallbackUrl="Competitor Site" />
@@ -170,8 +177,8 @@ export const ReportLayout: React.FC<ReportLayoutProps> = ({
                             <div className="flex items-center gap-2 md:gap-3 shrink-0">
                                 {/* White Label Logo */}
                                 {whiteLabelLogo && (
-                                    <div className="w-10 h-10 flex shrink-0 items-center justify-center bg-white border-2 border-black shadow-neo overflow-hidden" title="Organization Logo">
-                                        <img src={whiteLabelLogo} alt="Logo" className="w-full h-full object-contain p-1" />
+                                    <div className="h-10 w-auto min-w-[40px] flex shrink-0 items-center justify-center bg-white border-2 border-black shadow-neo px-2" title="Organization Logo">
+                                        <img src={whiteLabelLogo} alt="Logo" className="h-full w-auto object-contain" />
                                     </div>
                                 )}
 
@@ -192,11 +199,36 @@ export const ReportLayout: React.FC<ReportLayoutProps> = ({
                                     onClick={onGeneratePdf}
                                     disabled={isPdfGenerating}
                                     className="w-10 h-10 flex items-center justify-center bg-white border-2 border-black text-black rounded-none shadow-neo hover:shadow-neo-hover hover:-translate-x-px hover:-translate-y-px transition-all active:shadow-none active:translate-x-0 active:translate-y-0 disabled:opacity-50"
-                                    title="Download PDF"
+                                    title="Download PDF (Detailed)"
                                 >
                                     <Download className="w-4 h-4 stroke-[3px]" />
                                 </button>
-                                {/* New Audit Button REMOVED */}
+
+                                {/* Alternative PDF Button (Summary Layout) - HIDDEN FOR NOW
+                                {onGenerateAlternativePdf && (
+                                    <button
+                                        onClick={onGenerateAlternativePdf}
+                                        disabled={isPdfGenerating}
+                                        className="w-10 h-10 flex items-center justify-center bg-white border-2 border-black text-black rounded-none shadow-neo hover:shadow-neo-hover hover:-translate-x-px hover:-translate-y-px transition-all active:shadow-none active:translate-x-0 active:translate-y-0 disabled:opacity-50"
+                                        title="Download PDF (Summary Layout)"
+                                    >
+                                        <FileText className="w-4 h-4 stroke-[3px]" />
+                                    </button>
+                                )}
+                                */}
+
+                                {/* Hybrid PDF Button (Split Layout) - HIDDEN FOR NOW
+                                {onGenerateHybridPdf && (
+                                    <button
+                                        onClick={onGenerateHybridPdf}
+                                        disabled={isPdfGenerating}
+                                        className="w-10 h-10 flex items-center justify-center bg-white border-2 border-black text-black rounded-none shadow-neo hover:shadow-neo-hover hover:-translate-x-px hover:-translate-y-px transition-all active:shadow-none active:translate-x-0 active:translate-y-0 disabled:opacity-50"
+                                        title="Download PDF (Hybrid Layout)"
+                                    >
+                                        <LayoutTemplate className="w-4 h-4 stroke-[3px]" />
+                                    </button>
+                                )}
+                                */}
                             </div>
                         </div>
 

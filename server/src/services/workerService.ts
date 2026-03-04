@@ -79,4 +79,24 @@ export class WorkerService {
             await releaseBrowser();
         }
     }
+    /**
+     * Proactively attempts to claim and execute a specific job.
+     * Called by the API route to ensure the receiving server gets first dibs.
+     */
+    static async triggerJob(queueId: string, jobId: string) {
+        try {
+            const browser = await BrowserPoolService.acquireKey();
+            if (browser) {
+                console.log(`[WorkerService] ⚡ Proactive Trigger: Claiming Job ${jobId} and starting execution.`);
+                await QueueService.startProcessing(queueId, browser.key);
+                await JobService.updateJobStatus(jobId, 'processing');
+                await BrowserPoolService.logAction(browser.key, jobId, 'acquired');
+
+                // Execute in background
+                this.executeJob(queueId, jobId, browser);
+            }
+        } catch (error) {
+            console.error(`[WorkerService] ❌ Failed proactive trigger for ${jobId}:`, error);
+        }
+    }
 }

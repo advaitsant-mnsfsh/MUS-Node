@@ -299,7 +299,7 @@ const ComparisonTable = ({ items, title }: { items: CompetitorComparisonItem[], 
 };
 
 export const CompetitorReportPDF: React.FC<CompetitorReportPDFProps> = ({ data, url, whiteLabelLogo }) => {
-    const cleanUrl = url.replace(/^https?:\/\//, '').replace(/\/$/, '');
+    const cleanUrl = url?.replace(/^https?:\/\//, '')?.replace(/\/$/, '') || 'Analyzed Site';
 
     return (
         <Document title={`Competitor Analysis - ${cleanUrl}`}>

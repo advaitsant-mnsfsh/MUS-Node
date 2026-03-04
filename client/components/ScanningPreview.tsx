@@ -1,5 +1,6 @@
 import React from 'react';
 import { AuditInput } from '../types';
+import { getBaseUrlForStatic } from '../services/config';
 
 interface ScanningPreviewProps {
     screenshot: string | null;
@@ -13,6 +14,9 @@ interface ScanningPreviewProps {
 export const ScanningPreview: React.FC<ScanningPreviewProps> = ({ screenshot, progress, url, loadingMessage, inputs, isError }) => {
     const [displayUrl, setDisplayUrl] = React.useState(url || 'Scanning...');
     const [hasMounted, setHasMounted] = React.useState(false);
+
+    // Derived state
+    const isCompetitor = React.useMemo(() => inputs?.some(i => i.role === 'competitor') ?? false, [inputs]);
 
     React.useEffect(() => {
         const timer = setTimeout(() => setHasMounted(true), 100);
@@ -37,7 +41,6 @@ export const ScanningPreview: React.FC<ScanningPreviewProps> = ({ screenshot, pr
             return;
         }
 
-        const isCompetitor = inputs.some(i => i.role === 'competitor');
         const intervalTime = isCompetitor ? 2300 : 2500;
 
         const sortedUrls = isCompetitor
@@ -57,7 +60,7 @@ export const ScanningPreview: React.FC<ScanningPreviewProps> = ({ screenshot, pr
     }, [inputs, url, isError]);
 
     return (
-        <div className="relative w-full max-w-4xl mx-auto pl-0 md:pl-8">
+        <div className="relative w-full max-w-4xl mx-auto">
             {/* Browser Frame Container */}
             <div className="relative">
                 {/* Browser Chrome (Top Bar) */}
@@ -70,11 +73,13 @@ export const ScanningPreview: React.FC<ScanningPreviewProps> = ({ screenshot, pr
                     </div>
 
                     {/* URL Bar */}
-                    <div className={`flex-1 bg-white border ${isError ? 'border-red-300' : 'border-[#DDDDDD]'} rounded-md px-3 py-1.5 text-sm ${isError ? 'text-red-600' : 'text-text-secondary'} flex items-center gap-2`}>
-                        <svg className={`w-4 h-4 ${isError ? 'text-red-400' : 'text-[#94A3B8]'} flex-shrink-0`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <div className={`flex-1 min-w-0 bg-white border ${isError ? 'border-red-300' : 'border-[#DDDDDD]'} rounded-md px-3 py-1.5 text-sm ${isError ? 'text-red-600' : 'text-text-secondary'} flex items-center gap-2`}>
+                        <svg className={`w-4 h-4 ${isError ? 'text-red-400' : 'text-[#94A3B8]'} shrink-0`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
                         </svg>
-                        <span className="truncate">{displayUrl}</span>
+                        <span className="truncate">
+                            {displayUrl.length > 55 ? `${displayUrl.substring(0, 52)}...` : displayUrl}
+                        </span>
                     </div>
 
                     {/* Close Button (decorative) */}
@@ -93,8 +98,9 @@ export const ScanningPreview: React.FC<ScanningPreviewProps> = ({ screenshot, pr
                                 src={(() => {
                                     if (screenshot.startsWith('data:')) return screenshot;
                                     if (screenshot.startsWith('/uploads')) {
-                                        const backendUrl = import.meta.env.VITE_BACKEND_URL || import.meta.env.VITE_API_URL || (import.meta.env.PROD ? 'https://mus-node-production.up.railway.app' : 'http://localhost:3000');
-                                        return `${backendUrl}${screenshot}`;
+                                        const backendUrl = getBaseUrlForStatic();
+                                        const subPath = screenshot.startsWith('/') ? screenshot : `/${screenshot}`;
+                                        return `${backendUrl}${subPath}`;
                                     }
                                     return `data:image/png;base64,${screenshot}`;
                                 })()}
@@ -103,6 +109,7 @@ export const ScanningPreview: React.FC<ScanningPreviewProps> = ({ screenshot, pr
                             />
                             {isError && (
                                 <div className="absolute inset-0 flex items-center justify-center bg-red-900/20 backdrop-blur-[2px]">
+                                    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[120%] h-[20px] bg-brand/10 -rotate-2 blur-xl animate-pulse" />
                                     <div className="bg-white border-2 border-red-500 p-4 shadow-neo-red rotate-[-2deg] animate-in zoom-in duration-300">
                                         <div className="flex items-center gap-3">
                                             <div className="w-8 h-8 bg-red-100 rounded-full flex items-center justify-center">
@@ -112,7 +119,7 @@ export const ScanningPreview: React.FC<ScanningPreviewProps> = ({ screenshot, pr
                                             </div>
                                             <div>
                                                 <p className="font-bold text-red-800 text-sm">ANALYSIS ABORTED</p>
-                                                <p className="text-red-600 text-xs">System encountered a critical error</p>
+                                                <p className="text-red-600 text-sm">System encountered a critical error</p>
                                             </div>
                                         </div>
                                     </div>
@@ -123,12 +130,12 @@ export const ScanningPreview: React.FC<ScanningPreviewProps> = ({ screenshot, pr
                         <div className={`w-full h-full ${isError ? 'bg-red-50' : 'bg-gradient-to-br from-slate-50 to-slate-100'} flex flex-col items-center justify-center p-6`}>
                             <div className="text-center">
                                 <div className="mt-0 flex items-center justify-center">
-                                    <div className={`inline-flex items-top gap-2 px-4 py-2 bg-white border-2 ${isError ? 'border-red-500 shadow-neo-red' : 'border-border-main shadow-neo'}`}>
-                                        <span className="text-sm font-bold text-text-primary ml-2">
-                                            <h2 className={`text-xl md:text-2xl font-bold ${isError ? 'text-red-700' : 'text-text-primary'} mb-2`}>
+                                    <div className={`inline-flex items-top gap-2 px-6 py-4 bg-white border-2 ${isError ? 'border-red-500 shadow-neo-red' : 'border-black shadow-neo'}`}>
+                                        <span className="text-sm font-bold text-text-primary text-center">
+                                            <h2 className={`text-xl md:text-2xl font-black ${isError ? 'text-red-700' : 'text-black'} mb-2 uppercase tracking-tight`}>
                                                 {isError ? 'Analysis Failed' : 'Analyzing your website'}
                                             </h2>
-                                            <p className={`text-sm ${isError ? 'text-red-500' : 'text-text-secondary'} mb-8`}>
+                                            <p className={`text-sm ${isError ? 'text-red-500' : 'text-slate-500'} mb-0`}>
                                                 {isError ? 'We hit a technical snag. Check details below.' : 'This typically takes 2-3 minutes'}
                                             </p>
                                         </span>
@@ -141,9 +148,9 @@ export const ScanningPreview: React.FC<ScanningPreviewProps> = ({ screenshot, pr
                     {/* Continuous Scanning Line - Hidden on Error */}
                     {!isError && (
                         <div className="scanning-line-container absolute left-0 w-full h-1 z-30 pointer-events-none">
-                            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-brand to-transparent blur-md opacity-60"></div>
-                            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-[#8B5CF6] to-transparent blur-sm opacity-70"></div>
-                            <div className="absolute inset-0 h-[2px] bg-gradient-to-r from-transparent via-white to-transparent opacity-95"></div>
+                            <div className="absolute inset-0 bg-linear-to-r from-transparent via-brand to-transparent blur-md opacity-60"></div>
+                            <div className="absolute inset-0 bg-linear-to-r from-transparent via-[#8B5CF6] to-transparent blur-sm opacity-70"></div>
+                            <div className="absolute inset-0 h-[2px] bg-linear-to-r from-transparent via-white to-transparent opacity-95"></div>
                         </div>
                     )}
 
@@ -152,7 +159,7 @@ export const ScanningPreview: React.FC<ScanningPreviewProps> = ({ screenshot, pr
                         <div className="px-4 pt-3 pb-2 flex items-center justify-between gap-4">
                             <div className="flex items-center gap-2">
                                 {!isError && (
-                                    <div className="relative flex-shrink-0">
+                                    <div className="relative shrink-0">
                                         <div className="w-2 h-2 bg-brand rounded-full animate-ping"></div>
                                         <div className="w-2 h-2 bg-brand rounded-full absolute top-0 left-0 animate-pulse"></div>
                                     </div>
@@ -161,17 +168,17 @@ export const ScanningPreview: React.FC<ScanningPreviewProps> = ({ screenshot, pr
                                     {isError ? 'Error during processing' : (loadingMessage || 'Scanning...')}
                                 </h3>
                             </div>
-                            <span className={`text-lg font-bold ${isError ? 'text-red-500' : 'text-brand'} tabular-nums flex-shrink-0`}>
+                            <span className={`text-lg font-bold ${isError ? 'text-red-500' : 'text-brand'} tabular-nums shrink-0`}>
                                 {Math.round(progress)}%
                             </span>
                         </div>
 
                         <div className={`h-3 ${isError ? 'bg-red-100' : 'bg-slate-200'} overflow-hidden`}>
                             <div
-                                className={`h-full ${isError ? 'bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.5)]' : 'bg-gradient-to-r from-brand to-[#8B5CF6] shadow-[0_0_12px_rgba(99,102,241,0.6)]'} ${hasMounted ? 'transition-all duration-500 ease-out' : 'transition-none'} relative`}
+                                className={`h-full ${isError ? 'bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.5)]' : 'bg-linear-to-r from-brand to-[#8B5CF6] shadow-[0_0_12px_rgba(99,102,241,0.6)]'} ${hasMounted ? 'transition-all duration-500 ease-out' : 'transition-none'} relative`}
                                 style={{ width: `${progress}%` }}
                             >
-                                {!isError && <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/40 to-transparent animate-shimmer"></div>}
+                                {!isError && <div className="absolute inset-0 bg-linear-to-r from-transparent via-white/40 to-transparent animate-shimmer"></div>}
                             </div>
                         </div>
                     </div>

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Zap, ImagePlus, Globe, X, Loader2, Plus, Copy, Check } from 'lucide-react';
+import { getBackendUrl } from '../services/config';
 
 // Helper to determine if background is dark
 const isDarkBackground = (color: string | undefined): boolean => {
@@ -258,7 +259,7 @@ export const EmbeddableInput: React.FC<EmbeddableInputProps> = ({ config }) => {
             }));
 
             // 2. Submit to API
-            const apiUrl = import.meta.env.VITE_API_URL || '';
+            const apiUrl = getBackendUrl();
             const response = await fetch(`${apiUrl}/api/external/audit`, {
                 method: 'POST',
                 headers: {
@@ -289,7 +290,7 @@ export const EmbeddableInput: React.FC<EmbeddableInputProps> = ({ config }) => {
         if (!pollingJobId) return;
 
         let isMounted = true;
-        const apiUrl = import.meta.env.VITE_API_URL || '';
+        const apiUrl = getBackendUrl();
 
         const checkStatus = async () => {
             try {

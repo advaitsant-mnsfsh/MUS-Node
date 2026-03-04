@@ -3,6 +3,52 @@ import { JobService } from '../services/jobService.js';
 
 const router = Router();
 
+// POST /api/public/verify-beta
+router.post('/verify-beta', (req, res) => {
+    const { code } = req.body;
+    const betaCode = process.env.BETA_AUTH_CODE;
+    const adminCode = process.env.ADMIN_AUTH_CODE;
+
+    if (!betaCode && !adminCode) {
+        console.error('[Beta Auth] BETA_AUTH_CODE and ADMIN_AUTH_CODE not set in environment');
+        return res.status(500).json({ message: 'Server configuration error' });
+    }
+
+    if (code === betaCode || (adminCode && code === adminCode)) {
+        const type = (adminCode && code === adminCode) ? 'admin' : 'beta';
+
+        // Use the same auth cookie for both to retain core application flow logic
+        res.setHeader('Set-Cookie', `beta_authorized=true; Path=/; Max-Age=${30 * 24 * 60 * 60}; SameSite=Lax`);
+
+        return res.json({ success: true, type });
+    }
+
+    return res.status(401).json({ message: 'Invalid access code' });
+});
+
+// POST /api/public/beta-waitlist
+router.post('/beta-waitlist', async (req, res) => {
+    try {
+        const { email } = req.body;
+        if (!email || !email.includes('@')) {
+            return res.status(400).json({ message: 'Valid email is required' });
+        }
+
+        const { db } = await import('../lib/db.js');
+        const { betaEnquiries } = await import('../db/schema.js');
+
+        await db.insert(betaEnquiries).values({
+            id: Math.random().toString(36).substring(2, 11) + Date.now().toString(36),
+            email: email.toLowerCase().trim()
+        }).onConflictDoNothing();
+
+        res.json({ success: true });
+    } catch (error: any) {
+        console.error('Beta Waitlist Error:', error);
+        res.status(500).json({ message: 'Internal Server Error' });
+    }
+});
+
 // Test endpoint to verify router is working
 router.get('/test', (req, res) => {
     res.json({ message: 'Public API is working!' });
@@ -82,16 +128,25 @@ router.get('/jobs/:jobId', async (req, res) => {
         }
 
         // Return basic status and report_data (including logs) even during processing
-        res.json({
+        const responseData = {
             id: job.id,
             status: job.status,
             report_data: job.report_data,
             errorMessage: job.error_message,
             inputs: (job.input_data as any)?.inputs || job.input_data,
+            customName: (job.input_data as any)?.customName,
+            customFavicon: (job.input_data as any)?.customFavicon,
+            whiteLabelLogo: (job.report_data as any)?.whiteLabelLogo || (job.input_data as any)?.whiteLabelLogo,
             created_at: job.created_at,
             updated_at: job.updated_at
-        });
+        };
 
+        const hasInputLogo = !!(job.input_data as any)?.whiteLabelLogo;
+        const hasReportLogo = !!(job.report_data as any)?.whiteLabelLogo;
+        const logoStatus = hasReportLogo ? 'Present (Report)' : (hasInputLogo ? 'Present (Input)' : 'Missing');
+
+        console.log(`[Public API] Delivering Job ${jobId}. Status: ${job.status}. Logo: ${logoStatus}`);
+        res.json(responseData);
         return;
 
     } catch (error: any) {

@@ -36,7 +36,7 @@ export const performScrape = async (url: string, isMobile: boolean, isFirstPage:
                     ? `Remote browser connection failed (Endpoint present but unreachable). Error: ${lastConnectError}. Check your PUPPETEER_BROWSER_ENDPOINT.`
                     : `PUPPETEER_BROWSER_ENDPOINT is missing or empty.`;
 
-                throw new Error(`Scraper Error: Local Puppeteer launch blocked to prevent container OOM (DISABLE_LOCAL_FALLBACK=${process.env.DISABLE_LOCAL_FALLBACK}). ${errorDetail}`);
+                throw new Error(`Scraper Error: Local Puppeteer launch blocked to prevent container OOM (DISABLE_LOCAL_FALLBACK=${process.env.DISABLE_LOCAL_FALLBACK}). ${errorDetail} (Endpoint found: ${hasValue}, Len: ${valueLength})`);
             }
 
             console.log('[SCRAPE] Launching local browser...');
@@ -59,8 +59,11 @@ export const performScrape = async (url: string, isMobile: boolean, isFirstPage:
         page.setDefaultNavigationTimeout(60000);
         page.setDefaultTimeout(30000); // 30s timeout for all operations
 
-        // Enhanced stealth: Set realistic User Agent
-        await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36');
+        // Enhanced stealth: Set realistic User Agent based on viewport
+        const userAgent = isMobile
+            ? 'Mozilla/5.0 (iPhone; CPU iPhone OS 16_6 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.6 Mobile/15E148 Safari/604.1'
+            : 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36';
+        await page.setUserAgent(userAgent);
 
         // Enhanced stealth: More realistic headers to bypass bot detection
         await page.setExtraHTTPHeaders({
@@ -81,7 +84,8 @@ export const performScrape = async (url: string, isMobile: boolean, isFirstPage:
         console.log(`[SCRAPE] [${isMobile ? 'MOBILE' : 'DESKTOP'}] Navigating to ${url}...`);
         // Use domcontentloaded for speed (networkidle2 is too slow on heavy sites)
         await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 60000 });
-        try { await page.waitForNetworkIdle({ timeout: 2000 }).catch(() => { }); } catch (e) { }
+        try { await page.waitForNetworkIdle({ timeout: 3000 }).catch(() => { }); } catch (e) { }
+        await new Promise(r => setTimeout(r, 1000)); // Small extra buffer for heavy sites like Expedia
 
         // Scroll logic - wrapped for safety
         try {
@@ -109,25 +113,38 @@ export const performScrape = async (url: string, isMobile: boolean, isFirstPage:
 
         // Fix fixed positions - wrapped for safety
         try {
-            await page.evaluate(() => {
-                document.querySelectorAll('*').forEach((el: any) => {
-                    const style = window.getComputedStyle(el);
-                    if (style.position === 'fixed' || style.position === 'sticky') {
-                        el.style.position = 'absolute';
+            if (!page.isClosed()) {
+                await page.evaluate(() => {
+                    try {
+                        document.querySelectorAll('*').forEach((el: any) => {
+                            const style = window.getComputedStyle(el);
+                            if (style.position === 'fixed' || style.position === 'sticky') {
+                                el.style.position = 'absolute';
+                            }
+                        });
+                        window.scrollTo(0, 0);
+                    } catch (e) {
+                        // Ignore DOM traversal errors
                     }
                 });
-                window.scrollTo(0, 0);
-            });
+            }
         } catch (fixError) {
             console.warn('[SCRAPE] Fix positions failed, continuing...', fixError);
         }
 
         // Check page dimensions to prevent OOM on massive pages (like Wikipedia)
-        const metrics = await page.evaluate(() => ({
-            height: document.documentElement.scrollHeight,
-            width: document.documentElement.scrollWidth,
-            innerHeight: window.innerHeight
-        }));
+        let metrics = { height: 1080, width: 1920, innerHeight: 1080 };
+        try {
+            if (!page.isClosed()) {
+                metrics = await page.evaluate(() => ({
+                    height: document.documentElement.scrollHeight,
+                    width: document.documentElement.scrollWidth,
+                    innerHeight: window.innerHeight
+                }));
+            }
+        } catch (metricsError) {
+            console.warn('[SCRAPE] Metrics extraction failed, using defaults.', metricsError);
+        }
 
         console.log(`[SCRAPE] Page Dimensions: ${metrics.width}x${metrics.height} (Viewport: ${metrics.innerHeight})`);
 
@@ -167,29 +184,33 @@ export const performScrape = async (url: string, isMobile: boolean, isFirstPage:
         // Page data extraction - wrapped for safety
         let pageData;
         try {
-            pageData = await page.evaluate((isFirstPageDesktop: boolean) => {
-                const text = document.body.innerText;
-                let animationData = null;
-                let accessibilityData = null;
+            if (!page.isClosed()) {
+                pageData = await page.evaluate((isFirstPageDesktop: boolean) => {
+                    const text = document.body.innerText;
+                    let animationData = null;
+                    let accessibilityData = null;
 
-                if (isFirstPageDesktop) {
-                    // @ts-ignore
-                    animationData = Array.from(document.querySelectorAll('*')).filter((el: any) => {
-                        const style = window.getComputedStyle(el);
-                        return style.getPropertyValue('animation-name') !== 'none' || (style.getPropertyValue('transition-property') !== 'all' && style.getPropertyValue('transition-property') !== '');
-                    }).map((el: any) => `${el.tagName.toLowerCase()}${el.id ? `#${el.id}` : ''}${el.className && typeof el.className === 'string' ? `.${el.className.split(' ').filter((c: any) => c).join('.')}` : ''}`).slice(0, 20);
+                    if (isFirstPageDesktop) {
+                        // @ts-ignore
+                        animationData = Array.from(document.querySelectorAll('*')).filter((el: any) => {
+                            const style = window.getComputedStyle(el);
+                            return style.getPropertyValue('animation-name') !== 'none' || (style.getPropertyValue('transition-property') !== 'all' && style.getPropertyValue('transition-property') !== '');
+                        }).map((el: any) => `${el.tagName.toLowerCase()}${el.id ? `#${el.id}` : ''}${el.className && typeof el.className === 'string' ? `.${el.className.split(' ').filter((c: any) => c).join('.')}` : ''}`).slice(0, 20);
 
-                    // @ts-ignore
-                    accessibilityData = {
-                        imagesMissingAlt: Array.from(document.querySelectorAll('img:not([alt])')).length,
-                        inputsMissingLabels: Array.from(document.querySelectorAll('input:not([id]), textarea:not([id])')).filter((el: any) => !el.closest('label')).length + Array.from(document.querySelectorAll('input[id], textarea[id]')).filter((el: any) => !document.querySelector(`label[for="${el.id}"]`)).length,
-                        hasSemanticElements: !!document.querySelector('main, nav, header, footer, article, section, aside'),
-                        hasAriaAttributes: !!document.querySelector('[role], [aria-label], [aria-labelledby], [aria-describedby]')
-                    };
-                }
+                        // @ts-ignore
+                        accessibilityData = {
+                            imagesMissingAlt: Array.from(document.querySelectorAll('img:not([alt])')).length,
+                            inputsMissingLabels: Array.from(document.querySelectorAll('input:not([id]), textarea:not([id])')).filter((el: any) => !el.closest('label')).length + Array.from(document.querySelectorAll('input[id], textarea[id]')).filter((el: any) => !document.querySelector(`label[for="${el.id}"]`)).length,
+                            hasSemanticElements: !!document.querySelector('main, nav, header, footer, article, section, aside'),
+                            hasAriaAttributes: !!document.querySelector('[role], [aria-label], [aria-labelledby], [aria-describedby]')
+                        };
+                    }
 
-                return { liveText: text, animationData, accessibilityData };
-            }, isFirstPage && !isMobile);
+                    return { liveText: text, animationData, accessibilityData };
+                }, isFirstPage && !isMobile);
+            } else {
+                pageData = { liveText: '', animationData: null, accessibilityData: null };
+            }
         } catch (evalError) {
             console.warn('[SCRAPE] Page evaluation failed, using fallback...', evalError);
             pageData = { liveText: '', animationData: null, accessibilityData: null };

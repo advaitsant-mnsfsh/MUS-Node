@@ -30,8 +30,8 @@ export function UserBadge() {
             {isOpen && (
                 <div className="absolute right-0 mt-2 w-auto min-w-[260px] bg-white rounded-lg border-2 border-black shadow-neo-sm py-1 origin-top-right animate-in fade-in zoom-in-95 duration-100 z-50">
                     <div className="px-5 py-4 border-b-2 border-slate-100">
-                        <p className="text-xs text-text-secondary uppercase font-black tracking-wider mb-1">Signed in as</p>
-                        <p className="text-sm font-bold text-text-primary break-words leading-tight">
+                        <p className="text-sm text-text-secondary uppercase font-black tracking-wider mb-1">Signed in as</p>
+                        <p className="text-sm font-bold text-text-primary wrap-break-word leading-tight">
                             {user.email}
                         </p>
                     </div>

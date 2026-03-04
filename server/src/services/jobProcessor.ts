@@ -1,7 +1,9 @@
 import { db } from '../lib/db.js';
 // Reliability Fixes: Concurrency=4, Timeout=240s, Retry=3
+import { auditJobs } from '../db/schema.js';
 import { SecretService } from './secretService.js';
 import { JobService } from './jobService.js';
+import { eq } from 'drizzle-orm';
 import { Type } from '@google/genai';
 import { performScrape, performPerformanceCheck } from './scraperService.js';
 import { performAnalysis, callApi } from './aiService.js';
@@ -19,6 +21,7 @@ export class JobProcessor {
             const inputDataRaw = job.input_data as any;
             const inputs = Array.isArray(inputDataRaw) ? inputDataRaw : (inputDataRaw?.inputs || []);
             const auditMode = Array.isArray(inputDataRaw) ? 'standard' : (inputDataRaw?.auditMode || 'standard');
+            const whiteLabelLogo = Array.isArray(inputDataRaw) ? null : (inputDataRaw?.whiteLabelLogo || null);
 
             // --- STANDARD/COMPETITOR AUDIT FLOW ---
 
@@ -109,7 +112,8 @@ export class JobProcessor {
                 await JobService.updateProgress(jobId, 'Starting Standard Analysis...');
 
                 const firstInput = inputs[0];
-                let analysisContext: any = {};
+                const isScreenshotOnly = inputs.every((i: any) => i.type !== 'url');
+                let analysisContext: any = { isScreenshotOnly };
 
                 if (firstInput.type === 'url') {
                     finalUrl = firstInput.customName || firstInput.url;
@@ -201,8 +205,7 @@ export class JobProcessor {
                     }
                 }
 
-                // Run Experts
-                console.log(`[JobProcessor] Running experts...`);
+                console.log(`[JobProcessor] Running experts... Logo Status: ${whiteLabelLogo ? (whiteLabelLogo.startsWith('data:') ? 'Base64' : 'URL') : 'None'}`);
                 const modes = ['analyze-ux', 'analyze-product', 'analyze-visual', 'analyze-strategy', 'analyze-accessibility'];
 
                 const runExpertWithTimeout = async (mode: string) => {
@@ -270,17 +273,62 @@ export class JobProcessor {
             // --- FINALIZATION ---
             console.log(`[JobProcessor] Job ${jobId} completed. Finalizing...`);
 
+            let finalWhiteLabelLogoUrl = whiteLabelLogo;
+            if (whiteLabelLogo && whiteLabelLogo.startsWith('data:')) {
+                try {
+                    console.log(`[JobProcessor] 📤 Detected Base64 Whitelabel Logo. Saving to permanent storage...`);
+                    const { ImageService } = await import('./imageService.js');
+                    finalWhiteLabelLogoUrl = await ImageService.saveImage(jobId, 'whitelabel.png', whiteLabelLogo);
+                    console.log(`[JobProcessor] ✅ Saved Whitelabel logo: ${finalWhiteLabelLogoUrl}`);
+                } catch (e) {
+                    console.error('[JobProcessor] ❌ Failed to save whitelabel logo:', e);
+                }
+            } else if (whiteLabelLogo) {
+                console.log(`[JobProcessor] ℹ️ Whitelabel logo already processed or external: ${whiteLabelLogo}`);
+            }
+
+            // --- PERSIST SAVED LOGO TO DB ---
+            // Update input_data to replace Base64 with permanent path
+            if (finalWhiteLabelLogoUrl && finalWhiteLabelLogoUrl !== whiteLabelLogo) {
+                try {
+                    console.log(`[JobProcessor] 💾 Persisting permanent logo path to input_data...`);
+                    const inputs = (job.input_data as any)?.inputs || job.input_data;
+                    const newInputData = {
+                        ...(job.input_data as any || {}),
+                        whiteLabelLogo: finalWhiteLabelLogoUrl
+                    };
+
+                    await db.update(auditJobs)
+                        .set({ input_data: newInputData })
+                        .where(eq(auditJobs.id, jobId));
+                } catch (dbError) {
+                    console.warn(`[JobProcessor] ⚠️ Failed to update input_data with permanent logo:`, dbError);
+                }
+            }
+
             const reportData = {
                 url: finalUrl,
                 competitorUrl: auditMode === 'competitor' ? (inputs.find((i: any) => i.role === 'competitor') || inputs[1])?.url : undefined,
                 screenshots: finalScreenshots,
                 screenshotMimeType: finalMimeType,
+                whiteLabelLogo: finalWhiteLabelLogoUrl || whiteLabelLogo,
                 ...report
             };
 
             const resultUrl = `/report/${jobId}`;
+            const thumbnailUrl = finalScreenshots[0]?.url || undefined;
 
+            // --- ✨ FINAL COMPLETION SIGNAL ---
+            // We do this LAST to ensure terminal logs match the DB status timing
             await JobService.updateJobStatus(jobId, 'completed', reportData, undefined, resultUrl);
+
+            console.log(`[JobProcessor] ✨ Job Completed: ${jobId}`);
+            if (thumbnailUrl) {
+                const { auditJobs } = await import('../db/schema.js');
+                await db.update(auditJobs)
+                    .set({ thumbnail_url: thumbnailUrl })
+                    .where(eq(auditJobs.id, jobId));
+            }
             console.log(`[JobProcessor] ✨ Job Completed: ${jobId}`);
 
         } catch (error: any) {

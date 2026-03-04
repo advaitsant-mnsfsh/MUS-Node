@@ -123,7 +123,7 @@ export function ScoreDisplayCard({ score, label, variant = 'hero', isHero = fals
     const gaugeSize = isHero ? 220 : 110;
     const gaugeStroke = isHero ? 22 : 14;
     const fontSize = isHero ? "text-[64px]" : "text-[28px]";
-    const labelSize = isHero ? "text-lg" : "text-xs";
+    const labelSize = isHero ? "text-lg" : "text-sm";
     const badgeSize = isHero ? "text-sm px-6 py-2" : "text-[10px] px-3 py-1";
 
     // Container Style - Brutalist Box

@@ -48,8 +48,25 @@ app.get("/health", (req: any, res: any) => {
 app.use(compression());
 app.use(cors({
     origin: function (origin, callback) {
-        if (!origin) return callback(null, true);
-        return callback(null, origin);
+        const allowedOrigins = [
+            'http://localhost:5173',
+            'http://beta.localhost:5173',
+            'http://localhost:3000',
+            'http://beta.localhost:3000',
+            'https://myuxscore.com',
+            'https://www.myuxscore.com',
+            'https://beta.myuxscore.com'
+        ];
+
+        // Railway's proxy or healthcheck sometimes injects its own origin. 
+        // Returning true natively handles `Vary: Origin` and correctly signs the preflight 
+        // with the requested origin *only* if it is valid, avoiding CDN caching issues.
+        if (!origin || allowedOrigins.includes(origin) || origin.endsWith('.railway.app') || origin.endsWith('.vercel.app')) {
+            callback(null, true);
+        } else {
+            console.warn(`[CORS] Blocked unrecognized origin: ${origin}`);
+            callback(new Error('Not allowed by CORS'));
+        }
     },
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS', 'HEAD'],
@@ -85,6 +102,29 @@ import apiKeysRoutes from './routes/apiKeys.js';
 import authRoutes from './routes/auth.js';
 import userRoutes from './routes/user.js';
 
+const betaAuthMiddleware = (req: any, res: any, next: any) => {
+    const host = req.get('host') || '';
+    const isBetaSubdomain = host.startsWith('beta.');
+
+    // Skip protection for verification and waitlist endpoints
+    if (req.path === '/api/public/verify-beta' || req.path === '/api/public/beta-waitlist') {
+        return next();
+    }
+
+    if (isBetaSubdomain) {
+        const cookies = req.get('Cookie') || '';
+        const isAuthorized = cookies.includes('beta_authorized=true');
+
+        if (!isAuthorized) {
+            console.log(`[Beta Guard] Unauthorized access blocked from host: ${host}`);
+            return res.status(403).json({ error: 'Beta access required' });
+        }
+    }
+    next();
+};
+
+app.use(betaAuthMiddleware);
+
 app.use('/api', authRoutes);
 app.use('/api/user', userRoutes);
 app.use('/api/v1', apiRoutes);
@@ -106,33 +146,7 @@ if (fs.existsSync(clientBuildPath)) {
 }
 
 
-// Legacy Claim Route (for backward compatibility during deployment)
-app.post('/api/audit/claim', optionalUserAuth, async (req: any, res: any) => {
-    const user = (req as AuthenticatedRequest).user;
-    const { auditId } = req.body;
-    console.log(`[Claim-Legacy] Request for Audit: ${auditId}, User: ${user?.email || 'UNDEFINED'}`);
 
-    if (!user) {
-        return res.status(401).json({ success: false, error: 'Unauthorized: No active session found.' });
-    }
-
-    if (!auditId) return res.status(400).json({ success: false, error: 'Missing auditId' });
-
-    try {
-        const [updated] = await db.update(auditJobs)
-            .set({ user_id: user.id })
-            .where(and(eq(auditJobs.id, auditId), isNull(auditJobs.user_id)))
-            .returning({ id: auditJobs.id });
-
-        if (!updated) return res.status(404).json({ success: false, error: 'Audit not found or already claimed.' });
-
-        console.log(`[Claim-Legacy] ✅ Successfully assigned audit ${auditId} to user ${user.email}`);
-        return res.json({ success: true });
-    } catch (e: any) {
-        console.error(`[Claim-Legacy] 💥 Error:`, e);
-        return res.status(500).json({ success: false, error: e.message });
-    }
-});
 
 
 // --- 4. SYSTEM INITIALIZATION ---

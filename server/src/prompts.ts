@@ -65,7 +65,39 @@ This data was extracted from the page's HTML and indicates potential accessibili
     return prompt;
 };
 
-const BASE_SYSTEM_INSTRUCTION = `You are a world-class website auditor. Your task is to conduct a comprehensive audit of the provided website based on its screenshot(s) and text content. You must fill out all sections in the requested nested JSON schema completely and critically.
+const BASE_SYSTEM_INSTRUCTION = `ABSOLUTE STRUCTURE & PARAMETER LOCK (CRITICAL):
+
+You are NOT allowed to:
+- Add new parameters
+- Remove listed parameters
+- Rename parameters
+- Merge parameters
+- Split parameters
+- Change parameter order
+- Skip parameters
+
+Every parameter listed in the system instructions MUST appear EXACTLY ONCE in the output.
+
+If a parameter is NOT APPLICABLE:
+- You MUST still include it
+- Assign Score = 0
+- Analysis must clearly explain why it is not applicable
+- Recommendation must explain what would be required if it became applicable
+- Citations must still be present (may be empty only if truly impossible)
+
+RECOMMENDATION ENFORCEMENT (NON-NEGOTIABLE):
+- EVERY parameter (Score 0–10) MUST contain a Recommendation
+- Low scores MUST include corrective action
+- High scores (8–10) MUST include either:
+  - "Maintain current implementation", OR
+  - A future-proofing improvement
+
+CITATION ENFORCEMENT:
+- EVERY parameter MUST include Citations
+- Citations must reference observed UI, text, structure, metrics, or audit data
+- Generic statements without evidence are forbidden
+
+You are a world-class website auditor. Your task is to conduct a comprehensive audit of the provided website based on its screenshot(s) and text content. You must fill out all sections in the requested nested JSON schema completely and critically.
 
 GIVE A VERY CRITICAL RATING:
 Use a rating scale from 1 to 10 for all scored parameters, where 1 represents poor quality and 10 is excellent.
@@ -75,14 +107,12 @@ Use a rating scale from 1 to 10 for all scored parameters, where 1 represents po
 - 9-10 (Excellent): Outstanding.
 
 MANDATORY INSTRUCTIONS FOR ALL AUDITS:
-1.  **Infer Context**: First, analyze the provided content to infer the website's type (e.g., SaaS, E-commerce) and primary purpose. This context must guide your entire audit.
-2.  **Dynamic Parameter Relevance**: For each parameter, determine if it is relevant. If NOT APPLICABLE (e.g., 'CheckoutPaymentFlow' for a portfolio), you MUST assign it a \`Score\` of \`0\` and the \`Analysis\` must briefly explain why (e.g., 'Not applicable for a non-e-commerce site.').
-3.  **Score Calculation**: When calculating each \`SectionScore\` and \`CategoryScore\`, you MUST exclude any parameters with a \`Score\` of \`0\` from the average.
-4.  **Complete All Fields**: For all applicable parameters (score 1-10), you must provide a response for every single field in the schema.
-5.  **Mandatory Citations**: For EVERY applicable 'ScoredParameter' and 'CriticalIssue', provide at least one full, descriptive sentence as a citation from the website's content that supports your analysis.
-6.  **Be Concise**: Keep \`Analysis\`, \`Recommendation\`, and \`KeyFinding\` to a maximum of 3 sentences to be direct and actionable.
-7.  **Critical Issues**: You MUST populate 'Analysis', 'Confidence', and 'KeyFinding' for every issue in the 'Top 5' lists.`;
-
+1. Infer Context first and let it guide the audit.
+2. Dynamic relevance is allowed ONLY via Score = 0 (never omission).
+3. SectionScore and CategoryScore MUST exclude Score = 0 parameters.
+4. ALL schema fields must be populated.
+5. Be concise: max 3 sentences per Analysis / Recommendation / KeyFinding.
+`;
 
 export const getStrategySystemInstruction = () => `
   ### Role ###
@@ -107,13 +137,39 @@ export const getStrategySystemInstruction = () => `
   After completing the strategic analysis (Domain, Purpose, Target Audience), you MUST generate 3 realistic user personas based on your findings. Fill out all fields for each persona. For each persona, keep the \`UserNeedsBehavior\` and \`PainPointOpportunity\` descriptions to 3-4 concise sentences to ensure the report can be saved successfully.
 `;
 
-export const getAccessibilitySystemInstruction = (isMultiPage: boolean) => {
-    let specificInstructions = `You are a world-class **Accessibility Auditor** (CPACC/WebAIM Certified). Your task is to interpretation the provided automated Axe-Core audit data and combine it with visual/structural analysis to evaluate WCAG 2.1 AA compliance.
+export const getAccessibilitySystemInstruction = (isMultiPage: boolean, isScreenshotOnly: boolean = false) => {
+    const params = isScreenshotOnly
+        ? [
+            "ColorContrast",
+            "ResizableText",
+            "HeadingsAndStructure",
+            "FormLabels",
+            "TouchTargetSize"
+        ]
+        : [
+            "ColorContrast",
+            "ResizableText",
+            "FocusIndicators",
+            "HeadingsAndStructure",
+            "AlternativeText",
+            "KeyboardNavigation",
+            "FormLabels",
+            "TouchTargetSize",
+            "ARIAUsage"
+        ];
 
-    You MUST Populate the schema with a comprehensive list of parameters. DO NOT Summarize.
+    const mandatoryList = isScreenshotOnly
+        ? `1. **Visual Accessibility**:
+       - 'ColorContrast' (Legibility and contrast ratios)
+       - 'ResizableText' (Zoom capabilities and responsiveness)
 
-    MANDATORY PARAMETERS (Limit evaluation to these 9 key areas):
-    1. **Visual Accessibility**:
+    2. **Screen Reader Experience**:
+       - 'HeadingsAndStructure' (Logical hierarchy h1-h6, landmarks)
+
+    3. **AutomatedCompliance**:
+       - 'FormLabels' (Input labelling and instructions)
+       - 'TouchTargetSize' (Spacing and size for mobile/touch)`
+        : `1. **Visual Accessibility**:
        - 'ColorContrast' (Legibility and contrast ratios)
        - 'ResizableText' (Zoom capabilities and responsiveness)
        - 'FocusIndicators' (Visibility of focus states on interactive elements)
@@ -126,14 +182,32 @@ export const getAccessibilitySystemInstruction = (isMultiPage: boolean) => {
     3. **AutomatedCompliance**:
        - 'FormLabels' (Input labelling and instructions)
        - 'TouchTargetSize' (Spacing and size for mobile/touch)
-       - 'ARIAUsage' (Correct use of roles, states, and properties)
+       - 'ARIAUsage' (Correct use of roles, states, and properties)`;
+
+    let specificInstructions = `You are a world-class **Accessibility Auditor** (CPACC/WebAIM Certified). Your task is to interpretation the provided automated Axe-Core audit data and combine it with visual/structural analysis to evaluate WCAG 2.1 AA compliance.
+
+    You MUST Populate the schema with a comprehensive list of parameters. DO NOT Summarize.
+
+    MANDATORY PARAMETERS (Limit evaluation to these ${params.length} key areas):
+    ${mandatoryList}
 
     - **CRITICAL MAPPING**: Map any 'axeViolations' found to the most relevant parameter above.
-      - e.g. 'image-alt' faults -> 'AlternativeText'
+      - e.g. 'image-alt' faults -> ${isScreenshotOnly ? 'HeadingsAndStructure' : 'AlternativeText'}
       - e.g. 'label' faults -> 'FormLabels'
       - e.g. 'color-contrast' -> 'ColorContrast'
-    - Do NOT create new parameters for Axe rules. Integrate the findings into the Analysis of the 9 parameters above.
-    - If 'axeViolations' is empty, verify these parameters visually/manually.`;
+    - Do NOT create new parameters for Axe rules. Integrate the findings into the Analysis of the ${params.length} parameters above.
+    - If 'axeViolations' is empty, verify these parameters visually/manually.
+    
+    CARDINALITY LOCK (ACCESSIBILITY):
+
+You MUST evaluate EXACTLY these ${params.length} parameters — no more, no fewer:
+
+${params.map((p, i) => `${i + 1}. ${p}`).join('\n')}
+
+Each must appear EXACTLY ONCE.
+Do NOT introduce WCAG levels, Axe rules, or variants as new parameters.
+All axe violations MUST be mapped into these parameters.
+`;
 
     if (isMultiPage) {
         specificInstructions += `\n- **Multi-Page Context**: Identify accessibility patterns across pages.`;
@@ -147,14 +221,14 @@ export const getAccessibilitySystemInstruction = (isMultiPage: boolean) => {
        - If there are violations, cite the specific Axe rule or WCAG criterion failed.
        - If the score is high/perfect, cite the WCAG 2.1 Success Criterion that is being satisfied (e.g., "Compliant with WCAG 2.1 SC 1.4.3").
     3. GRANULAR REPORTING (CRITICAL):
-       - Use the Axe Rule ID (e.g. 'image-alt') strictly as the 'ParameterName' for specific failures. Do NOT truncate it.
+    
        - For the "AutomatedCompliance" section, YOU MUST LIST EVERY FAILING RULE found by Axe.
-       - **CRITICAL**: If a rule is in "Top5CriticalAccessibilityIssues", it MUST ALSO be listed in "AutomatedCompliance". Do not skip it.
+       - For the "AutomatedCompliance" section, YOU MUST LIST EVERY FAILING RULE found by Axe.
        - **SCORE**: Every parameter must have an integer 'Score' (0-10). Never return NaN or null.
        - **EXTRACT CODE**:
           - For Failures: Extract HTML from 'axeViolations' (nodes[].html) into 'FailingElements'.
           - For Passes: Extract HTML from 'axePasses' (html field) into 'FailingElements' (label will be "Element Source" in UI).
-       - Ensure EVERY passed check gets a "Satisfactory" (10/10) card in 'PassedAudits' section.
+       - For PassedAudits, reuse the SAME parameter names from the 9 Accessibility parameters, scored at 10/10 where applicable.
           - For Partially Completed: Populate 'ManualChecks' list using 'axeIncomplete' data.
           - For N/A: Populate 'NotApplicable' list using 'axeInapplicable' data.
        - 'ComplianceScore' should be a calculated percentage (Passed / (Passed + Failed)) * 100.
@@ -223,20 +297,7 @@ export const getSchemas = () => {
         required: ['Issue', 'ImpactLevel', 'Score', 'Recommendation', 'Citations', 'source', 'Confidence', 'Analysis', 'KeyFinding']
     };
 
-    const criticalIssueSchemaForExperts = {
-        type: Type.OBJECT,
-        properties: {
-            Issue: { type: Type.STRING },
-            ImpactLevel: { type: Type.STRING },
-            Score: { type: Type.INTEGER },
-            Recommendation: { type: Type.STRING },
-            Citations: { type: Type.ARRAY, items: { type: Type.STRING } },
-            Confidence: { type: Type.STRING, enum: ['high', 'medium', 'low'] },
-            Analysis: { type: Type.STRING },
-            KeyFinding: { type: Type.STRING }
-        },
-        required: ['Issue', 'ImpactLevel', 'Score', 'Recommendation', 'Citations', 'Confidence', 'Analysis', 'KeyFinding']
-    };
+
 
     const createScoredSectionSchema = (parameterKeys: string[]) => {
         return {
@@ -257,7 +318,17 @@ export const getSchemas = () => {
                             Citations: { type: Type.ARRAY, items: { type: Type.STRING } },
                             KeyFinding: { type: Type.STRING }
                         },
-                        required: ['ParameterName', 'Score', 'ImpactLevel', 'Confidence', 'Analysis', 'Citations']
+                        required: [
+                            'ParameterName',
+                            'Score',
+                            'ImpactLevel',
+                            'Confidence',
+                            'Analysis',
+                            'Recommendation',
+                            'Citations',
+                            'KeyFinding'
+                        ]
+
                     },
                 }
             },
@@ -269,7 +340,6 @@ export const getSchemas = () => {
         type: Type.OBJECT,
         properties: {
             CategoryScore: { type: Type.NUMBER },
-            Top5CriticalUXIssues: { type: Type.ARRAY, items: criticalIssueSchemaForExperts },
             UsabilityHeuristics: createScoredSectionSchema([
                 'VisibilityOfSystemStatus', 'MatchBetweenSystemAndRealWorld', 'UserControlAndFreedom',
                 'ConsistencyAndStandards', 'ErrorPrevention', 'RecognitionVsRecall',
@@ -284,14 +354,13 @@ export const getSchemas = () => {
             ]),
             OverallRecommendations: { type: Type.ARRAY, items: { type: Type.STRING } }
         },
-        required: ['CategoryScore', 'Top5CriticalUXIssues', 'UsabilityHeuristics', 'UsabilityMetrics', 'AccessibilityCompliance', 'OverallRecommendations']
+        required: ['CategoryScore', 'UsabilityHeuristics', 'UsabilityMetrics', 'AccessibilityCompliance', 'OverallRecommendations']
     };
 
     const productAuditSchema = {
         type: Type.OBJECT,
         properties: {
             CategoryScore: { type: Type.NUMBER },
-            Top5CriticalProductIssues: { type: Type.ARRAY, items: criticalIssueSchemaForExperts },
             MarketFitAndBusinessAlignment: createScoredSectionSchema([
                 'ClearValueProposition', 'OnboardingEffectiveness', 'FeatureDiscoverability', 'MonetizationModelClarity'
             ]),
@@ -303,14 +372,13 @@ export const getSchemas = () => {
             ]),
             OverallRecommendations: { type: Type.ARRAY, items: { type: Type.STRING } }
         },
-        required: ['CategoryScore', 'Top5CriticalProductIssues', 'MarketFitAndBusinessAlignment', 'UserRetentionAndEngagement', 'ConversionOptimization', 'OverallRecommendations']
+        required: ['CategoryScore', 'MarketFitAndBusinessAlignment', 'UserRetentionAndEngagement', 'ConversionOptimization', 'OverallRecommendations']
     };
 
     const visualAuditSchema = {
         type: Type.OBJECT,
         properties: {
             CategoryScore: { type: Type.NUMBER },
-            Top5CriticalVisualIssues: { type: Type.ARRAY, items: criticalIssueSchemaForExperts },
             UIConsistencyAndBranding: createScoredSectionSchema([
                 'ColorPaletteContrast', 'TypographyReadability', 'IconographySymbolism', 'SpacingAlignment'
             ]),
@@ -322,7 +390,7 @@ export const getSchemas = () => {
             ]),
             OverallRecommendations: { type: Type.ARRAY, items: { type: Type.STRING } }
         },
-        required: ['CategoryScore', 'Top5CriticalVisualIssues', 'UIConsistencyAndBranding', 'AestheticAndEmotionalAppeal', 'ResponsivenessAndAdaptability', 'OverallRecommendations']
+        required: ['CategoryScore', 'UIConsistencyAndBranding', 'AestheticAndEmotionalAppeal', 'ResponsivenessAndAdaptability', 'OverallRecommendations']
     };
 
     const strategyAuditSchema = {
@@ -382,7 +450,6 @@ export const getSchemas = () => {
             CategoryScore: { type: Type.NUMBER },
             ComplianceScore: { type: Type.NUMBER },
             RiskLevel: { type: Type.STRING, enum: ['Critical', 'High', 'Moderate', 'Low'] },
-            Top5CriticalAccessibilityIssues: { type: Type.ARRAY, items: criticalIssueSchemaForExperts },
             AutomatedCompliance: createScoredSectionSchema([
                 'FormLabels', 'TouchTargetSize', 'ARIAUsage'
             ]),
@@ -420,7 +487,7 @@ export const getSchemas = () => {
         },
         required: [
             'CategoryScore', 'ComplianceScore', 'RiskLevel',
-            'Top5CriticalAccessibilityIssues', 'AutomatedCompliance',
+            'AutomatedCompliance',
             'ScreenReaderExperience', 'VisualAccessibility',
             'PassedAudits', 'ManualChecks', 'NotApplicable',
             'OverallRecommendations'
@@ -573,13 +640,21 @@ export const getCompetitorSystemInstruction = () => `
   ### Role ###
   You are a Strategic Competitive Analyst. Your task is to compare two websites (Primary vs. Competitor) based on their text content and screenshots.
 
+  
   ### Analysis Guidelines ###
   - **Objective**: Identify where the Competitor outperforms the Primary website and vice-versa.
+  - Competitor Accessibility parameters are comparative heuristics and DO NOT need to match the Accessibility Audit parameters one-to-one.
   - **Data Source**: You will be provided with:
     1.  Primary Website Context (URL, text, screenshot analysis)
     2.  Competitor Website Context (URL, text, screenshot analysis)
   - **Scoring**: Use a 1-10 scale for all scores (1=Poor, 10=Excellent).
-  
+
+  PARAMETER SET LOCK:
+
+You MUST ONLY use the parameters explicitly listed below.
+No substitutions, aliases, or creative interpretations are allowed.
+If evidence is weak, infer conservatively but NEVER omit.
+
   ### Output Requirements ###
   - **Executive Summary**: A concise 5-6 line summary of the key competitive difference.
   

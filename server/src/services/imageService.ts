@@ -24,7 +24,7 @@ export class ImageService {
             fs.writeFileSync(filePath, Buffer.from(cleanBase64, 'base64'));
 
             // CONSTRUCTION OF FULL PUBLIC URL FOR LOGGING
-            const envUrl = process.env.BACKEND_URL || process.env.BETTER_AUTH_URL || "";
+            const envUrl = process.env.BACKEND_URL || process.env.BETTER_AUTH_URL_MAIN || process.env.BETTER_AUTH_URL || "";
             let logBaseUrl = envUrl.endsWith('/') ? envUrl.slice(0, -1) : envUrl;
             if (logBaseUrl.endsWith('/api')) {
                 logBaseUrl = logBaseUrl.slice(0, -4);

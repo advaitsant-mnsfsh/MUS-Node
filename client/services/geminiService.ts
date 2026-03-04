@@ -1,6 +1,5 @@
 import { StreamChunk, AnalysisReport, ExpertKey, Screenshot, AuditInput } from '../types';
-
-const apiUrl = import.meta.env.VITE_BACKEND_URL || import.meta.env.VITE_API_URL || (import.meta.env.PROD ? 'https://mus-node-production.up.railway.app' : 'http://localhost:3000');
+import { getBackendUrl } from './config';
 
 interface StreamCallbacks {
   onScrapeComplete: (screenshots: Screenshot[], screenshotMimeType: string) => void;
@@ -20,8 +19,7 @@ interface AnalyzeParams {
   whiteLabelLogo?: string | null;
   token?: string;
 }
-
-const functionUrl = `${apiUrl}/api/v1/audit`;
+const functionUrl = `${getBackendUrl()}/api/v1/audit`;
 
 const fileToBase64 = (file: File): Promise<string> => {
   return new Promise((resolve, reject) => {

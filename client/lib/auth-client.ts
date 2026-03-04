@@ -2,10 +2,26 @@ import { createAuthClient } from "better-auth/react"
 import { emailOTPClient } from "better-auth/client/plugins"
 
 const getBaseURL = () => {
-    if (import.meta.env.VITE_BACKEND_URL) return import.meta.env.VITE_BACKEND_URL;
-    if (import.meta.env.VITE_API_URL) return import.meta.env.VITE_API_URL;
-    if (import.meta.env.PROD) return "https://mus-node-production.up.railway.app";
-    return "http://localhost:8080";
+    // Priority 1: Explicitly set Backend/API URLs (usually for advanced dev)
+    let envUrl = import.meta.env.VITE_AUTH_BACKEND_URL || import.meta.env.VITE_API_URL || import.meta.env.VITE_BACKEND_URL;
+    if (envUrl) {
+        if (envUrl.endsWith('/')) envUrl = envUrl.slice(0, -1);
+        if (!envUrl.startsWith('http://') && !envUrl.startsWith('https://')) {
+            envUrl = `https://${envUrl}`;
+        }
+        return envUrl;
+    }
+
+    // Priority 2: Local Development Detection
+    if (typeof window !== 'undefined') {
+        const host = window.location.hostname;
+        if (host === 'localhost' || host === '127.0.0.1' || host.endsWith('.localhost')) {
+            return "http://localhost:8080";
+        }
+    }
+
+    // Priority 3: Universal Railway Backend (Default)
+    return "https://api.myuxscore.com";
 }
 
 export const authClient = createAuthClient({

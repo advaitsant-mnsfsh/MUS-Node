@@ -41,10 +41,35 @@ export const useAudit = () => {
     const [whiteLabelLogo, setWhiteLabelLogo] = useState<string | null>(null);
     const [queuePosition, setQueuePosition] = useState<number>(0);
     const [queueType, setQueueType] = useState<string>('realtime');
+    const [isLongWait, setIsLongWait] = useState<boolean>(false);
 
     const lastLogTime = useRef<number>(Date.now());
+    const waitTimerRef = useRef<NodeJS.Timeout | null>(null);
 
     // --- EFFECTS ---
+
+    // 0. Long Wait Timer (210 seconds)
+    useEffect(() => {
+        if (isLoading && !isLongWait) {
+            // Start or Resume timer
+            const startTime = Date.now();
+            waitTimerRef.current = setInterval(() => {
+                const elapsed = (Date.now() - startTime) / 1000;
+                if (elapsed >= 210) { // 3.5 minutes
+                    console.log(`[useAudit] ⏳ Long wait detected (${Math.round(elapsed)}s). Triggering opt-in UI.`);
+                    setIsLongWait(true);
+                    if (waitTimerRef.current) clearInterval(waitTimerRef.current);
+                }
+            }, 5000);
+        } else if (!isLoading) {
+            if (waitTimerRef.current) clearInterval(waitTimerRef.current);
+            setIsLongWait(false);
+        }
+
+        return () => {
+            if (waitTimerRef.current) clearInterval(waitTimerRef.current);
+        };
+    }, [isLoading, isLongWait]);
 
     // 0. Sync with Global State on Load/Recovery
     useEffect(() => {
@@ -103,7 +128,7 @@ export const useAudit = () => {
             setPerformanceError(errorMessage);
         },
         onJobCreated: (id: string) => {
-            navigate(`/analysis/${id}`, { state: { newAudit: true } });
+            navigate(`/analysis/${id}`, { state: { newAudit: true }, replace: true });
         },
         onQueueUpdate: (position: number, type: string) => {
             setQueuePosition(position);
@@ -175,7 +200,7 @@ export const useAudit = () => {
             setProgress(95);
         },
         onClose: () => { }
-    }), [navigate, location.pathname, auditId]);
+    }), [navigate, location.pathname, auditId, whiteLabelLogo, user]);
 
 
     const lastAuditId = useRef<string | undefined>(undefined);
@@ -183,6 +208,11 @@ export const useAudit = () => {
     // 3. Main Data Loading / Resume Logic
     useEffect(() => {
         if (!auditId) {
+            // Let optimistic navigation to /analysis bypass the reset
+            // We use window.location because history.pushState updates it instantly
+            // before react-router's useLocation hook realizes it
+            if (window.location.pathname === '/analysis') return;
+
             if (report || isLoading || error) {
                 setReport(null);
                 setScreenshots([]);
@@ -210,9 +240,9 @@ export const useAudit = () => {
                 const jobFromState = location.state?.job;
                 let job = jobFromState || null;
 
-                if (!isNewAudit && !job) {
+                if (!isNewAudit && (!job || !job.report_data)) {
                     setIsFetchingReport(true);
-                    job = await getAuditJob(auditId);
+                    job = await getAuditJob(auditId) || job;
                     setIsFetchingReport(false);
                 }
 
@@ -220,19 +250,34 @@ export const useAudit = () => {
                     const reportData = job.report_data;
                     if (reportData) {
                         setReport(reportData);
-                        if (reportData.screenshots) setScreenshots(reportData.screenshots);
+                        if (reportData.screenshots) {
+                            console.log(`[useAudit] 🖼️ Loading ${reportData.screenshots.length} screenshots from report_data`);
+                            setScreenshots(reportData.screenshots);
+                        }
                         if (reportData.screenshotMimeType) setScreenshotMimeType(reportData.screenshotMimeType);
-                        if (reportData.whiteLabelLogo) setWhiteLabelLogo(reportData.whiteLabelLogo);
+                        if (reportData.whiteLabelLogo) {
+                            console.log(`[useAudit] 🏷️ Found whitelabel in report_data: ${reportData.whiteLabelLogo}`);
+                            setWhiteLabelLogo(reportData.whiteLabelLogo);
+                        }
                     }
 
-                    if (job.input_data && (job.input_data as any).whiteLabelLogo) {
-                        setWhiteLabelLogo((job.input_data as any).whiteLabelLogo);
+                    if (job.whiteLabelLogo) {
+                        console.log(`[useAudit] 🏷️ Found top-level whitelabel logo: ${job.whiteLabelLogo}`);
+                        setWhiteLabelLogo(job.whiteLabelLogo);
                     }
 
                     if (job.inputs) {
-                        setReportInputs(job.inputs);
-                        if (job.inputs.length > 0) {
-                            const firstInput = job.inputs[0];
+                        let finalInputs = [...job.inputs];
+                        if (job.customName && finalInputs.length > 0) {
+                            finalInputs[0] = { ...finalInputs[0], customName: job.customName };
+                        }
+                        if (job.customFavicon && finalInputs.length > 0) {
+                            finalInputs[0] = { ...finalInputs[0], customFavicon: job.customFavicon };
+                        }
+                        setReportInputs(finalInputs);
+
+                        if (finalInputs.length > 0) {
+                            const firstInput = finalInputs[0];
                             setSubmittedUrl(firstInput.type === 'url' ? firstInput.url! : 'Manual Upload');
                         }
                     }
@@ -306,7 +351,7 @@ export const useAudit = () => {
         setTargetProgress(0);
 
         analyzeWebsiteStream({ inputs, auditMode, whiteLabelLogo }, getStreamCallbacks(false));
-    }, [getStreamCallbacks]);
+    }, [getStreamCallbacks, whiteLabelLogo]);
 
     const handleAnalyze = useCallback((inputs: AuditInput[], auditMode: 'standard' | 'competitor' = 'standard') => {
         // --- 1. INSTANT UI PIVOT ---
@@ -317,6 +362,9 @@ export const useAudit = () => {
         const firstInput = inputs[0];
         setSubmittedUrl(firstInput.type === 'url' ? firstInput.url! : 'Manual Upload');
         setReportInputs(inputs);
+
+        // Optimistic Navigation (without remounting React)
+        window.history.pushState({}, '', '/analysis');
 
         // If it's an uploaded screenshot, show it immediately
         if (firstInput.type === 'upload' && (firstInput.file || firstInput.files?.length)) {
@@ -346,7 +394,6 @@ export const useAudit = () => {
             try {
                 for (const input of inputs) {
                     const filesData = await processFiles(input.files, input.file);
-
                     const cleanedInput = { ...input, file: undefined, files: undefined };
 
                     if (input.type === 'url') {
@@ -372,10 +419,15 @@ export const useAudit = () => {
                             setIsLoading(false);
                             return;
                         }
+
+                        const filesToProcess = input.files && input.files.length > 0 ? input.files : (input.file ? [input.file] : []);
+
                         processedInputs.push({
                             ...cleanedInput,
                             filesData: filesData,
-                            fileData: filesData[0]
+                            fileData: filesData[0],
+                            fileName: filesToProcess[0]?.name,
+                            fileNames: filesToProcess.map(f => f.name)
                         });
                     }
                 }
@@ -401,7 +453,7 @@ export const useAudit = () => {
                 setIsLoading(false);
             }
         }, 10);
-    }, [startAnalysis]);
+    }, [startAnalysis, whiteLabelLogo]);
 
     const handleRunNewAudit = useCallback(() => {
         setReport(null);
@@ -415,6 +467,7 @@ export const useAudit = () => {
         setTargetProgress(0);
         setIsLoading(false);
         setQueuePosition(0);
+        setWhiteLabelLogo(null);
         navigate('/');
     }, [navigate]);
 
@@ -463,6 +516,7 @@ export const useAudit = () => {
         user,
         queuePosition,
         queueType,
+        isLongWait,
         handleAnalyze,
         handleRunNewAudit,
         handleEmailOptIn,
