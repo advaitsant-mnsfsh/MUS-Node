@@ -37,6 +37,9 @@ export const BetaAccessPage: React.FC<BetaAccessPageProps> = ({ onAuthorized }) 
                     localStorage.setItem('mus_auth_type', 'beta');
                 }
 
+                // Store in sessionStorage for faster frontend persistence during navigate
+                sessionStorage.setItem('beta_authorized', 'true');
+
                 // Immediately set GA user property for current session
                 setUserTypeProperty();
 

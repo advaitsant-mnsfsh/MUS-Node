@@ -17,8 +17,13 @@ router.post('/verify-beta', (req, res) => {
     if (code === betaCode || (adminCode && code === adminCode)) {
         const type = (adminCode && code === adminCode) ? 'admin' : 'beta';
 
-        // Use the same auth cookie for both to retain core application flow logic
-        res.setHeader('Set-Cookie', `beta_authorized=true; Path=/; Max-Age=${30 * 24 * 60 * 60}; SameSite=Lax`);
+        const host = req.get('host') || '';
+        const isProd = host.includes('myuxscore.com');
+        const cookieDomain = isProd ? '; Domain=.myuxscore.com' : '';
+        const secureFlag = isProd ? '; Secure' : '';
+
+        // Session cookie (no Max-Age) stays for the duration of the browser session
+        res.setHeader('Set-Cookie', `beta_authorized=true; Path=/; SameSite=Lax${cookieDomain}${secureFlag}`);
 
         return res.json({ success: true, type });
     }
