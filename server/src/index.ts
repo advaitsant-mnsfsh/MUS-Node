@@ -7,6 +7,7 @@ import fs from 'fs';
 import { fileURLToPath } from 'url';
 import { dirname } from 'path';
 import { execSync } from 'child_process';
+import externalRoutes from './api/external.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -46,6 +47,14 @@ app.get("/health", (req: any, res: any) => {
 });
 
 app.use(compression());
+// --- EXTERNAL API (WIDGETS) ---
+// We allow all origins for the external API so the widget can be embedded anywhere.
+// This must be BEFORE the global restrictive CORS middleware.
+app.use('/api/external', cors({
+    origin: '*',
+    credentials: false // External API doesn't use cookies
+}), externalRoutes);
+
 app.use(cors({
     origin: function (origin, callback) {
         const allowedOrigins = [
@@ -96,7 +105,7 @@ app.use('/uploads', (req, res, next) => {
 }));
 
 import apiRoutes from './api/routes.js';
-import externalRoutes from './api/external.js';
+// externalRoutes imported above
 import publicRoutes from './api/public.js';
 import apiKeysRoutes from './routes/apiKeys.js';
 import authRoutes from './routes/auth.js';
@@ -128,14 +137,6 @@ app.use(betaAuthMiddleware);
 app.use('/api', authRoutes);
 app.use('/api/user', userRoutes);
 app.use('/api/v1', apiRoutes);
-
-// --- EXTERNAL API (WIDGETS) ---
-// We allow all origins for the external API so the widget can be embedded anywhere.
-app.use('/api/external', cors({
-    origin: '*',
-    credentials: false // External API doesn't use cookies
-}), externalRoutes);
-
 app.use('/api/public', publicRoutes);
 app.use('/api/keys', apiKeysRoutes);
 

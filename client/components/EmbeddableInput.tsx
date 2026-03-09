@@ -260,12 +260,17 @@ export const EmbeddableInput: React.FC<EmbeddableInputProps> = ({ config }) => {
 
             // 2. Submit to API
             const apiUrl = getBackendUrl();
+            const headers: Record<string, string> = {
+                'Content-Type': 'application/json'
+            };
+
+            if (config.apiKey) {
+                headers['Authorization'] = `Bearer ${config.apiKey}`;
+            }
+
             const response = await fetch(`${apiUrl}/api/external/audit`, {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${config.apiKey || 'YOUR_PUBLIC_KEY'}`
-                },
+                headers,
                 body: JSON.stringify({ inputs: processedInputs })
             });
 
@@ -295,9 +300,9 @@ export const EmbeddableInput: React.FC<EmbeddableInputProps> = ({ config }) => {
         const checkStatus = async () => {
             try {
                 const response = await fetch(`${apiUrl}/api/external/audit/${pollingJobId}`, {
-                    headers: {
-                        'Authorization': `Bearer ${config.apiKey || 'YOUR_PUBLIC_KEY'}`
-                    }
+                    headers: config.apiKey ? {
+                        'Authorization': `Bearer ${config.apiKey}`
+                    } : {}
                 });
 
                 if (!response.ok) {
