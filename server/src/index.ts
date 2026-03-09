@@ -128,7 +128,14 @@ app.use(betaAuthMiddleware);
 app.use('/api', authRoutes);
 app.use('/api/user', userRoutes);
 app.use('/api/v1', apiRoutes);
-app.use('/api/external', externalRoutes);
+
+// --- EXTERNAL API (WIDGETS) ---
+// We allow all origins for the external API so the widget can be embedded anywhere.
+app.use('/api/external', cors({
+    origin: '*',
+    credentials: false // External API doesn't use cookies
+}), externalRoutes);
+
 app.use('/api/public', publicRoutes);
 app.use('/api/keys', apiKeysRoutes);
 

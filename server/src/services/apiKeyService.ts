@@ -18,7 +18,7 @@ export class ApiKeyService {
     static async validateKey(keyValue: string, origin: string | undefined): Promise<ApiKeyDetails | null> {
         if (!keyValue) return null;
 
-        // Remove 'Bearer ' prefix if present
+        // Support both 'Bearer <key>' and direct '<key>' (for x-api-key use)
         const cleanKey = keyValue.replace('Bearer ', '').trim();
 
         try {

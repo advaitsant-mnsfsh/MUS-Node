@@ -141,10 +141,13 @@ export const APIKeysPage: React.FC = () => {
                                         Copy this code snippet and paste it into your website's HTML, just before the closing &lt;/body&gt; tag:
                                     </p>
                                     <div className="bg-slate-900 text-slate-100 p-4 rounded-lg font-mono text-sm overflow-x-auto">
-                                        <code>{`<script src="https://widget.myuxscore.com/widget.js"></script>
+                                        <code>{`<script src="https://api.myuxscore.com/widget.js"></script>
 <script>
-  UXWidget.init({
-    apiKey: 'YOUR_API_KEY_HERE'
+  window.addEventListener('load', function() {
+    AuditWidget.mount({
+      container: '#audit-widget-root',
+      apiKey: 'YOUR_API_KEY_HERE'
+    });
   });
 </script>`}</code>
                                     </div>
