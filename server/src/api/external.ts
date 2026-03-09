@@ -42,7 +42,7 @@ router.post('/audit', async (req, res) => {
             frontendBaseUrl = origin;
         }
 
-        const redirectUrl = `${frontendBaseUrl}/report/${job.id}`;
+        const redirectUrl = `${frontendBaseUrl}/shared/${job.id}`;
 
         // 4. Process Job Directly (Bypass Queue for No-Redis setup)
         // Fire and forget, similar to main flow
@@ -96,7 +96,7 @@ router.get('/audit/:jobId', async (req, res) => {
             frontendBaseUrl = origin;
         }
 
-        const resultUrl = job.result_url || `${frontendBaseUrl}/report/${job.id}`;
+        const resultUrl = job.result_url || `${frontendBaseUrl}/shared/${job.id}`;
 
         res.json({
             jobId: job.id,

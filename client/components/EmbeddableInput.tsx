@@ -177,6 +177,7 @@ export const EmbeddableInput: React.FC<EmbeddableInputProps> = ({ config }) => {
     const [error, setError] = useState<string | null>(null);
     const [shareableLink, setShareableLink] = useState<string | null>(null);
     const [showResult, setShowResult] = useState(false);
+    const [isCopied, setIsCopied] = useState(false);
 
     // Send height to parent for iframe auto-resize
     useEffect(() => {
@@ -533,7 +534,41 @@ export const EmbeddableInput: React.FC<EmbeddableInputProps> = ({ config }) => {
                             />
                             <button
                                 onClick={() => {
-                                    navigator.clipboard.writeText(shareableLink);
+                                    const copyToClipboard = async (text: string) => {
+                                        try {
+                                            if (navigator.clipboard) {
+                                                await navigator.clipboard.writeText(text);
+                                                return true;
+                                            }
+                                        } catch (err) {
+                                            console.warn('Clipboard API failed:', err);
+                                        }
+
+                                        // Fallback
+                                        const textArea = document.createElement("textarea");
+                                        textArea.value = text;
+                                        textArea.style.position = "fixed";
+                                        textArea.style.left = "-9999px";
+                                        textArea.style.top = "-9999px";
+                                        document.body.appendChild(textArea);
+                                        textArea.focus();
+                                        textArea.select();
+                                        try {
+                                            const successful = document.execCommand('copy');
+                                            document.body.removeChild(textArea);
+                                            return successful;
+                                        } catch (err) {
+                                            document.body.removeChild(textArea);
+                                            return false;
+                                        }
+                                    };
+
+                                    copyToClipboard(shareableLink).then(success => {
+                                        if (success) {
+                                            setIsCopied(true);
+                                            setTimeout(() => setIsCopied(false), 2000);
+                                        }
+                                    });
                                 }}
                                 style={{
                                     background: copyBtnColor,
@@ -544,10 +579,11 @@ export const EmbeddableInput: React.FC<EmbeddableInputProps> = ({ config }) => {
                                     cursor: 'pointer',
                                     display: 'flex',
                                     alignItems: 'center',
-                                    justifyContent: 'center'
+                                    justifyContent: 'center',
+                                    minWidth: '40px'
                                 }}
                             >
-                                <Copy size={16} />
+                                {isCopied ? <span style={{ fontSize: '10px', fontWeight: 'bold' }}>COPIED!</span> : <Copy size={16} />}
                             </button>
                         </div>
 
