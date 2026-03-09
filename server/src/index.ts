@@ -47,6 +47,9 @@ app.get("/health", (req: any, res: any) => {
 });
 
 app.use(compression());
+app.use(express.json({ limit: '150mb' }));
+app.use(express.urlencoded({ limit: '150mb', extended: true }));
+
 // --- EXTERNAL API (WIDGETS) ---
 // We allow all origins for the external API so the widget can be embedded anywhere.
 // This must be BEFORE the global restrictive CORS middleware.
@@ -81,8 +84,6 @@ app.use(cors({
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS', 'HEAD'],
     allowedHeaders: ['Content-Type', 'Authorization', 'x-api-key', 'x-admin-password', 'Cache-Control', 'Pragma', 'Accept', 'Cookie']
 }));
-app.use(express.json({ limit: '150mb' }));
-app.use(express.urlencoded({ limit: '150mb', extended: true }));
 
 // --- 3. BUSINESS ROUTES ---
 const uploadsDir = path.resolve(process.cwd(), 'uploads');
