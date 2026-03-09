@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import { isBetaSubdomain, hasBetaAccess } from '../../lib/betaUtils';
 import { BetaAccessPage } from './BetaAccessPage';
 
@@ -7,6 +8,7 @@ interface BetaGuardProps {
 }
 
 export const BetaGuard: React.FC<BetaGuardProps> = ({ children }) => {
+    const location = useLocation();
     const [isAuthorized, setIsAuthorized] = useState<boolean | null>(null);
     const [isBeta, setIsBeta] = useState<boolean>(false);
 
@@ -14,12 +16,17 @@ export const BetaGuard: React.FC<BetaGuardProps> = ({ children }) => {
         const betaStatus = isBetaSubdomain();
         setIsBeta(betaStatus);
 
-        if (betaStatus) {
+        // Public Route Exemptions
+        const isPublicRoute =
+            location.pathname.startsWith('/shared/') ||
+            location.pathname === '/docs/widget';
+
+        if (betaStatus && !isPublicRoute) {
             setIsAuthorized(hasBetaAccess());
         } else {
-            setIsAuthorized(true); // Not a beta subdomain, access granted
+            setIsAuthorized(true); // Public route or not a beta subdomain
         }
-    }, []);
+    }, [location.pathname]);
 
     // While checking initial state
     if (isAuthorized === null) {

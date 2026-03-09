@@ -116,8 +116,14 @@ const betaAuthMiddleware = (req: any, res: any, next: any) => {
     const host = req.get('host') || '';
     const isBetaSubdomain = host.startsWith('beta.');
 
-    // Skip protection for verification and waitlist endpoints
-    if (req.path === '/api/public/verify-beta' || req.path === '/api/public/beta-waitlist') {
+    // Skip protection for verification, waitlist, and public viewer endpoints
+    const publicPaths = [
+        '/api/public/verify-beta',
+        '/api/public/beta-waitlist',
+        '/docs/widget'
+    ];
+
+    if (publicPaths.includes(req.path) || req.path.startsWith('/shared/')) {
         return next();
     }
 
