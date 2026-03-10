@@ -1,4 +1,5 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 import { ArrowUpRight } from 'lucide-react';
 
 /**
@@ -27,12 +28,12 @@ const PricingFooter = () => {
                     <div className="flex flex-col gap-6">
                         <h4 className="text-[16px] font-semibold text-black">Product</h4>
                         <ul className="space-y-4 text-[14px] font-normal text-[#666666]">
-                            <li><a href="#" className="hover:text-black transition-colors">Assess Now</a></li>
-                            <li><a href="#" className="hover:text-black transition-colors">My Reports</a></li>
+                            <li><Link to="/" className="hover:text-black transition-colors">Assess Now</Link></li>
+                            <li><Link to="/dashboard" className="hover:text-black transition-colors">My Reports</Link></li>
                             <li>
-                                <a href="#" className="hover:text-black transition-colors border-black/30 pb-0.5">
+                                <Link to="/feedback" className="hover:text-black transition-colors border-black/30 pb-0.5">
                                     Feedback
-                                </a>
+                                </Link>
                             </li>
                         </ul>
                     </div>
@@ -41,9 +42,9 @@ const PricingFooter = () => {
                     <div className="flex flex-col gap-6">
                         <h4 className="text-[16px] font-semibold text-black">Resources</h4>
                         <ul className="space-y-4 text-[14px] font-normal text-[#666666]">
-                            <li><a href="#" className="hover:text-black transition-colors">About</a></li>
-                            <li><a href="#" className="hover:text-black transition-colors">API Keys</a></li>
-                            <li><a href="#" className="hover:text-black transition-colors">Pricing</a></li>
+                            <li><Link to="/about" className="hover:text-black transition-colors">About</Link></li>
+                            <li><Link to="/api-keys" className="hover:text-black transition-colors">API Keys</Link></li>
+                            <li><Link to="/pricing" className="hover:text-black transition-colors">Pricing</Link></li>
                         </ul>
                     </div>
 
@@ -52,13 +53,23 @@ const PricingFooter = () => {
                         <h4 className="text-[16px] font-semibold text-black">Reach</h4>
                         <ul className="space-y-4 text-[14px] font-normal text-[#666666]">
                             <li className="flex items-center gap-1.5 group">
-                                <a href="#" className="hover:text-black transition-colors flex items-center gap-1">
+                                <a
+                                    href="https://www.linkedin.com/company/my-ux-score/"
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="hover:text-black transition-colors flex items-center gap-1"
+                                >
                                     <ArrowUpRight size={14} className="text-[#666] group-hover:text-black" />
                                     LinkedIn
                                 </a>
                             </li>
                             <li className="flex items-center gap-1.5 group">
-                                <a href="#" className="hover:text-black transition-colors flex items-center gap-1">
+                                <a
+                                    href="https://www.youtube.com/@MyUXScore"
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="hover:text-black transition-colors flex items-center gap-1"
+                                >
                                     <ArrowUpRight size={14} className="text-[#666] group-hover:text-black" />
                                     YouTube
                                 </a>

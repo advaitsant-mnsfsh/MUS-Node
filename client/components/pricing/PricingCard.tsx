@@ -1,5 +1,6 @@
 import React from 'react';
 import { Check } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 interface PricingCardProps {
     title: string;
@@ -23,6 +24,16 @@ const PricingCard: React.FC<PricingCardProps> = ({
     isHighlighted = false,
     badge = ""
 }) => {
+    const navigate = useNavigate();
+
+    const handleButtonClick = () => {
+        if (title === "Scale") {
+            navigate('/feedback');
+        } else {
+            navigate('/');
+        }
+    };
+
     return (
         <div className={`
       relative flex flex-col p-9 gap-6 bg-white border-[3.28px] border-black transition-all h-full
@@ -54,11 +65,13 @@ const PricingCard: React.FC<PricingCardProps> = ({
                 </p>
             </div>
 
-            <button className={`
+            <button
+                onClick={handleButtonClick}
+                className={`
         w-full h-12 flex items-center justify-center gap-2.5 py-4 px-5 text-base font-bold border-2 border-black transition-transform active:scale-95
         ${isHighlighted
-                    ? 'bg-[#F4D067] shadow-[4px_4px_0px_0px_#000]'
-                    : 'bg-white hover:bg-gray-50'}
+                        ? 'bg-[#F4D067] shadow-[4px_4px_0px_0px_#000]'
+                        : 'bg-white hover:bg-gray-50'}
       `}>
                 {buttonText}
             </button>
