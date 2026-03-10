@@ -139,6 +139,7 @@
             iframe.style.backgroundColor = 'transparent';
             iframe.setAttribute('allowtransparency', 'true');
             iframe.setAttribute('scrolling', 'no');
+            iframe.setAttribute('allow', 'clipboard-write');
             iframe.title = 'Audit Widget';
 
             // Auto-resize iframe based on content height

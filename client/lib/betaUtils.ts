@@ -8,5 +8,8 @@ export const isBetaSubdomain = () => {
 };
 
 export const hasBetaAccess = () => {
-    return document.cookie.split(';').some((item) => item.trim().startsWith('beta_authorized='));
+    // Check both cookie and sessionStorage for robustness within a single session
+    const hasCookie = document.cookie.split(';').some((item) => item.trim().startsWith('beta_authorized='));
+    const hasSession = sessionStorage.getItem('beta_authorized') === 'true';
+    return hasCookie || hasSession;
 };

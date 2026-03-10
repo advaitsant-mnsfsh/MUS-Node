@@ -11,10 +11,11 @@ const router = express.Router();
 router.post('/audit', async (req, res) => {
     try {
         const authHeader = req.headers.authorization;
+        const apiKeyHeader = req.headers['x-api-key'] as string;
         const origin = req.headers.origin;
 
-        // 1. Validate API Key
-        const keyDetails = await ApiKeyService.validateKey(authHeader || '', origin);
+        // 1. Validate API Key (Check both headers)
+        const keyDetails = await ApiKeyService.validateKey(authHeader || apiKeyHeader || '', origin);
         if (!keyDetails) {
             return res.status(401).json({ message: 'Unauthorized: Invalid API Key or Origin not allowed.' });
         }
@@ -41,7 +42,7 @@ router.post('/audit', async (req, res) => {
             frontendBaseUrl = origin;
         }
 
-        const redirectUrl = `${frontendBaseUrl}/report/${job.id}`;
+        const redirectUrl = `${frontendBaseUrl}/shared/${job.id}`;
 
         // 4. Process Job Directly (Bypass Queue for No-Redis setup)
         // Fire and forget, similar to main flow
@@ -66,11 +67,12 @@ router.post('/audit', async (req, res) => {
 router.get('/audit/:jobId', async (req, res) => {
     try {
         const authHeader = req.headers.authorization;
+        const apiKeyHeader = req.headers['x-api-key'] as string;
         const origin = req.headers.origin;
         const { jobId } = req.params;
 
         // 1. Validate API Key (Security)
-        const keyDetails = await ApiKeyService.validateKey(authHeader || '', origin);
+        const keyDetails = await ApiKeyService.validateKey(authHeader || apiKeyHeader || '', origin);
         if (!keyDetails) {
             return res.status(401).json({ message: 'Unauthorized: Invalid API Key or Origin not allowed.' });
         }
@@ -94,7 +96,7 @@ router.get('/audit/:jobId', async (req, res) => {
             frontendBaseUrl = origin;
         }
 
-        const resultUrl = job.result_url || `${frontendBaseUrl}/report/${job.id}`;
+        const resultUrl = job.result_url || `${frontendBaseUrl}/shared/${job.id}`;
 
         res.json({
             jobId: job.id,

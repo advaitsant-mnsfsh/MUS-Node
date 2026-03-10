@@ -7,6 +7,7 @@ import fs from 'fs';
 import { fileURLToPath } from 'url';
 import { dirname } from 'path';
 import { execSync } from 'child_process';
+import externalRoutes from './api/external.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -46,6 +47,17 @@ app.get("/health", (req: any, res: any) => {
 });
 
 app.use(compression());
+app.use(express.json({ limit: '150mb' }));
+app.use(express.urlencoded({ limit: '150mb', extended: true }));
+
+// --- EXTERNAL API (WIDGETS) ---
+// We allow all origins for the external API so the widget can be embedded anywhere.
+// This must be BEFORE the global restrictive CORS middleware.
+app.use('/api/external', cors({
+    origin: '*',
+    credentials: false // External API doesn't use cookies
+}), externalRoutes);
+
 app.use(cors({
     origin: function (origin, callback) {
         const allowedOrigins = [
@@ -61,7 +73,7 @@ app.use(cors({
         // Railway's proxy or healthcheck sometimes injects its own origin. 
         // Returning true natively handles `Vary: Origin` and correctly signs the preflight 
         // with the requested origin *only* if it is valid, avoiding CDN caching issues.
-        if (!origin || allowedOrigins.includes(origin) || origin.endsWith('.railway.app') || origin.endsWith('.vercel.app')) {
+        if (!origin || allowedOrigins.includes(origin) || origin.endsWith('.railway.app') || origin.endsWith('.vercel.app') || /^http:\/\/192\.168\.\d+\.\d+(:\d+)?$/.test(origin) || /^http:\/\/10\.\d+\.\d+\.\d+(:\d+)?$/.test(origin)) {
             callback(null, true);
         } else {
             console.warn(`[CORS] Blocked unrecognized origin: ${origin}`);
@@ -72,8 +84,6 @@ app.use(cors({
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS', 'HEAD'],
     allowedHeaders: ['Content-Type', 'Authorization', 'x-api-key', 'x-admin-password', 'Cache-Control', 'Pragma', 'Accept', 'Cookie']
 }));
-app.use(express.json({ limit: '150mb' }));
-app.use(express.urlencoded({ limit: '150mb', extended: true }));
 
 // --- 3. BUSINESS ROUTES ---
 const uploadsDir = path.resolve(process.cwd(), 'uploads');
@@ -96,7 +106,6 @@ app.use('/uploads', (req, res, next) => {
 }));
 
 import apiRoutes from './api/routes.js';
-import externalRoutes from './api/external.js';
 import publicRoutes from './api/public.js';
 import apiKeysRoutes from './routes/apiKeys.js';
 import authRoutes from './routes/auth.js';
@@ -106,8 +115,14 @@ const betaAuthMiddleware = (req: any, res: any, next: any) => {
     const host = req.get('host') || '';
     const isBetaSubdomain = host.startsWith('beta.');
 
-    // Skip protection for verification and waitlist endpoints
-    if (req.path === '/api/public/verify-beta' || req.path === '/api/public/beta-waitlist') {
+    // Skip protection for verification, waitlist, and public viewer endpoints
+    const publicPaths = [
+        '/api/public/verify-beta',
+        '/api/public/beta-waitlist',
+        '/docs/widget'
+    ];
+
+    if (publicPaths.includes(req.path) || req.path.startsWith('/shared/')) {
         return next();
     }
 
@@ -128,7 +143,6 @@ app.use(betaAuthMiddleware);
 app.use('/api', authRoutes);
 app.use('/api/user', userRoutes);
 app.use('/api/v1', apiRoutes);
-app.use('/api/external', externalRoutes);
 app.use('/api/public', publicRoutes);
 app.use('/api/keys', apiKeysRoutes);
 
