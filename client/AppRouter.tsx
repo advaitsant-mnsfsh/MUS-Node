@@ -12,6 +12,7 @@ import { LoadingScreen } from './components/LoadingScreen';
 import { DataLoadingScreen } from './components/DataLoadingScreen';
 import { ReportContainer } from './components/report/ReportContainer';
 import DocsWidgetPage from './pages/DocsWidgetPage';
+import LegalPage from './pages/LegalPage';
 
 import { Logo } from './components/Logo';
 import { AdminAuditDashboard } from './pages/AdminAuditDashboard';
@@ -216,6 +217,7 @@ function AppWithRouting() {
 
                     <Route path="/shared/:auditId" element={<SharedAuditView />} />
                     <Route path="/embed" element={<EmbedPage />} />
+                    <Route path="/legal" element={<LegalPage />} />
                     <Route path="/dashb204727-295257950-9257507594824597" element={<AdminAuditDashboard />} />
                 </Routes>
             </BetaGuard>

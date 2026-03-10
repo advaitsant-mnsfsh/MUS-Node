@@ -1,4 +1,5 @@
 import { db } from '../lib/db.js';
+// Reliability Fixes: Concurrency=4, Timeout=240s, Retry=3
 import { auditJobs } from '../db/schema.js';
 import { SecretService } from './secretService.js';
 import { JobService } from './jobService.js';
@@ -64,41 +65,82 @@ export class JobProcessor {
                 const primaryInput = inputs.find((i: any) => i.role === 'primary') || inputs[0];
                 const competitorInput = inputs.find((i: any) => i.role === 'competitor') || inputs[1];
 
-                if (!primaryInput?.url || !competitorInput?.url) {
-                    throw new Error("Competitor audit requires two URLs (primary and competitor).");
+                if (!primaryInput || !competitorInput) {
+                    throw new Error("Competitor audit requires two inputs (primary and competitor).");
                 }
 
-                finalUrl = primaryInput.url;
+                // Allow URLs or Uploads
+                if (!((primaryInput.url && primaryInput.type === 'url') || primaryInput.type === 'upload') ||
+                    !((competitorInput.url && competitorInput.type === 'url') || competitorInput.type === 'upload')) {
+                    throw new Error("Competitor audit requires two valid inputs (URLs or uploaded screenshots).");
+                }
 
-                // A. Scrape Primary
-                console.log(`[JobProcessor] Scraping Primary: ${primaryInput.url}`);
-                await JobService.updateProgress(jobId, `Scraping Primary Site: ${primaryInput.url}...`);
-                const primaryScrape = await performScrape(primaryInput.url, false, true, browserEndpoint);
+                finalUrl = primaryInput.url || 'Uploaded Image (Primary)';
+                const competitorUrl = competitorInput.url || 'Uploaded Image (Competitor)';
 
-                // B. Scrape Competitor
-                console.log(`[JobProcessor] Scraping Competitor: ${competitorInput.url}`);
-                await JobService.updateProgress(jobId, `Scraping Competitor Site: ${competitorInput.url}...`);
-                const competitorScrape = await performScrape(competitorInput.url, false, true, browserEndpoint);
+                let primaryScrape = { screenshot: { data: '' }, liveText: `Content from: ${finalUrl}` };
+                let competitorScrape = { screenshot: { data: '' }, liveText: `Content from: ${competitorUrl}` };
+
+                // Track if we need to release the browser early depending on input types
+                const needsBrowser = primaryInput.type === 'url' || competitorInput.type === 'url';
+
+                // A. Process Primary
+                if (primaryInput.type === 'url') {
+                    console.log(`[JobProcessor] Scraping Primary: ${primaryInput.url}`);
+                    await JobService.updateProgress(jobId, `Scraping Primary Site: ${primaryInput.url}...`);
+                    primaryScrape = await performScrape(primaryInput.url, false, true, browserEndpoint);
+                } else if (primaryInput.type === 'upload') {
+                    console.log(`[JobProcessor] Processing Uploaded Primary Image`);
+                    await JobService.updateProgress(jobId, 'Processing uploaded Primary image...');
+                    const base64 = primaryInput.filesData?.[0] || primaryInput.fileData;
+                    if (!base64) throw new Error("No file data provided for primary input");
+                    primaryScrape.screenshot.data = base64;
+
+                    // Save to DB
+                    const { ImageService } = await import('./imageService.js');
+                    await ImageService.saveImage(jobId, 'primary_upload.png', base64);
+                }
+
+                // B. Process Competitor
+                if (competitorInput.type === 'url') {
+                    console.log(`[JobProcessor] Scraping Competitor: ${competitorInput.url}`);
+                    await JobService.updateProgress(jobId, `Scraping Competitor Site: ${competitorInput.url}...`);
+                    competitorScrape = await performScrape(competitorInput.url, false, true, browserEndpoint);
+                } else if (competitorInput.type === 'upload') {
+                    console.log(`[JobProcessor] Processing Uploaded Competitor Image`);
+                    await JobService.updateProgress(jobId, 'Processing uploaded Competitor image...');
+                    const base64 = competitorInput.filesData?.[0] || competitorInput.fileData;
+                    if (!base64) throw new Error("No file data provided for competitor input");
+                    competitorScrape.screenshot.data = base64;
+
+                    // Save to DB
+                    const { ImageService } = await import('./imageService.js');
+                    await ImageService.saveImage(jobId, 'competitor_upload.png', base64);
+                }
+
                 finalScreenshots = [primaryScrape.screenshot, competitorScrape.screenshot];
 
                 // RELEASE BROWSER - Scrape phase complete
-                if (onBrowserFinished) {
+                if (onBrowserFinished && needsBrowser) {
                     console.log(`[JobProcessor] [${jobId}] Browser tasks complete. Signaling early release.`);
+                    await onBrowserFinished();
+                } else if (onBrowserFinished) {
+                    console.log(`[JobProcessor] [${jobId}] No URLs to scrape. Signaling early browser release.`);
                     await onBrowserFinished();
                 }
 
                 // C. Analyze
                 console.log(`[JobProcessor] Running Competitor Analysis...`);
-                await JobService.updateProgress(jobId, 'Analyzed content acquired. Starting comparison...');
+                await JobService.updateProgress(jobId, 'Processed content acquired. Starting comparison...');
 
                 const analysisBody = {
-                    primaryUrl: primaryInput.url,
+                    primaryUrl: finalUrl,
                     primaryScreenshotsBase64: [primaryScrape.screenshot.data],
                     primaryLiveText: primaryScrape.liveText,
-                    competitorUrl: competitorInput.url,
+                    competitorUrl: competitorUrl,
                     competitorScreenshotsBase64: [competitorScrape.screenshot.data],
                     competitorLiveText: competitorScrape.liveText,
-                    screenshotMimeType: 'image/jpeg'
+                    screenshotMimeType: 'image/jpeg' // Let Gemini figure out if it's png or jpeg
                 };
 
                 const result = await performAnalysis(apiKeys, 'analyze-competitor', analysisBody);
@@ -234,7 +276,7 @@ export class JobProcessor {
                         return result;
                     } catch (error: any) {
                         console.error(`[JobProcessor] ❌ EXPERT FAILED: ${mode}:`, error.message);
-
+                        // Explicitly log if it was a timeout
                         const errorMessage = error.message.includes('timed out')
                             ? `TIMEOUT: ${expertName} took too long (>240s).`
                             : `⚠️ ${expertName} failed: ${error.message.substring(0, 100)}`;
@@ -245,7 +287,7 @@ export class JobProcessor {
                 };
 
                 const results: any[] = [];
-                const concurrency = 3;
+                const concurrency = 4; // User requested concurrency boost
 
                 for (let i = 0; i < modes.length; i += concurrency) {
                     const batch = modes.slice(i, i + concurrency);
@@ -259,82 +301,14 @@ export class JobProcessor {
                 });
 
                 // --- D. CONTEXTUAL IMPACT ANALYSIS ---
+                // [DISABLED] Per user request (Feature Removal) - 2026-02-18
+                console.log(`[JobProcessor] Skipping Contextual Impact Analysis (Disabled).`);
+
+                /* Feature Removed for Reliability/Speed
                 if (report['Strategy Audit expert']) {
-                    console.log(`[JobProcessor] Running Contextual Impact Analysis...`);
-                    await JobService.updateProgress(jobId, 'Analyzing issues for strategic impact...');
-                    try {
-                        // Helper to extract critical issues (Score <= 5) from any audit section
-                        const extractCriticalIssues = (auditData: any, source: string): any[] => {
-                            if (!auditData) return [];
-                            const issues: any[] = [];
-                            // Iterate over keys that might be sections (objects with 'Parameters' array)
-                            Object.keys(auditData).forEach(key => {
-                                const section = auditData[key];
-                                if (section && Array.isArray(section.Parameters)) {
-                                    section.Parameters.forEach((param: any) => {
-                                        // Capture issues with Low Score (<=5) OR High Impact
-                                        if ((typeof param.Score === 'number' && param.Score <= 5) ||
-                                            (param.ImpactLevel === 'Critical' || param.ImpactLevel === 'High')) {
-                                            issues.push({
-                                                Issue: param.ParameterName || 'Unknown Issue',
-                                                Score: param.Score,
-                                                ImpactLevel: param.ImpactLevel || 'High',
-                                                Analysis: param.Analysis || param.Description,
-                                                Recommendation: param.Recommendation,
-                                                Citations: param.Citations,
-                                                Confidence: param.Confidence,
-                                                KeyFinding: param.KeyFinding,
-                                                source: source
-                                            });
-                                        }
-                                    });
-                                }
-                            });
-                            return issues;
-                        };
-
-                        const allIssues = [
-                            ...extractCriticalIssues(report['UX Audit expert'], 'UX Audit'),
-                            ...extractCriticalIssues(report['Product Audit expert'], 'Product Audit'),
-                            ...extractCriticalIssues(report['Visual Audit expert'], 'Visual Design'),
-                            ...extractCriticalIssues(report['Accessibility Audit expert'], 'Accessibility Audit')
-                        ];
-
-                        if (allIssues.length > 0) {
-                            const strategyAudit = report['Strategy Audit expert'];
-                            const strategyContext = `
-- Website Purpose: ${strategyAudit.PurposeAnalysis?.PrimaryPurpose?.join(', ')}
-- Key Objectives: ${strategyAudit.PurposeAnalysis?.KeyObjectives}
-- Target Audience: ${strategyAudit.TargetAudience?.Primary?.join(', ')} (${strategyAudit.TargetAudience?.DemographicsPsychographics})
-- Website Type: ${strategyAudit.TargetAudience?.WebsiteType}`;
-
-                            const systemInstruction = `You are a Chief Product Strategist. Your task is to analyze a list of critical issues identified for a website, considering the site's strategic context. Re-rank these issues based on which ones have the most significant impact on the website's primary purpose and ability to serve its target audience.`;
-                            const contents = `
-### Strategic Context ###
-${strategyContext}
-### Your Task ###
-1. Review the strategic context and each issue in the provided JSON list.
-2. Select the TOP 5 issues that represent the most critical barriers to the website's success.
-3. Return ONLY these 5 issues, sorted from most to least critical.
-4. You MUST return the issues in the exact same JSON structure as they were provided, including all original fields.
-5. EXCLUSION CRITERIA: Do NOT select any issues primarily related to "Screen Reader Compatibility", "Missing Alt Text", or "Missing Form Labels".
-### Critical Issues List (JSON) ###
-${JSON.stringify(allIssues, null, 2)}`;
-
-                            const schemas = getSchemas();
-                            const rankResult = await callApi([primaryKey], systemInstruction, contents, {
-                                type: Type.ARRAY,
-                                items: schemas.criticalIssueSchema
-                            });
-
-                            report['Top5ContextualIssues'] = rankResult;
-                            await JobService.updateProgress(jobId, '✓ Contextual Analysis complete.', { 'Top5ContextualIssues': rankResult });
-                        }
-                    } catch (e: any) {
-                        console.error("[JobProcessor] Contextual Rank Failed:", e);
-                        await JobService.updateProgress(jobId, '\u26a0\ufe0f Contextual Analysis skipped due to error.');
-                    }
+                     ... (Code Removed) ...
                 }
+                */
             }
 
             // --- FINALIZATION ---

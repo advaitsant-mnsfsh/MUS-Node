@@ -175,9 +175,7 @@ export const BetaAccessPage: React.FC<BetaAccessPageProps> = ({ onAuthorized }) 
                     <span>Version 0.4.2-BETA</span>
                 </div>
                 <div className="flex gap-8">
-                    <a className="hover:text-black transition-colors" href="#">Security</a>
-                    <a className="hover:text-black transition-colors" href="#">Privacy</a>
-                    <a className="hover:text-black transition-colors" href="#">Terms</a>
+                    <a href="/legal" className="hover:text-black transition-colors uppercase tracking-[0.2em]">Security, Privacy &amp; Terms</a>
                 </div>
             </footer>
 
@@ -237,6 +235,7 @@ export const BetaAccessPage: React.FC<BetaAccessPageProps> = ({ onAuthorized }) 
                     </div>
                 </div>
             )}
+
         </div>
     );
 };

@@ -16,7 +16,7 @@ export const monitorJobPoll = (jobId: string, callbacks: StreamCallbacks): (() =
         if (!isPolling) return;
 
         try {
-            const { authenticatedFetch } = await import('../lib/authenticatedFetch');
+            const { authenticatedFetch } = await import('../lib/a-+-+--------------------------------------------------------------uthenticatedFetch');
             const { getBackendUrl } = await import('./config');
 
             const statusUrl = `${getBackendUrl()}/api/v1/audit?mode=stream-job&jobId=${jobId}`;

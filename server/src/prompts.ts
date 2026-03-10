@@ -494,6 +494,18 @@ export const getSchemas = () => {
         ]
     };
 
+    const comparisonItemSchema = {
+        type: Type.OBJECT,
+        properties: {
+            Parameter: { type: Type.STRING },
+            PrimaryScore: { type: Type.INTEGER },
+            CompetitorScore: { type: Type.INTEGER },
+            Analysis: { type: Type.STRING },
+            Winner: { type: Type.STRING }
+        },
+        required: ['Parameter', 'PrimaryScore', 'CompetitorScore', 'Analysis', 'Winner']
+    };
+
     const competitorAuditSchema = {
         type: Type.OBJECT,
         properties: {
@@ -537,73 +549,23 @@ export const getSchemas = () => {
             // Comparisons - REORDERED: Strategy & Accessibility First
             StrategyComparison: {
                 type: Type.ARRAY,
-                items: {
-                    type: Type.OBJECT,
-                    properties: {
-                        Parameter: { type: Type.STRING },
-                        PrimaryScore: { type: Type.INTEGER },
-                        CompetitorScore: { type: Type.INTEGER },
-                        Analysis: { type: Type.STRING },
-                        Winner: { type: Type.STRING, enum: ['Primary', 'Competitor', 'Tie'] }
-                    },
-                    required: ['Parameter', 'PrimaryScore', 'CompetitorScore', 'Analysis', 'Winner']
-                }
+                items: comparisonItemSchema
             },
             AccessibilityComparison: {
                 type: Type.ARRAY,
-                items: {
-                    type: Type.OBJECT,
-                    properties: {
-                        Parameter: { type: Type.STRING },
-                        PrimaryScore: { type: Type.INTEGER },
-                        CompetitorScore: { type: Type.INTEGER },
-                        Analysis: { type: Type.STRING },
-                        Winner: { type: Type.STRING, enum: ['Primary', 'Competitor', 'Tie'] }
-                    },
-                    required: ['Parameter', 'PrimaryScore', 'CompetitorScore', 'Analysis', 'Winner']
-                }
+                items: comparisonItemSchema
             },
             UXComparison: {
                 type: Type.ARRAY,
-                items: {
-                    type: Type.OBJECT,
-                    properties: {
-                        Parameter: { type: Type.STRING },
-                        PrimaryScore: { type: Type.INTEGER },
-                        CompetitorScore: { type: Type.INTEGER },
-                        Analysis: { type: Type.STRING },
-                        Winner: { type: Type.STRING, enum: ['Primary', 'Competitor', 'Tie'] }
-                    },
-                    required: ['Parameter', 'PrimaryScore', 'CompetitorScore', 'Analysis', 'Winner']
-                }
+                items: comparisonItemSchema
             },
             ProductComparison: {
                 type: Type.ARRAY,
-                items: {
-                    type: Type.OBJECT,
-                    properties: {
-                        Parameter: { type: Type.STRING },
-                        PrimaryScore: { type: Type.INTEGER },
-                        CompetitorScore: { type: Type.INTEGER },
-                        Analysis: { type: Type.STRING },
-                        Winner: { type: Type.STRING, enum: ['Primary', 'Competitor', 'Tie'] }
-                    },
-                    required: ['Parameter', 'PrimaryScore', 'CompetitorScore', 'Analysis', 'Winner']
-                }
+                items: comparisonItemSchema
             },
             VisualComparison: {
                 type: Type.ARRAY,
-                items: {
-                    type: Type.OBJECT,
-                    properties: {
-                        Parameter: { type: Type.STRING },
-                        PrimaryScore: { type: Type.INTEGER },
-                        CompetitorScore: { type: Type.INTEGER },
-                        Analysis: { type: Type.STRING },
-                        Winner: { type: Type.STRING, enum: ['Primary', 'Competitor', 'Tie'] }
-                    },
-                    required: ['Parameter', 'PrimaryScore', 'CompetitorScore', 'Analysis', 'Winner']
-                }
+                items: comparisonItemSchema
             },
         },
         required: ['ExecutiveSummary', 'CompetitorStrengths', 'PrimaryStrengths', 'Opportunities', 'UXComparison', 'ProductComparison', 'VisualComparison', 'StrategyComparison', 'AccessibilityComparison']
@@ -659,35 +621,30 @@ If evidence is weak, infer conservatively but NEVER omit.
   - **Executive Summary**: A concise 5-6 line summary of the key competitive difference.
   
     1. **Strategic & Accessibility Comparison**:
-       - Strategy: 'DomainClarity', 'PurposeClarity', 'TargetAudienceAlignment', 'TrustSignals', 'MarketPositioning', 'BrandAuthority'
-       - Accessibility: 'WCAG_A_Compliance', 'WCAG_AA_Compliance', 'BestPractices', 'ARIANavigation', 'StructureAndHeadings', 'AlternativeTextQuality', 'KeyboardFlow', 'AriaLiveUsage', 'ColorContrast Ratios', 'ResizableText', 'FocusIndicators', 'LayoutStability'
+       - Strategy: EXACTLY 6 items: 'DomainClarity', 'PurposeClarity', 'TargetAudienceAlignment', 'TrustSignals', 'MarketPositioning', 'BrandAuthority'
+       - Accessibility: EXACTLY 12 items: 'WCAG_A_Compliance', 'WCAG_AA_Compliance', 'BestPractices', 'ARIANavigation', 'StructureAndHeadings', 'AlternativeTextQuality', 'KeyboardFlow', 'AriaLiveUsage', 'ColorContrastRatios', 'ResizableText', 'FocusIndicators', 'LayoutStability'
 
     2. **UXComparison**:
-       - 'VisibilityOfSystemStatus', 'MatchBetweenSystemAndRealWorld', 'UserControlAndFreedom'
-       - 'ConsistencyAndStandards', 'ErrorPrevention', 'RecognitionVsRecall'
-       - 'FlexibilityAndEfficiencyOfUse', 'AestheticAndMinimalistDesign'
-       - 'HelpUsersRecoverFromErrors', 'HelpAndDocumentation'
-       - 'TaskCompletionTime', 'ClickDepth', 'NavigationClarity', 'CognitiveLoad', 'ErrorRate'
-       - 'ScreenReaderCompatibility', 'TouchTargetSize'
+       - EXACTLY 17 items: 'VisibilityOfSystemStatus', 'MatchBetweenSystemAndRealWorld', 'UserControlAndFreedom', 'ConsistencyAndStandards', 'ErrorPrevention', 'RecognitionVsRecall', 'FlexibilityAndEfficiencyOfUse', 'AestheticAndMinimalistDesign', 'HelpUsersRecoverFromErrors', 'HelpAndDocumentation', 'TaskCompletionTime', 'ClickDepth', 'NavigationClarity', 'CognitiveLoad', 'ErrorRate', 'ScreenReaderCompatibility', 'TouchTargetSize'
 
     3. **ProductComparison**:
-       - 'ClearValueProposition', 'OnboardingEffectiveness', 'FeatureDiscoverability', 'MonetizationModelClarity'
-       - 'GamificationIncentives', 'PersonalizationAdaptability', 'FrictionPoints', 'UserFeedbackIteration'
-       - 'CTAClarityPlacement', 'CheckoutPaymentFlow', 'LeadGenerationForms', 'MicrocopyMessaging'
-       - 'PageSpeedAPI_ActualLoadTime_CoreWebVitals'
+       - EXACTLY 13 items: 'ClearValueProposition', 'OnboardingEffectiveness', 'FeatureDiscoverability', 'MonetizationModelClarity', 'GamificationIncentives', 'PersonalizationAdaptability', 'FrictionPoints', 'UserFeedbackIteration', 'CTAClarityPlacement', 'CheckoutPaymentFlow', 'LeadGenerationForms', 'MicrocopyMessaging', 'PageSpeedAPI_ActualLoadTime_CoreWebVitals'
 
     4. **VisualComparison**:
-       - 'ColorPaletteContrast', 'TypographyReadability', 'IconographySymbolism', 'SpacingAlignment'
-       - 'VisualHierarchy', 'ImageryIllustrations', 'AnimationMotionUI', 'WhitespaceMinimalism'
-       - 'MobileOptimization', 'DarkModeTheming'
+       - EXACTLY 10 items: 'ColorPaletteContrast', 'TypographyReadability', 'IconographySymbolism', 'SpacingAlignment', 'VisualHierarchy', 'ImageryIllustrations', 'AnimationMotionUI', 'WhitespaceMinimalism', 'MobileOptimization', 'DarkModeTheming'
 
     *For each parameter, provide a 'PrimaryScore', 'CompetitorScore', a brief 'Analysis' (1 sentence), and declare a 'Winner'.*
 
   - **Competitor Strengths**: You MUST identify exactly 3 specific things the competitor does BETTER.
   - **Primary Strengths**: You MUST identify exactly 3 specific things the Primary site does BETTER.
-  **CRITICAL**: You must complete ALL sections.
+  **CRITICAL PARAMETER LOCK**: You must complete ALL sections and include EVERY single parameter listed above.
+  - StrategyComparison MUST have exactly 6 items.
+  - AccessibilityComparison MUST have exactly 12 items.
+  - UXComparison MUST have exactly 17 items.
+  - ProductComparison MUST have exactly 13 items.
+  - VisualComparison MUST have exactly 10 items.
+  FAILURE TO INCLUDE EXACTLY THESE COUNTS WILL RESULT IN SYSTEM REJECTION.
   - 'CompetitorStrengths', 'PrimaryStrengths', and 'Opportunities' MUST each contain exactly 3 items.
-  - **NO EMPTY ARRAYS**. If you cannot find explicit differences, you MUST INFER them from general UX/UI best practices and the visual comparison.
-  - **VALUE**: These sections are the most important part of the report. Provide specific, actionable insights, not generic advice.
+  - **NO EMPTY ARRAYS**. If you cannot find explicit differences, you MUST INFER them from general UX/UI best practices and the visual comparison. Provide specific, actionable insights, not generic advice.
   - **IMPACT**: For 'Impact', use values like "High", "Critical", or "Strategic".
 `;

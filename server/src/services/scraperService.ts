@@ -28,6 +28,7 @@ export const performScrape = async (url: string, isMobile: boolean, isFirstPage:
             // CRITICAL SAFEGUARD: 
             // In Production (Railway/Vercel), launching local Chrome usually kills the container (OOM).
             // We MUST use a remote browser (Browserless, etc.) unless explicitly overridden.
+            // ADDED: Explicit disable switch for stability
             if ((process.env.NODE_ENV === 'production' && process.env.ALLOW_LOCAL_CHROME !== 'true') || process.env.DISABLE_LOCAL_FALLBACK === 'true') {
                 const hasValue = !!browserEndpoint;
                 const valueLength = browserEndpoint?.length || 0;

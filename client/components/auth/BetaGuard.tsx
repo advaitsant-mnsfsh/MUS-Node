@@ -19,7 +19,8 @@ export const BetaGuard: React.FC<BetaGuardProps> = ({ children }) => {
         // Public Route Exemptions
         const isPublicRoute =
             location.pathname.startsWith('/shared/') ||
-            location.pathname === '/docs/widget';
+            location.pathname === '/docs/widget' ||
+            location.pathname === '/legal';
 
         if (betaStatus && !isPublicRoute) {
             setIsAuthorized(hasBetaAccess());
