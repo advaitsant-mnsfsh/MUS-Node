@@ -255,7 +255,7 @@ export const BetaAccessPage: React.FC<BetaAccessPageProps> = ({ onAuthorized }) 
 
                             <section>
                                 <h3 className="font-black uppercase tracking-tight text-black mb-2">1. Service Overview</h3>
-                                <p>MUS UX Score is an AI-powered tool that analyzes websites and generates UX audit reports. Results are based on automated analysis and are intended to support, not replace, professional UX judgment.</p>
+                                <p>MyUXScore is an AI-powered tool that analyzes websites and generates UX audit reports. Results are based on automated analysis and are intended to support, not replace, professional UX judgment.</p>
                             </section>
 
                             <section>
@@ -280,7 +280,7 @@ export const BetaAccessPage: React.FC<BetaAccessPageProps> = ({ onAuthorized }) 
 
                             <section>
                                 <h3 className="font-black uppercase tracking-tight text-black mb-2">6. Limitation of Liability</h3>
-                                <p>We have built MUS UX Score to be as helpful and reliable as possible. That said, audit reports are AI-generated and may occasionally miss things. We kindly ask that you use the reports as guidance rather than as a final verdict, and we cannot be held responsible for decisions made solely based on them.</p>
+                                <p>We have built MyUXScore to be as helpful and reliable as possible. That said, audit reports are AI-generated and may occasionally miss things. We kindly ask that you use the reports as guidance rather than as a final verdict, and we cannot be held responsible for decisions made solely based on them.</p>
                             </section>
 
                             <section>
@@ -293,7 +293,7 @@ export const BetaAccessPage: React.FC<BetaAccessPageProps> = ({ onAuthorized }) 
                                 <p>For any questions, reach out to us at <span className="font-bold text-black">hello@myuxscore.com</span>.</p>
                             </section>
 
-                            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-400 pt-2">By using MUS UX Score, you acknowledge that you have read and agree to these terms.</p>
+                            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-400 pt-2">By using MyUXScore, you acknowledge that you have read and agree to these terms.</p>
                         </div>
                     </div>
                 </div>
