@@ -15,8 +15,8 @@ const getBaseURL = () => {
     // Priority 2: Local Development Detection
     if (typeof window !== 'undefined') {
         const host = window.location.hostname;
-        if (host === 'localhost' || host === '127.0.0.1' || host.endsWith('.localhost')) {
-            return "http://localhost:8080";
+        if (host === 'localhost' || host === '127.0.0.1' || host.endsWith('.localhost') || /^192\.168\.\d+\.\d+$/.test(host) || /^10\.\d+\.\d+\.\d+$/.test(host)) {
+            return `http://${host}:3000`;
         }
     }
 

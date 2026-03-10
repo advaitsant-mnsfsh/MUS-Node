@@ -9,9 +9,10 @@ export const getBackendUrl = () => {
         const hostname = window.location.hostname;
         const origin = window.location.origin;
 
-        // 1. Check for local development
-        if (hostname === 'localhost' || hostname === '127.0.0.1') {
-            return 'http://localhost:8080';
+        // 1. Check for local development (including local network IPs)
+        if (hostname === 'localhost' || hostname === '127.0.0.1' || /^192\.168\.\d+\.\d+$/.test(hostname) || /^10\.\d+\.\d+\.\d+$/.test(hostname)) {
+            // Use the hostname but point to the server port 8080
+            return `http://${hostname}:8080`;
         }
 
         // 2. Support dynamic Railway environments (e.g., stage-1) by default

@@ -51,7 +51,13 @@ const EditorialCard = ({
     };
 
     // Get score background and shadow based on score (0-100 scale)
-    const getScoreStyle = (score: number) => {
+    const getScoreStyle = (score: number, confidence?: string) => {
+        if (score === 0 || confidence?.toLowerCase() === 'low') {
+            return {
+                bg: 'bg-[#F1F5F9]',
+                shadow: 'shadow-[2px_2px_0px_0px_#CBD5E1]'
+            };
+        }
         const displayScore = Math.round(score * 10);
         if (displayScore >= 80) {
             return {
@@ -73,6 +79,7 @@ const EditorialCard = ({
 
     // Calculate score for display (0-100)
     const displayScore = Math.round(score * 10);
+    const isNA = score === 0 || confidence?.toLowerCase() === 'low';
 
     return (
         <div className={`flex flex-col bg-white border-2 border-black overflow-hidden shadow-[0px_0px_0px_0px_#CAD5E0] duration-200 ${isOpen ? 'ring-0' : ''}`}>
@@ -103,9 +110,11 @@ const EditorialCard = ({
 
 
                     {/* Score Pill (Colored Background Based on Score) */}
-                    <div className={`flex items-center justify-center px-3 py-1.5 text-black min-w-[70px] border-2 border-black ${getScoreStyle(score).bg} ${getScoreStyle(score).shadow}`}>
+                    <div className={`flex items-center justify-center px-3 py-1.5 min-w-[70px] border-2 border-black ${isNA ? 'text-slate-500' : 'text-black'} ${getScoreStyle(score, confidence).bg} ${getScoreStyle(score, confidence).shadow}`}>
                         <span className="text-sm font-bold">
-                            {displayScore}<span className="text-slate-500 text-[10px] ml-0.5">/100</span>
+                            {isNA ? "N/A" : (
+                                <>{displayScore}<span className="text-slate-500 text-[10px] ml-0.5">/100</span></>
+                            )}
                         </span>
                     </div>
 
@@ -216,7 +225,7 @@ export const CriticalIssueCard: React.FC<{ issue: CriticalIssue & { source?: str
 };
 
 export const ScoredParameterCard: React.FC<{ param: ScoredParameter, isPdf?: boolean, auditType?: string }> = ({ param, isPdf, auditType }) => {
-    if (param.Score === 0) return null;
+    // Note: Scores of 0 or Low Confidence indicate "Not Assessed/Unverifiable" by AI and are explicitly un-hidden to show transparency.
 
     return (
         <EditorialCard
