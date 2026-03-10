@@ -596,7 +596,6 @@ router.get('/admin/beta-enquiries', async (req, res) => {
         res.status(500).json({ error: e.message });
     }
 });
-
 // POST /api/v1/leads
 router.post('/leads', async (req, res) => {
     try {

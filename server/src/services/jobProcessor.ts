@@ -65,41 +65,82 @@ export class JobProcessor {
                 const primaryInput = inputs.find((i: any) => i.role === 'primary') || inputs[0];
                 const competitorInput = inputs.find((i: any) => i.role === 'competitor') || inputs[1];
 
-                if (!primaryInput?.url || !competitorInput?.url) {
-                    throw new Error("Competitor audit requires two URLs (primary and competitor).");
+                if (!primaryInput || !competitorInput) {
+                    throw new Error("Competitor audit requires two inputs (primary and competitor).");
                 }
 
-                finalUrl = primaryInput.url;
+                // Allow URLs or Uploads
+                if (!((primaryInput.url && primaryInput.type === 'url') || primaryInput.type === 'upload') ||
+                    !((competitorInput.url && competitorInput.type === 'url') || competitorInput.type === 'upload')) {
+                    throw new Error("Competitor audit requires two valid inputs (URLs or uploaded screenshots).");
+                }
 
-                // A. Scrape Primary
-                console.log(`[JobProcessor] Scraping Primary: ${primaryInput.url}`);
-                await JobService.updateProgress(jobId, `Scraping Primary Site: ${primaryInput.url}...`);
-                const primaryScrape = await performScrape(primaryInput.url, false, true, browserEndpoint);
+                finalUrl = primaryInput.url || 'Uploaded Image (Primary)';
+                const competitorUrl = competitorInput.url || 'Uploaded Image (Competitor)';
 
-                // B. Scrape Competitor
-                console.log(`[JobProcessor] Scraping Competitor: ${competitorInput.url}`);
-                await JobService.updateProgress(jobId, `Scraping Competitor Site: ${competitorInput.url}...`);
-                const competitorScrape = await performScrape(competitorInput.url, false, true, browserEndpoint);
+                let primaryScrape = { screenshot: { data: '' }, liveText: `Content from: ${finalUrl}` };
+                let competitorScrape = { screenshot: { data: '' }, liveText: `Content from: ${competitorUrl}` };
+
+                // Track if we need to release the browser early depending on input types
+                const needsBrowser = primaryInput.type === 'url' || competitorInput.type === 'url';
+
+                // A. Process Primary
+                if (primaryInput.type === 'url') {
+                    console.log(`[JobProcessor] Scraping Primary: ${primaryInput.url}`);
+                    await JobService.updateProgress(jobId, `Scraping Primary Site: ${primaryInput.url}...`);
+                    primaryScrape = await performScrape(primaryInput.url, false, true, browserEndpoint);
+                } else if (primaryInput.type === 'upload') {
+                    console.log(`[JobProcessor] Processing Uploaded Primary Image`);
+                    await JobService.updateProgress(jobId, 'Processing uploaded Primary image...');
+                    const base64 = primaryInput.filesData?.[0] || primaryInput.fileData;
+                    if (!base64) throw new Error("No file data provided for primary input");
+                    primaryScrape.screenshot.data = base64;
+
+                    // Save to DB
+                    const { ImageService } = await import('./imageService.js');
+                    await ImageService.saveImage(jobId, 'primary_upload.png', base64);
+                }
+
+                // B. Process Competitor
+                if (competitorInput.type === 'url') {
+                    console.log(`[JobProcessor] Scraping Competitor: ${competitorInput.url}`);
+                    await JobService.updateProgress(jobId, `Scraping Competitor Site: ${competitorInput.url}...`);
+                    competitorScrape = await performScrape(competitorInput.url, false, true, browserEndpoint);
+                } else if (competitorInput.type === 'upload') {
+                    console.log(`[JobProcessor] Processing Uploaded Competitor Image`);
+                    await JobService.updateProgress(jobId, 'Processing uploaded Competitor image...');
+                    const base64 = competitorInput.filesData?.[0] || competitorInput.fileData;
+                    if (!base64) throw new Error("No file data provided for competitor input");
+                    competitorScrape.screenshot.data = base64;
+
+                    // Save to DB
+                    const { ImageService } = await import('./imageService.js');
+                    await ImageService.saveImage(jobId, 'competitor_upload.png', base64);
+                }
+
                 finalScreenshots = [primaryScrape.screenshot, competitorScrape.screenshot];
 
                 // RELEASE BROWSER - Scrape phase complete
-                if (onBrowserFinished) {
+                if (onBrowserFinished && needsBrowser) {
                     console.log(`[JobProcessor] [${jobId}] Browser tasks complete. Signaling early release.`);
+                    await onBrowserFinished();
+                } else if (onBrowserFinished) {
+                    console.log(`[JobProcessor] [${jobId}] No URLs to scrape. Signaling early browser release.`);
                     await onBrowserFinished();
                 }
 
                 // C. Analyze
                 console.log(`[JobProcessor] Running Competitor Analysis...`);
-                await JobService.updateProgress(jobId, 'Analyzed content acquired. Starting comparison...');
+                await JobService.updateProgress(jobId, 'Processed content acquired. Starting comparison...');
 
                 const analysisBody = {
-                    primaryUrl: primaryInput.url,
+                    primaryUrl: finalUrl,
                     primaryScreenshotsBase64: [primaryScrape.screenshot.data],
                     primaryLiveText: primaryScrape.liveText,
-                    competitorUrl: competitorInput.url,
+                    competitorUrl: competitorUrl,
                     competitorScreenshotsBase64: [competitorScrape.screenshot.data],
                     competitorLiveText: competitorScrape.liveText,
-                    screenshotMimeType: 'image/jpeg'
+                    screenshotMimeType: 'image/jpeg' // Let Gemini figure out if it's png or jpeg
                 };
 
                 const result = await performAnalysis(apiKeys, 'analyze-competitor', analysisBody);
