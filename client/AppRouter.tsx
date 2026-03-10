@@ -213,11 +213,11 @@ function AppWithRouting() {
                         <Route path="/pricing" element={<PricingPage />} />
                         <Route path="/feedback" element={<FeedbackPage />} />
                         <Route path="/docs/widget" element={<DocsWidgetPage />} />
-                        <Route path="/legal" element={<LegalPage />} />
                     </Route>
 
                     <Route path="/shared/:auditId" element={<SharedAuditView />} />
                     <Route path="/embed" element={<EmbedPage />} />
+                    <Route path="/legal" element={<LegalPage />} />
                     <Route path="/dashb204727-295257950-9257507594824597" element={<AdminAuditDashboard />} />
                 </Routes>
             </BetaGuard>
