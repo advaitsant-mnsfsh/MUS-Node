@@ -12,7 +12,8 @@ const PricingPage: React.FC = () => {
             title: "Begin",
             price: "$0",
             description: "For professionals looking to try our auditing tools",
-            buttonText: "Get Free Audit",
+            buttonText: "Access Now",
+            isHighlighted: true,
             features: [
                 "1 audit per month",
                 "Basic UX analysis",
@@ -24,8 +25,8 @@ const PricingPage: React.FC = () => {
             title: "Grow",
             price: "$29",
             description: "For independents and small agencies.",
-            buttonText: "Start Trial",
-            isHighlighted: true,
+            buttonText: "Coming Soon",
+
             badge: "Most Popular",
             features: [
                 "10 audits per month",
