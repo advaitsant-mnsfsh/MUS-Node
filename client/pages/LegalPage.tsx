@@ -48,7 +48,7 @@ const sections = [
         id: '8',
         title: 'Contact',
         content: null,
-        contactEmail: 'hello@myuxscore.com',
+        contactEmail: 'shravani@myuxscore.com',
     },
 ];
 
