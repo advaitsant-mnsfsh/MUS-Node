@@ -69,7 +69,7 @@ export const callApi = async (apiKeys: string[], systemInstruction: string, cont
         });
     };
 
-    const response = await retryWithBackoff(apiCall, 10, 2000, "Generate Content");
+    const response = await retryWithBackoff(apiCall, 3, 2000, "Generate Content");
     try {
         let outputText = "";
         if (typeof response.text === 'function') {

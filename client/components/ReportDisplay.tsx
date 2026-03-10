@@ -58,7 +58,7 @@ export function ReportDisplay({
         "Strategy Audit expert": strategy,
         "Accessibility Audit expert": accessibility,
         "Competitor Analysis expert": competitorAnalysis,
-        Top5ContextualIssues
+        "Competitor Analysis expert": competitorAnalysis
     } = report || {};
 
     const isCompetitorReport = !!competitorAnalysis;
@@ -327,15 +327,7 @@ export function ReportDisplay({
                                         {/* Strategy Audit */}
                                         <DetailedAuditView auditData={strategy} auditType={'Strategic Foundation'} />
 
-                                        {/* Top 5 Issues */}
-                                        <div className="mt-8">
-                                            <h2 className="text-2xl font-bold text-slate-900 mb-6">Top 5 Impactful Issues</h2>
-                                            <div className="flex flex-col gap-4">
-                                                {Top5ContextualIssues?.map((issue, index) => (
-                                                    <CriticalIssueCard key={index} issue={issue} />
-                                                ))}
-                                            </div>
-                                        </div>
+
                                     </div>
                                 )}
 

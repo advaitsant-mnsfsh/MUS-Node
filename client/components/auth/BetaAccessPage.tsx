@@ -14,6 +14,7 @@ export const BetaAccessPage: React.FC<BetaAccessPageProps> = ({ onAuthorized }) 
     const [waitlistEmail, setWaitlistEmail] = useState('');
     const [isWaitlistSubmitting, setIsWaitlistSubmitting] = useState(false);
     const [waitlistSuccess, setWaitlistSuccess] = useState(false);
+    const [showLegal, setShowLegal] = useState(false);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -175,9 +176,7 @@ export const BetaAccessPage: React.FC<BetaAccessPageProps> = ({ onAuthorized }) 
                     <span>Version 0.4.2-BETA</span>
                 </div>
                 <div className="flex gap-8">
-                    <a className="hover:text-black transition-colors" href="#">Security</a>
-                    <a className="hover:text-black transition-colors" href="#">Privacy</a>
-                    <a className="hover:text-black transition-colors" href="#">Terms</a>
+                    <button onClick={() => setShowLegal(true)} className="hover:text-black transition-colors uppercase tracking-[0.2em]">Security, Privacy &amp; Terms</button>
                 </div>
             </footer>
 
@@ -234,6 +233,68 @@ export const BetaAccessPage: React.FC<BetaAccessPageProps> = ({ onAuthorized }) 
                                 </p>
                             </div>
                         )}
+                    </div>
+                </div>
+            )}
+
+            {/* Legal Modal */}
+            {showLegal && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-white/80 backdrop-blur-sm animate-in fade-in duration-200">
+                    <div className="w-full max-w-lg bg-white border-4 border-black shadow-[10px_10px_0px_0px_rgba(0,0,0,1)] relative animate-in zoom-in-95 duration-200 flex flex-col max-h-[85vh]">
+                        <div className="h-2 w-full bg-[#6366f1] border-b-4 border-black flex-shrink-0" />
+                        <div className="flex items-start justify-between px-8 pt-6 pb-4 border-b-2 border-zinc-100 flex-shrink-0">
+                            <h2 className="text-2xl font-black uppercase tracking-tight">Security, Privacy &amp; Terms</h2>
+                            <button onClick={() => setShowLegal(false)} className="text-black hover:scale-110 transition-transform ml-4 flex-shrink-0">
+                                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M6 18L18 6M6 6l12 12" />
+                                </svg>
+                            </button>
+                        </div>
+                        <div className="overflow-y-auto px-8 py-6 space-y-6 text-sm text-zinc-700 leading-relaxed">
+                            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-400">Last updated: March 10, 2026</p>
+
+                            <section>
+                                <h3 className="font-black uppercase tracking-tight text-black mb-2">1. Service Overview</h3>
+                                <p>MUS UX Score is an AI-powered tool that analyzes websites and generates UX audit reports. Results are based on automated analysis and are intended to support, not replace, professional UX judgment.</p>
+                            </section>
+
+                            <section>
+                                <h3 className="font-black uppercase tracking-tight text-black mb-2">2. Use of the Service</h3>
+                                <p>You must provide a valid URL or screenshot for analysis. You agree not to use the service for any unlawful or malicious purpose, and you are responsible for ensuring you have the right to analyze any website you submit.</p>
+                            </section>
+
+                            <section>
+                                <h3 className="font-black uppercase tracking-tight text-black mb-2">3. Accuracy of Reports</h3>
+                                <p>Our reports are generated using AI and automated tools. While we put genuine effort into making them accurate and useful, results may not always be perfect. We recommend using them as a starting point alongside your own expertise.</p>
+                            </section>
+
+                            <section>
+                                <h3 className="font-black uppercase tracking-tight text-black mb-2">4. Intellectual Property</h3>
+                                <p>All generated reports are for your private or commercial use. You may not resell or redistribute the core analysis engine or platform.</p>
+                            </section>
+
+                            <section>
+                                <h3 className="font-black uppercase tracking-tight text-black mb-2">5. Data &amp; Privacy</h3>
+                                <p>Submitted URLs and screenshots are stored on our servers to generate and retain your reports. We handle your data with care and do not share it with third parties for marketing or advertising purposes. For full details on how we handle your data, please refer to our Privacy Policy.</p>
+                            </section>
+
+                            <section>
+                                <h3 className="font-black uppercase tracking-tight text-black mb-2">6. Limitation of Liability</h3>
+                                <p>We have built MUS UX Score to be as helpful and reliable as possible. That said, audit reports are AI-generated and may occasionally miss things. We kindly ask that you use the reports as guidance rather than as a final verdict, and we cannot be held responsible for decisions made solely based on them.</p>
+                            </section>
+
+                            <section>
+                                <h3 className="font-black uppercase tracking-tight text-black mb-2">7. Changes to Terms</h3>
+                                <p>We may update these terms occasionally. Continued use of the service after changes means you accept the revised terms.</p>
+                            </section>
+
+                            <section>
+                                <h3 className="font-black uppercase tracking-tight text-black mb-2">8. Contact</h3>
+                                <p>For any questions, reach out to us at <span className="font-bold text-black">hello@myuxscore.com</span>.</p>
+                            </section>
+
+                            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-400 pt-2">By using MUS UX Score, you acknowledge that you have read and agree to these terms.</p>
+                        </div>
                     </div>
                 </div>
             )}

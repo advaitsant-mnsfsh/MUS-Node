@@ -73,7 +73,7 @@ app.use(cors({
         // Railway's proxy or healthcheck sometimes injects its own origin. 
         // Returning true natively handles `Vary: Origin` and correctly signs the preflight 
         // with the requested origin *only* if it is valid, avoiding CDN caching issues.
-        if (!origin || allowedOrigins.includes(origin) || origin.endsWith('.railway.app') || origin.endsWith('.vercel.app')) {
+        if (!origin || allowedOrigins.includes(origin) || origin.endsWith('.railway.app') || origin.endsWith('.vercel.app') || /^http:\/\/192\.168\.\d+\.\d+(:\d+)?$/.test(origin) || /^http:\/\/10\.\d+\.\d+\.\d+(:\d+)?$/.test(origin)) {
             callback(null, true);
         } else {
             console.warn(`[CORS] Blocked unrecognized origin: ${origin}`);
@@ -106,7 +106,6 @@ app.use('/uploads', (req, res, next) => {
 }));
 
 import apiRoutes from './api/routes.js';
-// externalRoutes imported above
 import publicRoutes from './api/public.js';
 import apiKeysRoutes from './routes/apiKeys.js';
 import authRoutes from './routes/auth.js';
