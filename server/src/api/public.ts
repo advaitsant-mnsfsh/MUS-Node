@@ -132,6 +132,16 @@ router.get('/jobs/:jobId', async (req, res) => {
             return res.status(404).json({ message: 'Job not found' });
         }
 
+        // Security Check: Only allow public sharing if the job is assigned to a user
+        const isShareLink = req.query.share === 'true' || req.query.share === '1';
+        if (isShareLink && !job.user_id) {
+            console.warn(`[Public API] Unauthorized access attempt to unassigned job ${jobId} via shared link`);
+            return res.status(403).json({
+                message: 'This report has not been claimed yet and cannot be shared.',
+                status: 'unclaimed'
+            });
+        }
+
         // Return basic status and report_data (including logs) even during processing
         const responseData = {
             id: job.id,

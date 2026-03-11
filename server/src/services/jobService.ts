@@ -153,6 +153,7 @@ export class JobService {
             const [job] = await db.select({
                 id: auditJobs.id,
                 status: auditJobs.status,
+                user_id: auditJobs.user_id,
                 api_key_id: auditJobs.api_key_id,
                 input_data: auditJobs.input_data,
                 report_data: auditJobs.report_data,

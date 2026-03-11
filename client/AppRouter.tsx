@@ -72,7 +72,7 @@ function SharedAuditView() {
             // 1. Try to fetch as a Job first (Widget Flow)
             try {
                 const { getAuditJob } = await import('./services/auditStorage');
-                const job = await getAuditJob(auditId);
+                const job = await getAuditJob(auditId, true);
 
                 if (job && isMounted) {
                     if (job.status === 'completed') {
@@ -133,10 +133,14 @@ function SharedAuditView() {
                     setWhiteLabelLogo(data.whiteLabelLogo || null);
                     setLoading(false);
                 }
-            } catch (err) {
+            } catch (err: any) {
                 console.error('Error loading shared audit:', err);
                 if (isMounted) {
-                    setError('Failed to load audit');
+                    if (err.message && (err.message.includes('not been claimed') || err.message.includes('unclaimed'))) {
+                        setError('This report has not been claimed yet and cannot be shared.');
+                    } else {
+                        setError('Failed to load audit');
+                    }
                     setLoading(false);
                 }
             }
@@ -157,15 +161,21 @@ function SharedAuditView() {
     }
 
     if (error || !report) {
-        // ... (Error View - same as before)
+        const isUnclaimed = error?.includes('not been claimed');
         return (
             <div className="min-h-screen bg-slate-50 text-slate-800 font-sans flex flex-col items-center justify-center px-4">
                 <Logo className="mb-8" />
                 <div className="max-w-md text-center">
-                    <h1 className="text-2xl font-bold text-slate-900 mb-4">Audit Not Found</h1>
-                    <p className="text-slate-600 mb-6">{error || 'This audit link may be invalid or expired.'}</p>
+                    <h1 className="text-2xl font-bold text-slate-900 mb-4">
+                        {isUnclaimed ? 'Report Not Yet Shared' : 'Audit Not Found'}
+                    </h1>
+                    <p className="text-slate-600 mb-6">
+                        {isUnclaimed
+                            ? "This report hasn't been claimed by a user yet. Please log in on the main report page to activate sharing."
+                            : (error || 'This audit link may be invalid or expired.')}
+                    </p>
                     <a href="/" className="inline-block px-6 py-3 bg-indigo-600 text-white font-semibold rounded-lg hover:bg-indigo-700 transition-colors">
-                        Run Your Own Audit
+                        {isUnclaimed ? 'Go to Main Page' : 'Run Your Own Audit'}
                     </a>
                 </div>
             </div>

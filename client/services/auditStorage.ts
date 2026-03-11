@@ -40,7 +40,7 @@ export async function saveSharedAudit(data: {
  */
 export async function getSharedAudit(auditId: string): Promise<SharedAuditData | null> {
     // Forward to getAuditJob logic which queries API (unified)
-    const job = await getAuditJob(auditId);
+    const job = await getAuditJob(auditId, true);
     if (!job || !job.report_data) return null;
 
     const report = job.report_data;
@@ -90,7 +90,7 @@ export interface AuditJobData {
 // Basic In-Memory Cache to prevent redundant fetches
 const jobCache = new Map<string, Promise<AuditJobData | null>>();
 
-export async function getAuditJob(jobId: string): Promise<AuditJobData | null> {
+export async function getAuditJob(jobId: string, isShared: boolean = false): Promise<AuditJobData | null> {
     // Check cache first
     const cached = jobCache.get(jobId);
     if (cached) return cached;
@@ -99,7 +99,13 @@ export async function getAuditJob(jobId: string): Promise<AuditJobData | null> {
         try {
             // Prioritize API over Storage (since we stopped using Storage)
             // Try API endpoint
-            const response = await fetch(`${backendUrl}/api/public/jobs/${jobId}`);
+            const url = `${backendUrl}/api/public/jobs/${jobId}${isShared ? '?share=true' : ''}`;
+            const response = await fetch(url);
+            if (response.status === 403) {
+                const errorData = await response.json();
+                throw new Error(errorData.message || 'unclaimed');
+            }
+
             if (response.ok) {
                 const apiData = await response.json();
 
