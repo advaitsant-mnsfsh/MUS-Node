@@ -90,7 +90,8 @@ export class JobService {
                     }
 
                     if (targetEmail) {
-                        const websiteUrl = Array.isArray(job.input_data?.inputs) ? job.input_data.inputs[0] : 'your website';
+                        const inputData = job.input_data as any;
+                        const websiteUrl = Array.isArray(inputData?.inputs) ? inputData.inputs[0]?.url || 'your website' : 'your website';
                         const { sendReportReadyEmail } = await import('../lib/auth.js');
                         await sendReportReadyEmail(targetEmail, jobId, targetName, websiteUrl);
                     }
