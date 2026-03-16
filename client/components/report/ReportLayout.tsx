@@ -142,7 +142,9 @@ export const ReportLayout: React.FC<ReportLayoutProps> = ({
 
                             {/* LEFT: Branding & Inputs */}
                             <div className="flex items-center gap-2 md:gap-4 flex-1 min-w-0">
-                                        {/* Back Button (Square Neo Style) */}
+                                {/* Back Button & Divider (Hidden in Shared View) */}
+                                {!isSharedView && (
+                                    <>
                                         <button
                                             onClick={() => navigate('/dashboard')}
                                             className="w-10 h-10 flex shrink-0 items-center justify-center bg-white border-2 border-black text-black shadow-neo hover:shadow-neo-hover hover:-translate-x-px hover:-translate-y-px transition-all active:shadow-none active:translate-x-0 active:translate-y-0"
@@ -153,6 +155,8 @@ export const ReportLayout: React.FC<ReportLayoutProps> = ({
 
                                         {/* Divider */}
                                         <div className="h-8 w-0.5 bg-black mx-2 hidden sm:block"></div>
+                                    </>
+                                )}
 
                                 <div className="flex flex-wrap items-center gap-2 md:gap-3 min-w-0">
                                     <span className="text-black font-black text-sm uppercase tracking-wider hidden lg:inline">Audit Report for</span>
