@@ -20,6 +20,8 @@ interface ReportLayoutProps {
     isAuthLoading: boolean;
     onUnlock: () => void;
     url: string;
+    auditId: string | null;
+    ownerId?: string | null;
 
     // UI Props
     whiteLabelLogo?: string | null;
@@ -100,6 +102,8 @@ export const ReportLayout: React.FC<ReportLayoutProps> = ({
     isAuthLoading,
     onUnlock,
     url,
+    auditId,
+    ownerId,
     whiteLabelLogo,
     isSharedView,
     primaryScreenshotSrc,
@@ -138,17 +142,17 @@ export const ReportLayout: React.FC<ReportLayoutProps> = ({
 
                             {/* LEFT: Branding & Inputs */}
                             <div className="flex items-center gap-2 md:gap-4 flex-1 min-w-0">
-                                {/* Back Button (Square Neo Style) */}
-                                <button
-                                    onClick={() => navigate('/dashboard')}
-                                    className="w-10 h-10 flex shrink-0 items-center justify-center bg-white border-2 border-black text-black shadow-neo hover:shadow-neo-hover hover:-translate-x-px hover:-translate-y-px transition-all active:shadow-none active:translate-x-0 active:translate-y-0"
-                                    aria-label="Back"
-                                >
-                                    <ChevronLeft className="w-5 h-5 stroke-[3px]" />
-                                </button>
+                                        {/* Back Button (Square Neo Style) */}
+                                        <button
+                                            onClick={() => navigate('/dashboard')}
+                                            className="w-10 h-10 flex shrink-0 items-center justify-center bg-white border-2 border-black text-black shadow-neo hover:shadow-neo-hover hover:-translate-x-px hover:-translate-y-px transition-all active:shadow-none active:translate-x-0 active:translate-y-0"
+                                            aria-label="Back"
+                                        >
+                                            <ChevronLeft className="w-5 h-5 stroke-[3px]" />
+                                        </button>
 
-                                {/* Divider */}
-                                <div className="h-8 w-0.5 bg-black mx-2 hidden sm:block"></div>
+                                        {/* Divider */}
+                                        <div className="h-8 w-0.5 bg-black mx-2 hidden sm:block"></div>
 
                                 <div className="flex flex-wrap items-center gap-2 md:gap-3 min-w-0">
                                     <span className="text-black font-black text-sm uppercase tracking-wider hidden lg:inline">Audit Report for</span>
@@ -234,7 +238,7 @@ export const ReportLayout: React.FC<ReportLayoutProps> = ({
 
                         {/* Content Area with Auth Lock */}
                         <div className="relative">
-                            {isLocked && !isAuthLoading && <AuthBlocker isUnlocked={false} onUnlock={onUnlock} auditUrl={url} />}
+                        {isLocked && !isAuthLoading && <AuthBlocker isUnlocked={false} onUnlock={onUnlock} auditUrl={url} auditId={auditId} ownerId={ownerId} />}
 
                             <div className={`transition-all duration-500 ${isLocked ? 'blur-sm pointer-events-none select-none h-[600px] overflow-hidden' : ''}`}>
                                 <ReportRenderer

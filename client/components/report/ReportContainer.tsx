@@ -17,6 +17,7 @@ interface ReportContainerProps {
     screenshotMimeType: string;
     performanceError: string | null;
     auditId: string | null;
+    ownerId?: string | null;
     onRunNewAudit: () => void;
     whiteLabelLogo?: string | null;
     isSharedView?: boolean;
@@ -28,6 +29,7 @@ export const ReportContainer: React.FC<ReportContainerProps> = ({
     url,
     screenshots,
     auditId,
+    ownerId,
     onRunNewAudit,
     whiteLabelLogo,
     screenshotMimeType,
@@ -139,6 +141,8 @@ export const ReportContainer: React.FC<ReportContainerProps> = ({
             isAuthLoading={isAuthLoading}
             onUnlock={() => setIsLocked(false)}
             url={url}
+            auditId={auditId}
+            ownerId={ownerId}
             whiteLabelLogo={whiteLabelLogo}
             isSharedView={isSharedView}
             primaryScreenshotSrc={primaryScreenshotSrc}

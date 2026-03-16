@@ -3,6 +3,7 @@ import { adminService, AdminAudit } from '../services/adminService';
 import { format } from 'date-fns';
 import { Activity, Shield, Terminal, Mail, Clock, RefreshCw, Copy, Check, Download } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { getBackendUrl } from '../services/config';
 
 export const AdminAuditDashboard: React.FC = () => {
     const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -62,6 +63,29 @@ export const AdminAuditDashboard: React.FC = () => {
             toast.error('Download failed / No data found');
         } finally {
             setDownloadingId(null);
+        }
+    };
+
+    const closeFeedbackTicket = async (ticketId: string) => {
+        if (!confirm('Are you sure you want to close this ticket?')) return;
+        
+        try {
+            const response = await fetch(`${getBackendUrl()}/api/v1/feedback/${ticketId}/close`, {
+                method: 'POST',
+                headers: {
+                    'x-admin-password': password
+                }
+            });
+
+            if (response.ok) {
+                toast.success('Ticket closed successfully');
+                fetchData(); // Refresh the list
+            } else {
+                toast.error('Failed to close ticket');
+            }
+        } catch (error) {
+            console.error('Error closing ticket:', error);
+            toast.error('Local error closing ticket');
         }
     };
 
@@ -464,58 +488,99 @@ export const AdminAuditDashboard: React.FC = () => {
                 ) : activeTab === 'feedback' ? (
                     /* Feedback View */
                     <div className="grid grid-cols-1 gap-6">
-                        {feedback.map((item, i) => (
-                            <div key={i} className="bg-slate-900/40 border border-slate-800 rounded-3xl overflow-hidden hover:border-slate-700/50 transition-all hover:bg-slate-900/60 p-6">
-                                <div className="flex flex-wrap items-start justify-between gap-4 mb-4">
-                                    <div className="flex items-center gap-4">
-                                        <div className="w-10 h-10 rounded-xl bg-indigo-500/10 flex items-center justify-center text-indigo-400">
-                                            <Mail className="w-5 h-5" />
+                        {feedback.filter(item => item.status !== 'closed').map((item, i) => (
+                            <div key={i} className="bg-slate-900/40 border border-slate-800 rounded-3xl overflow-hidden hover:border-slate-700/50 transition-all hover:bg-slate-900/60 p-6 flex flex-col md:flex-row gap-6 relative">
+                                
+                                {/* Main Content */}
+                                <div className="flex-1">
+                                    <div className="flex flex-wrap items-start justify-between gap-4 mb-4">
+                                        <div className="flex items-center gap-4">
+                                            <div className="w-10 h-10 rounded-xl bg-indigo-500/10 flex items-center justify-center text-indigo-400">
+                                                <Mail className="w-5 h-5" />
+                                            </div>
+                                            <div>
+                                                <div className="text-white font-bold">{item.userEmail || 'Anonymous'}</div>
+                                                <div className="text-sm text-slate-500">Ticket #{item.id || 'LEGACY-SYSTEM'}</div>
+                                            </div>
                                         </div>
-                                        <div>
-                                            <div className="text-white font-bold">{item.userEmail}</div>
-                                            <div className="text-sm text-slate-500">User Report</div>
+                                        <div className="text-right">
+                                            <div className="text-sm text-slate-500 font-mono">{format(new Date(item.timestamp), 'MMM d, HH:mm:ss')}</div>
+                                            <div className="mt-1 bg-indigo-500/10 text-indigo-400 text-[10px] font-black uppercase tracking-widest px-2 py-0.5 rounded border border-indigo-500/20">
+                                                {item.teamNumber || 'No Team'}
+                                            </div>
                                         </div>
                                     </div>
-                                    <div className="text-right">
-                                        <div className="text-sm text-slate-500 font-mono">{format(new Date(item.timestamp), 'MMM d, HH:mm:ss')}</div>
-                                        <div className="mt-1 bg-indigo-500/10 text-indigo-400 text-[10px] font-black uppercase tracking-widest px-2 py-0.5 rounded border border-indigo-500/20">
-                                            {item.teamNumber || 'No Team'}
-                                        </div>
-                                    </div>
-                                </div>
 
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                                    <div className="bg-slate-950/50 p-3 rounded-xl border border-slate-800">
-                                        <div className="text-[10px] text-slate-500 uppercase tracking-widest font-bold mb-1">Target Website</div>
-                                        <div className="text-slate-300 text-sm truncate">{item.websiteUrl || 'Not provided'}</div>
-                                    </div>
-                                    <div className="bg-slate-950/50 p-3 rounded-xl border border-slate-800">
-                                        <div className="text-[10px] text-slate-500 uppercase tracking-widest font-bold mb-1">Job ID Reference</div>
-                                        <div className="text-slate-300 text-sm flex items-center justify-between">
-                                            <span className="truncate">{item.jobId || 'N/A'}</span>
-                                            {item.jobId && (
-                                                <button onClick={() => copyToClipboard(item.jobId)} className="text-slate-600 hover:text-indigo-400 transition-colors">
-                                                    {copiedId === item.jobId ? <Check className="w-3.5 h-3.5 text-emerald-500" /> : <Copy className="w-3.5 h-3.5" />}
-                                                </button>
-                                            )}
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                                        <div className="bg-slate-950/50 p-3 rounded-xl border border-slate-800">
+                                            <div className="text-[10px] text-slate-500 uppercase tracking-widest font-bold mb-1">Target Website</div>
+                                            <div className="text-slate-300 text-sm truncate">{item.websiteUrl || 'Not provided'}</div>
+                                        </div>
+                                        <div className="bg-slate-950/50 p-3 rounded-xl border border-slate-800">
+                                            <div className="text-[10px] text-slate-500 uppercase tracking-widest font-bold mb-1">Job ID Reference</div>
+                                            <div className="text-slate-300 text-sm flex items-center justify-between">
+                                                <span className="truncate">{item.jobId || 'N/A'}</span>
+                                                {item.jobId && (
+                                                    <button onClick={() => copyToClipboard(item.jobId)} className="text-slate-600 hover:text-indigo-400 transition-colors">
+                                                        {copiedId === item.jobId ? <Check className="w-3.5 h-3.5 text-emerald-500" /> : <Copy className="w-3.5 h-3.5" />}
+                                                    </button>
+                                                )}
+                                            </div>
                                         </div>
                                     </div>
-                                </div>
 
-                                <div className="bg-rose-500/5 p-4 rounded-2xl border border-rose-500/10">
-                                    <div className="text-[10px] text-rose-500 uppercase tracking-widest font-black mb-2 flex items-center gap-2">
-                                        <Activity className="w-3 h-3" /> Error Details
+                                    <div className="bg-rose-500/5 p-4 rounded-2xl border border-rose-500/10">
+                                        <div className="text-[10px] text-rose-500 uppercase tracking-widest font-black mb-2 flex items-center gap-2">
+                                            <Activity className="w-3 h-3" /> Error Details
+                                        </div>
+                                        <p className="text-slate-300 text-sm leading-relaxed whitespace-pre-wrap">
+                                            {item.errorDetails}
+                                        </p>
                                     </div>
-                                    <p className="text-slate-300 text-sm leading-relaxed whitespace-pre-wrap">
-                                        {item.errorDetails}
-                                    </p>
+                                    
+                                    {/* Action Banner */}
+                                    <div className="mt-4 flex justify-end">
+                                        <button 
+                                            onClick={() => closeFeedbackTicket(item.id)}
+                                            disabled={!item.id}
+                                            className="bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/30 text-emerald-400 px-6 py-2 rounded-xl text-sm font-bold transition-all flex items-center gap-2 disabled:opacity-50"
+                                        >
+                                            <Check className="w-4 h-4" /> Close Ticket
+                                        </button>
+                                    </div>
                                 </div>
+                                
+                                {/* Screenshot Sidebar */}
+                                {item.screenshot && (
+                                    <div className="w-full md:w-1/3 shrink-0">
+                                        <div className="bg-slate-950/50 p-2 rounded-xl border border-slate-800 h-full flex flex-col">
+                                            <div className="text-[10px] text-slate-500 uppercase tracking-widest font-bold mb-2 pl-2 pt-1 flex justify-between items-center">
+                                                <span>Screenshot Attached</span>
+                                                <a 
+                                                    href={`${getBackendUrl()}/api/v1/feedback/image/${item.screenshot}?key=${password}`} 
+                                                    target="_blank" 
+                                                    rel="noreferrer"
+                                                    className="text-indigo-400 hover:text-indigo-300 mr-2"
+                                                >
+                                                    Zoom
+                                                </a>
+                                            </div>
+                                            <div className="flex-1 min-h-[150px] rounded-lg overflow-hidden bg-slate-900 border border-slate-800/50 flex items-center justify-center group relative cursor-pointer" onClick={() => window.open(`${getBackendUrl()}/api/v1/feedback/image/${item.screenshot}?key=${password}`, '_blank')}>
+                                                <img 
+                                                    src={`${getBackendUrl()}/api/v1/feedback/image/${item.screenshot}?key=${password}`} 
+                                                    alt="Feedback error" 
+                                                    className="object-cover w-full h-full opacity-80 group-hover:opacity-100 transition-opacity"
+                                                />
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
                             </div>
                         ))}
 
-                        {feedback.length === 0 && !isLoading && (
+                        {feedback.filter(item => item.status !== 'closed').length === 0 && !isLoading && (
                             <div className="text-center py-20 bg-slate-900/20 border border-dashed border-slate-800 rounded-3xl text-slate-500">
-                                No user feedback has been recorded yet.
+                                No active user tickets at the moment.
                             </div>
                         )}
                     </div>

@@ -8,23 +8,49 @@ import { eq, and, isNull, sql, asc, desc, inArray, or } from 'drizzle-orm';
 import crypto from 'crypto';
 import fs from 'fs';
 import path from 'path';
+import multer from 'multer';
+import { sendFeedbackReceivedEmail } from '../lib/auth.js';
 
 const router = express.Router();
 
+// Multer Setup for Feedback Screenshots
+const feedbackUploadDir = path.join(process.cwd(), 'data', 'feedback_images');
+if (!fs.existsSync(feedbackUploadDir)) {
+    fs.mkdirSync(feedbackUploadDir, { recursive: true });
+}
+
+const storage = multer.diskStorage({
+    destination: function (req, file, cb) {
+        cb(null, feedbackUploadDir);
+    },
+    filename: function (req, file, cb) {
+        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+        cb(null, 'ticket-' + uniqueSuffix + path.extname(file.originalname));
+    }
+});
+
+const upload = multer({ storage: storage, limits: { fileSize: 10 * 1024 * 1024 } }); // 10MB limit
+
 // POST /api/v1/feedback
-router.post('/feedback', optionalUserAuth, async (req: express.Request, res: express.Response) => {
+router.post('/feedback', optionalUserAuth, upload.single('screenshot'), async (req: express.Request, res: express.Response) => {
     try {
         const { teamNumber, jobId, websiteUrl, errorDetails, email } = req.body;
         const authReq = req as AuthenticatedRequest;
         const userEmail = email || authReq.user?.email || 'anonymous';
+        
+        const ticketId = `TKT-${Date.now().toString(36).toUpperCase()}-${crypto.randomBytes(2).toString('hex').toUpperCase()}`;
+        const screenshotFilename = req.file ? req.file.filename : null;
 
         const feedback = {
+            id: ticketId,
             timestamp: new Date().toISOString(),
+            status: 'open',
             userEmail,
             teamNumber,
             jobId,
             websiteUrl,
-            errorDetails
+            errorDetails,
+            screenshot: screenshotFilename
         };
 
         const feedbackDir = path.join(process.cwd(), 'data');
@@ -44,11 +70,91 @@ router.post('/feedback', optionalUserAuth, async (req: express.Request, res: exp
         }
         currentFeedback.push(feedback);
         fs.writeFileSync(feedbackFile, JSON.stringify(currentFeedback, null, 2));
+        
+        // Send Email Confirmation
+        if (userEmail !== 'anonymous' && userEmail) {
+            await sendFeedbackReceivedEmail(userEmail, ticketId, errorDetails, websiteUrl);
+        }
 
-        res.json({ success: true, message: 'Feedback received' });
+        res.json({ success: true, message: 'Feedback received', ticketId });
     } catch (error) {
         console.error('[Feedback] Error saving feedback:', error);
         res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
+// POST /api/v1/feedback/:id/close
+router.post('/feedback/:id/close', async (req: express.Request, res: express.Response) => {
+    try {
+        const password = req.headers['x-admin-password'];
+        if (password !== '0000') {
+            return res.status(401).json({ error: 'Unauthorized' });
+        }
+
+        const ticketId = req.params.id;
+        const feedbackFile = path.join(process.cwd(), 'data', 'feedback.json');
+        
+        if (!fs.existsSync(feedbackFile)) {
+            return res.status(404).json({ error: 'No feedback found' });
+        }
+
+        const content = fs.readFileSync(feedbackFile, 'utf-8');
+        let feedbackList = JSON.parse(content);
+        
+        const index = feedbackList.findIndex((f: any) => f.id === ticketId);
+        if (index === -1) {
+            return res.status(404).json({ error: 'Ticket not found' });
+        }
+
+        const feedback = feedbackList[index];
+        feedback.status = 'closed';
+        feedback.closedAt = new Date().toISOString();
+
+        // Delete screenshot
+        if (feedback.screenshot) {
+            const imagePath = path.join(process.cwd(), 'data', 'feedback_images', feedback.screenshot);
+            if (fs.existsSync(imagePath)) {
+                fs.unlinkSync(imagePath);
+            }
+            // Optionally clear the filename from JSON to signify it's gone
+            // feedback.screenshot = null; 
+        }
+
+        fs.writeFileSync(feedbackFile, JSON.stringify(feedbackList, null, 2));
+
+        // Import here to avoid circular dependencies if any, but since it's an admin endpoint it's fine.
+        const { sendTicketClosedEmail } = await import('../lib/auth.js');
+        if (feedback.userEmail && feedback.userEmail !== 'anonymous') {
+            await sendTicketClosedEmail(feedback.userEmail, ticketId);
+        }
+
+        res.json({ success: true, message: 'Ticket closed' });
+    } catch (error) {
+        console.error('[Feedback] Error closing ticket:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
+// GET /api/v1/feedback/image/:filename
+router.get('/feedback/image/:filename', async (req: express.Request, res: express.Response) => {
+    try {
+        // Simple security: Check admin password from query param
+        const password = req.query.key;
+        if (password !== '0000') {
+            return res.status(401).send('Unauthorized');
+        }
+
+        const filename = req.params.filename;
+        const imagePath = path.join(process.cwd(), 'data', 'feedback_images', filename);
+
+        if (!fs.existsSync(imagePath)) {
+            return res.status(404).send('Image not found');
+        }
+
+        res.sendFile(imagePath);
+    } catch (error) {
+        console.error('[Feedback] Error serving image:', error);
+        res.status(500).send('Internal Server Error');
     }
 });
 
@@ -102,7 +208,7 @@ router.post('/audit', optionalUserAuth, async (req: express.Request, res: expres
             status: 'pending',
             input_data: payload,
             audit_type: payload.auditMode === 'competitor' ? 'competitor' : 'standard',
-            user_id: authReq.user?.id || null
+            user_id: authReq.user?.id || authReq.apiKey?.userId || null
         }).returning();
 
         if (!job) {

@@ -78,6 +78,7 @@ export async function getSharedAudit(auditId: string): Promise<SharedAuditData |
 export interface AuditJobData {
     id: string;
     status: 'pending' | 'processing' | 'completed' | 'failed';
+    user_id?: string | null;
     report_data?: any;
     error_message?: string;
     redirectUrl?: string; // Optional if you need to know where it would have gone
@@ -137,6 +138,7 @@ export async function getAuditJob(jobId: string, isShared: boolean = false): Pro
                 return {
                     id: apiData.id,
                     status: apiData.status,
+                    user_id: apiData.user_id,
                     report_data: apiData.report_data,
                     error_message: apiData.error_message,
                     inputs: apiData.inputs,

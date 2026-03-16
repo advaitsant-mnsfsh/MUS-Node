@@ -10,11 +10,12 @@ interface AuthBlockerProps {
     isUnlocked: boolean;
     auditUrl: string;
     auditId?: string | null; // Optional audit ID to transfer ownership
+    ownerId?: string | null; // ID of current owner to avoid redundant transfers
     onClose?: () => void;
     initialLoginMode?: boolean; // New prop to control initial state
 }
 
-export const AuthBlocker: React.FC<AuthBlockerProps> = ({ onUnlock, isUnlocked, auditUrl, auditId, onClose, initialLoginMode = false }) => {
+export const AuthBlocker: React.FC<AuthBlockerProps> = ({ onUnlock, isUnlocked, auditUrl, auditId, ownerId, onClose, initialLoginMode = false }) => {
     const [isLoginMode, setIsLoginMode] = useState(initialLoginMode); // Toggle between Sign Up and Login
     const [isHidden, setIsHidden] = useState(false); // Local state to close the modal
     const [step, setStep] = useState<'email' | 'otp' | 'password' | 'forgot-email' | 'forgot-otp' | 'forgot-reset'>('email'); // For flows
@@ -55,11 +56,15 @@ export const AuthBlocker: React.FC<AuthBlockerProps> = ({ onUnlock, isUnlocked, 
             // Try to verify lead just in case
             await verifyLead(email);
 
-            // Transfer audit ownership if auditId exists
+            // Transfer audit ownership if auditId exists and it's not already owned by this user
             if (auditId && session.user) {
-                const { success } = await transferAuditOwnership(auditId, session.user.id);
-                if (success) {
-                    console.log('[AuthBlocker] Audit ownership transferred successfully');
+                if (ownerId === session.user.id) {
+                    console.log('[AuthBlocker] Audit already owned by this user. Skipping transfer.');
+                } else {
+                    const { success } = await transferAuditOwnership(auditId, session.user.id);
+                    if (success) {
+                        console.log('[AuthBlocker] Audit ownership transferred successfully');
+                    }
                 }
             }
 
@@ -225,12 +230,16 @@ export const AuthBlocker: React.FC<AuthBlockerProps> = ({ onUnlock, isUnlocked, 
 
         // 5. Transfer audit ownership (Now we have a confirmed session!)
         if (auditId && session.user) {
-            console.log(`[AuthBlocker] 🔄 Transferring Audit ${auditId} to ${session.user.id}...`);
-            const { success, error: transferError } = await transferAuditOwnership(auditId, session.user.id);
-            if (success) {
-                toast.success('Report saved to your account!', { icon: '📊' });
+            if (ownerId === session.user.id) {
+                console.log('[AuthBlocker] Audit already owned by this user. Skipping transfer.');
             } else {
-                console.error('[AuthBlocker] Ownership transfer failed:', transferError);
+                console.log(`[AuthBlocker] 🔄 Transferring Audit ${auditId} to ${session.user.id}...`);
+                const { success, error: transferError } = await transferAuditOwnership(auditId, session.user.id);
+                if (success) {
+                    toast.success('Report saved to your account!', { icon: '📊' });
+                } else {
+                    console.error('[AuthBlocker] Ownership transfer failed:', transferError);
+                }
             }
         }
 

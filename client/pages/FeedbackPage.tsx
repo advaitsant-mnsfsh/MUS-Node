@@ -14,26 +14,30 @@ export const FeedbackPage: React.FC = () => {
         websiteUrl: '',
         errorDetails: ''
     });
+    const [screenshot, setScreenshot] = useState<File | null>(null);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!user) return;
 
         setIsSubmitting(true);
-        const payload = {
-            ...formData,
-            email: user.email
-        };
+        const payload = new FormData();
+        payload.append('email', user.email);
+        payload.append('jobId', formData.jobId);
+        payload.append('websiteUrl', formData.websiteUrl);
+        payload.append('errorDetails', formData.errorDetails);
+        if (screenshot) {
+            payload.append('screenshot', screenshot);
+        }
 
         try {
             const apiUrl = getBackendUrl();
             const response = await fetch(`${apiUrl}/api/v1/feedback`, {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json',
                     'Authorization': `Bearer ${user.id}`
                 },
-                body: JSON.stringify(payload)
+                body: payload
             });
 
             if (response.ok) {
@@ -109,6 +113,36 @@ export const FeedbackPage: React.FC = () => {
                             className="w-full px-4 py-4 bg-white border-4 border-black text-black font-bold focus:outline-none focus:ring-4 focus:ring-brand/20"
                             placeholder="https://example.com"
                         />
+                    </div>
+                    
+                    {/* Screenshot Upload */}
+                    <div className="space-y-2 md:col-span-2">
+                        <label className="block text-sm font-black uppercase tracking-widest text-black">Reference Screenshot (Optional)</label>
+                        <div className="relative group/upload">
+                            <input
+                                type="file"
+                                accept="image/*"
+                                onChange={(e) => setScreenshot(e.target.files?.[0] || null)}
+                                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+                            />
+                            <div className={`w-full px-4 py-4 bg-white border-4 border-black text-black font-bold flex items-center gap-3 transition-all ${screenshot ? 'bg-indigo-50 border-indigo-600 outline outline-4 outline-indigo-500/20' : 'group-hover/upload:bg-slate-50'}`}>
+                                <div className={`shrink-0 w-8 h-8 flex items-center justify-center rounded-lg border-2 ${screenshot ? 'bg-indigo-600 border-indigo-700 text-white' : 'bg-slate-100 border-slate-300 text-slate-500'}`}>
+                                    {screenshot ? <CheckCircle2 className="w-4 h-4" /> : <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" /></svg>}
+                                </div>
+                                <div className="flex-1 truncate">
+                                    {screenshot ? screenshot.name : 'Click to select or drag and drop an image...'}
+                                </div>
+                                {screenshot && (
+                                    <button 
+                                        type="button"
+                                        onClick={(e) => { e.preventDefault(); setScreenshot(null); }}
+                                        className="text-slate-400 hover:text-rose-500 transition-colors z-20 pointer-events-auto shrink-0 px-2"
+                                    >
+                                        Clear
+                                    </button>
+                                )}
+                            </div>
+                        </div>
                     </div>
                 </div>
 

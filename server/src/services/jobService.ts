@@ -71,9 +71,9 @@ export class JobService {
                     where: eq(auditJobs.id, jobId)
                 });
 
-                if (job?.email_opt_in) {
+                if (job) {
                     const { user } = await import('../db/schema.js');
-                    let targetEmail = job.opt_in_email;
+                    let targetEmail = job.opt_in_email || null;
                     let targetName = 'there';
 
                     // If job is linked to a user, get their latest email/name from DB
@@ -84,14 +84,15 @@ export class JobService {
                             .limit(1);
 
                         if (userData) {
-                            targetEmail = userData.email;
+                            targetEmail = targetEmail || userData.email;
                             targetName = userData.name;
                         }
                     }
 
                     if (targetEmail) {
+                        const websiteUrl = Array.isArray(job.input_data?.inputs) ? job.input_data.inputs[0] : 'your website';
                         const { sendReportReadyEmail } = await import('../lib/auth.js');
-                        await sendReportReadyEmail(targetEmail, jobId, targetName);
+                        await sendReportReadyEmail(targetEmail, jobId, targetName, websiteUrl);
                     }
                 }
             }
