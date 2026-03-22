@@ -35,7 +35,7 @@ router.post('/audit', async (req, res) => {
         // 3. Construct Redirect URL
         // Support multiple client URLs
         const clientUrls = [process.env.CLIENT_URL_MAIN, process.env.CLIENT_URL].filter(Boolean);
-        let frontendBaseUrl = clientUrls[0] || origin || 'http://localhost:5173';
+        let frontendBaseUrl = clientUrls[0] || 'https://beta.myuxscore.com';
 
         // If the origin is one of our trusted client URLs, use it to maintain domain consistency
         if (origin && clientUrls.includes(origin)) {
@@ -88,15 +88,17 @@ router.get('/audit/:jobId', async (req, res) => {
             return res.status(403).json({ message: 'Forbidden: You do not have access to this job.' });
         }
 
-        // Use result_url from database if available, otherwise generate it
         const clientUrls = [process.env.CLIENT_URL_MAIN, process.env.CLIENT_URL].filter(Boolean);
-        let frontendBaseUrl = clientUrls[0] || origin || 'http://localhost:5173';
+        let frontendBaseUrl = clientUrls[0] || 'https://beta.myuxscore.com';
 
         if (origin && clientUrls.includes(origin)) {
             frontendBaseUrl = origin;
         }
 
-        const resultUrl = job.result_url || `${frontendBaseUrl}/shared/${job.id}`;
+        let resultUrl = job.result_url || `/shared/${job.id}`;
+        if (resultUrl.startsWith('/')) {
+            resultUrl = `${frontendBaseUrl}${resultUrl}`;
+        }
 
         res.json({
             jobId: job.id,

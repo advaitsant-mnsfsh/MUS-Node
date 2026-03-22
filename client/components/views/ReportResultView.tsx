@@ -16,6 +16,7 @@ interface ReportResultViewProps {
     performanceError: string | null;
     uiAuditId: string | null;
     auditId: string | undefined;
+    ownerId?: string | null;
     reportInputs: AuditInput[];
     whiteLabelLogo: string | null;
     // Animation
@@ -35,6 +36,7 @@ export const ReportResultView: React.FC<ReportResultViewProps> = ({
     performanceError,
     uiAuditId,
     auditId,
+    ownerId,
     reportInputs,
     whiteLabelLogo,
     animationData,
@@ -75,7 +77,10 @@ export const ReportResultView: React.FC<ReportResultViewProps> = ({
                             boxShadow: 'none',
                         }}
                     >
-                        <LoginPanel auditId={uiAuditId || auditId} />
+                        <LoginPanel
+                            auditId={uiAuditId || auditId}
+                            ownerId={ownerId}
+                        />
                     </div>
                 </div>
             </SplitLayout>
@@ -97,6 +102,7 @@ export const ReportResultView: React.FC<ReportResultViewProps> = ({
                                 screenshotMimeType={screenshotMimeType}
                                 performanceError={performanceError}
                                 auditId={uiAuditId || auditId || null}
+                                ownerId={ownerId}
                                 onRunNewAudit={handleRunNewAudit}
                                 whiteLabelLogo={whiteLabelLogo}
                                 inputs={reportInputs}

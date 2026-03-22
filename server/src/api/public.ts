@@ -146,6 +146,7 @@ router.get('/jobs/:jobId', async (req, res) => {
         const responseData = {
             id: job.id,
             status: job.status,
+            user_id: job.user_id,
             report_data: job.report_data,
             errorMessage: job.error_message,
             inputs: (job.input_data as any)?.inputs || job.input_data,

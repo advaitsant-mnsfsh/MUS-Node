@@ -21,26 +21,30 @@ export const FeedbackPage: React.FC = () => {
     websiteUrl: "",
     errorDetails: "",
   });
+  const [screenshot, setScreenshot] = useState<File | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user) return;
 
     setIsSubmitting(true);
-    const payload = {
-      ...formData,
-      email: user.email,
-    };
-
     try {
+      const payload = new FormData();
+      payload.append("email", user.email ?? "");
+      payload.append("jobId", formData.jobId);
+      payload.append("websiteUrl", formData.websiteUrl);
+      payload.append("errorDetails", formData.errorDetails);
+      if (screenshot) {
+        payload.append("screenshot", screenshot);
+      }
+
       const apiUrl = getBackendUrl();
       const response = await fetch(`${apiUrl}/api/v1/feedback`, {
         method: "POST",
         headers: {
-          "Content-Type": "application/json",
           Authorization: `Bearer ${user.id}`,
         },
-        body: JSON.stringify(payload),
+        body: payload,
       });
 
       if (response.ok) {
@@ -126,6 +130,7 @@ export const FeedbackPage: React.FC = () => {
             type="button"
             onClick={() => {
               setSubmitted(false);
+              setScreenshot(null);
               setFormData({ jobId: "", websiteUrl: "", errorDetails: "" });
             }}
             className="mt-10 inline-flex items-center justify-center rounded-lg border border-[#ccc] bg-white px-6 py-3 text-base font-bold text-[#1a1a1a] shadow-sm transition-colors hover:bg-neutral-50"
@@ -209,6 +214,41 @@ export const FeedbackPage: React.FC = () => {
                 placeholder="https://example.com"
                 autoComplete="url"
               />
+            </div>
+
+            <div className="space-y-2">
+              <label
+                htmlFor="feedback-screenshot"
+                className="block text-sm font-bold text-[#1a1a1a]"
+              >
+                Reference screenshot{" "}
+                <span className="font-medium text-[#94a3b8]">(optional)</span>
+              </label>
+              <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+                <input
+                  id="feedback-screenshot"
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) =>
+                    setScreenshot(e.target.files?.[0] ?? null)
+                  }
+                  className="w-full text-sm font-medium text-[#1a1a1a] file:mr-3 file:rounded-lg file:border-0 file:bg-brand file:px-4 file:py-2 file:text-sm file:font-bold file:text-white"
+                />
+                {screenshot && (
+                  <button
+                    type="button"
+                    onClick={() => setScreenshot(null)}
+                    className="shrink-0 text-sm font-semibold text-brand hover:underline"
+                  >
+                    Remove file
+                  </button>
+                )}
+              </div>
+              {screenshot && (
+                <p className="text-xs font-medium text-text-secondary">
+                  Attached: {screenshot.name}
+                </p>
+              )}
             </div>
 
             <div className="space-y-2">

@@ -17,6 +17,7 @@ interface ReportContainerProps {
   screenshotMimeType: string;
   performanceError: string | null;
   auditId: string | null;
+  ownerId?: string | null;
   onRunNewAudit: () => void;
   whiteLabelLogo?: string | null;
   isSharedView?: boolean;
@@ -30,6 +31,7 @@ export const ReportContainer: React.FC<ReportContainerProps> = ({
   url,
   screenshots,
   auditId,
+  ownerId,
   onRunNewAudit,
   whiteLabelLogo,
   screenshotMimeType,
@@ -164,6 +166,8 @@ export const ReportContainer: React.FC<ReportContainerProps> = ({
       isAuthLoading={isAuthLoading}
       onUnlock={() => setIsLocked(false)}
       url={url}
+      auditId={auditId}
+      ownerId={ownerId}
       whiteLabelLogo={whiteLabelLogo}
       isSharedView={isSharedView}
       teaserMode={teaserMode}
@@ -174,7 +178,7 @@ export const ReportContainer: React.FC<ReportContainerProps> = ({
       onGenerateAlternativePdf={
         !isCompetitorReport ? generateAlternativePdf : undefined
       }
-      onGenerateHybridPdf={!isCompetitorReport ? generateHybridPdf : undefined} // Only for standard reports
+      onGenerateHybridPdf={!isCompetitorReport ? generateHybridPdf : undefined}
       isPdfGenerating={isPdfGenerating}
       onShareAudit={handleShareAudit}
       isSharing={isSharing}

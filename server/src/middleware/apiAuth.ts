@@ -7,6 +7,7 @@ export interface AuthenticatedRequest extends Request {
     apiKey?: {
         id: string;
         owner_name: string;
+        userId: string;
     };
 }
 
@@ -105,7 +106,8 @@ export const validateAccess = async (req: Request, res: Response, next: NextFunc
                 // console.log(`[Auth] validateAccess: API Key Verified for ${keyRecord.owner_name}`); // Removed verbose log
                 (req as AuthenticatedRequest).apiKey = {
                     id: keyRecord.id,
-                    owner_name: keyRecord.owner_name
+                    owner_name: keyRecord.owner_name,
+                    userId: keyRecord.user_id
                 };
                 return next();
             }

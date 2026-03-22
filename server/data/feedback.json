@@ -6,5 +6,16 @@
     "jobId": "/550e8400-e29b-41d4-a716-446655440000",
     "websiteUrl": "https://lego.mybrickhouse.com/",
     "errorDetails": "audit failed"
+  },
+  {
+    "id": "TKT-MMSQJJOW-94C3",
+    "timestamp": "2026-03-16T05:20:56.434Z",
+    "status": "closed",
+    "userEmail": "advait.sant@monsoonfish.com",
+    "jobId": "",
+    "websiteUrl": "",
+    "errorDetails": "error broke down",
+    "screenshot": "ticket-1773638456420-615646716.jpeg",
+    "closedAt": "2026-03-16T05:24:20.042Z"
   }
 ]

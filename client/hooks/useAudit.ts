@@ -42,6 +42,7 @@ export const useAudit = () => {
     const [queuePosition, setQueuePosition] = useState<number>(0);
     const [queueType, setQueueType] = useState<string>('realtime');
     const [isLongWait, setIsLongWait] = useState<boolean>(false);
+    const [ownerId, setOwnerId] = useState<string | null>(null);
 
     const lastLogTime = useRef<number>(Date.now());
     const waitTimerRef = useRef<NodeJS.Timeout | null>(null);
@@ -135,7 +136,7 @@ export const useAudit = () => {
             setQueueType(type);
         },
         onStatus: (message: string) => {
-            if (location.pathname.includes('/report/') && auditId) {
+            if ((location.pathname.includes('/report/') || location.pathname.includes('/shared/')) && auditId) {
                 navigate(`/analysis/${auditId}`, { replace: true });
             }
 
@@ -288,6 +289,7 @@ export const useAudit = () => {
                     if ((job as any).screenshotMimeType) setScreenshotMimeType((job as any).screenshotMimeType);
 
                     setUiAuditId(job.id);
+                    if (job.user_id) setOwnerId(job.user_id);
 
                     if (job.status === 'completed' && reportData) {
                         setIsLoading(false);
@@ -497,6 +499,21 @@ export const useAudit = () => {
         }
     }, [uiAuditId, navigate]);
 
+    // 6. Resilient Audit Ownership Claim
+    const hasAttemptedClaim = useRef<Set<string>>(new Set());
+    useEffect(() => {
+        const currentId = uiAuditId || auditId;
+        if (currentId && user?.id && !ownerId) {
+            if (!hasAttemptedClaim.current.has(currentId)) {
+                hasAttemptedClaim.current.add(currentId);
+                console.log(`[useAudit] 🔄 User authenticated detected without owner. Automatically claiming audit ${currentId}...`);
+                import('../services/auditStorage').then(({ transferAuditOwnership }) => {
+                    transferAuditOwnership(currentId, user.id);
+                });
+            }
+        }
+    }, [user?.id, uiAuditId, auditId, ownerId]);
+
     return {
         submittedUrl,
         report,
@@ -513,6 +530,7 @@ export const useAudit = () => {
         reportInputs,
         whiteLabelLogo,
         auditId,
+        ownerId,
         user,
         queuePosition,
         queueType,

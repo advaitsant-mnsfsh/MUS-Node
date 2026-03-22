@@ -356,7 +356,7 @@ export class JobProcessor {
                 ...report
             };
 
-            const resultUrl = `/report/${jobId}`;
+            const resultUrl = `/shared/${jobId}`;
             const thumbnailUrl = finalScreenshots[0]?.url || undefined;
 
             // --- ✨ FINAL COMPLETION SIGNAL ---

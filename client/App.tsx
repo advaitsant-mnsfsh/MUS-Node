@@ -89,6 +89,7 @@ const App: React.FC = () => {
         reportInputs,
         whiteLabelLogo,
         auditId,
+        ownerId,
         user,
         queuePosition,
         isLongWait,
@@ -119,16 +120,28 @@ const App: React.FC = () => {
             </div>
         );
 
-        // 1. Scraper / Puppeteer Error
+        // 1. Scraper / Puppeteer Error (Anti-Bot / Protocol Blocks)
         if (error.toLowerCase().includes('scraper error') ||
             error.toLowerCase().includes('puppeteer') ||
             error.toLowerCase().includes('navigation failed') ||
-            error.toLowerCase().includes('access denied')) {
-            title = "Website Unreachable";
+            error.toLowerCase().includes('access denied') ||
+            error.toUpperCase().includes('HTTP2_PROTOCOL_ERROR') || 
+            error.toUpperCase().includes('ERR_HTTP2_PROTOCOL_ERROR')) {
+            title = "Website Unreachable (Anti-Bot Protection)";
             message = (
                 <div className="mt-2 space-y-2 text-left text-sm text-text-secondary">
-                    <p className="font-semibold text-text-primary">Please try again with screenshots instead — this site is not reachable by our automated checks.</p>
-                    <p>Some sites block bots. On the homepage, upload a screenshot of your site instead of using a URL.</p>
+                    <p className="font-semibold text-text-primary">
+                        Action required: use screenshots instead
+                    </p>
+                    <p>
+                        Some sites block automated access (for example{" "}
+                        <code className="rounded bg-slate-100 px-1 text-xs text-text-primary">
+                            ERR_HTTP2_PROTOCOL_ERROR
+                        </code>
+                        ). Return to the homepage and{" "}
+                        <strong>upload high-quality screenshots</strong> of the
+                        interface instead of using the URL.
+                    </p>
                 </div>
             );
         }
@@ -191,6 +204,7 @@ const App: React.FC = () => {
             <ReportResultView
                 report={report}
                 user={user}
+                ownerId={ownerId}
                 error={error}
                 renderError={renderError}
                 submittedUrl={submittedUrl}

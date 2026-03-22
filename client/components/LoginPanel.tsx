@@ -7,6 +7,7 @@ import { transferAuditOwnership } from '../services/auditStorage';
 
 interface LoginPanelProps {
     auditId?: string | null;
+    ownerId?: string | null;
     hideTitle?: boolean;
 }
 
@@ -27,7 +28,7 @@ const inOtpClass =
 const btnClass =
     'w-full h-14 rounded-lg bg-[#1A1A1A] text-white font-bold text-base transition-colors hover:bg-black disabled:opacity-70 disabled:cursor-not-allowed flex justify-center items-center gap-2';
 
-export const LoginPanel: React.FC<LoginPanelProps> = ({ auditId, hideTitle = false }) => {
+export const LoginPanel: React.FC<LoginPanelProps> = ({ auditId, ownerId, hideTitle = false }) => {
     const [isLoginMode, setIsLoginMode] = useState(false); // Toggle between Sign Up and Login
     const [step, setStep] = useState<'email' | 'otp' | 'password' | 'forgot-email' | 'forgot-otp' | 'forgot-reset'>('email'); // For various flows
     const [tempPassword] = useState(() => Math.random().toString(36).slice(-12) + 'A1!'); // Bridge password
@@ -59,17 +60,21 @@ export const LoginPanel: React.FC<LoginPanelProps> = ({ auditId, hideTitle = fal
         } else if (session) {
             await verifyLead(email); // Try to verify lead just in case
 
-            // Transfer audit ownership if auditId exists
+            // Transfer audit ownership if auditId exists and it's not already owned by this user
             if (auditId && session.user) {
-                console.log(`[LoginPanel] 🔓 User Logged In: ${session.user.id} (${session.user.email})`);
-                console.log(`[LoginPanel] 🔄 Transferring Audit ${auditId} to User ${session.user.id}...`);
-
-                const { success, error } = await transferAuditOwnership(auditId, session.user.id);
-
-                if (success) {
-                    console.log(`[LoginPanel] ✅ Audit ${auditId} ownership transferred successfully!`);
+                if (ownerId === session.user.id) {
+                    console.log(`[LoginPanel] ✅ Audit ${auditId} is already owned by user ${session.user.id}. Skipping transfer.`);
                 } else {
-                    console.error(`[LoginPanel] ❌ Failed to transfer audit ownership:`, error);
+                    console.log(`[LoginPanel] 🔓 User Logged In: ${session.user.id} (${session.user.email})`);
+                    console.log(`[LoginPanel] 🔄 Transferring Audit ${auditId} to User ${session.user.id}...`);
+
+                    const { success, error } = await transferAuditOwnership(auditId, session.user.id);
+
+                    if (success) {
+                        console.log(`[LoginPanel] ✅ Audit ${auditId} ownership transferred successfully!`);
+                    } else {
+                        console.error(`[LoginPanel] ❌ Failed to transfer audit ownership:`, error);
+                    }
                 }
             } else if (session.user) {
                 console.log(`[LoginPanel] 🔓 User Logged In: ${session.user.id}. No Audit ID to transfer.`);
@@ -234,12 +239,16 @@ export const LoginPanel: React.FC<LoginPanelProps> = ({ auditId, hideTitle = fal
 
         // 5. Transfer audit ownership
         if (auditId && session.user) {
-            console.log(`[LoginPanel] 🔄 Transferring Audit ${auditId} to ${session.user.id}...`);
-            const { success, error: transferError } = await transferAuditOwnership(auditId, session.user.id);
-            if (success) {
-                toast.success('Report saved to your account!', { icon: '📊' });
+            if (ownerId === session.user.id) {
+                console.log(`[LoginPanel] ✅ Audit ${auditId} is already owned by user ${session.user.id}. Skipping transfer.`);
             } else {
-                console.error('[LoginPanel] Ownership transfer failed:', transferError);
+                console.log(`[LoginPanel] 🔄 Transferring Audit ${auditId} to ${session.user.id}...`);
+                const { success, error: transferError } = await transferAuditOwnership(auditId, session.user.id);
+                if (success) {
+                    toast.success('Report saved to your account!', { icon: '📊' });
+                } else {
+                    console.error('[LoginPanel] Ownership transfer failed:', transferError);
+                }
             }
         }
 

@@ -243,7 +243,7 @@ export const auth = betterAuth({
 /**
  * 📧 Sends a "Report Ready" notification email to users who opted in.
  */
-export async function sendReportReadyEmail(email: string, jobId: string, userName?: string | null) {
+export async function sendReportReadyEmail(email: string, jobId: string, userName?: string | null, websiteUrl?: string) {
     const resendApiKey = process.env.RESEND_API_KEY || process.env.RESENT_API_KEY;
     const fromEmail = process.env.RESEND_FROM_EMAIL || 'onboarding@resend.dev';
     const clientUrl = getClientUrl();
@@ -260,6 +260,7 @@ export async function sendReportReadyEmail(email: string, jobId: string, userNam
 
         const reportUrl = `${clientUrl}/report/${jobId}`;
         const displayName = userName || 'there';
+        const targetText = websiteUrl ? ` for <strong>${websiteUrl}</strong>` : '';
 
         await resend.emails.send({
             from: fromEmail,
@@ -313,7 +314,7 @@ export async function sendReportReadyEmail(email: string, jobId: string, userNam
                                     </tr>
                                     <tr>
                                         <td align="center" style="padding-bottom: 32px;">
-                                            <p class="text-secondary" style="margin: 0; font-size: 16px; font-weight: 400; color: #666666; line-height: 1.6;">Your UX Audit is complete and ready for review. We found some great insights to help you grow.</p>
+                                            <p class="text-secondary" style="margin: 0; font-size: 16px; font-weight: 400; color: #666666; line-height: 1.6;">Your UX Audit${targetText} is complete and ready for review. We found some great insights to help you grow.</p>
                                         </td>
                                     </tr>
                                     <tr>
@@ -337,5 +338,106 @@ export async function sendReportReadyEmail(email: string, jobId: string, userNam
         console.log(`[AUTH] ✅ Report ready email sent to ${email}`);
     } catch (err) {
         console.error("[AUTH] 💥 Failed to send report ready email:", err);
+    }
+}
+
+/**
+ * 📧 Sends an email confirming receipt of a feedback ticket.
+ */
+export async function sendFeedbackReceivedEmail(email: string, ticketId: string, errorDetails: string, websiteUrl?: string) {
+    const resendApiKey = process.env.RESEND_API_KEY || process.env.RESENT_API_KEY;
+    const fromEmail = process.env.RESEND_FROM_EMAIL || 'onboarding@resend.dev';
+    const clientUrl = getClientUrl();
+
+    if (!resendApiKey) {
+        console.error("[AUTH] ❌ RESEND_API_KEY is missing. Cannot send feedback received email.");
+        return;
+    }
+
+    try {
+        const { Resend } = await import("resend");
+        const resend = new Resend(resendApiKey);
+
+        await resend.emails.send({
+            from: fromEmail,
+            to: email,
+            subject: `Feedback Ticket Raised: #${ticketId}`,
+            html: `
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <meta charset="utf-8">
+                    <style>
+                        body { margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, sans-serif; background: #FAFAFA; color: #1A1A1A; }
+                        .container { max-width: 600px; margin: 40px auto; background: #FFFFFF; padding: 40px; border-radius: 12px; border: 1px solid #E0E0E0; }
+                    </style>
+                </head>
+                <body>
+                    <div class="container">
+                        <h2 style="margin-top: 0;">We received your feedback!</h2>
+                        <p>Thank you for letting us know. A ticket has been raised with our engineering team.</p>
+                        <div style="background: #F5F5F5; padding: 20px; border-radius: 8px; margin: 20px 0;">
+                            <p style="margin: 0 0 10px 0;"><strong>Ticket ID:</strong> ${ticketId}</p>
+                            ${websiteUrl ? `<p style="margin: 0 0 10px 0;"><strong>Target URL:</strong> ${websiteUrl}</p>` : ''}
+                            <p style="margin: 0;"><strong>Error Details:</strong><br/>${errorDetails}</p>
+                        </div>
+                        <p>We'll notify you once the issue has been resolved and the ticket is closed.</p>
+                        <p style="color: #666; font-size: 14px; margin-top: 40px;">MyUXScore Team</p>
+                    </div>
+                </body>
+                </html>
+            `
+        });
+        console.log(`[AUTH] ✅ Feedback received email sent to ${email}`);
+    } catch (err) {
+        console.error("[AUTH] 💥 Failed to send feedback received email:", err);
+    }
+}
+
+/**
+ * 📧 Sends an email confirming closure of a feedback ticket.
+ */
+export async function sendTicketClosedEmail(email: string, ticketId: string) {
+    const resendApiKey = process.env.RESEND_API_KEY || process.env.RESENT_API_KEY;
+    const fromEmail = process.env.RESEND_FROM_EMAIL || 'onboarding@resend.dev';
+    const clientUrl = getClientUrl();
+
+    if (!resendApiKey) {
+        console.error("[AUTH] ❌ RESEND_API_KEY is missing. Cannot send ticket closed email.");
+        return;
+    }
+
+    try {
+        const { Resend } = await import("resend");
+        const resend = new Resend(resendApiKey);
+
+        await resend.emails.send({
+            from: fromEmail,
+            to: email,
+            subject: `Feedback Ticket Closed: #${ticketId}`,
+            html: `
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <meta charset="utf-8">
+                    <style>
+                        body { margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, sans-serif; background: #FAFAFA; color: #1A1A1A; }
+                        .container { max-width: 600px; margin: 40px auto; background: #FFFFFF; padding: 40px; border-radius: 12px; border: 1px solid #E0E0E0; border-top: 6px solid #10B981; }
+                    </style>
+                </head>
+                <body>
+                    <div class="container">
+                        <h2 style="margin-top: 0;">Ticket Resolved</h2>
+                        <p>Your feedback ticket <strong>#${ticketId}</strong> has been successfully reviewed and closed by our engineering team.</p>
+                        <p>Thank you for helping us improve MyUXScore! If you run into any more issues, don't hesitate to reach out again.</p>
+                        <p style="color: #666; font-size: 14px; margin-top: 40px;">MyUXScore Team</p>
+                    </div>
+                </body>
+                </html>
+            `
+        });
+        console.log(`[AUTH] ✅ Ticket closed email sent to ${email}`);
+    } catch (err) {
+        console.error("[AUTH] 💥 Failed to send ticket closed email:", err);
     }
 }

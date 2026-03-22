@@ -28,6 +28,8 @@ interface ReportLayoutProps {
   isAuthLoading: boolean;
   onUnlock: () => void;
   url: string;
+  auditId: string | null;
+  ownerId?: string | null;
   /** Split-column unlock teaser: skip AuthBlocker and content blur */
   teaserMode?: boolean;
 
@@ -184,6 +186,8 @@ export const ReportLayout: React.FC<ReportLayoutProps> = ({
   isAuthLoading,
   onUnlock,
   url,
+  auditId,
+  ownerId,
   whiteLabelLogo,
   isSharedView,
   primaryScreenshotSrc,
@@ -452,6 +456,8 @@ export const ReportLayout: React.FC<ReportLayoutProps> = ({
                   isUnlocked={false}
                   onUnlock={onUnlock}
                   auditUrl={url}
+                  auditId={auditId}
+                  ownerId={ownerId}
                 />
               )}
 

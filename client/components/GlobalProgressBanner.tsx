@@ -19,9 +19,9 @@ export const GlobalProgressBanner: React.FC = () => {
         const isHomePage = location.pathname === '/';
         const isAnalysisPage = location.pathname.startsWith('/analysis/');
 
-        // Extract ID from /report/:id
-        const reportMatch = location.pathname.match(/\/report\/([^/]+)/);
-        const reportIdInUrl = reportMatch ? reportMatch[1] : null;
+        // Extract ID from /report/:id or /shared/:id
+        const reportMatch = location.pathname.match(/\/(report|shared)\/([^/]+)/);
+        const reportIdInUrl = reportMatch ? reportMatch[2] : null;
 
         // Condition: Show if we have an active audit AND
         // 1. Not on home page
