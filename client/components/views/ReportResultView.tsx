@@ -50,17 +50,33 @@ export const ReportResultView: React.FC<ReportResultViewProps> = ({
                 microcopy="Unlock to view full report"
                 isAnalysisComplete={true}
                 animationData={animationData}
-                screenshot={screenshots.length > 0 ? screenshots[0].data : null}
+                screenshot={
+                    screenshots.length > 0
+                        ? screenshots[0].data ||
+                          screenshots[0].url ||
+                          null
+                        : null
+                }
                 url={submittedUrl}
                 fullWidth={false}
                 report={report}
                 reportUrl={submittedUrl}
                 reportScreenshots={screenshots}
                 screenshotMimeType={screenshotMimeType}
+                inputs={reportInputs}
+                reportInputs={reportInputs}
                 isError={!!error}
             >
-                <div className="flex flex-col items-center justify-center w-full h-full animate-in fade-in duration-500">
-                    <LoginPanel auditId={uiAuditId || auditId} />
+                <div className="flex w-full flex-col items-center justify-center animate-in fade-in duration-500">
+                    <div
+                        className="w-full bg-white/50 backdrop-blur-sm rounded-lg p-8 overflow-hidden"
+                        style={{
+                            border: '0.5px solid var(--high-grey, #1A1A1A)',
+                            boxShadow: 'none',
+                        }}
+                    >
+                        <LoginPanel auditId={uiAuditId || auditId} />
+                    </div>
                 </div>
             </SplitLayout>
         );

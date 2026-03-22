@@ -162,20 +162,24 @@ function SharedAuditView() {
 
     if (error || !report) {
         const isUnclaimed = error?.includes('not been claimed');
+        const cardStyle = { border: '0.5px solid var(--high-grey, #1A1A1A)', boxShadow: 'none' } as const;
         return (
-            <div className="min-h-screen bg-slate-50 text-slate-800 font-sans flex flex-col items-center justify-center px-4">
+            <div className="flex min-h-dvh flex-col items-center justify-center bg-page-bg px-4 font-sans text-text-primary">
                 <Logo className="mb-8" />
-                <div className="max-w-md text-center">
-                    <h1 className="text-2xl font-bold text-slate-900 mb-4">
-                        {isUnclaimed ? 'Report Not Yet Shared' : 'Audit Not Found'}
+                <div className="w-full max-w-md rounded-lg bg-white p-8 text-center" style={cardStyle}>
+                    <h1 className="mb-3 text-xl font-bold tracking-tight text-text-primary md:text-2xl">
+                        {isUnclaimed ? 'Report not shared yet' : 'We could not open this audit'}
                     </h1>
-                    <p className="text-slate-600 mb-6">
+                    <p className="mb-6 text-sm leading-relaxed text-text-secondary">
                         {isUnclaimed
-                            ? "This report hasn't been claimed by a user yet. Please log in on the main report page to activate sharing."
-                            : (error || 'This audit link may be invalid or expired.')}
+                            ? 'This report has not been claimed yet. Open it on the main report page while logged in to enable sharing.'
+                            : (error || 'This link may be invalid or expired.')}
                     </p>
-                    <a href="/" className="inline-block px-6 py-3 bg-indigo-600 text-white font-semibold rounded-lg hover:bg-indigo-700 transition-colors">
-                        {isUnclaimed ? 'Go to Main Page' : 'Run Your Own Audit'}
+                    <a
+                        href="/"
+                        className="inline-flex h-12 items-center justify-center rounded-lg bg-[#1A1A1A] px-6 text-sm font-bold text-white transition-colors hover:bg-black"
+                    >
+                        {isUnclaimed ? 'Go to home' : 'Run your own audit'}
                     </a>
                 </div>
             </div>

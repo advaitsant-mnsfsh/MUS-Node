@@ -1,11 +1,28 @@
 import React, { useState } from 'react';
 import toast from 'react-hot-toast';
+import { ArrowRight, X } from 'lucide-react';
 import { getBackendUrl } from '../../services/config';
 import { setUserTypeProperty } from '../../lib/analytics';
 
 interface BetaAccessPageProps {
     onAuthorized: () => void;
 }
+
+const SURFACE: React.CSSProperties = {
+    border: '0.5px solid var(--high-grey, #1A1A1A)',
+    boxShadow: 'none',
+};
+
+const INPUT_BASE =
+    'w-full rounded-lg bg-white px-4 text-text-primary outline-none transition-shadow placeholder:text-slate-400 focus-visible:ring-2 focus-visible:ring-brand/25 disabled:opacity-60';
+
+const inputOutline: React.CSSProperties = {
+    border: '0.5px solid var(--high-grey, #1A1A1A)',
+    boxShadow: 'none',
+};
+
+const BTN_PRIMARY =
+    'flex h-14 w-full items-center justify-center gap-2 rounded-lg bg-[#1A1A1A] text-base font-bold text-white transition-colors hover:bg-black disabled:cursor-not-allowed disabled:opacity-60';
 
 export const BetaAccessPage: React.FC<BetaAccessPageProps> = ({ onAuthorized }) => {
     const [code, setCode] = useState('');
@@ -24,31 +41,27 @@ export const BetaAccessPage: React.FC<BetaAccessPageProps> = ({ onAuthorized }) 
             const response = await fetch(`${getBackendUrl()}/api/public/verify-beta`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ code: code.trim() })
+                body: JSON.stringify({ code: code.trim() }),
             });
 
             if (response.ok) {
                 const data = await response.json();
 
-                // Store the access type for Google Analytics separation
                 if (data.type) {
                     localStorage.setItem('mus_auth_type', data.type);
                 } else {
                     localStorage.setItem('mus_auth_type', 'beta');
                 }
 
-                // Store in sessionStorage for faster frontend persistence during navigate
                 sessionStorage.setItem('beta_authorized', 'true');
-
-                // Immediately set GA user property for current session
                 setUserTypeProperty();
 
-                toast.success('Access Granted!');
+                toast.success('Access granted');
                 onAuthorized();
             } else {
                 toast.error('Invalid access code');
             }
-        } catch (error) {
+        } catch {
             toast.error('Server error. Please try again.');
         } finally {
             setIsSubmitting(false);
@@ -64,7 +77,7 @@ export const BetaAccessPage: React.FC<BetaAccessPageProps> = ({ onAuthorized }) 
             const response = await fetch(`${getBackendUrl()}/api/public/beta-waitlist`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ email: waitlistEmail.trim() })
+                body: JSON.stringify({ email: waitlistEmail.trim() }),
             });
 
             if (response.ok) {
@@ -72,7 +85,7 @@ export const BetaAccessPage: React.FC<BetaAccessPageProps> = ({ onAuthorized }) 
             } else {
                 toast.error('Failed to join waitlist');
             }
-        } catch (error) {
+        } catch {
             toast.error('Error joining waitlist');
         } finally {
             setIsWaitlistSubmitting(false);
@@ -80,86 +93,145 @@ export const BetaAccessPage: React.FC<BetaAccessPageProps> = ({ onAuthorized }) 
     };
 
     return (
-        <div className="min-h-screen bg-white text-black flex flex-col font-sans bg-[radial-gradient(#E5E7EB_1px,transparent_1px)] bg-[size:32px_32px]">
-            <main className="flex-grow flex items-center justify-center w-full max-w-7xl mx-auto px-8 pt-20 pb-12 lg:pt-32 lg:pb-16">
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-8 w-full lg:items-stretch">
-                    <div className="flex flex-col justify-between py-2 md:py-0">
+        <div className="flex min-h-dvh flex-col bg-page-bg font-sans text-text-primary">
+            {/* Very light grid — same family as before, toned down */}
+            <div
+                className="pointer-events-none fixed inset-0 opacity-[0.35]"
+                style={{
+                    backgroundImage: 'radial-gradient(rgb(148 163 184 / 0.25) 1px, transparent 1px)',
+                    backgroundSize: '28px 28px',
+                }}
+                aria-hidden
+            />
+
+            <main className="relative z-10 mx-auto flex w-full max-w-6xl grow flex-col justify-center px-5 pb-16 pt-20 md:px-8 lg:pt-28 lg:pb-20">
+                <div className="grid w-full grid-cols-1 items-stretch gap-12 lg:grid-cols-2 lg:gap-10">
+                    {/* Left column */}
+                    <div className="flex flex-col justify-between gap-10 py-1">
                         <div>
-                            <img src="/logo.png" alt="MyUXScore Logo" className="h-12 md:h-14 lg:h-[64px] w-auto object-contain mb-3 lg:mb-4" />
-                            <div className="space-y-2">
-                                <h1 className="text-7xl lg:text-[100px] font-black uppercase leading-[0.85] tracking-tighter">
-                                    BETA<br />
-                                    <span className="bg-[#FFC107] px-4 mt-2 inline-block shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] border-2 border-black">ACCESS</span>
+                            <img
+                                src="/logo.png"
+                                alt="MyUXScore"
+                                className="mb-5 h-11 w-auto object-contain md:h-12 lg:h-14"
+                            />
+                            <div className="space-y-4">
+                                <p className="text-xs font-semibold uppercase tracking-[0.2em] text-text-secondary">
+                                    Private beta
+                                </p>
+                                <h1 className="text-4xl font-bold leading-[1.05] tracking-tight text-text-primary md:text-5xl lg:text-[3.25rem]">
+                                    Measure UX
+                                    <br />
+                                    <span className="relative inline-block">
+                                        <span
+                                            className="relative z-10 inline-block rounded-lg bg-accent-yellow/90 px-3 py-1 text-text-primary"
+                                            style={SURFACE}
+                                        >
+                                            like a pro
+                                        </span>
+                                    </span>
                                 </h1>
+                                <p className="max-w-md text-base leading-relaxed text-text-secondary md:text-lg">
+                                    Professional-grade UX insights from our framework — available to a limited number of teams
+                                    during this beta.
+                                </p>
                             </div>
-                            <p className="text-xl lg:text-2xl font-medium text-zinc-600 max-w-md leading-relaxed mt-6">
-                                Experience the next evolution of user experience measurement. Professional-grade insights powered by our proprietary framework.
-                            </p>
                         </div>
-                        <div className="flex items-center gap-4 pt-10 mt-auto">
-                            <div className="flex -space-x-3">
-                                <div className="w-12 h-12 rounded-full border-2 border-black bg-zinc-100 flex items-center justify-center overflow-hidden">
-                                    <div className="w-full h-full bg-zinc-200"></div>
-                                </div>
-                                <div className="w-12 h-12 rounded-full border-2 border-black bg-zinc-200 flex items-center justify-center overflow-hidden">
-                                    <div className="w-full h-full bg-zinc-300"></div>
-                                </div>
-                                <div className="w-12 h-12 rounded-full border-2 border-black bg-[#FFC107] flex items-center justify-center text-xs font-black">
-                                    1K+
+
+                        <div className="flex flex-wrap items-center gap-4 border-t border-slate-200/80 pt-8">
+                            <div className="flex -space-x-2">
+                                <div
+                                    className="flex h-11 w-11 items-center justify-center overflow-hidden rounded-full bg-slate-100 ring-2 ring-page-bg"
+                                    style={inputOutline}
+                                />
+                                <div
+                                    className="flex h-11 w-11 items-center justify-center overflow-hidden rounded-full bg-slate-200/80 ring-2 ring-page-bg"
+                                    style={inputOutline}
+                                />
+                                <div
+                                    className="flex h-11 w-11 items-center justify-center rounded-full bg-accent-yellow/80 text-xs font-bold text-text-primary ring-2 ring-page-bg"
+                                    style={inputOutline}
+                                >
+                                    1k+
                                 </div>
                             </div>
-                            <p className="text-[10px] font-black text-zinc-400 uppercase tracking-[0.2em]">Trusted by 1,000+ UX Designers</p>
+                            <p className="max-w-[200px] text-[11px] font-semibold uppercase leading-snug tracking-wider text-text-secondary">
+                                Trusted by UX designers &amp; product teams
+                            </p>
                         </div>
                     </div>
 
-                    <div className="flex justify-start lg:justify-end relative">
-                        <div className="absolute -top-12 -right-4 lg:-right-8 z-20 w-32 h-32 bg-white rounded-full border-4 border-black shadow-[10px_10px_0px_0px_rgba(0,0,0,1)] flex items-center justify-center text-center p-4">
-                            <span className="text-[#6366f1] text-[11px] font-bold uppercase leading-tight tracking-tighter">
-                                Strictly Limited Capacity
+                    {/* Right column — form card */}
+                    <div className="relative flex justify-start lg:justify-end">
+                        <div
+                            className="absolute -top-2 right-0 z-20 max-w-44 rounded-full bg-white px-3 py-2 text-center"
+                            style={{
+                                boxShadow: 'none',
+                                border: '0.5px solid rgb(99 102 241 / 0.35)',
+                            }}
+                        >
+                            <span className="text-[10px] font-semibold uppercase leading-tight tracking-wide text-brand">
+                                Limited capacity
                             </span>
                         </div>
-                        <div className="w-full max-w-md bg-white border-4 border-black shadow-[10px_10px_0px_0px_rgba(0,0,0,1)] overflow-hidden relative">
-                            <div className="h-2 w-full bg-[#6366f1] border-b-4 border-black"></div>
-                            <div className="p-8 lg:p-12">
-                                <div className="mb-10">
-                                    <h2 className="text-3xl font-black uppercase tracking-tight mb-2">Claim Entry</h2>
-                                    <p className="text-sm font-medium text-zinc-500">Enter your unique invitation code to begin.</p>
+
+                        <div
+                            className="relative mt-6 w-full max-w-md overflow-hidden rounded-lg bg-white lg:mt-0"
+                            style={SURFACE}
+                        >
+                            <div className="h-1 w-full bg-brand" aria-hidden />
+                            <div className="p-8 lg:p-10">
+                                <div className="mb-8">
+                                    <h2 className="mb-2 text-2xl font-bold tracking-tight text-text-primary">
+                                        Enter your invite
+                                    </h2>
+                                    <p className="text-sm text-text-secondary">
+                                        Use the code from your invitation email to unlock the beta.
+                                    </p>
                                 </div>
-                                <form className="space-y-8" onSubmit={handleSubmit}>
+
+                                <form className="space-y-6" onSubmit={handleSubmit}>
                                     <div>
-                                        <label className="block uppercase font-black text-[11px] tracking-[0.2em] mb-3 text-black">Access Code</label>
+                                        <label
+                                            htmlFor="beta-code"
+                                            className="mb-2 block text-xs font-semibold uppercase tracking-wide text-text-secondary"
+                                        >
+                                            Access code
+                                        </label>
                                         <input
-                                            className="w-full p-5 text-xl font-mono font-bold bg-white border-4 border-black focus:ring-0 focus:border-black focus:outline-none placeholder-zinc-200"
+                                            id="beta-code"
+                                            className={`${INPUT_BASE} h-14 font-mono text-lg font-semibold tracking-wide`}
+                                            style={inputOutline}
                                             placeholder="UX-000-000-000"
                                             type="text"
+                                            autoComplete="off"
                                             value={code}
                                             onChange={(e) => setCode(e.target.value)}
                                             disabled={isSubmitting}
                                         />
                                     </div>
-                                    <button
-                                        type="submit"
-                                        disabled={isSubmitting}
-                                        className="w-full bg-[#FFC107] text-black p-6 font-black text-xl uppercase tracking-widest flex items-center justify-center gap-4 border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-1 hover:translate-y-1 hover:shadow-none transition-all disabled:hover:translate-x-0 disabled:hover:translate-y-0 disabled:hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]"
-                                    >
-                                        {isSubmitting ? 'Verifying...' : 'Grant Access'}
-                                        {!isSubmitting && (
-                                            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="3">
-                                                <path strokeLinecap="round" strokeLinejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3" />
-                                            </svg>
-                                        )}
+                                    <button type="submit" disabled={isSubmitting} className={BTN_PRIMARY}>
+                                        {isSubmitting ? 'Verifying…' : 'Continue'}
+                                        {!isSubmitting && <ArrowRight className="h-5 w-5 shrink-0" strokeWidth={2} />}
                                     </button>
                                 </form>
-                                <div className="mt-10 pt-8 border-t-2 border-zinc-100 flex flex-col items-start gap-3">
-                                    <span className="text-[10px] font-black text-zinc-400 uppercase tracking-[0.2em]">No invitation code?</span>
+
+                                <div
+                                    className="mt-8 flex flex-col items-start gap-2 border-t border-slate-100 pt-8"
+                                    style={{ borderTopWidth: '0.5px' }}
+                                >
+                                    <span className="text-xs font-semibold uppercase tracking-wide text-text-secondary">
+                                        No code yet?
+                                    </span>
                                     <button
+                                        type="button"
                                         onClick={() => setShowWaitlist(true)}
-                                        className="inline-flex items-center gap-2 text-black font-black text-sm uppercase group underline underline-offset-8 decoration-2"
+                                        className="group inline-flex items-center gap-2 text-sm font-semibold text-brand transition-colors hover:text-brand-hover"
                                     >
                                         Join the waitlist
-                                        <svg className="w-4 h-4 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="3">
-                                            <path strokeLinecap="round" strokeLinejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3" />
-                                        </svg>
+                                        <ArrowRight
+                                            className="h-4 w-4 transition-transform group-hover:translate-x-0.5"
+                                            strokeWidth={2}
+                                        />
                                     </button>
                                 </div>
                             </div>
@@ -168,74 +240,77 @@ export const BetaAccessPage: React.FC<BetaAccessPageProps> = ({ onAuthorized }) 
                 </div>
             </main>
 
-            <footer className="p-10 w-full max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center text-[10px] font-black uppercase tracking-[0.2em] text-zinc-400 gap-6">
-                <div className="flex items-center gap-4">
-                    <span>© 2024 MYUXSCORE</span>
-                    <span className="w-1 h-1 bg-zinc-300 rounded-full"></span>
-                    <span>Version 0.4.2-BETA</span>
+            <footer className="relative z-10 mx-auto flex w-full max-w-6xl flex-col items-center justify-between gap-4 px-5 py-10 text-[11px] font-semibold uppercase tracking-wider text-text-secondary md:flex-row md:px-8">
+                <div className="flex flex-wrap items-center justify-center gap-3 md:justify-start">
+                    <span>© 2024 MyUXScore</span>
+                    <span className="hidden h-1 w-1 rounded-full bg-slate-300 sm:inline" aria-hidden />
+                    <span>v0.4.2-beta</span>
                 </div>
-                <div className="flex gap-8">
-                    <a href="/legal" className="hover:text-black transition-colors uppercase tracking-[0.2em]">Security, Privacy &amp; Terms</a>
-                </div>
+                <a
+                    href="/legal"
+                    className="text-center transition-colors hover:text-text-primary md:text-right"
+                >
+                    Security, privacy &amp; terms
+                </a>
             </footer>
 
-            {/* Waitlist Modal */}
             {showWaitlist && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-white/80 backdrop-blur-sm animate-in fade-in duration-200">
-                    <div className="w-full max-w-sm bg-white border-4 border-black p-8 shadow-[10px_10px_0px_0px_rgba(0,0,0,1)] relative animate-in zoom-in-95 duration-200">
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/25 p-4 backdrop-blur-[6px] animate-in fade-in duration-200">
+                    <div
+                        className="relative w-full max-w-md animate-in rounded-lg bg-white p-8 zoom-in-95 duration-200"
+                        style={SURFACE}
+                    >
                         <button
+                            type="button"
                             onClick={() => {
                                 setShowWaitlist(false);
                                 setWaitlistSuccess(false);
                             }}
-                            className="absolute top-4 right-4 text-black hover:scale-110 transition-transform"
+                            className="absolute right-3 top-3 rounded-lg p-2 text-text-secondary transition-colors hover:bg-slate-100 hover:text-text-primary"
+                            aria-label="Close"
                         >
-                            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M6 18L18 6M6 6l12 12" />
-                            </svg>
+                            <X className="h-5 w-5" strokeWidth={2} />
                         </button>
 
                         {!waitlistSuccess ? (
                             <>
-                                <h3 className="text-2xl font-black uppercase tracking-tight mb-4">Join the Waitlist</h3>
-                                <p className="text-sm font-medium mb-6 text-zinc-500">Be the first to know when we open more beta slots.</p>
+                                <h3 className="mb-2 pr-10 text-xl font-bold tracking-tight text-text-primary">
+                                    Join the waitlist
+                                </h3>
+                                <p className="mb-6 text-sm text-text-secondary">
+                                    We will email you when more beta spots open.
+                                </p>
                                 <form onSubmit={handleWaitlistSubmit} className="space-y-4">
-                                    <div>
-                                        <input
-                                            type="email"
-                                            value={waitlistEmail}
-                                            onChange={(e) => setWaitlistEmail(e.target.value)}
-                                            placeholder="your@email.com"
-                                            required
-                                            className="w-full bg-white border-4 border-black px-4 py-3 font-bold focus:outline-none placeholder-zinc-200"
-                                        />
-                                    </div>
-                                    <button
-                                        type="submit"
-                                        disabled={isWaitlistSubmitting}
-                                        className="w-full bg-[#FFC107] text-black font-black uppercase tracking-widest py-4 border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-1 hover:translate-y-1 hover:shadow-none transition-all disabled:opacity-50 disabled:hover:translate-x-0 disabled:hover:translate-y-0 disabled:hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]"
-                                    >
-                                        {isWaitlistSubmitting ? "Sending..." : "Notify Me"}
+                                    <input
+                                        type="email"
+                                        value={waitlistEmail}
+                                        onChange={(e) => setWaitlistEmail(e.target.value)}
+                                        placeholder="you@company.com"
+                                        required
+                                        className={`${INPUT_BASE} h-12`}
+                                        style={inputOutline}
+                                    />
+                                    <button type="submit" disabled={isWaitlistSubmitting} className={BTN_PRIMARY}>
+                                        {isWaitlistSubmitting ? 'Sending…' : 'Notify me'}
                                     </button>
                                 </form>
                             </>
                         ) : (
-                            <div className="text-center py-4">
-                                <div className="w-16 h-16 bg-white border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] rounded-full flex items-center justify-center mx-auto mb-6">
-                                    <svg className="w-8 h-8 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="4" d="M5 13l4 4L19 7" />
+                            <div className="py-2 text-center">
+                                <div className="mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-full border border-emerald-200/80 bg-emerald-50 text-emerald-700">
+                                    <svg className="h-7 w-7" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5}>
+                                        <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                                     </svg>
                                 </div>
-                                <h3 className="text-2xl font-black uppercase mb-3">You're In!</h3>
-                                <p className="font-bold text-sm leading-relaxed text-zinc-600">
-                                    We've added you to the waitlist.<br />You'll be notified as soon as there's an update.
+                                <h3 className="mb-2 text-xl font-bold text-text-primary">You are on the list</h3>
+                                <p className="text-sm leading-relaxed text-text-secondary">
+                                    We will let you know when there is room for you in the beta.
                                 </p>
                             </div>
                         )}
                     </div>
                 </div>
             )}
-
         </div>
     );
 };

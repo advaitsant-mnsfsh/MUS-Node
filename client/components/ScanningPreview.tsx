@@ -59,12 +59,22 @@ export const ScanningPreview: React.FC<ScanningPreviewProps> = ({ screenshot, pr
         return () => clearInterval(interval);
     }, [inputs, url, isError]);
 
+    const frameBorder = isError
+        ? '0.5px solid rgb(239, 68, 68)'
+        : '0.5px solid var(--high-grey, #1A1A1A)';
+
     return (
         <div className="relative w-full max-w-4xl mx-auto">
-            {/* Browser Frame Container */}
-            <div className="relative">
+            {/* Browser frame: single hairline border, no drop shadow (matches refined inputs / cards) */}
+            <div
+                className="relative rounded-xl overflow-hidden bg-white"
+                style={{ border: frameBorder, boxShadow: 'none' }}
+            >
                 {/* Browser Chrome (Top Bar) */}
-                <div className={`bg-[#F5F5F5] border-2 ${isError ? 'border-red-500' : 'border-border-main'} border-b-0 rounded-t-xl px-4 py-3 flex items-center gap-3 shadow-[1px_0px_0px_0px_rgba(0,0,0,1)]`}>
+                <div
+                    className="bg-[#F5F5F5] px-4 py-3 flex items-center gap-3"
+                    style={{ borderBottom: '0.5px solid var(--high-grey, #1A1A1A)', opacity: isError ? 0.95 : 1 }}
+                >
                     {/* Traffic Lights (macOS style) */}
                     <div className="flex gap-2">
                         <div className={`w-3 h-3 rounded-full ${isError ? 'bg-red-400' : 'bg-[#FF5F57]'} border border-[#E04A3F]`}></div>
@@ -90,8 +100,8 @@ export const ScanningPreview: React.FC<ScanningPreviewProps> = ({ screenshot, pr
                     </div>
                 </div>
 
-                {/* Screenshot Container */}
-                <div className={`relative bg-white border-2 ${isError ? 'border-red-500' : 'border-border-main'} rounded-b-xl overflow-hidden aspect-[16/10] shadow-neo`}>
+                {/* Screenshot / analyzing stage */}
+                <div className="relative bg-white overflow-hidden aspect-[16/10]">
                     {screenshot ? (
                         <div className="relative w-full h-full">
                             <img
@@ -110,7 +120,10 @@ export const ScanningPreview: React.FC<ScanningPreviewProps> = ({ screenshot, pr
                             {isError && (
                                 <div className="absolute inset-0 flex items-center justify-center bg-red-900/20 backdrop-blur-[2px]">
                                     <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[120%] h-[20px] bg-brand/10 -rotate-2 blur-xl animate-pulse" />
-                                    <div className="bg-white border-2 border-red-500 p-4 shadow-neo-red rotate-[-2deg] animate-in zoom-in duration-300">
+                                    <div
+                                        className="bg-white rounded-lg p-4 rotate-[-2deg] animate-in zoom-in duration-300"
+                                        style={{ border: '0.5px solid rgb(239, 68, 68)', boxShadow: 'none' }}
+                                    >
                                         <div className="flex items-center gap-3">
                                             <div className="w-8 h-8 bg-red-100 rounded-full flex items-center justify-center">
                                                 <svg className="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -130,7 +143,13 @@ export const ScanningPreview: React.FC<ScanningPreviewProps> = ({ screenshot, pr
                         <div className={`w-full h-full ${isError ? 'bg-red-50' : 'bg-gradient-to-br from-slate-50 to-slate-100'} flex flex-col items-center justify-center p-6`}>
                             <div className="text-center">
                                 <div className="mt-0 flex items-center justify-center">
-                                    <div className={`inline-flex items-top gap-2 px-6 py-4 bg-white border-2 ${isError ? 'border-red-500 shadow-neo-red' : 'border-black shadow-neo'}`}>
+                                    <div
+                                        className="inline-flex items-top gap-2 px-6 py-4 bg-white rounded-lg"
+                                        style={{
+                                            border: isError ? '0.5px solid rgb(239, 68, 68)' : '0.5px solid var(--high-grey, #1A1A1A)',
+                                            boxShadow: 'none',
+                                        }}
+                                    >
                                         <span className="text-sm font-bold text-text-primary text-center">
                                             <h2 className={`text-xl md:text-2xl font-black ${isError ? 'text-red-700' : 'text-black'} mb-2 uppercase tracking-tight`}>
                                                 {isError ? 'Analysis Failed' : 'Analyzing your website'}
@@ -148,14 +167,17 @@ export const ScanningPreview: React.FC<ScanningPreviewProps> = ({ screenshot, pr
                     {/* Continuous Scanning Line - Hidden on Error */}
                     {!isError && (
                         <div className="scanning-line-container absolute left-0 w-full h-1 z-30 pointer-events-none">
-                            <div className="absolute inset-0 bg-linear-to-r from-transparent via-brand to-transparent blur-md opacity-60"></div>
-                            <div className="absolute inset-0 bg-linear-to-r from-transparent via-[#8B5CF6] to-transparent blur-sm opacity-70"></div>
+                            <div className="absolute inset-0 bg-linear-to-r from-transparent via-brand to-transparent blur-sm opacity-35"></div>
+                            <div className="absolute inset-0 bg-linear-to-r from-transparent via-[#8B5CF6] to-transparent blur-sm opacity-40"></div>
                             <div className="absolute inset-0 h-[2px] bg-linear-to-r from-transparent via-white to-transparent opacity-95"></div>
                         </div>
                     )}
 
                     {/* Progress Bar - Bottom */}
-                    <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-white via-white/95 to-white/80 backdrop-blur-md border-t-2 border-border-main z-40">
+                    <div
+                        className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-white via-white/95 to-white/80 backdrop-blur-md z-40"
+                        style={{ borderTop: '0.5px solid var(--high-grey, #1A1A1A)' }}
+                    >
                         <div className="px-4 pt-3 pb-2 flex items-center justify-between gap-4">
                             <div className="flex items-center gap-2">
                                 {!isError && (
@@ -175,7 +197,7 @@ export const ScanningPreview: React.FC<ScanningPreviewProps> = ({ screenshot, pr
 
                         <div className={`h-3 ${isError ? 'bg-red-100' : 'bg-slate-200'} overflow-hidden`}>
                             <div
-                                className={`h-full ${isError ? 'bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.5)]' : 'bg-linear-to-r from-brand to-[#8B5CF6] shadow-[0_0_12px_rgba(99,102,241,0.6)]'} ${hasMounted ? 'transition-all duration-500 ease-out' : 'transition-none'} relative`}
+                                className={`h-full ${isError ? 'bg-red-500' : 'bg-linear-to-r from-brand to-[#8B5CF6]'} ${hasMounted ? 'transition-all duration-500 ease-out' : 'transition-none'} relative`}
                                 style={{ width: `${progress}%` }}
                             >
                                 {!isError && <div className="absolute inset-0 bg-linear-to-r from-transparent via-white/40 to-transparent animate-shimmer"></div>}
@@ -221,10 +243,7 @@ export const ScanningPreview: React.FC<ScanningPreviewProps> = ({ screenshot, pr
                     background-image: radial-gradient(circle, var(--tw-gradient-stops));
                 }
 
-                .shadow-neo-red {
-                    box-shadow: 4px 4px 0px 0px rgba(239, 68, 68, 1);
-                }
             `}</style>
-        </div >
+        </div>
     );
 };

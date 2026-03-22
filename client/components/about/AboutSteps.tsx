@@ -3,7 +3,7 @@ import { Globe, Plus, Image as ImageIcon, Box, Zap, Settings, Accessibility, Pal
 
 const AboutSteps: React.FC = () => {
     return (
-        <section className="relative w-full bg-[#FFFEF9] pb-20 px-6 font-['DM_Sans'] overflow-hidden">
+        <section className="relative w-full max-w-full min-w-0 bg-[#FFFEF9] pb-16 md:pb-20 px-4 sm:px-6 font-['DM_Sans'] overflow-x-hidden">
             {/* Decorative Right Ring image (between steps 3 and 4) */}
             {/* The exported PNG is exactly 123px wide (the clipped crescent), so we just set natural width against the right edge */}
             <img
@@ -14,21 +14,26 @@ const AboutSteps: React.FC = () => {
             />
 
             {/* Steps Parent Container: flex-col, center, gap-5.25rem, self-stretch */}
-            <div className="flex flex-col items-center gap-[5.25rem] self-stretch w-full max-w-[1271px] mx-auto">
+            <div className="flex flex-col items-center gap-12 md:gap-20 lg:gap-[5.25rem] self-stretch w-full max-w-[1271px] mx-auto">
                 <h2 className="text-[#1A1A1A] text-center text-3xl md:text-[40px] font-bold tracking-tight">
                     From URL to UX roadmap in 4 steps
                 </h2>
 
                 {/* Steps Container Parent: flex-col, h-81.75rem, gap-7.25rem */}
-                <div className="relative flex flex-col items-start gap-[7.25rem] w-full min-h-[81.75rem]">
-                    {/* Vertical Timeline Line */}
-                    <div className="absolute left-1/2 -ml-[0.5px] top-4 bottom-10 w-[1px] border-l border-dashed border-[#1A1A1A]/30 z-0"></div>
+                <div className="relative flex flex-col items-start gap-16 md:gap-24 lg:gap-[7.25rem] w-full min-h-0 md:min-h-[81.75rem]">
+                    {/* Vertical Timeline Line — desktop only (avoids odd centering on narrow screens) */}
+                    <div className="absolute left-1/2 -ml-[0.5px] top-4 bottom-10 w-px border-l border-dashed border-[#1A1A1A]/30 z-0 hidden md:block" aria-hidden />
 
                     {/* --- STEP 1: Input & Contextualization --- */}
-                    <div className="flex flex-col md:flex-row justify-center items-start w-full gap-[2rem] md:gap-[8.8125rem] relative z-10 flex-1">
+                    <div className="flex flex-col md:flex-row justify-center items-start w-full gap-6 md:gap-[8.8125rem] relative z-10 flex-1 min-w-0">
+                        {/* Mobile step badge */}
+                        <div className="flex md:hidden items-center gap-2 w-full">
+                            <div className="w-9 h-9 bg-[#FBD24E] border border-black flex items-center justify-center font-bold text-sm shadow-[2px_2px_0px_#000] shrink-0">1</div>
+                            <span className="text-xs font-bold uppercase tracking-wide text-[#1A1A1A]/60">Step 1</span>
+                        </div>
                         {/* Left: Input Card Mockup */}
-                        <div className="flex flex-col items-end gap-[0.625rem] w-full md:w-[37rem] pt-[1.375rem] shrink-0">
-                            <div className="w-full max-w-[500px] bg-white border border-black rounded-sm shadow-[2px_2px_0px_#000] p-6 flex flex-col gap-4">
+                        <div className="flex flex-col items-stretch md:items-end gap-[0.625rem] w-full md:w-[37rem] md:pt-[1.375rem] shrink-0 min-w-0">
+                            <div className="w-full max-w-[500px] mx-auto md:mx-0 md:ml-auto bg-white border border-black rounded-sm shadow-[2px_2px_0px_#000] p-4 sm:p-6 flex flex-col gap-4">
                                 <div className="flex items-center gap-2 border border-black rounded-md p-3 w-full shadow-[3px_3px_0px_rgba(0,0,0,0.5)] bg-white">
                                     <span className="text-[15px] text-[#1A1A1A] font-medium ml-2 font-['DM_Sans']">www.yourwebsite.com</span>
                                     <div className="ml-auto flex items-center gap-3">
@@ -63,9 +68,13 @@ const AboutSteps: React.FC = () => {
                     </div>
 
                     {/* --- STEP 2: The 5-Aspect Deep Dive --- */}
-                    <div className="flex flex-col md:flex-row justify-center items-start w-full gap-[2rem] md:gap-[8.8125rem] relative z-10 flex-1">
+                    <div className="flex flex-col md:flex-row justify-center items-start w-full gap-6 md:gap-[8.8125rem] relative z-10 flex-1 min-w-0">
+                        <div className="flex md:hidden items-center gap-2 w-full order-first">
+                            <div className="w-9 h-9 bg-[#FBD24E] border border-black flex items-center justify-center font-bold text-sm shadow-[2px_2px_0px_#000] shrink-0">2</div>
+                            <span className="text-xs font-bold uppercase tracking-wide text-[#1A1A1A]/60">Step 2</span>
+                        </div>
                         {/* Left: Text Content (Right Aligned) */}
-                        <div className="flex flex-col items-end gap-[0.5rem] w-full md:w-[37rem] shrink-0 text-right">
+                        <div className="flex flex-col items-start md:items-end gap-[0.5rem] w-full md:w-[37rem] shrink-0 text-left md:text-right min-w-0">
                             <h3 className="text-[#1A1A1A] text-2xl md:text-[1.5rem] font-bold leading-normal m-0 w-full text-right">
                                 The 5-Aspect Deep Dive
                             </h3>
@@ -83,14 +92,14 @@ const AboutSteps: React.FC = () => {
 
                         {/* Right: Aspect Cards Grid */}
                         {/* Right: Aspect Cards Grid */}
-                        <div className="flex flex-col justify-center items-center w-full md:w-[33.625rem] shrink-0 relative">
+                        <div className="flex flex-col justify-center items-center w-full md:w-[33.625rem] shrink-0 relative min-w-0 max-w-full">
                             {/* Top 2 Boxes */}
-                            <div className="flex gap-4 mb-4">
+                            <div className="flex flex-wrap justify-center gap-3 sm:gap-4 mb-4 w-full">
                                 <AspectCard icon={<Box className="w-8 h-8" />} label="Product Fit" />
                                 <AspectCard icon={<Zap className="w-8 h-8" />} label="Performance" />
                             </div>
                             {/* Bottom 3 Boxes */}
-                            <div className="flex gap-4">
+                            <div className="flex flex-wrap justify-center gap-3 sm:gap-4 w-full">
                                 <AspectCard icon={<Settings className="w-8 h-8" />} label="UX Heuristics" />
                                 <AspectCard icon={<Accessibility className="w-8 h-8" />} label="Accessibility" />
                                 <AspectCard icon={<Palette className="w-8 h-8" />} label="Visual Design" />
@@ -99,7 +108,11 @@ const AboutSteps: React.FC = () => {
                     </div>
 
                     {/* --- STEP 3: Synthesis & Scoring --- */}
-                    <div className="flex flex-col md:flex-row justify-center items-start w-full gap-[2rem] md:gap-[8.8125rem] relative z-10 flex-1">
+                    <div className="flex flex-col md:flex-row justify-center items-start w-full gap-6 md:gap-[8.8125rem] relative z-10 flex-1 min-w-0">
+                        <div className="flex md:hidden items-center gap-2 w-full">
+                            <div className="w-9 h-9 bg-[#FBD24E] border border-black flex items-center justify-center font-bold text-sm shadow-[2px_2px_0px_#000] shrink-0">3</div>
+                            <span className="text-xs font-bold uppercase tracking-wide text-[#1A1A1A]/60">Step 3</span>
+                        </div>
                         {/* Left: Meters */}
                         {/* Parent: flex, col, center, w-37rem, gap-2.5rem */}
                         <div className="flex flex-col items-center gap-[2.5rem] w-full md:w-[37rem] shrink-0 pt-4">
@@ -160,9 +173,13 @@ const AboutSteps: React.FC = () => {
                     </div>
 
                     {/* --- STEP 4: Actionable Reporting --- */}
-                    <div className="flex flex-col md:flex-row justify-center items-start w-full gap-[2rem] md:gap-[8.8125rem] relative z-10 flex-1">
+                    <div className="flex flex-col md:flex-row justify-center items-start w-full gap-6 md:gap-[8.8125rem] relative z-10 flex-1 min-w-0">
+                        <div className="flex md:hidden items-center gap-2 w-full">
+                            <div className="w-9 h-9 bg-[#FBD24E] border border-black flex items-center justify-center font-bold text-sm shadow-[2px_2px_0px_#000] shrink-0">4</div>
+                            <span className="text-xs font-bold uppercase tracking-wide text-[#1A1A1A]/60">Step 4</span>
+                        </div>
                         {/* Left: Text Content (Right Aligned) */}
-                        <div className="flex flex-col items-end gap-[0.5rem] w-full md:w-[37rem] shrink-0 text-right pt-[1.5rem]">
+                        <div className="flex flex-col items-start md:items-end gap-[0.5rem] w-full md:w-[37rem] shrink-0 text-left md:text-right md:pt-[1.5rem] min-w-0">
                             <h3 className="text-[#1A1A1A] text-2xl md:text-[1.5rem] font-bold leading-normal m-0 w-full text-right">
                                 Actionable Reporting
                             </h3>
@@ -214,7 +231,7 @@ interface AspectCardProps {
 }
 
 const AspectCard: React.FC<AspectCardProps> = ({ icon, label }) => (
-    <div className="flex flex-col justify-center items-center gap-[0.75rem] w-[8.75rem] h-[7.5rem] bg-white border border-[#FFDC60] rounded-lg p-6 group hover:border-[#FBD24E] transition-colors duration-200">
+    <div className="flex flex-col justify-center items-center gap-2 sm:gap-[0.75rem] w-[min(100%,8.75rem)] min-w-[7.25rem] max-w-[8.75rem] min-h-[6.5rem] sm:h-[7.5rem] bg-white border border-[#FFDC60] rounded-lg p-4 sm:p-6 group hover:border-[#FBD24E] transition-colors duration-200 shrink-0">
         <div className="w-8 h-8 shrink-0 text-black group-hover:scale-110 transition-transform duration-200">
             {icon}
         </div>

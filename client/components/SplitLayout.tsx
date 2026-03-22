@@ -1,7 +1,7 @@
 import React from 'react';
 import { ScanningPreview } from './ScanningPreview';
 import { ReportContainer } from './report/ReportContainer';
-import { AnalysisReport, Screenshot } from '../types';
+import { AnalysisReport, AuditInput, Screenshot } from '../types';
 
 interface SplitLayoutProps {
     progress: number;
@@ -19,6 +19,7 @@ interface SplitLayoutProps {
     reportScreenshots?: Screenshot[];
     screenshotMimeType?: string;
     inputs?: any[]; // Allow inputs for ScanningPreview
+    reportInputs?: AuditInput[];
     isError?: boolean;
 }
 
@@ -37,25 +38,33 @@ export const SplitLayout: React.FC<SplitLayoutProps> = ({
     reportScreenshots,
     screenshotMimeType,
     inputs,
+    reportInputs,
     isError
 }) => {
+    // Fill Layout main (flex-1 + min-h-0): do not use content height or 100dvh calc — that
+    // lets the full report dictate flex item height and blows up page scroll.
+    const shellClass =
+        'relative flex w-full min-h-0 flex-1 flex-col overflow-hidden bg-page-bg';
+
     // If fullWidth (user is logged in during analysis), show only the preview
     if (fullWidth) {
         return (
-            <div className="h-[calc(100vh-5rem)] bg-page-bg flex items-center justify-center p-4 relative">
-                <div className="w-full max-w-5xl">
-                    <ScanningPreview
-                        screenshot={screenshot || null}
-                        progress={progress}
-                        url={url}
-                        loadingMessage={loadingMessage}
-                        inputs={inputs}
-                        isError={isError}
-                    />
+            <div className={`${shellClass} p-4`}>
+                <div className="flex min-h-0 flex-1 items-center justify-center">
+                    <div className="w-full max-w-5xl">
+                        <ScanningPreview
+                            screenshot={screenshot || null}
+                            progress={progress}
+                            url={url}
+                            loadingMessage={loadingMessage}
+                            inputs={inputs}
+                            isError={isError}
+                        />
+                    </div>
                 </div>
                 {/* Overlay for children (like Queue Notice) in full-width mode */}
                 {children && (
-                    <div className="absolute inset-0 flex items-center justify-center p-4 z-50 pointer-events-none">
+                    <div className="pointer-events-none absolute inset-0 z-50 flex items-center justify-center p-4">
                         <div className="pointer-events-auto w-full max-w-md">
                             {children}
                         </div>
@@ -65,12 +74,17 @@ export const SplitLayout: React.FC<SplitLayoutProps> = ({
         );
     }
 
-    // Split layout: Preview on left, content (login/report preview) on right
+    // Split: one screen tall; report scrolls inside RHS only (minmax(0,1fr) row + min-h-0 cells)
     return (
-        <div className="h-[calc(100vh-5rem)] bg-page-bg overflow-hidden">
-            <div className="grid lg:grid-cols-2 gap-0 h-full">
-                {/* Left Side: Scanning Preview */}
-                <div className="bg-page-bg flex items-center justify-center p-4 border-r-2 border-border-main">
+        <div className={shellClass}>
+            <div
+                className="grid min-h-0 w-full flex-1 grid-cols-1 gap-0 overflow-hidden max-lg:grid-rows-[minmax(200px,auto)_minmax(0,1fr)] lg:grid-cols-2 lg:grid-rows-[minmax(0,1fr)]"
+            >
+                {/* Left: browser / scan preview */}
+                <div
+                    className="flex min-h-0 min-w-0 items-center justify-center overflow-y-auto overflow-x-hidden bg-page-bg p-4 lg:h-full lg:max-h-full max-lg:max-h-[min(42vh,360px)]"
+                    style={{ borderRight: '0.5px solid var(--high-grey, #1A1A1A)' }}
+                >
                     <ScanningPreview
                         screenshot={screenshot || null}
                         progress={progress}
@@ -81,15 +95,11 @@ export const SplitLayout: React.FC<SplitLayoutProps> = ({
                     />
                 </div>
 
-                {/* Right Side: Content (Login Panel or Report Preview) */}
-                <div className="bg-white flex items-center justify-center p-4 lg:p-8">
+                {/* Right: login during analysis, or blurred report + login when complete */}
+                <div className="flex min-h-0 min-w-0 flex-col items-stretch justify-center overflow-hidden bg-white p-4 lg:h-full lg:max-h-full lg:p-8">
                     {isAnalysisComplete && report ? (
-                        // Show blurred report preview
-                        <div className="w-full h-full overflow-hidden relative">
-                            <div className="absolute inset-0 backdrop-blur-sm bg-white/50 z-10 flex items-center justify-center">
-                                {children}
-                            </div>
-                            <div className="blur-md pointer-events-none">
+                        <div className="relative h-full min-h-0 w-full min-w-0 overflow-hidden">
+                            <div className="h-full min-h-0 overflow-y-auto overscroll-contain pointer-events-none">
                                 {report && reportUrl && (
                                     <ReportContainer
                                         report={report}
@@ -100,14 +110,31 @@ export const SplitLayout: React.FC<SplitLayoutProps> = ({
                                         auditId={null}
                                         onRunNewAudit={() => { }}
                                         whiteLabelLogo={null}
-                                        inputs={[]}
+                                        inputs={reportInputs ?? []}
+                                        teaserMode
                                     />
                                 )}
                             </div>
+                            {/* Login + frosted veil above report; z above report so it is never covered */}
+                            <div className="pointer-events-none absolute inset-0 z-20 flex items-center justify-center p-4 lg:p-6">
+                                <div
+                                    className="absolute inset-0 bg-page-bg/15"
+                                    aria-hidden
+                                />
+                                <div
+                                    className="absolute inset-0 backdrop-blur-[6px] sm:backdrop-blur-sm"
+                                    style={{ backgroundColor: 'rgba(255, 255, 255, 0.08)' }}
+                                    aria-hidden
+                                />
+                                <div className="relative z-30 w-full max-w-md pointer-events-auto">
+                                    {children}
+                                </div>
+                            </div>
                         </div>
                     ) : (
-                        // Show children (typically LoginPanel)
-                        children
+                        <div className="flex min-h-0 flex-1 flex-col items-center justify-center overflow-y-auto">
+                            {children}
+                        </div>
                     )}
                 </div>
             </div>

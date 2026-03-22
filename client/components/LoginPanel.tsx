@@ -10,6 +10,23 @@ interface LoginPanelProps {
     hideTitle?: boolean;
 }
 
+/** Same radius family as URLInputForm + StandardInputControl: rounded-lg (0.5rem) */
+/** Match URL input / analysis UI: hairline border, no neo shadow */
+const FIELD: React.CSSProperties = { border: '0.5px solid var(--high-grey, #1A1A1A)', boxShadow: 'none' };
+const FIELD_ERR: React.CSSProperties = {
+    border: '0.5px solid rgb(220 38 38)',
+    boxShadow: 'none',
+    backgroundColor: 'rgb(254 242 242)',
+};
+const BTN_PRIMARY: React.CSSProperties = { boxShadow: 'none' };
+
+const inClass =
+    'w-full h-12 px-4 bg-white rounded-lg text-base outline-none transition-colors focus-visible:ring-2 focus-visible:ring-brand/25 placeholder:text-slate-400';
+const inOtpClass =
+    'w-full h-16 px-4 bg-white rounded-lg text-center tracking-[0.5em] text-2xl font-mono outline-none focus-visible:ring-2 focus-visible:ring-brand/25';
+const btnClass =
+    'w-full h-14 rounded-lg bg-[#1A1A1A] text-white font-bold text-base transition-colors hover:bg-black disabled:opacity-70 disabled:cursor-not-allowed flex justify-center items-center gap-2';
+
 export const LoginPanel: React.FC<LoginPanelProps> = ({ auditId, hideTitle = false }) => {
     const [isLoginMode, setIsLoginMode] = useState(false); // Toggle between Sign Up and Login
     const [step, setStep] = useState<'email' | 'otp' | 'password' | 'forgot-email' | 'forgot-otp' | 'forgot-reset'>('email'); // For various flows
@@ -235,10 +252,10 @@ export const LoginPanel: React.FC<LoginPanelProps> = ({ auditId, hideTitle = fal
             {/* Header - Fixed Height */}
             {!hideTitle && (
                 <div className="h-24 flex flex-col justify-center mb-6 text-center md:text-left">
-                    <h2 className="text-2xl font-bold text-slate-900 mb-2">
+                    <h2 className="text-2xl font-bold text-[#1A1A1A] mb-2">
                         {isLoginMode ? 'Welcome Back' : 'Unlock Full Audit Report'}
                     </h2>
-                    <p className="text-sm text-slate-600 line-clamp-2">
+                    <p className="text-sm text-slate-600 line-clamp-2 leading-snug">
                         {isLoginMode
                             ? 'Log in to access your saved reports.'
                             : 'Get instant access to your detailed strategic roadmap and UI/UX insights.'}
@@ -259,7 +276,8 @@ export const LoginPanel: React.FC<LoginPanelProps> = ({ auditId, hideTitle = fal
                                 type="email"
                                 id="email"
                                 required
-                                className="w-full h-12 px-4 bg-white border-2 border-black rounded-none shadow-neo focus:outline-none focus:shadow-neo-hover transition-all text-base placeholder-slate-400"
+                                className={inClass}
+                                style={FIELD}
                                 placeholder="you@company.com"
                                 value={email}
                                 onChange={(e) => setEmail(e.target.value)}
@@ -285,7 +303,8 @@ export const LoginPanel: React.FC<LoginPanelProps> = ({ auditId, hideTitle = fal
                                 type="password"
                                 id="password"
                                 required
-                                className="w-full h-12 px-4 bg-white border-2 border-black rounded-none shadow-neo focus:outline-none focus:shadow-neo-hover transition-all text-base placeholder-slate-400"
+                                className={inClass}
+                                style={FIELD}
                                 placeholder="••••••••"
                                 value={password}
                                 onChange={(e) => setPassword(e.target.value)}
@@ -296,7 +315,8 @@ export const LoginPanel: React.FC<LoginPanelProps> = ({ auditId, hideTitle = fal
                     <button
                         type="submit"
                         disabled={isLoading}
-                        className="w-full h-14 mt-4 bg-black hover:bg-slate-800 text-white border-2 border-black rounded-none shadow-neo hover:shadow-neo-hover active:translate-x-px active:translate-y-px active:shadow-none text-base font-bold transition-all disabled:opacity-70 disabled:cursor-not-allowed flex justify-center items-center gap-2"
+                        className={`${btnClass} mt-4`}
+                        style={BTN_PRIMARY}
                     >
                         {isLoading ? (
                             <>
@@ -312,7 +332,7 @@ export const LoginPanel: React.FC<LoginPanelProps> = ({ auditId, hideTitle = fal
             ) : step === 'forgot-email' ? (
                 // FORGOT PASSWORD: EMAIL
                 <form onSubmit={handleForgotPasswordRequest} className="space-y-6">
-                    <div className="p-4 bg-indigo-50 border-l-4 border-indigo-600">
+                    <div className="p-4 bg-indigo-50/80 rounded-lg" style={{ borderLeft: '3px solid rgb(79 70 229)' }}>
                         <p className="text-sm font-bold text-slate-900">Reset Password</p>
                         <p className="text-sm text-slate-600">Enter your business email and we'll send you a security code.</p>
                     </div>
@@ -324,7 +344,8 @@ export const LoginPanel: React.FC<LoginPanelProps> = ({ auditId, hideTitle = fal
                             type="email"
                             id="email"
                             required
-                            className="w-full h-12 px-4 bg-white border-2 border-black rounded-none shadow-neo focus:outline-none focus:shadow-neo-hover transition-all text-base"
+                            className={inClass}
+                            style={FIELD}
                             placeholder="you@company.com"
                             value={email}
                             onChange={(e) => setEmail(e.target.value)}
@@ -333,7 +354,8 @@ export const LoginPanel: React.FC<LoginPanelProps> = ({ auditId, hideTitle = fal
                     <button
                         type="submit"
                         disabled={isLoading}
-                        className="w-full h-14 bg-black text-white font-bold border-2 border-black shadow-neo hover:shadow-neo-hover active:translate-x-px active:translate-y-px active:shadow-none transition-all flex justify-center items-center gap-2"
+                        className={btnClass}
+                        style={BTN_PRIMARY}
                     >
                         {isLoading ? "Sending..." : "Send Reset Code"}
                     </button>
@@ -360,7 +382,8 @@ export const LoginPanel: React.FC<LoginPanelProps> = ({ auditId, hideTitle = fal
                             id="otp"
                             required
                             autoFocus
-                            className="w-full h-16 px-4 bg-white border-2 border-black rounded-none shadow-neo text-center tracking-[0.5em] text-2xl font-mono"
+                            className={inOtpClass}
+                            style={FIELD}
                             placeholder="------"
                             maxLength={6}
                             value={otp}
@@ -369,7 +392,8 @@ export const LoginPanel: React.FC<LoginPanelProps> = ({ auditId, hideTitle = fal
                     </div>
                     <button
                         type="submit"
-                        className="w-full h-14 bg-black text-white font-bold border-2 border-black shadow-neo hover:shadow-neo-hover active:translate-x-px active:translate-y-px active:shadow-none transition-all"
+                        className={btnClass}
+                        style={BTN_PRIMARY}
                     >
                         Confirm Security Code
                     </button>
@@ -384,7 +408,7 @@ export const LoginPanel: React.FC<LoginPanelProps> = ({ auditId, hideTitle = fal
             ) : step === 'forgot-reset' ? (
                 // FORGOT PASSWORD: NEW PASSWORD
                 <form onSubmit={handleForgotPasswordReset} className="space-y-6">
-                    <div className="p-4 bg-green-50 border-l-4 border-green-500">
+                    <div className="p-4 bg-green-50/80 rounded-lg" style={{ borderLeft: '3px solid rgb(34 197 94)' }}>
                         <p className="text-sm font-bold text-slate-900">Security Verified</p>
                         <p className="text-sm text-slate-600">Now choose a new strong password for your account.</p>
                     </div>
@@ -396,7 +420,8 @@ export const LoginPanel: React.FC<LoginPanelProps> = ({ auditId, hideTitle = fal
                             type="password"
                             required
                             minLength={8}
-                            className="w-full h-12 px-4 bg-white border-2 border-black rounded-none shadow-neo text-base"
+                            className={inClass}
+                            style={FIELD}
                             value={password}
                             onChange={(e) => setPassword(e.target.value)}
                         />
@@ -409,7 +434,8 @@ export const LoginPanel: React.FC<LoginPanelProps> = ({ auditId, hideTitle = fal
                             type="password"
                             required
                             minLength={8}
-                            className="w-full h-12 px-4 bg-white border-2 border-black rounded-none shadow-neo text-base"
+                            className={inClass}
+                            style={FIELD}
                             value={confirmPassword}
                             onChange={(e) => setConfirmPassword(e.target.value)}
                         />
@@ -417,7 +443,8 @@ export const LoginPanel: React.FC<LoginPanelProps> = ({ auditId, hideTitle = fal
                     <button
                         type="submit"
                         disabled={isLoading}
-                        className="w-full h-14 bg-black text-white font-bold border-2 border-black shadow-neo hover:shadow-neo-hover active:translate-x-px active:translate-y-px active:shadow-none transition-all"
+                        className={btnClass}
+                        style={BTN_PRIMARY}
                     >
                         {isLoading ? "Saving..." : "Update Password & Login"}
                     </button>
@@ -435,7 +462,8 @@ export const LoginPanel: React.FC<LoginPanelProps> = ({ auditId, hideTitle = fal
                                     type="email"
                                     id="email"
                                     required
-                                    className={`w-full h-12 px-4 bg-white border-2 border-black rounded-none shadow-neo focus:outline-none focus:shadow-neo-hover transition-all text-base placeholder-slate-400 ${emailError ? 'border-red-600 bg-red-50' : 'border-black'}`}
+                                    className={inClass}
+                                    style={emailError ? FIELD_ERR : FIELD}
                                     placeholder="you@company.com"
                                     value={email}
                                     onChange={(e) => {
@@ -450,7 +478,8 @@ export const LoginPanel: React.FC<LoginPanelProps> = ({ auditId, hideTitle = fal
                         <button
                             type="submit"
                             disabled={isLoading}
-                            className="w-full h-14 mt-4 bg-black hover:bg-slate-800 text-white border-2 border-black rounded-none shadow-neo hover:shadow-neo-hover active:translate-x-px active:translate-y-px active:shadow-none text-base font-bold transition-all disabled:opacity-70 disabled:cursor-not-allowed flex justify-center items-center gap-2"
+                            className={`${btnClass} mt-4`}
+                            style={BTN_PRIMARY}
                         >
                             {isLoading ? (
                                 <>
@@ -479,7 +508,8 @@ export const LoginPanel: React.FC<LoginPanelProps> = ({ auditId, hideTitle = fal
                                     id="otp"
                                     required
                                     autoFocus
-                                    className="w-full h-16 px-4 bg-white border-2 border-black rounded-none shadow-neo focus:outline-none focus:shadow-neo-hover transition-all text-center tracking-[0.5em] text-2xl font-mono"
+                                    className={inOtpClass}
+                                    style={FIELD}
                                     placeholder="------"
                                     maxLength={6}
                                     value={otp}
@@ -494,7 +524,8 @@ export const LoginPanel: React.FC<LoginPanelProps> = ({ auditId, hideTitle = fal
                         <button
                             type="submit"
                             disabled={isLoading}
-                            className="w-full h-14 mt-4 bg-black hover:bg-slate-800 text-white border-2 border-black rounded-none shadow-neo hover:shadow-neo-hover active:translate-x-px active:translate-y-px active:shadow-none text-base font-bold transition-all disabled:opacity-70 disabled:cursor-not-allowed flex justify-center items-center gap-2"
+                            className={`${btnClass} mt-4`}
+                            style={BTN_PRIMARY}
                         >
                             {isLoading ? (
                                 <>
@@ -520,7 +551,7 @@ export const LoginPanel: React.FC<LoginPanelProps> = ({ auditId, hideTitle = fal
                     // STEP 3: PASSWORD SETUP
                     <form onSubmit={handleSignupStep3} className="grow flex flex-col">
                         <div className="space-y-6 grow">
-                            <div className="p-4 bg-slate-50 border-l-4 border-brand mb-4">
+                            <div className="p-4 bg-slate-50 rounded-lg mb-4" style={{ borderLeft: '3px solid var(--color-brand, #6366f1)' }}>
                                 <p className="text-sm font-bold text-slate-800">Welcome to MUS!</p>
                                 <p className="text-sm text-slate-600">Final step: Secure your account with a password.</p>
                             </div>
@@ -532,7 +563,8 @@ export const LoginPanel: React.FC<LoginPanelProps> = ({ auditId, hideTitle = fal
                                     type="password"
                                     id="pass"
                                     required
-                                    className="w-full h-12 px-4 bg-white border-2 border-black rounded-none shadow-neo focus:outline-none focus:shadow-neo-hover transition-all text-base placeholder-slate-400"
+                                    className={inClass}
+                                    style={FIELD}
                                     placeholder="••••••••"
                                     value={password}
                                     onChange={(e) => setPassword(e.target.value)}
@@ -547,7 +579,8 @@ export const LoginPanel: React.FC<LoginPanelProps> = ({ auditId, hideTitle = fal
                                     type="password"
                                     id="confirm"
                                     required
-                                    className="w-full h-12 px-4 bg-white border-2 border-black rounded-none shadow-neo focus:outline-none focus:shadow-neo-hover transition-all text-base placeholder-slate-400"
+                                    className={inClass}
+                                    style={FIELD}
                                     placeholder="••••••••"
                                     value={confirmPassword}
                                     onChange={(e) => setConfirmPassword(e.target.value)}
@@ -559,7 +592,8 @@ export const LoginPanel: React.FC<LoginPanelProps> = ({ auditId, hideTitle = fal
                         <button
                             type="submit"
                             disabled={isLoading}
-                            className="w-full h-14 mt-4 bg-black hover:bg-slate-800 text-white border-2 border-black rounded-none shadow-neo hover:shadow-neo-hover active:translate-x-px active:translate-y-px active:shadow-none text-base font-bold transition-all disabled:opacity-70 disabled:cursor-not-allowed flex justify-center items-center gap-2"
+                            className={`${btnClass} mt-4`}
+                            style={BTN_PRIMARY}
                         >
                             {isLoading ? (
                                 <>
@@ -576,7 +610,10 @@ export const LoginPanel: React.FC<LoginPanelProps> = ({ auditId, hideTitle = fal
                     </form>
                 )
             )}
-            <div className={`mt-4 pt-4 border-t-2 border-slate-100 text-center ${step !== 'email' && !isLoginMode ? 'hidden' : ''}`}>
+            <div
+                className={`mt-4 pt-4 text-center ${step !== 'email' && !isLoginMode ? 'hidden' : ''}`}
+                style={{ borderTop: '0.5px solid rgba(26, 26, 26, 0.12)' }}
+            >
                 <p className="text-sm text-slate-600 font-medium">
                     {isLoginMode ? "Don't have an account? " : "Already have an account? "}
                     <button
@@ -586,7 +623,7 @@ export const LoginPanel: React.FC<LoginPanelProps> = ({ auditId, hideTitle = fal
                             setStep('email');
                             setEmailError(null);
                         }}
-                        className="text-black font-bold hover:underline decoration-2 underline-offset-2 ml-1"
+                        className="text-[#1A1A1A] font-bold hover:underline decoration-2 underline-offset-2 ml-1"
                     >
                         {isLoginMode ? "Sign Up" : "Log In"}
                     </button>

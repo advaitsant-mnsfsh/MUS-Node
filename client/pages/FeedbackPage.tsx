@@ -1,153 +1,269 @@
-import React, { useState } from 'react';
-import { useAuth } from '../contexts/AuthContext';
-import toast from 'react-hot-toast';
-import { Send, AlertCircle, CheckCircle2 } from 'lucide-react';
-import { getBackendUrl } from '../services/config';
+import React, { useState } from "react";
+import { Link } from "react-router-dom";
+import { useAuth } from "../contexts/AuthContext";
+import toast from "react-hot-toast";
+import {
+  Send,
+  MessageSquare,
+  CheckCircle2,
+  Loader2,
+  Lightbulb,
+} from "lucide-react";
+import { getBackendUrl } from "../services/config";
 
 export const FeedbackPage: React.FC = () => {
-    const { user } = useAuth();
-    const [isSubmitting, setIsSubmitting] = useState(false);
-    const [submitted, setSubmitted] = useState(false);
+  const { user, isLoading } = useAuth();
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitted, setSubmitted] = useState(false);
 
-    const [formData, setFormData] = useState({
-        jobId: '',
-        websiteUrl: '',
-        errorDetails: ''
-    });
+  const [formData, setFormData] = useState({
+    jobId: "",
+    websiteUrl: "",
+    errorDetails: "",
+  });
 
-    const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
-        if (!user) return;
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!user) return;
 
-        setIsSubmitting(true);
-        const payload = {
-            ...formData,
-            email: user.email
-        };
-
-        try {
-            const apiUrl = getBackendUrl();
-            const response = await fetch(`${apiUrl}/api/v1/feedback`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${user.id}`
-                },
-                body: JSON.stringify(payload)
-            });
-
-            if (response.ok) {
-                setSubmitted(true);
-                toast.success('Feedback submitted successfully!');
-            } else {
-                throw new Error('Failed to submit feedback');
-            }
-        } catch (error) {
-            console.error('Feedback error:', error);
-            toast.error('Failed to submit feedback. Please try again.');
-        } finally {
-            setIsSubmitting(false);
-        }
+    setIsSubmitting(true);
+    const payload = {
+      ...formData,
+      email: user.email,
     };
 
-    if (submitted) {
-        return (
-            <div className="max-w-2xl mx-auto px-4 py-20 text-center">
-                <div className="inline-flex items-center justify-center w-20 h-20 bg-green-100 border-4 border-black shadow-neo mb-8">
-                    <CheckCircle2 className="w-10 h-10 text-green-600" />
-                </div>
-                <h1 className="text-4xl font-black text-black mb-4 uppercase tracking-tighter">Thank You!</h1>
-                <p className="text-xl text-slate-600 mb-8 font-medium">Your feedback has been received. We'll look into the error details right away.</p>
-                <button
-                    onClick={() => setSubmitted(false)}
-                    className="px-8 py-4 bg-white border-4 border-black text-black font-black uppercase tracking-widest shadow-neo hover:shadow-neo-hover hover:-translate-x-1 hover:-translate-y-1 transition-all active:shadow-none active:translate-x-0 active:translate-y-0"
-                >
-                    Submit Another
-                </button>
-            </div>
-        );
+    try {
+      const apiUrl = getBackendUrl();
+      const response = await fetch(`${apiUrl}/api/v1/feedback`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${user.id}`,
+        },
+        body: JSON.stringify(payload),
+      });
+
+      if (response.ok) {
+        setSubmitted(true);
+        toast.success("Feedback submitted successfully!");
+      } else {
+        throw new Error("Failed to submit feedback");
+      }
+    } catch (error) {
+      console.error("Feedback error:", error);
+      toast.error("Failed to submit feedback. Please try again.");
+    } finally {
+      setIsSubmitting(false);
     }
+  };
 
+  if (isLoading) {
     return (
-        <div className="max-w-3xl mx-auto px-4 py-12 md:py-20">
-            <div className="mb-12">
-                <h1 className="text-5xl font-black text-black mb-4 uppercase tracking-tighter">Feedback & Support</h1>
-                <p className="text-xl text-slate-600 font-medium">Experienced an error? Let us know the details and we'll fix it.</p>
-            </div>
-
-            <form onSubmit={handleSubmit} className="space-y-8 bg-white border-4 border-black p-8 shadow-neo-lg">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                    {/* User Email (Info Only) */}
-                    <div className="space-y-2">
-                        <label className="block text-sm font-black uppercase tracking-widest text-slate-500">Your Email</label>
-                        <div className="w-full px-4 py-4 bg-slate-50 border-2 border-slate-200 text-slate-500 font-bold">
-                            {user?.email || 'Loading...'}
-                        </div>
-                    </div>
-
-                    {/* Job ID */}
-                    <div className="space-y-2">
-                        <label htmlFor="jobId" className="block text-sm font-black uppercase tracking-widest text-black">Audit / Job ID (Optional)</label>
-                        <input
-                            id="jobId"
-                            type="text"
-                            value={formData.jobId}
-                            onChange={(e) => setFormData({ ...formData, jobId: e.target.value })}
-                            className="w-full px-4 py-4 bg-white border-4 border-black text-black font-bold focus:outline-none focus:ring-4 focus:ring-brand/20"
-                            placeholder="uuid-from-url"
-                        />
-                    </div>
-
-                    {/* Website URL */}
-                    <div className="space-y-2 md:col-span-2">
-                        <label htmlFor="websiteUrl" className="block text-sm font-black uppercase tracking-widest text-black">Website URL (Optional)</label>
-                        <input
-                            id="websiteUrl"
-                            type="text"
-                            value={formData.websiteUrl}
-                            onChange={(e) => setFormData({ ...formData, websiteUrl: e.target.value })}
-                            className="w-full px-4 py-4 bg-white border-4 border-black text-black font-bold focus:outline-none focus:ring-4 focus:ring-brand/20"
-                            placeholder="https://example.com"
-                        />
-                    </div>
-                </div>
-
-                {/* Error Details */}
-                <div className="space-y-2">
-                    <label htmlFor="errorDetails" className="block text-sm font-black uppercase tracking-widest text-black">Error Details / Comments</label>
-                    <textarea
-                        id="errorDetails"
-                        required
-                        rows={5}
-                        value={formData.errorDetails}
-                        onChange={(e) => setFormData({ ...formData, errorDetails: e.target.value })}
-                        className="w-full px-4 py-4 bg-white border-4 border-black text-black font-bold focus:outline-none focus:ring-4 focus:ring-brand/20 resize-none"
-                        placeholder="Please describe what happened..."
-                    />
-                </div>
-
-                <button
-                    type="submit"
-                    disabled={isSubmitting}
-                    className="w-full md:w-auto px-10 py-5 bg-black text-white font-black uppercase tracking-widest shadow-neo hover:shadow-neo-hover hover:-translate-x-1 hover:-translate-y-1 transition-all active:shadow-none active:translate-x-0 active:translate-y-0 disabled:opacity-50 flex items-center justify-center gap-3"
-                >
-                    {isSubmitting ? 'Sending...' : (
-                        <>
-                            <span>Send Feedback</span>
-                            <Send className="w-5 h-5" />
-                        </>
-                    )}
-                </button>
-            </form>
-
-            <div className="mt-8 flex items-start gap-3 p-4 bg-brand/10 border-2 border-brand/20">
-                <AlertCircle className="w-5 h-5 text-brand shrink-0 mt-0.5" />
-                <p className="text-sm text-brand-dark font-medium leading-relaxed">
-                    Note: This goes directly to our engineering team. We typically respond within 24 hours for major errors.
-                </p>
-            </div>
-        </div>
+      <div className="flex min-h-[calc(100vh-5rem)] items-center justify-center bg-[#fef9f1] font-['DM_Sans']">
+        <Loader2
+          className="h-9 w-9 animate-spin text-brand"
+          aria-hidden
+        />
+        <span className="sr-only">Loading</span>
+      </div>
     );
+  }
+
+  if (!user) {
+    return (
+      <div className="min-h-[calc(100vh-5rem)] bg-[#fef9f1] font-['DM_Sans']">
+        <div className="mx-auto flex w-full max-w-lg flex-col items-center px-4 py-16 text-center sm:px-6 lg:px-8 lg:py-20">
+          <div className="mb-6 flex h-16 w-16 items-center justify-center rounded-2xl bg-white shadow-sm ring-1 ring-black/5">
+            <MessageSquare
+              className="h-8 w-8 text-brand"
+              strokeWidth={1.75}
+              aria-hidden
+            />
+          </div>
+          <h1 className="text-2xl font-bold tracking-tight text-[#1a1a1a] md:text-3xl">
+            Sign in to send feedback
+          </h1>
+          <p className="mt-3 max-w-md text-base font-medium leading-relaxed text-text-secondary">
+            We use your account email so we can follow up. Sign in and you’ll
+            land back here.
+          </p>
+          <Link
+            to="/login?returnUrl=/feedback"
+            className="mt-8 inline-flex items-center justify-center rounded-lg bg-brand px-6 py-3 text-base font-bold text-white transition-opacity hover:opacity-95"
+          >
+            Sign in
+          </Link>
+          <Link
+            to="/"
+            className="mt-4 text-sm font-semibold text-brand hover:underline"
+          >
+            Back to home
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
+  if (submitted) {
+    return (
+      <div className="min-h-[calc(100vh-5rem)] bg-[#fef9f1] font-['DM_Sans']">
+        <div className="mx-auto w-full max-w-lg px-4 py-16 text-center sm:px-6 lg:px-8 lg:py-20">
+          <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-full bg-emerald-50 ring-2 ring-emerald-200/80">
+            <CheckCircle2
+              className="h-9 w-9 text-emerald-600"
+              strokeWidth={2}
+              aria-hidden
+            />
+          </div>
+          <h1 className="text-2xl font-bold tracking-tight text-[#1a1a1a] md:text-3xl">
+            Thanks for the feedback
+          </h1>
+          <p className="mt-3 text-base font-medium leading-relaxed text-text-secondary">
+            We’ve received your message. Our team reviews submissions regularly
+            and will reach out if we need more detail.
+          </p>
+          <button
+            type="button"
+            onClick={() => {
+              setSubmitted(false);
+              setFormData({ jobId: "", websiteUrl: "", errorDetails: "" });
+            }}
+            className="mt-10 inline-flex items-center justify-center rounded-lg border border-[#ccc] bg-white px-6 py-3 text-base font-bold text-[#1a1a1a] shadow-sm transition-colors hover:bg-neutral-50"
+          >
+            Send another message
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  const inputClass =
+    "w-full rounded-lg border border-[#ccc] bg-white px-4 py-3 text-base font-medium text-[#1a1a1a] outline-none transition-shadow placeholder:text-[#94a3b8] focus:border-brand focus:ring-2 focus:ring-brand/25";
+
+  return (
+    <div className="min-h-[calc(100vh-5rem)] bg-[#fef9f1] font-['DM_Sans']">
+      <div className="mx-auto w-full max-w-2xl px-4 py-10 sm:px-6 lg:px-8 lg:py-14">
+        <div className="mb-10 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+          <div className="min-w-0">
+            <div className="mb-3 inline-flex items-center gap-2 rounded-full bg-brand/10 px-3 py-1 text-xs font-bold uppercase tracking-wide text-brand">
+              <MessageSquare className="h-3.5 w-3.5" aria-hidden />
+              Feedback
+            </div>
+            <h1 className="text-[2rem] font-bold leading-tight tracking-tight text-[#1a1a1a] md:text-[2.25rem]">
+              We’re listening
+            </h1>
+            <p className="mt-2 max-w-xl text-base font-medium leading-relaxed text-text-secondary md:text-lg">
+              Bugs, rough edges, or ideas — tell us what you ran into. Optional
+              fields help us reproduce issues faster.
+            </p>
+          </div>
+        </div>
+
+        <form
+          onSubmit={handleSubmit}
+          className="rounded-xl border border-[#ccc] bg-white p-6 shadow-sm md:p-8"
+        >
+          <div className="space-y-6">
+            <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+              <div className="space-y-2">
+                <label className="block text-sm font-bold text-[#1a1a1a]">
+                  Your email
+                </label>
+                <div className="rounded-lg border border-[#e5e5e5] bg-[#fafafa] px-4 py-3 text-sm font-semibold text-text-secondary">
+                  {user.email ?? "—"}
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <label htmlFor="jobId" className="block text-sm font-bold text-[#1a1a1a]">
+                  Audit / job ID{" "}
+                  <span className="font-medium text-[#94a3b8]">(optional)</span>
+                </label>
+                <input
+                  id="jobId"
+                  type="text"
+                  value={formData.jobId}
+                  onChange={(e) =>
+                    setFormData({ ...formData, jobId: e.target.value })
+                  }
+                  className={inputClass}
+                  placeholder="From report URL"
+                  autoComplete="off"
+                />
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <label htmlFor="websiteUrl" className="block text-sm font-bold text-[#1a1a1a]">
+                Website URL{" "}
+                <span className="font-medium text-[#94a3b8]">(optional)</span>
+              </label>
+              <input
+                id="websiteUrl"
+                type="url"
+                value={formData.websiteUrl}
+                onChange={(e) =>
+                  setFormData({ ...formData, websiteUrl: e.target.value })
+                }
+                className={inputClass}
+                placeholder="https://example.com"
+                autoComplete="url"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <label htmlFor="errorDetails" className="block text-sm font-bold text-[#1a1a1a]">
+                Your message
+              </label>
+              <textarea
+                id="errorDetails"
+                required
+                rows={6}
+                value={formData.errorDetails}
+                onChange={(e) =>
+                  setFormData({ ...formData, errorDetails: e.target.value })
+                }
+                className={`${inputClass} resize-y min-h-[140px]`}
+                placeholder="What happened? What did you expect? Steps to reproduce help a lot."
+              />
+            </div>
+          </div>
+
+          <div className="mt-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <button
+              type="submit"
+              disabled={isSubmitting}
+              className="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-brand px-8 py-3.5 text-base font-bold text-white transition-opacity hover:opacity-95 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
+            >
+              {isSubmitting ? (
+                <>
+                  <Loader2 className="h-5 w-5 animate-spin" aria-hidden />
+                  Sending…
+                </>
+              ) : (
+                <>
+                  Send feedback
+                  <Send className="h-5 w-5" aria-hidden />
+                </>
+              )}
+            </button>
+          </div>
+        </form>
+
+        <div className="mt-6 flex gap-3 rounded-xl border border-brand/20 bg-brand/5 p-4 md:p-5">
+          <Lightbulb
+            className="mt-0.5 h-5 w-5 shrink-0 text-brand"
+            aria-hidden
+          />
+          <p className="text-sm font-medium leading-relaxed text-[#475569]">
+            This goes to our engineering team. For urgent production issues,
+            include the audit ID and roughly when it occurred — we usually
+            triage within a day.
+          </p>
+        </div>
+      </div>
+    </div>
+  );
 };
 
 export default FeedbackPage;

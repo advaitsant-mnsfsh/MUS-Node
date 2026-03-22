@@ -2,10 +2,10 @@ import { Link } from 'react-router-dom';
 
 const AboutBanner: React.FC = () => {
     return (
-        <section className="w-full flex flex-col items-center justify-center text-center py-24 px-6">
+        <section className="w-full max-w-full min-w-0 overflow-x-hidden flex flex-col items-center justify-center text-center py-16 md:py-24 px-4 sm:px-6">
 
             {/* Headline */}
-            <h2 className="text-[2rem] md:text-[2.6rem] font-extrabold text-[#1A1A1A] leading-snug max-w-[620px]">
+            <h2 className="text-[1.65rem] sm:text-[2rem] md:text-[2.6rem] font-extrabold text-[#1A1A1A] leading-snug max-w-[620px] text-balance">
                 Hear what you need to. No BS.<br />
                 Just Actionable Insights.
             </h2>

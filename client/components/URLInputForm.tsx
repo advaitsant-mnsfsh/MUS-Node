@@ -121,7 +121,11 @@ export const URLInputForm: React.FC<URLInputFormProps> = ({
 
   return (
     <>
-      <section aria-label="Start Audit" className="bg-white rounded-lg border-2 border-border-main shadow-neo overflow-hidden font-sans">
+      <section
+        aria-label="Start Audit"
+        className="bg-white rounded-lg overflow-hidden font-sans"
+        style={{ border: '1px solid var(--high-grey, #1A1A1A)' }}
+      >
         <div className="p-6 md:p-8 space-y-4">
 
           {/* Header & Mode Switch */}
@@ -142,7 +146,7 @@ export const URLInputForm: React.FC<URLInputFormProps> = ({
               <button
                 type="button"
                 onClick={() => setCompetitorMode(false)}
-                className={`flex-1 px-6 py-2 text-sm font-bold rounded-xm transition-all border-2 border-border-main hover:shadow-neo ${!competitorMode
+                className={`flex-1 px-6 py-2 text-sm font-bold rounded-xm transition-all border-1 border-border-main hover:shadow-neo ${!competitorMode
                   ? 'bg-accent-yellow shadow-neo text-text-primary'
                   : 'bg-white text-text-secondary hover:bg-[#F5F5F5]'
                   }`}
@@ -152,7 +156,7 @@ export const URLInputForm: React.FC<URLInputFormProps> = ({
               <button
                 type="button"
                 onClick={() => setCompetitorMode(true)}
-                className={`flex-1 px-6 py-2 text-sm font-bold rounded-xm transition-all border-2 border-border-main flex items-center justify-center gap-2 hover:shadow-neo ${competitorMode
+                className={`flex-1 px-6 py-2 text-sm font-bold rounded-xm transition-all border-1 border-border-main flex items-center justify-center gap-2 hover:shadow-neo ${competitorMode
                   ? 'bg-accent-yellow shadow-neo text-text-primary'
                   : 'bg-white text-text-secondary hover:bg-[#F5F5F5]'
                   }`}
@@ -170,7 +174,7 @@ export const URLInputForm: React.FC<URLInputFormProps> = ({
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 animate-in fade-in slide-in-from-top-2">
 
                 {/* PRIMARY QUEUE */}
-                <div className="bg-white p-5 rounded-lg border-2 border-border-main hover:shadow-neo">
+                <div className="bg-white p-5 rounded-lg border-1 border-border-main hover:shadow-neo">
                   <h3 className="text-sm font-bold text-text-primary mb-4 flex items-center gap-2">
                     <Globe className="w-4 h-4 text-brand" /> Your Website
                   </h3>
@@ -187,7 +191,7 @@ export const URLInputForm: React.FC<URLInputFormProps> = ({
                 </div>
 
                 {/* COMPETITOR QUEUE */}
-                <div className="bg-white p-5 rounded-lg border-2 border-border-main hover:shadow-neo">
+                <div className="bg-white p-5 rounded-lg border-1 border-border-main hover:shadow-neo">
                   <h3 className="text-sm font-bold text-text-primary mb-4 flex items-center gap-2">
                     <Swords className="w-4 h-4 text-[#EF4444]" /> Competitor Website
                   </h3>
@@ -264,7 +268,7 @@ export const URLInputForm: React.FC<URLInputFormProps> = ({
                         <img
                           src={whiteLabelLogo}
                           alt="Custom Logo"
-                          className="h-6 max-w-[100px] object-contain border-2 border-border-main rounded bg-white shadow-sm"
+                          className="h-6 max-w-[100px] object-contain border-1 border-border-main rounded bg-white shadow-sm"
                         />
                         <button
                           type="button"
@@ -286,7 +290,7 @@ export const URLInputForm: React.FC<URLInputFormProps> = ({
                 <button
                   type="submit"
                   disabled={isLoading}
-                  className="w-full px-6 py-4 bg-text-primary text-white font-bold text-body rounded-lg border-2 border-border-main shadow-neo hover:shadow-neo-hover hover:-translate-x-px hover:-translate-y-px active:shadow-none active:translate-x-0 active:translate-y-0 disabled:bg-slate-300 disabled:text-slate-500 disabled:shadow-none disabled:cursor-not-allowed transition-all duration-200 flex items-center justify-center gap-3"
+                  className="w-full px-6 py-4 bg-text-primary text-white font-bold text-body rounded-lg border-1 border-border-main shadow-neo hover:shadow-neo-hover hover:-translate-x-px hover:-translate-y-px active:shadow-none active:translate-x-0 active:translate-y-0 disabled:bg-slate-300 disabled:text-slate-500 disabled:shadow-none disabled:cursor-not-allowed transition-all duration-200 flex items-center justify-center gap-3"
                 >
                   {isLoading ? (
                     <>

@@ -50,18 +50,10 @@ const cards = [
 
 const AboutWhatWeCheck: React.FC = () => {
     return (
-        <section className="relative w-full bg-[#FFFEF9] pt-0 pb-20">
+        <section className="relative w-full max-w-full min-w-0 overflow-x-hidden bg-[#FFFEF9] pt-0 pb-20">
 
-            {/* Yellow arc — full viewport width, no clipping */}
-            <div
-                style={{
-                    position: 'relative',
-                    width: '100vw',
-                    left: '50%',
-                    transform: 'translateX(-50%)',
-                    lineHeight: 0,
-                }}
-            >
+            {/* Yellow arc — span container only (avoids 100vw horizontal scroll) */}
+            <div className="relative w-full max-w-full block leading-none">
                 <svg
                     viewBox="0 0 1200 180"
                     fill="none"
@@ -88,12 +80,11 @@ const AboutWhatWeCheck: React.FC = () => {
             </div>
 
             {/* 4 Cards */}
-            <div className="mt-10 px-6 md:px-16 w-fit  mx-auto grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="mt-10 px-4 sm:px-6 md:px-10 w-full max-w-[80rem] mx-auto grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                 {cards.map((card) => (
                     <div
                         key={card.title}
-                        className="bg-[#FFEFB266] p-5 flex flex-col justify-between items-start flex-1 self-stretch"
-                        style={{ height: '19.625rem', width: '17.5rem' }}
+                        className="bg-[#FFEFB266] p-5 flex flex-col justify-between items-start flex-1 self-stretch w-full min-w-0 min-h-[17.5rem] sm:min-h-[19.625rem] max-w-[17.5rem] sm:max-w-none mx-auto sm:mx-0"
                     >
                         {/* Icon circle */}
                         <div className="w-[4.5rem] h-[4.5rem] rounded-full bg-[#2A2A2A] flex items-center justify-center flex-shrink-0">
