@@ -5,6 +5,16 @@ import { createLead, verifyLead } from '../services/leadService';
 import { transferAuditOwnership } from '../services/auditStorage';
 import { X } from 'lucide-react';
 
+/** Modal + form chrome aligned with Beta / app shell — thin border, no neo shadow */
+const AUTH_MODAL_CLASS =
+    'relative z-10 w-full max-w-md rounded-lg border border-slate-200 bg-white p-6 shadow-none md:p-8';
+
+const AUTH_INPUT =
+    'w-full rounded-lg border border-slate-300 bg-white px-4 text-base text-text-primary outline-none transition-shadow placeholder:text-slate-400 focus-visible:border-slate-300 focus-visible:ring-2 focus-visible:ring-brand/25 disabled:opacity-60';
+
+const AUTH_BTN_PRIMARY =
+    'flex h-14 w-full items-center justify-center gap-2 rounded-lg border-0 bg-[#1E293B] text-base font-bold text-white shadow-none transition-colors hover:bg-[#334155] disabled:cursor-not-allowed disabled:opacity-70';
+
 interface AuthBlockerProps {
     onUnlock: () => void;
     isUnlocked: boolean;
@@ -250,15 +260,11 @@ export const AuthBlocker: React.FC<AuthBlockerProps> = ({ onUnlock, isUnlocked, 
 
     return (
         <div className="fixed inset-0 z-9999 flex items-center justify-center p-4 font-['DM_Sans']">
-            {/* Backdrop with stronger blur and dark overlay */}
-            <div className="absolute inset-0 bg-slate-900/35 backdrop-blur-sm"></div>
+            <div className="absolute inset-0 bg-amber-950/15 backdrop-blur-lg" aria-hidden />
 
-            {/* Modal Card - Neo Brutalist Style */}
-            <div className="relative z-10 w-full max-w-md bg-white border-2 border-black shadow-neo p-6 md:p-8">
-
-                {/* Close Button (Optional, but good for modals) */}
-                {/* Close Button - Always visible now */}
+            <div className={AUTH_MODAL_CLASS}>
                 <button
+                    type="button"
                     onClick={() => {
                         if (onClose) {
                             onClose();
@@ -266,16 +272,17 @@ export const AuthBlocker: React.FC<AuthBlockerProps> = ({ onUnlock, isUnlocked, 
                             setIsHidden(true);
                         }
                     }}
-                    className="absolute top-4 right-4 p-2 rounded-full border-2 border-transparent hover:border-black hover:bg-black/5 transition-colors text-black"
+                    className="absolute right-3 top-3 rounded-lg p-2 text-text-secondary transition-colors hover:bg-slate-100 hover:text-text-primary"
+                    aria-label="Close"
                 >
-                    <X size={24} />
+                    <X size={22} strokeWidth={2} />
                 </button>
 
-                <div className="text-center mb-8">
-                    <h2 className="text-2xl font-bold text-slate-900">
+                <div className="mb-8 text-center">
+                    <h2 className="text-2xl font-bold tracking-tight text-text-primary">
                         {isLoginMode ? 'Welcome Back' : 'Unlock Full Audit Report'}
                     </h2>
-                    <p className="mt-2 text-slate-600 text-sm">
+                    <p className="mt-2 text-sm text-text-secondary">
                         {isLoginMode
                             ? 'Log in to access your saved reports.'
                             : 'Get instant access to your detailed strategic roadmap and UI/UX insights.'}
@@ -286,22 +293,22 @@ export const AuthBlocker: React.FC<AuthBlockerProps> = ({ onUnlock, isUnlocked, 
                     // LOGIN FORM
                     <form onSubmit={handleLogin} className="space-y-6">
                         <div>
-                            <label htmlFor="email" className="block text-sm font-semibold text-slate-900 mb-2">
+                            <label htmlFor="email" className="mb-2 block text-sm font-semibold text-text-primary">
                                 Business Email <span className="text-red-600">*</span>
                             </label>
                             <input
                                 type="email"
                                 id="email"
                                 required
-                                className="w-full h-12 px-4 bg-white border-2 border-black rounded-none shadow-neo focus:outline-none focus:shadow-neo-hover transition-all text-base placeholder-slate-400"
+                                className={`${AUTH_INPUT} h-12`}
                                 placeholder="you@company.com"
                                 value={email}
                                 onChange={(e) => setEmail(e.target.value)}
                             />
                         </div>
                         <div>
-                            <div className="flex justify-between mb-2">
-                                <label htmlFor="password" className="block text-sm font-semibold text-slate-900">
+                            <div className="mb-2 flex justify-between">
+                                <label htmlFor="password" className="block text-sm font-semibold text-text-primary">
                                     Password <span className="text-red-600">*</span>
                                 </label>
                                 <button
@@ -310,7 +317,7 @@ export const AuthBlocker: React.FC<AuthBlockerProps> = ({ onUnlock, isUnlocked, 
                                         setIsLoginMode(false);
                                         setStep('forgot-email');
                                     }}
-                                    className="text-sm font-bold text-slate-500 hover:text-black hover:underline"
+                                    className="text-sm font-semibold text-text-secondary transition-colors hover:text-text-primary hover:underline"
                                 >
                                     Forgot Password?
                                 </button>
@@ -319,17 +326,13 @@ export const AuthBlocker: React.FC<AuthBlockerProps> = ({ onUnlock, isUnlocked, 
                                 type="password"
                                 id="password"
                                 required
-                                className="w-full h-12 px-4 bg-white border-2 border-black rounded-none shadow-neo focus:outline-none focus:shadow-neo-hover transition-all text-base placeholder-slate-400"
+                                className={`${AUTH_INPUT} h-12`}
                                 placeholder="••••••••"
                                 value={password}
                                 onChange={(e) => setPassword(e.target.value)}
                             />
                         </div>
-                        <button
-                            type="submit"
-                            disabled={isLoading}
-                            className="w-full h-14 mt-4 bg-black hover:bg-slate-800 text-white border-2 border-black rounded-none shadow-neo hover:shadow-neo-hover active:translate-x-px active:translate-y-px active:shadow-none text-base font-bold transition-all disabled:opacity-70 disabled:cursor-not-allowed flex justify-center items-center gap-2"
-                        >
+                        <button type="submit" disabled={isLoading} className={`${AUTH_BTN_PRIMARY} mt-4`}>
                             {isLoading ? (
                                 <>
                                     <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
@@ -346,29 +349,25 @@ export const AuthBlocker: React.FC<AuthBlockerProps> = ({ onUnlock, isUnlocked, 
                 ) : step === 'forgot-email' ? (
                     // FORGOT PASSWORD: EMAIL
                     <form onSubmit={handleForgotPasswordRequest} className="space-y-6">
-                        <div className="p-4 bg-brand/5 border-l-4 border-brand">
-                            <p className="text-sm font-bold text-slate-900">Reset Password</p>
-                            <p className="text-sm text-slate-600">Enter your business email and we'll send you a security code.</p>
+                        <div className="rounded-lg border border-brand/20 bg-brand/5 p-4">
+                            <p className="text-sm font-bold text-text-primary">Reset Password</p>
+                            <p className="text-sm text-text-secondary">Enter your business email and we'll send you a security code.</p>
                         </div>
                         <div>
-                            <label htmlFor="email" className="block text-sm font-semibold text-slate-900 mb-2">
+                            <label htmlFor="email" className="mb-2 block text-sm font-semibold text-text-primary">
                                 Business Email
                             </label>
                             <input
                                 type="email"
                                 id="email"
                                 required
-                                className="w-full h-12 px-4 bg-white border-2 border-black rounded-none shadow-neo focus:outline-none focus:shadow-neo-hover transition-all text-base"
+                                className={`${AUTH_INPUT} h-12`}
                                 placeholder="you@company.com"
                                 value={email}
                                 onChange={(e) => setEmail(e.target.value)}
                             />
                         </div>
-                        <button
-                            type="submit"
-                            disabled={isLoading}
-                            className="w-full h-14 bg-black text-white font-bold border-2 border-black shadow-neo hover:shadow-neo-hover active:translate-x-px active:translate-y-px active:shadow-none transition-all flex justify-center items-center gap-2"
-                        >
+                        <button type="submit" disabled={isLoading} className={AUTH_BTN_PRIMARY}>
                             {isLoading ? "Sending..." : "Send Reset Code"}
                         </button>
                         <button
@@ -377,7 +376,7 @@ export const AuthBlocker: React.FC<AuthBlockerProps> = ({ onUnlock, isUnlocked, 
                                 setIsLoginMode(true);
                                 setStep('email');
                             }}
-                            className="w-full text-sm text-slate-500 hover:text-black font-semibold underline underline-offset-4"
+                            className="w-full text-sm font-semibold text-text-secondary underline underline-offset-4 transition-colors hover:text-text-primary"
                         >
                             Back to Login
                         </button>
@@ -386,7 +385,7 @@ export const AuthBlocker: React.FC<AuthBlockerProps> = ({ onUnlock, isUnlocked, 
                     // FORGOT PASSWORD: OTP
                     <form onSubmit={handleForgotPasswordVerify} className="space-y-6">
                         <div className="text-center">
-                            <label htmlFor="otp" className="block text-sm font-semibold text-slate-900 mb-4">
+                            <label htmlFor="otp" className="mb-4 block text-sm font-semibold text-text-primary">
                                 Verification Code for <br /><span className="text-brand">{email}</span>
                             </label>
                             <input
@@ -394,23 +393,20 @@ export const AuthBlocker: React.FC<AuthBlockerProps> = ({ onUnlock, isUnlocked, 
                                 id="otp"
                                 required
                                 autoFocus
-                                className="w-full h-16 px-4 bg-white border-2 border-black rounded-none shadow-neo text-center tracking-[0.5em] text-2xl font-mono"
+                                className={`${AUTH_INPUT} h-16 text-center font-mono text-2xl tracking-[0.5em]`}
                                 placeholder="------"
                                 maxLength={6}
                                 value={otp}
                                 onChange={(e) => setOtp(e.target.value)}
                             />
                         </div>
-                        <button
-                            type="submit"
-                            className="w-full h-14 bg-black text-white font-bold border-2 border-black shadow-neo hover:shadow-neo-hover active:translate-x-px active:translate-y-px active:shadow-none transition-all"
-                        >
+                        <button type="submit" className={AUTH_BTN_PRIMARY}>
                             Confirm Security Code
                         </button>
                         <button
                             type="button"
                             onClick={() => setStep('forgot-email')}
-                            className="w-full text-sm text-slate-500 hover:text-black font-semibold underline underline-offset-4"
+                            className="w-full text-sm font-semibold text-text-secondary underline underline-offset-4 transition-colors hover:text-text-primary"
                         >
                             Resend or Change Email
                         </button>
@@ -418,41 +414,37 @@ export const AuthBlocker: React.FC<AuthBlockerProps> = ({ onUnlock, isUnlocked, 
                 ) : step === 'forgot-reset' ? (
                     // FORGOT PASSWORD: NEW PASSWORD
                     <form onSubmit={handleForgotPasswordReset} className="space-y-6">
-                        <div className="p-4 bg-green-50 border-l-4 border-green-500">
-                            <p className="text-sm font-bold text-slate-900">Security Verified</p>
-                            <p className="text-sm text-slate-600">Now choose a new strong password for your account.</p>
+                        <div className="rounded-lg border border-emerald-200 bg-emerald-50/80 p-4">
+                            <p className="text-sm font-bold text-text-primary">Security Verified</p>
+                            <p className="text-sm text-text-secondary">Now choose a new strong password for your account.</p>
                         </div>
                         <div>
-                            <label className="block text-sm font-semibold text-slate-900 mb-2">
+                            <label className="mb-2 block text-sm font-semibold text-text-primary">
                                 New Password
                             </label>
                             <input
                                 type="password"
                                 required
                                 minLength={8}
-                                className="w-full h-12 px-4 bg-white border-2 border-black rounded-none shadow-neo text-base"
+                                className={`${AUTH_INPUT} h-12`}
                                 value={password}
                                 onChange={(e) => setPassword(e.target.value)}
                             />
                         </div>
                         <div>
-                            <label className="block text-sm font-semibold text-slate-900 mb-2">
+                            <label className="mb-2 block text-sm font-semibold text-text-primary">
                                 Confirm New Password
                             </label>
                             <input
                                 type="password"
                                 required
                                 minLength={8}
-                                className="w-full h-12 px-4 bg-white border-2 border-black rounded-none shadow-neo text-base"
+                                className={`${AUTH_INPUT} h-12`}
                                 value={confirmPassword}
                                 onChange={(e) => setConfirmPassword(e.target.value)}
                             />
                         </div>
-                        <button
-                            type="submit"
-                            disabled={isLoading}
-                            className="w-full h-14 bg-black text-white font-bold border-2 border-black shadow-neo hover:shadow-neo-hover active:translate-x-px active:translate-y-px active:shadow-none transition-all"
-                        >
+                        <button type="submit" disabled={isLoading} className={AUTH_BTN_PRIMARY}>
                             {isLoading ? "Saving..." : "Update Password & Login"}
                         </button>
                     </form>
@@ -461,14 +453,14 @@ export const AuthBlocker: React.FC<AuthBlockerProps> = ({ onUnlock, isUnlocked, 
 
                     <form onSubmit={handleSignupStep1} className="space-y-4">
                         <div>
-                            <label htmlFor="email" className="block text-sm font-semibold text-slate-900 mb-2">
+                            <label htmlFor="email" className="mb-2 block text-sm font-semibold text-text-primary">
                                 Business Email <span className="text-red-600">*</span>
                             </label>
                             <input
                                 type="email"
                                 id="email"
                                 required
-                                className={`w-full h-12 px-4 bg-white border-2 border-black rounded-none shadow-neo focus:outline-none focus:shadow-neo-hover transition-all text-base placeholder-slate-400 ${emailError ? 'border-red-600 bg-red-50' : 'border-black'}`}
+                                className={`${AUTH_INPUT} h-12 ${emailError ? 'border-red-500 bg-red-50 focus-visible:ring-red-200' : ''}`}
                                 placeholder="you@company.com"
                                 value={email}
                                 onChange={(e) => {
@@ -476,13 +468,9 @@ export const AuthBlocker: React.FC<AuthBlockerProps> = ({ onUnlock, isUnlocked, 
                                     if (emailError) setEmailError(null);
                                 }}
                             />
-                            {emailError && <p className="text-red-600 text-sm mt-1 font-bold">{emailError}</p>}
+                            {emailError && <p className="mt-1 text-sm font-bold text-red-600">{emailError}</p>}
                         </div>
-                        <button
-                            type="submit"
-                            disabled={isLoading}
-                            className="w-full h-14 mt-4 bg-black hover:bg-slate-800 text-white border-2 border-black rounded-none shadow-neo hover:shadow-neo-hover active:translate-x-px active:translate-y-px active:shadow-none text-base font-bold transition-all disabled:opacity-70 disabled:cursor-not-allowed flex justify-center items-center gap-2"
-                        >
+                        <button type="submit" disabled={isLoading} className={`${AUTH_BTN_PRIMARY} mt-4`}>
                             {isLoading ? (
                                 <>
                                     <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
@@ -495,7 +483,7 @@ export const AuthBlocker: React.FC<AuthBlockerProps> = ({ onUnlock, isUnlocked, 
                                 'Continue to Signup'
                             )}
                         </button>
-                        <p className="text-center text-sm text-slate-500 mt-6 font-medium">
+                        <p className="mt-6 text-center text-sm font-medium text-text-secondary">
                             Step 1 of 3: Verification
                         </p>
                     </form>
@@ -503,7 +491,7 @@ export const AuthBlocker: React.FC<AuthBlockerProps> = ({ onUnlock, isUnlocked, 
                     // OTP VERIFICATION STEP
                     <form onSubmit={handleSignupStep2} className="space-y-6">
                         <div className="text-center">
-                            <label htmlFor="otp" className="block text-sm font-semibold text-slate-900 mb-4">
+                            <label htmlFor="otp" className="mb-4 block text-sm font-semibold text-text-primary">
                                 Enter Verification Code sent to <span className="text-brand">{email}</span>
                             </label>
                             <input
@@ -511,21 +499,17 @@ export const AuthBlocker: React.FC<AuthBlockerProps> = ({ onUnlock, isUnlocked, 
                                 id="otp"
                                 required
                                 autoFocus
-                                className="w-full h-16 px-4 bg-white border-2 border-black rounded-none shadow-neo focus:outline-none focus:shadow-neo-hover transition-all text-center tracking-[0.5em] text-2xl font-mono"
+                                className={`${AUTH_INPUT} h-16 text-center font-mono text-2xl tracking-[0.5em]`}
                                 placeholder="------"
                                 maxLength={6}
                                 value={otp}
                                 onChange={(e) => setOtp(e.target.value)}
                             />
-                            <p className="mt-2 text-sm text-slate-500">
+                            <p className="mt-2 text-sm text-text-secondary">
                                 Can't find it? Check your spam folder.
                             </p>
                         </div>
-                        <button
-                            type="submit"
-                            disabled={isLoading}
-                            className="w-full h-14 bg-black hover:bg-slate-800 text-white border-2 border-black rounded-none shadow-neo hover:shadow-neo-hover active:translate-x-px active:translate-y-px active:shadow-none text-base font-bold transition-all disabled:opacity-70 disabled:cursor-not-allowed flex justify-center items-center gap-2"
-                        >
+                        <button type="submit" disabled={isLoading} className={AUTH_BTN_PRIMARY}>
                             {isLoading ? (
                                 <>
                                     <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
@@ -538,13 +522,13 @@ export const AuthBlocker: React.FC<AuthBlockerProps> = ({ onUnlock, isUnlocked, 
                                 'Verify Code'
                             )}
                         </button>
-                        <p className="text-center text-sm text-slate-500 mt-4 font-medium">
+                        <p className="mt-4 text-center text-sm font-medium text-text-secondary">
                             Step 2 of 3: Security Check
                         </p>
                         <button
                             type="button"
                             onClick={() => setStep('email')}
-                            className="w-full text-sm text-slate-500 hover:text-black font-semibold underline decoration-2 underline-offset-4"
+                            className="w-full text-sm font-semibold text-text-secondary underline decoration-2 underline-offset-4 transition-colors hover:text-text-primary"
                         >
                             Change Email
                         </button>
@@ -552,19 +536,19 @@ export const AuthBlocker: React.FC<AuthBlockerProps> = ({ onUnlock, isUnlocked, 
                 ) : (
                     // STEP 3: PASSWORD SETUP
                     <form onSubmit={handleSignupStep3} className="space-y-6">
-                        <div className="p-4 bg-slate-50 border-l-4 border-brand mb-4">
-                            <p className="text-sm font-bold text-slate-800">Welcome to MUS!</p>
-                            <p className="text-sm text-slate-600">Final step: Secure your account with a password.</p>
+                        <div className="mb-4 rounded-lg border border-slate-200 bg-slate-50 p-4">
+                            <p className="text-sm font-bold text-text-primary">Welcome to MUS!</p>
+                            <p className="text-sm text-text-secondary">Final step: Secure your account with a password.</p>
                         </div>
                         <div>
-                            <label htmlFor="pass" className="block text-sm font-semibold text-slate-900 mb-2">
+                            <label htmlFor="pass" className="mb-2 block text-sm font-semibold text-text-primary">
                                 Create Password <span className="text-red-600">*</span>
                             </label>
                             <input
                                 type="password"
                                 id="pass"
                                 required
-                                className="w-full h-12 px-4 bg-white border-2 border-black rounded-none shadow-neo focus:outline-none focus:shadow-neo-hover transition-all text-base placeholder-slate-400"
+                                className={`${AUTH_INPUT} h-12`}
                                 placeholder="••••••••"
                                 value={password}
                                 onChange={(e) => setPassword(e.target.value)}
@@ -572,14 +556,14 @@ export const AuthBlocker: React.FC<AuthBlockerProps> = ({ onUnlock, isUnlocked, 
                             />
                         </div>
                         <div>
-                            <label htmlFor="confirm" className="block text-sm font-semibold text-slate-900 mb-2">
+                            <label htmlFor="confirm" className="mb-2 block text-sm font-semibold text-text-primary">
                                 Confirm Password <span className="text-red-600">*</span>
                             </label>
                             <input
                                 type="password"
                                 id="confirm"
                                 required
-                                className="w-full h-12 px-4 bg-white border-2 border-black rounded-none shadow-neo focus:outline-none focus:shadow-neo-hover transition-all text-base placeholder-slate-400"
+                                className={`${AUTH_INPUT} h-12`}
                                 placeholder="••••••••"
                                 value={confirmPassword}
                                 onChange={(e) => setConfirmPassword(e.target.value)}
@@ -587,11 +571,7 @@ export const AuthBlocker: React.FC<AuthBlockerProps> = ({ onUnlock, isUnlocked, 
                             />
                         </div>
 
-                        <button
-                            type="submit"
-                            disabled={isLoading}
-                            className="w-full h-14 mt-4 bg-black hover:bg-slate-800 text-white border-2 border-black rounded-none shadow-neo hover:shadow-neo-hover active:translate-x-px active:translate-y-px active:shadow-none text-base font-bold transition-all disabled:opacity-70 disabled:cursor-not-allowed flex justify-center items-center gap-2"
-                        >
+                        <button type="submit" disabled={isLoading} className={`${AUTH_BTN_PRIMARY} mt-4`}>
                             {isLoading ? (
                                 <>
                                     <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
@@ -604,14 +584,14 @@ export const AuthBlocker: React.FC<AuthBlockerProps> = ({ onUnlock, isUnlocked, 
                                 'Complete Registration'
                             )}
                         </button>
-                        <p className="text-center text-sm text-slate-500 mt-6 font-medium">
+                        <p className="mt-6 text-center text-sm font-medium text-text-secondary">
                             Step 3 of 3: Finalize
                         </p>
                     </form>
                 )}
 
-                <div className="mt-8 pt-6 border-t-2 border-slate-100 text-center">
-                    <p className="text-sm text-slate-600 font-medium">
+                <div className="mt-8 border-t border-slate-200 pt-6 text-center">
+                    <p className="text-sm font-medium text-text-secondary">
                         {isLoginMode ? "Don't have an account? " : "Already have an account? "}
                         <button
                             type="button"
@@ -620,7 +600,7 @@ export const AuthBlocker: React.FC<AuthBlockerProps> = ({ onUnlock, isUnlocked, 
                                 setStep('email');
                                 setEmailError(null);
                             }}
-                            className="text-black font-bold hover:underline decoration-2 underline-offset-2 ml-1"
+                            className="ml-1 font-bold text-text-primary underline decoration-2 underline-offset-2 transition-colors hover:text-brand"
                         >
                             {isLoginMode ? "Sign Up" : "Log In"}
                         </button>

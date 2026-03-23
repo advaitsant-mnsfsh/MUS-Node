@@ -22,7 +22,7 @@ const inputOutline: React.CSSProperties = {
 };
 
 const BTN_PRIMARY =
-    'flex h-14 w-full items-center justify-center gap-2 rounded-lg bg-[#1A1A1A] text-base font-bold text-white transition-colors hover:bg-black disabled:cursor-not-allowed disabled:opacity-60';
+    'flex h-14 w-full items-center justify-center gap-2 rounded-lg bg-[#1E293B] text-base font-bold text-white transition-colors hover:bg-[#334155] disabled:cursor-not-allowed disabled:opacity-60';
 
 export const BetaAccessPage: React.FC<BetaAccessPageProps> = ({ onAuthorized }) => {
     const [code, setCode] = useState('');
