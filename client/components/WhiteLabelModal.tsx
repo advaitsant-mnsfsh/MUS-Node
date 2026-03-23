@@ -1,7 +1,20 @@
-import React, { useState, useRef, useEffect } from 'react';
-import ReactCrop, { Crop, PixelCrop, centerCrop, makeAspectCrop } from 'react-image-crop';
-import 'react-image-crop/dist/ReactCrop.css';
-import { Image, X, Upload, Trash2, Check, Crop as CropIcon } from 'lucide-react';
+import React, { useState, useRef, useEffect, useCallback } from "react";
+import ReactCrop, {
+  Crop,
+  PixelCrop,
+  centerCrop,
+  makeAspectCrop,
+} from "react-image-crop";
+import "react-image-crop/dist/ReactCrop.css";
+import {
+  ImagePlus,
+  X,
+  Upload,
+  Trash2,
+  Check,
+  Crop as CropIcon,
+  RefreshCw,
+} from "lucide-react";
 
 interface WhiteLabelModalProps {
   isOpen: boolean;
@@ -15,11 +28,12 @@ interface WhiteLabelModalProps {
 
 const DEFAULT_ASPECT = 1 / 1;
 
-const ASPECT_RATIOS = [
-  { label: 'Square (1:1)', value: 1 / 1 },
-  { label: 'Landscape (4:3)', value: 4 / 3 },
-  { label: 'Banner (16:9)', value: 16 / 9 },
-  { label: 'Free', value: undefined },
+/** Order matches design: Free first, then fixed ratios */
+const ASPECT_RATIOS: { label: string; value: number | undefined }[] = [
+  { label: "Free", value: undefined },
+  { label: "Square (1:1)", value: 1 },
+  { label: "Landscape (4:3)", value: 4 / 3 },
+  { label: "Banner (16:9)", value: 16 / 9 },
 ];
 
 function centerAspectCrop(
@@ -30,7 +44,7 @@ function centerAspectCrop(
   return centerCrop(
     makeAspectCrop(
       {
-        unit: '%',
+        unit: "%",
         width: 90,
       },
       aspect,
@@ -39,7 +53,7 @@ function centerAspectCrop(
     ),
     mediaWidth,
     mediaHeight,
-  )
+  );
 }
 
 export const WhiteLabelModal: React.FC<WhiteLabelModalProps> = ({
@@ -47,14 +61,18 @@ export const WhiteLabelModal: React.FC<WhiteLabelModalProps> = ({
   onClose,
   onSave,
   initialLogo,
-  title = "Upload Organization’s Logo",
-  description = "This logo will be used to whitelabel the report to make it shareable.",
-  lockAspectRatio = false
+  title = "Upload your organization's logo",
+  description =
+    "This will be used to label your reports and personalise them for sharing.",
+  lockAspectRatio = false,
 }) => {
   const [imageSrc, setImageSrc] = useState<string | null>(initialLogo);
   const [crop, setCrop] = useState<Crop>();
   const [completedCrop, setCompletedCrop] = useState<PixelCrop>();
-  const [aspect, setAspect] = useState<number | undefined>(lockAspectRatio ? DEFAULT_ASPECT : undefined);
+  const [aspect, setAspect] = useState<number | undefined>(
+    lockAspectRatio ? DEFAULT_ASPECT : undefined,
+  );
+  const [isDragging, setIsDragging] = useState(false);
 
   const imgRef = useRef<HTMLImageElement>(null);
 
@@ -64,16 +82,27 @@ export const WhiteLabelModal: React.FC<WhiteLabelModalProps> = ({
       setCrop(undefined);
       setCompletedCrop(undefined);
       setAspect(lockAspectRatio ? DEFAULT_ASPECT : undefined);
+      setIsDragging(false);
     }
   }, [isOpen, initialLogo, lockAspectRatio]);
 
+  const applyFile = useCallback((file: File | undefined) => {
+    if (!file || !file.type.startsWith("image/")) return;
+    setCrop(undefined);
+    setCompletedCrop(undefined);
+    const reader = new FileReader();
+    reader.addEventListener(
+      "load",
+      () => setImageSrc(reader.result?.toString() || ""),
+      false,
+    );
+    reader.readAsDataURL(file);
+  }, []);
+
   const onFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files.length > 0) {
-      setCrop(undefined);
-      const reader = new FileReader();
-      reader.addEventListener('load', () => setImageSrc(reader.result?.toString() || ''), false);
-      reader.readAsDataURL(e.target.files[0]);
-    }
+    const f = e.target.files?.[0];
+    applyFile(f);
+    e.target.value = "";
   };
 
   const onImageLoad = (e: React.SyntheticEvent<HTMLImageElement>) => {
@@ -93,9 +122,12 @@ export const WhiteLabelModal: React.FC<WhiteLabelModalProps> = ({
     }
   };
 
-  const getCroppedImg = async (image: HTMLImageElement, pixelCrop: PixelCrop) => {
-    const canvas = document.createElement('canvas');
-    const ctx = canvas.getContext('2d');
+  const getCroppedImg = async (
+    image: HTMLImageElement,
+    pixelCrop: PixelCrop,
+  ) => {
+    const canvas = document.createElement("canvas");
+    const ctx = canvas.getContext("2d");
     if (!ctx) return null;
 
     const scaleX = image.naturalWidth / image.width;
@@ -117,11 +149,16 @@ export const WhiteLabelModal: React.FC<WhiteLabelModalProps> = ({
       canvas.height,
     );
 
-    return canvas.toDataURL('image/png');
+    return canvas.toDataURL("image/png");
   };
 
   const handleSave = async () => {
-    if (imgRef.current && completedCrop && completedCrop.width > 0 && completedCrop.height > 0) {
+    if (
+      imgRef.current &&
+      completedCrop &&
+      completedCrop.width > 0 &&
+      completedCrop.height > 0
+    ) {
       try {
         const croppedImage = await getCroppedImg(imgRef.current, completedCrop);
         if (croppedImage) {
@@ -139,97 +176,165 @@ export const WhiteLabelModal: React.FC<WhiteLabelModalProps> = ({
 
   const handleRemove = () => {
     setImageSrc(null);
-    onSave('');
+    onSave("");
     onClose();
-  }
+  };
+
+  const onDropZoneDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(true);
+  };
+
+  const onDropZoneDragLeave = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+  };
+
+  const onDropZoneDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+    const file = e.dataTransfer.files?.[0];
+    applyFile(file);
+  };
 
   if (!isOpen) return null;
 
-  return (
-    <div className="fixed inset-0 z-9999 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-in fade-in duration-200">
-      <div className="bg-white rounded-lg shadow-neo border-2 border-border-main w-full max-w-4xl flex flex-col max-h-[90vh] overflow-hidden animate-in zoom-in-95 duration-200">
+  const dropZoneClass = [
+    "flex min-h-[280px] w-full cursor-pointer flex-col items-center justify-center rounded-xl border border-neutral-200 bg-white px-6 py-10 transition-colors",
+    isDragging
+      ? "border-brand/40 bg-brand/5"
+      : "hover:border-neutral-300 hover:bg-neutral-50/80",
+  ].join(" ");
 
+  return (
+    <div className="fixed inset-0 z-9999 flex items-center justify-center bg-black/50 p-4 backdrop-blur-[2px] animate-in fade-in duration-200">
+      <div
+        className="flex max-h-[92vh] w-full max-w-4xl flex-col overflow-hidden rounded-2xl border border-neutral-200 bg-white shadow-[0_24px_48px_-12px_rgba(0,0,0,0.18)] animate-in zoom-in-95 duration-200"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="wl-modal-title"
+      >
         {/* Header */}
-        <div className="p-6 border-b-2 border-border-main flex justify-between items-center bg-accent-yellow/10">
-          <div>
-            <h2 className="text-xl font-bold text-text-primary flex items-center gap-2">
-              <Image className="w-5 h-5" />
-              {title}
-            </h2>
-            <p className="text-sm text-text-secondary mt-1 font-medium">
-              {description}
-            </p>
+        <div className="flex items-start justify-between gap-4 border-b border-neutral-200 bg-[#fafaf9] px-5 py-4 md:px-6 md:py-5">
+          <div className="flex min-w-0 gap-3">
+            <span className="mt-0.5 inline-flex h-9 w-9 shrink-0 items-center justify-center">
+              <ImagePlus
+                className="h-5 w-5 text-[#1a1a1a]"
+                strokeWidth={2}
+                aria-hidden
+              />
+            </span>
+            <div className="min-w-0">
+              <h2
+                id="wl-modal-title"
+                className="text-lg font-bold tracking-tight text-[#1a1a1a] md:text-xl"
+              >
+                {title}
+              </h2>
+              <p className="mt-2 text-sm font-medium leading-relaxed text-text-secondary">
+                {description}
+              </p>
+            </div>
           </div>
-          <button onClick={onClose} className="p-2 hover:bg-black/5 rounded-full transition-colors text-text-primary border-2 border-transparent hover:border-black">
-            <X className="w-6 h-6" />
+          <button
+            type="button"
+            onClick={onClose}
+            className="shrink-0 rounded-lg p-2 text-text-secondary transition-colors hover:bg-black/6 hover:text-[#1a1a1a]"
+            aria-label="Close"
+          >
+            <X className="h-5 w-5" strokeWidth={2} />
           </button>
         </div>
 
-        {/* Content */}
-        <div className="flex-1 overflow-y-auto p-6 bg-slate-50">
+        {/* Body */}
+        <div className="flex-1 overflow-y-auto bg-white px-5 py-6 md:px-6">
           {!imageSrc ? (
-            <div className="flex items-center justify-center w-full min-h-[300px]">
-              <label className="flex flex-col items-center justify-center w-full h-80 border-2 border-dashed border-border-main rounded-lg cursor-pointer bg-white hover:bg-accent-cyan/5 hover:border-accent-cyan transition-colors group relative overflow-hidden">
-                <div className="flex flex-col items-center justify-center pt-5 pb-6 z-10">
-                  <div className="p-4 bg-accent-cyan rounded-full border-2 border-border-main shadow-neo-sm group-hover:shadow-neo group-hover:-translate-y-1 transition-all mb-4">
-                    <Upload className="w-8 h-8 text-black" />
-                  </div>
-                  <p className="mb-2 text-lg font-bold text-text-primary">Click to upload logo</p>
-                  <p className="text-sm text-text-secondary">or drag and drop here</p>
-                </div>
-                <input type="file" className="hidden" accept="image/*" onChange={onFileChange} />
-              </label>
-            </div>
+            <label
+              className={dropZoneClass}
+              onDragOver={onDropZoneDragOver}
+              onDragLeave={onDropZoneDragLeave}
+              onDrop={onDropZoneDrop}
+            >
+              <input
+                type="file"
+                className="hidden"
+                accept="image/jpeg,image/jpg,image/png,image/*"
+                onChange={onFileChange}
+              />
+              <span className="mb-5 inline-flex rounded-xl bg-[#f8d448] p-3.5 border-1 border-black">
+                <Upload
+                  className="h-7 w-7 text-[#1a1a1a]"
+                  strokeWidth={2.25}
+                  aria-hidden
+                />
+              </span>
+              <p className="mb-1 text-center text-base font-bold text-[#1a1a1a]">
+                Click to upload logo
+              </p>
+              <p className="mb-6 text-center text-sm font-medium text-text-secondary">
+                or drag and drop here
+              </p>
+              <div className="text-center text-xs font-medium leading-relaxed text-text-secondary">
+                <p>Input type: JPEG, JPG, PNG</p>
+                <p className="mt-1">Upload at highest resolution for best output</p>
+              </div>
+            </label>
           ) : (
-            <div className="space-y-6">
-              <div className="flex justify-center bg-slate-900 border-2 border-border-main rounded-lg overflow-hidden min-h-[300px] items-center relative shadow-inner">
+            <div className="space-y-5">
+              <div className="flex min-h-[280px] items-center justify-center overflow-hidden rounded-xl bg-neutral-400 px-3 py-4 md:min-h-[320px]">
                 <ReactCrop
                   crop={crop}
                   onChange={(_, percentCrop) => setCrop(percentCrop)}
                   onComplete={(c) => setCompletedCrop(c)}
                   aspect={aspect}
-                  className="max-h-[350px] z-10"
+                  className="ReactCrop--no-animate max-h-[360px] max-w-full"
                 >
                   <img
                     ref={imgRef}
-                    alt="Crop me"
+                    alt="Crop preview"
                     src={imageSrc}
                     onLoad={onImageLoad}
-                    style={{ maxHeight: '350px', maxWidth: '100%', objectFit: 'contain' }}
+                    className="max-h-[360px] max-w-full object-contain"
                   />
                 </ReactCrop>
               </div>
 
-              <div className="bg-white p-4 rounded-lg border-2 border-border-main shadow-neo-sm">
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div className="pt-5">
+                <div className="flex flex-col gap-4">
                   <div className="flex flex-wrap items-center gap-2">
-                    <span className="text-sm font-bold text-text-primary flex items-center gap-2 mr-2">
-                      <CropIcon className="w-4 h-4" />
-                      Aspect Ratio:
+                    <span className="mr-1 flex items-center gap-2 text-sm font-bold text-[#1a1a1a]">
+                      <CropIcon className="h-4 w-4 shrink-0" aria-hidden />
+                      Aspect ratio
                     </span>
                     {lockAspectRatio ? (
-                      <span className="px-3 py-1 bg-accent-yellow border-2 border-black text-xs font-bold rounded shadow-neo-sm">
-                        Fixed Square (1:1)
+                      <span className="rounded-lg bg-[#f8d448] px-3 py-2 text-xs font-bold text-[#1a1a1a]">
+                        Fixed square (1:1)
                       </span>
                     ) : (
-                      ASPECT_RATIOS.map((ratio) => (
-                        <button
-                          key={ratio.label}
-                          onClick={() => handleAspectChange(ratio.value)}
-                          className={`px-3 py-1 text-xs font-bold rounded border-2 transition-all ${aspect === ratio.value
-                              ? 'bg-accent-yellow border-black text-black shadow-neo-sm'
-                              : 'bg-white border-transparent text-slate-500 hover:border-black hover:text-black'
-                            }`}
-                        >
-                          {ratio.label}
-                        </button>
-                      ))
+                      <div className="flex flex-wrap gap-2">
+                        {ASPECT_RATIOS.map((ratio) => {
+                          const active = aspect === ratio.value;
+                          return (
+                            <button
+                              key={ratio.label}
+                              type="button"
+                              onClick={() => handleAspectChange(ratio.value)}
+                              className={`rounded-lg px-3 py-2 text-xs font-bold transition-colors ${
+                                active
+                                  ? "bg-[#f8d448] text-[#1a1a1a] shadow-sm"
+                                  : "bg-neutral-100 text-neutral-600 hover:bg-neutral-200 hover:text-[#1a1a1a]"
+                              }`}
+                            >
+                              {ratio.label}
+                            </button>
+                          );
+                        })}
+                      </div>
                     )}
                   </div>
-                  <label className="cursor-pointer text-sm font-bold text-brand hover:text-brand-hover underline decoration-dotted underline-offset-2 flex items-center gap-1 shrink-0">
-                    Change Image
-                    <input type="file" className="hidden" accept="image/*" onChange={onFileChange} />
-                  </label>
                 </div>
               </div>
             </div>
@@ -237,18 +342,50 @@ export const WhiteLabelModal: React.FC<WhiteLabelModalProps> = ({
         </div>
 
         {/* Footer */}
-        <div className="p-6 border-t-2 border-border-main bg-white flex justify-between items-center">
+        <div className="flex flex-col gap-4 border-t border-neutral-200 bg-white px-5 py-4 md:flex-row md:items-center md:justify-between md:px-6 md:py-5">
           {imageSrc ? (
-            <button onClick={handleRemove} className="text-red-500 hover:text-red-600 text-sm font-bold flex items-center gap-2 px-3 py-2 rounded hover:bg-red-50 transition-colors">
-              <Trash2 className="w-4 h-4" /> Remove
-            </button>
-          ) : <div></div>}
-          <div className="flex gap-3">
-            <button onClick={onClose} className="px-6 py-2.5 text-sm font-bold text-text-primary bg-white border-2 border-border-main shadow-neo-sm hover:translate-x-px hover:translate-y-px hover:shadow-none transition-all rounded">
+            <div className="flex flex-wrap items-center gap-5">
+              <label className="flex cursor-pointer items-center gap-1.5 text-sm font-semibold text-brand decoration-dotted underline-offset-4 hover:text-brand-hover">
+                <RefreshCw className="h-4 w-4 shrink-0" aria-hidden />
+                Change image
+                <input
+                  type="file"
+                  className="hidden"
+                  accept="image/*"
+                  onChange={onFileChange}
+                />
+              </label>
+              <button
+                type="button"
+                onClick={handleRemove}
+                className="flex items-center gap-1.5 text-sm font-semibold text-red-600 transition-colors hover:text-red-700"
+              >
+                <Trash2 className="h-4 w-4 shrink-0" aria-hidden />
+                Remove image
+              </button>
+            </div>
+          ) : (
+            <div className="hidden md:block" aria-hidden />
+          )}
+
+          <div
+            className={`flex items-center gap-3 ${imageSrc ? "md:ml-auto" : "ml-auto"}`}
+          >
+            <button
+              type="button"
+              onClick={onClose}
+              className="rounded-lg px-4 py-2.5 text-sm font-semibold text-text-secondary transition-colors hover:bg-neutral-100 hover:text-[#1a1a1a]"
+            >
               Cancel
             </button>
-            <button onClick={handleSave} disabled={!imageSrc} className="px-6 py-2.5 text-sm font-bold text-white bg-brand border-2 border-border-main shadow-neo hover:translate-x-px hover:translate-y-px hover:shadow-none disabled:bg-slate-300 disabled:shadow-none disabled:cursor-not-allowed transition-all rounded flex items-center gap-2">
-              <Check className="w-4 h-4" /> Save Logo
+            <button
+              type="button"
+              onClick={handleSave}
+              disabled={!imageSrc}
+              className="inline-flex items-center justify-center gap-2 rounded-lg bg-brand px-5 py-2.5 text-sm font-bold text-white shadow-sm transition-opacity hover:opacity-95 disabled:cursor-not-allowed disabled:bg-violet-200 disabled:text-white/90 disabled:opacity-90"
+            >
+              <Check className="h-4 w-4 shrink-0" strokeWidth={2.5} />
+              Save logo
             </button>
           </div>
         </div>

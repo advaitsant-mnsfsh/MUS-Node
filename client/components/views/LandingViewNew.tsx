@@ -1,8 +1,6 @@
 import React from 'react';
-import { GlobalNavbar } from '../GlobalNavbar';
 import { LandingHero } from '../LandingHero';
 import { URLInputForm } from '../URLInputForm';
-import { Footer } from '../Footer';
 import { AuditInput } from '../../types';
 
 interface LandingViewProps {
@@ -23,10 +21,10 @@ export const LandingView: React.FC<LandingViewProps> = ({
     renderError
 }) => {
     return (
-        <div className="h-[calc(100vh-5rem)] w-full flex flex-col relative bg-page-bg font-sans overflow-x-hidden overflow-y-auto custom-scrollbar">
+        <div className="flex-1 min-h-0 w-full flex flex-col relative bg-page-bg font-sans overflow-x-hidden overflow-y-auto custom-scrollbar">
 
             {/* Main Content (Hero + Input) */}
-            <main className="w-full min-h-full flex flex-col items-center pt-16 md:pt-[8vh] px-4 pb-20 animate-in fade-in duration-500 z-10">
+            <main className="w-full flex-1 flex flex-col items-center pt-16 md:pt-[8vh] px-4 pb-20 animate-in fade-in duration-500 z-10 min-h-0">
                 <LandingHero />
 
                 <div className="w-full max-w-4xl mt-8 space-y-6">

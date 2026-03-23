@@ -110,7 +110,7 @@ export default function SiteLogo({ domain, size = 'medium', className = '', cust
     // Render custom logo first if available
     if (logoSource === 'custom' && customIcon) {
         return (
-            <div className={`${sizeClasses[size]} ${className} rounded-lg overflow-hidden bg-white shadow-md flex items-center justify-center shrink-0`}>
+            <div className={`${sizeClasses[size]} flex shrink-0 items-center justify-center overflow-hidden rounded-lg bg-white shadow-md ${className}`}>
                 <img
                     src={resolvedCustomIcon as string}
                     alt="Custom logo"
@@ -128,7 +128,7 @@ export default function SiteLogo({ domain, size = 'medium', className = '', cust
         if (domain === 'Manual Upload' || domain === 'Uploaded Image') {
             return (
                 <div
-                    className={`${sizeClasses[size]} ${className} rounded-lg flex items-center justify-center bg-brand text-white shadow-md`}
+                    className={`${sizeClasses[size]} flex items-center justify-center rounded-lg bg-brand text-white shadow-md ${className}`}
                 >
                     <ImageIcon className={size === 'tiny' ? 'w-4 h-4' : size === 'small' ? 'w-8 h-8' : size === 'medium' ? 'w-10 h-10' : 'w-16 h-16'} />
                 </div>
@@ -136,7 +136,7 @@ export default function SiteLogo({ domain, size = 'medium', className = '', cust
         }
         return (
             <div
-                className={`${sizeClasses[size]} ${className} rounded-lg flex items-center justify-center font-bold text-white shadow-md`}
+                className={`${sizeClasses[size]} flex items-center justify-center rounded-lg font-bold text-white shadow-md ${className}`}
                 style={{ backgroundColor: domainColor }}
             >
                 <span className={fontSize[size]}>{firstLetter}</span>
@@ -147,7 +147,7 @@ export default function SiteLogo({ domain, size = 'medium', className = '', cust
 
     // Render logo image with crisp rendering
     return (
-        <div className={`${sizeClasses[size]} ${className} rounded-lg overflow-hidden bg-white shadow-md flex items-center justify-center shrink-0`}>
+        <div className={`${sizeClasses[size]} flex shrink-0 items-center justify-center overflow-hidden rounded-lg bg-white shadow-md ${className}`}>
             <img
                 src={googleFaviconUrl}
                 alt={`${cleanDomain} logo`}

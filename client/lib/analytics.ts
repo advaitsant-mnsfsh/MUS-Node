@@ -19,6 +19,12 @@ export const initGA = () => {
         window.dataLayer.push(arguments);
     };
 
+    // Load gtag.js only when GA_ID is set (avoids Vite env warning in index.html)
+    const script = document.createElement('script');
+    script.async = true;
+    script.src = `https://www.googletagmanager.com/gtag/js?id=${GA_ID}`;
+    document.head.appendChild(script);
+
     // Default setup
     window.gtag('js', new Date());
 

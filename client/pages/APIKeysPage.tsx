@@ -1,368 +1,914 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../contexts/AuthContext';
-import { Key, Copy, Eye, EyeOff, Code, BookOpen, Zap, Trash2 } from 'lucide-react';
-import toast from 'react-hot-toast';
-import { generateAPIKey, getUserAPIKeys, deactivateAPIKey, APIKey } from '../services/apiKeysService';
+import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "../contexts/AuthContext";
+import {
+  Copy,
+  Eye,
+  EyeOff,
+  Trash2,
+  Plus,
+  Check,
+  ExternalLink,
+} from "lucide-react";
+import toast from "react-hot-toast";
+import {
+  generateAPIKey,
+  getUserAPIKeys,
+  deactivateAPIKey,
+  APIKey,
+} from "../services/apiKeysService";
+import { Footer } from "../components/Footer";
 
+// ─────────────────────────────────────────────────────────────────────
+// Figma source: Dev Handoff → API Keys Pages
+//
+// Logged in:  "API Keys Iteration logged in"   node 1858:3925
+// Logged out: "API Keys Iteration 15 Logged Out" node 1858:4146
+//
+// Layout tokens from Figma:
+//   Page:          bg #ffffff, min-h screen
+//   Content area:  pt-8 pb-8, sections gap 48px
+//   Side padding:  200px each side on inner content
+//   Hero:          embed preview (566×494 yellow) left, heading right
+//   Page bg:       #f5f5f5 (content under navbar)
+//   Keys card:     w 1046 max, bg #fff border 1px rgba(0,0,0,0.1) radius 12 p 32
+//   Key row:       border 1px rgba(0,0,0,0.1) radius 12 p 16 gap 8
+//   Key value:     bg #fafafa border 0.5px rgba(0,0,0,0.1) radius 4 p 10
+//   Active chip:   bg rgba(26,255,26,0.10) radius 4 pad 4  text #24312d 10px SemiBold
+//   Generate btn:  bg #6366f1 border 1px rgba(0,0,0,0.1) radius 12 p 12
+//   View Docs:     logged in border rgba(0,0,0,0.5); logged out #f8d448 + dark border
+//   Setup cards:   bg #fff border 1px #e5e5e5 radius 12 pad 24
+//   Value cards:   bg #fff border 1px #e5e5e5 radius 12 pad 20
+// ─────────────────────────────────────────────────────────────────────
+
+// Main content column width — matches Widget API Keys card (all sections below align to this).
+const API_KEYS_PAGE_CONTENT_MAX = 1046;
+
+// ── Key Row ────────────────────────────────────────────────────────
+const KeyRow: React.FC<{
+  apiKey: APIKey;
+  visible: boolean;
+  onToggle: () => void;
+  onCopy: () => void;
+  onDeactivate: () => void;
+}> = ({ apiKey, visible, onToggle, onCopy, onDeactivate }) => {
+  const masked = "mus-live" + "•".repeat(22);
+  const createdDate = new Date(apiKey.createdAt)
+    .toLocaleDateString("en-GB", {
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric",
+    })
+    .replace(/\//g, "/");
+
+  return (
+    <div
+      className="flex flex-col font-['DM_Sans'] w-full"
+      style={{
+        backgroundColor: "#ffffff",
+        border: "1px solid rgba(0,0,0,0.1)",
+        borderRadius: 8,
+        padding: 16,
+        gap: 12,
+        opacity: apiKey.isActive ? 1 : 0.5,
+      }}
+    >
+      <div className="flex items-start justify-between gap-3">
+        <div className="flex flex-col min-w-0" style={{ gap: 6 }}>
+          <div className="flex flex-wrap items-center" style={{ gap: 8 }}>
+            <svg
+              width="14"
+              height="14"
+              viewBox="0 0 12 12"
+              fill="none"
+              className="shrink-0 text-[#666666]"
+              aria-hidden
+            >
+              <circle
+                cx="4.5"
+                cy="5"
+                r="3.5"
+                stroke="currentColor"
+                strokeWidth="1"
+              />
+              <line
+                x1="7.5"
+                y1="5"
+                x2="11.5"
+                y2="5"
+                stroke="currentColor"
+                strokeWidth="1"
+              />
+              <line
+                x1="9.5"
+                y1="3.5"
+                x2="9.5"
+                y2="6.5"
+                stroke="currentColor"
+                strokeWidth="1"
+              />
+              <circle
+                cx="4.5"
+                cy="5"
+                r="1"
+                fill="currentColor"
+                fillOpacity={0.65}
+              />
+            </svg>
+            <span
+              className="font-semibold text-[#1a1a1a]"
+              style={{ fontSize: 16, lineHeight: 1.25 }}
+            >
+              {apiKey.name}
+            </span>
+            <span
+              className="font-semibold shrink-0"
+              style={{
+                backgroundColor: apiKey.isActive
+                  ? "rgba(26,255,26,0.10)"
+                  : "rgba(239,68,68,0.10)",
+                borderRadius: 9999,
+                padding: "3px 10px",
+                fontSize: 10,
+                lineHeight: 1.2,
+                color: apiKey.isActive ? "#24312d" : "#7f1d1d",
+              }}
+            >
+              {apiKey.isActive ? "Active" : "Inactive"}
+            </span>
+          </div>
+          <span
+            className="font-normal text-[#999999]"
+            style={{ fontSize: 10, lineHeight: 1.4 }}
+          >
+            created on {createdDate}
+            {apiKey.lastUsedAt &&
+              ` • Last used ${new Date(apiKey.lastUsedAt).toLocaleDateString()}`}
+          </span>
+        </div>
+        {apiKey.isActive && (
+          <button
+            type="button"
+            onClick={onDeactivate}
+            className="shrink-0 p-1 rounded-md hover:bg-neutral-100 transition-colors"
+            title="Deactivate key"
+          >
+            <Trash2 className="w-4 h-4 text-[#999999]" strokeWidth={1.5} />
+          </button>
+        )}
+      </div>
+
+      <div
+        className="flex items-center justify-between min-h-[44px]"
+        style={{
+          backgroundColor: "#fafafa",
+          border: "1px solid rgba(0,0,0,0.08)",
+          borderRadius: 6,
+          padding: "10px 12px",
+          gap: 12,
+        }}
+      >
+        <span
+          className="font-normal text-[#1a1a1a] flex-1 min-w-0 truncate font-mono"
+          style={{ fontSize: 14 }}
+        >
+          {visible ? apiKey.key : masked}
+        </span>
+        <div className="flex items-center shrink-0" style={{ gap: 10 }}>
+          <button
+            type="button"
+            onClick={onToggle}
+            className="p-0.5 rounded hover:opacity-70 transition-opacity"
+            aria-label={visible ? "Hide key" : "Show key"}
+          >
+            {visible ? (
+              <EyeOff className="w-4 h-4 text-[#666666]" strokeWidth={1.75} />
+            ) : (
+              <Eye className="w-4 h-4 text-[#666666]" strokeWidth={1.75} />
+            )}
+          </button>
+          <button
+            type="button"
+            onClick={onCopy}
+            className="p-0.5 rounded hover:opacity-70 transition-opacity"
+            aria-label="Copy key"
+          >
+            <Copy className="w-4 h-4 text-[#666666]" strokeWidth={1.75} />
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// ── Setup Step Card ────────────────────────────────────────────────
+const SetupCard: React.FC<{
+  step: string;
+  title: string;
+  description: string;
+  code?: string;
+}> = ({ step, title, description, code }) => {
+  const [copied, setCopied] = useState(false);
+  const handleCopy = () => {
+    if (code) {
+      navigator.clipboard.writeText(code);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    }
+  };
+  return (
+    // Figma: bg #fff border 1px #e5e5e5 radius 12 pad 24 gap 24
+    <div
+      className="flex flex-col font-['DM_Sans'] w-full"
+      style={{
+        backgroundColor: "#ffffff",
+        border: "1px solid rgba(0,0,0,0.1)",
+        borderRadius: 12,
+        padding: 24,
+        gap: 24,
+      }}
+    >
+      {/* Step number + text — horizontal gap 12 */}
+      <div className="flex items-start" style={{ gap: 12 }}>
+        {/* Step number — 15px SemiBold #666 */}
+        <span
+          className="font-semibold text-[#666666] shrink-0 inline-flex justify-start"
+          style={{ fontSize: 15, minWidth: 16, lineHeight: 1.5 }}
+        >
+          {step}
+        </span>
+        <div className="flex flex-col" style={{ gap: 8 }}>
+          {/* Title — 14px Bold #1a1a1a */}
+          <p className="font-bold text-[#1a1a1a]" style={{ fontSize: 14 }}>
+            {title}
+          </p>
+          {/* Body — 14px Medium #1a1a1a */}
+          <p
+            className="font-medium text-[#1a1a1a] whitespace-pre-line"
+            style={{ fontSize: 14, letterSpacing: "-0.5px", lineHeight: 1.5 }}
+          >
+            {description}
+          </p>
+        </div>
+      </div>
+      {/* Code block — bg #4d4d4d border 0.5px #000 radius 4 pad 12 */}
+      {code && (
+        <div
+          className="relative flex items-start justify-between"
+          style={{
+            backgroundColor: "#4d4d4d",
+            border: "0.5px solid rgba(0,0,0,0.1)",
+            borderRadius: 4,
+            padding: "6px 8px",
+            gap: 10,
+          }}
+        >
+          <pre
+            className="font-mono text-[#fafafa] flex-1 overflow-x-auto whitespace-pre-wrap"
+            style={{ fontSize: 14, fontWeight: 400, lineHeight: "normal" }}
+          >
+            {code}
+          </pre>
+          <button
+            onClick={handleCopy}
+            className="shrink-0 hover:opacity-60 transition-opacity"
+          >
+            {copied ? (
+              <Check className="w-3 h-3 text-emerald-400" />
+            ) : (
+              <Copy className="w-3 h-3 text-[#666666]" strokeWidth={2} />
+            )}
+          </button>
+        </div>
+      )}
+    </div>
+  );
+};
+
+// ── Value Prop Card (Figma bottom — shadow 2.572px 2.572px 0 #f8d448) ──
+const ValueCard: React.FC<{
+  title: string;
+  items: { heading: string; body: string }[];
+}> = ({ title, items }) => (
+  <div
+    className="flex flex-col flex-1 min-w-0 overflow-hidden font-['DM_Sans'] relative"
+    style={{
+      backgroundColor: "#ffffff",
+      border: "1px solid #e5e5e5",
+      borderRadius: 12,
+      padding: 20,
+      gap: 8,
+      boxShadow: "2.572px 2.572px 0px 0px #f8d448",
+    }}
+  >
+    <p
+      className="font-bold capitalize shrink-0"
+      style={{ fontSize: 20, color: "#996f00", letterSpacing: "-0.5px" }}
+    >
+      {title}
+    </p>
+    <div className="flex flex-col w-full" style={{ gap: 6, paddingTop: 16 }}>
+      {items.map((item, i) => (
+        <div
+          key={i}
+          className="flex items-start w-full"
+          style={{ gap: 8, paddingBottom: 24 }}
+        >
+          <div
+            className="shrink-0 flex items-center justify-center"
+            style={{ width: 20, height: 20, paddingTop: 2 }}
+          >
+            <div
+              className="rounded-full"
+              style={{
+                width: 8,
+                height: 8,
+                backgroundColor: "#f8d448",
+                border: "1px solid #1a1a1a",
+              }}
+            />
+          </div>
+          <div className="flex flex-col flex-1 min-w-0" style={{ gap: 2 }}>
+            <p
+              className="font-bold text-[#1a1a1a]"
+              style={{
+                fontSize: 18,
+                letterSpacing: "-0.36px",
+                lineHeight: 1.5,
+              }}
+            >
+              {item.heading}
+            </p>
+            <p
+              className="font-medium text-[#1a1a1a] max-w-[370px]"
+              style={{ fontSize: 14, letterSpacing: "-0.5px", lineHeight: 1.5 }}
+            >
+              {item.body}
+            </p>
+          </div>
+        </div>
+      ))}
+    </div>
+  </div>
+);
+
+// ── Generate Key Modal ─────────────────────────────────────────────
+const GenerateModal: React.FC<{
+  isOpen: boolean;
+  onClose: () => void;
+  onConfirm: (name: string) => Promise<void>;
+  isGenerating: boolean;
+}> = ({ isOpen, onClose, onConfirm, isGenerating }) => {
+  const [name, setName] = useState("");
+  if (!isOpen) return null;
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 font-['DM_Sans']"
+      style={{ backgroundColor: "rgba(0,0,0,0.70)" }}
+    >
+      <div
+        className="flex flex-col w-full animate-in zoom-in-95 duration-200 overflow-hidden"
+        style={{
+          backgroundColor: "#ffffff",
+          border: "1px solid #000000",
+          borderRadius: 12,
+          maxWidth: 420,
+        }}
+      >
+        <div style={{ backgroundColor: "#6366f1", height: 6 }} />
+        <div style={{ padding: 24 }}>
+          <h3
+            className="font-black text-[#000000] mb-2"
+            style={{ fontSize: 20 }}
+          >
+            Name Your API Key
+          </h3>
+          <p
+            className="font-medium mb-5"
+            style={{ fontSize: 13, color: "#71717b" }}
+          >
+            Give your API key a descriptive name to identify it later.
+          </p>
+          <input
+            type="text"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            placeholder="e.g., Production Widget Key"
+            className="font-medium outline-none w-full placeholder:text-[#9f9fa9] mb-4"
+            style={{
+              backgroundColor: "#ffffff",
+              border: "1px solid #000000",
+              height: 48,
+              padding: "0 12px",
+              fontSize: 14,
+              color: "#000000",
+            }}
+            autoFocus
+            onKeyDown={(e) =>
+              e.key === "Enter" && name.trim() && onConfirm(name.trim())
+            }
+          />
+          <div className="flex gap-3">
+            <button
+              onClick={onClose}
+              className="flex-1 font-medium text-[#666666] hover:opacity-70 transition-opacity"
+              style={{
+                backgroundColor: "#fafafa",
+                borderRadius: 12,
+                padding: "10px",
+                fontSize: 14,
+              }}
+            >
+              Cancel
+            </button>
+            <button
+              onClick={() => name.trim() && onConfirm(name.trim())}
+              disabled={isGenerating || !name.trim()}
+              className="font-black text-white hover:opacity-80 disabled:opacity-40 disabled:cursor-not-allowed transition-opacity"
+              style={{
+                backgroundColor: "#6366f1",
+                border: "1px solid #000000",
+                borderRadius: 12,
+                padding: "10px 24px",
+                fontSize: 14,
+                flex: 2,
+              }}
+            >
+              {isGenerating ? "Generating..." : "Generate"}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// ── Main Page ──────────────────────────────────────────────────────
 export const APIKeysPage: React.FC = () => {
-    const navigate = useNavigate();
-    const { user } = useAuth();
-    const [showKey, setShowKey] = useState<{ [key: string]: boolean }>({});
-    const [apiKeys, setApiKeys] = useState<APIKey[]>([]);
-    const [isLoading, setIsLoading] = useState(false);
-    const [isGenerating, setIsGenerating] = useState(false);
-    const [showNameModal, setShowNameModal] = useState(false);
-    const [newKeyName, setNewKeyName] = useState('');
+  const navigate = useNavigate();
+  const { user } = useAuth();
+  const isLoggedIn = !!user;
 
-    // Fetch API keys when user logs in
-    useEffect(() => {
-        if (user) {
-            fetchAPIKeys();
-        }
-    }, [user]);
+  const [showKey, setShowKey] = useState<{ [id: string]: boolean }>({});
+  const [apiKeys, setApiKeys] = useState<APIKey[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [showModal, setShowModal] = useState(false);
 
-    const fetchAPIKeys = async () => {
-        setIsLoading(true);
-        const { success, apiKeys: keys, error } = await getUserAPIKeys();
-        setIsLoading(false);
+  useEffect(() => {
+    if (user) fetchAPIKeys();
+  }, [user]);
 
-        if (success && keys) {
-            setApiKeys(keys);
-        } else {
-            console.error('Failed to fetch API keys:', error);
-            toast.error(error || 'Failed to load API keys');
-        }
-    };
+  const fetchAPIKeys = async () => {
+    setIsLoading(true);
+    const { success, apiKeys: keys, error } = await getUserAPIKeys();
+    setIsLoading(false);
+    if (success && keys) setApiKeys(keys);
+    else toast.error(error || "Failed to load API keys");
+  };
 
-    const handleGenerateKey = () => {
-        if (!user) {
-            navigate('/login?returnUrl=/api-keys');
-        } else {
-            setShowNameModal(true);
-            setNewKeyName('');
-        }
-    };
+  const handleGenerateKey = () => {
+    if (!user) navigate("/login?returnUrl=/api-keys");
+    else setShowModal(true);
+  };
 
-    const handleConfirmGenerate = async () => {
-        if (!newKeyName.trim()) {
-            toast.error('Please enter a name for your API key');
-            return;
-        }
+  const handleConfirmGenerate = async (name: string) => {
+    setIsGenerating(true);
+    const { success, apiKey, error } = await generateAPIKey(name);
+    setIsGenerating(false);
+    if (success && apiKey) {
+      toast.success("API key generated!");
+      setApiKeys((prev) => [apiKey, ...prev]);
+      setShowModal(false);
+      setShowKey((prev) => ({ ...prev, [apiKey.id]: true }));
+    } else {
+      toast.error(error || "Failed to generate API key");
+    }
+  };
 
-        setIsGenerating(true);
-        const { success, apiKey, error } = await generateAPIKey(newKeyName.trim());
-        setIsGenerating(false);
+  const handleDeactivate = async (id: string, name: string) => {
+    if (!confirm(`Deactivate "${name}"? This cannot be undone.`)) return;
+    const { success, error } = await deactivateAPIKey(id);
+    if (success) {
+      toast.success("API key deactivated");
+      setApiKeys((prev) =>
+        prev.map((k) => (k.id === id ? { ...k, isActive: false } : k)),
+      );
+    } else {
+      toast.error(error || "Failed to deactivate");
+    }
+  };
 
-        if (success && apiKey) {
-            toast.success('API key generated successfully!');
-            setApiKeys([apiKey, ...apiKeys]);
-            setShowNameModal(false);
-            setNewKeyName('');
-            // Auto-show the new key
-            setShowKey({ [apiKey.id]: true });
-        } else {
-            toast.error(error || 'Failed to generate API key');
-        }
-    };
+  const embedCode = `<script src="https://widget.myuxscore.com/widget.js"></script>\n<script>\n  UXWidget.init({ apiKey: 'YOUR_API_KEY_HERE' });\n</script>`;
 
-    const handleDeactivateKey = async (keyId: string, keyName: string) => {
-        if (!confirm(`Are you sure you want to deactivate "${keyName}"? This action cannot be undone.`)) {
-            return;
-        }
+  const valueWhyItems = [
+    {
+      heading: "Seamless Integration",
+      body: "Drop the embed onto your existing site to start capturing contextual leads without changing your workflow.",
+    },
+    {
+      heading: "Offer Value First",
+      body: "Replace static forms with an interactive audit that delivers immediate, personalized insights to your visitors.",
+    },
+    {
+      heading: "White-Labeled Output",
+      body: "It's your brand, your logo, and your client-ready report—powered by our 110+ proven interaction standards.",
+    },
+  ];
+  const valueForWhoItems = [
+    {
+      heading: "For Design Agencies",
+      body: "Automatically qualify inbound leads by letting prospects uncover their product's flaws before your first pitch.",
+    },
+    {
+      heading: "For Freelance Designers",
+      body: "Build immediate trust and secure better clients by offering data-backed UX insights directly from your portfolio.",
+    },
+    {
+      heading: "For Growth Consultants",
+      body: "Skip the guesswork and start client conversations with concrete data on exactly where users are dropping off.",
+    },
+  ];
 
-        const { success, error } = await deactivateAPIKey(keyId);
+  const setupHowToTitle = (
+    <div className="flex items-center w-full" style={{ gap: 8 }}>
+      <div className="w-6 h-6 flex items-center justify-center shrink-0">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden>
+          <path
+            d="M8 4L4 8l4 4M16 4l4 4-4 4M10 12h4"
+            stroke="#1a1a1a"
+            strokeWidth="1.5"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+        </svg>
+      </div>
+      <h3
+        className="font-bold text-[#1a1a1a] capitalize"
+        style={{ fontSize: 20, letterSpacing: "-0.5px", lineHeight: "normal" }}
+      >
+        How to Set up
+      </h3>
+    </div>
+  );
 
-        if (success) {
-            toast.success('API key deactivated');
-            // Update local state
-            setApiKeys(apiKeys.map(k => k.id === keyId ? { ...k, isActive: false } : k));
-        } else {
-            toast.error(error || 'Failed to deactivate API key');
-        }
-    };
+  // Logged-out: Figma wide gutters (1440 / 200px). Logged-in: same max width as keys + setup (1046), no extra px.
+  const valueCardsRowWide = (
+    <div
+      className="flex flex-col lg:flex-row w-full max-w-[1440px] mx-auto items-stretch justify-center px-4 sm:px-8 lg:px-[200px]"
+      style={{ gap: 12 }}
+    >
+      <ValueCard title="Why this tool?" items={valueWhyItems} />
+      <ValueCard title="For Who?" items={valueForWhoItems} />
+    </div>
+  );
+  const valueCardsRowMain = (
+    <div
+      className="flex flex-col lg:flex-row w-full mx-auto items-stretch"
+      style={{ gap: 12, maxWidth: API_KEYS_PAGE_CONTENT_MAX }}
+    >
+      <ValueCard title="Why this tool?" items={valueWhyItems} />
+      <ValueCard title="For Who?" items={valueForWhoItems} />
+    </div>
+  );
 
-    const toggleKeyVisibility = (id: string) => {
-        setShowKey(prev => ({ ...prev, [id]: !prev[id] }));
-    };
-
-    const copyToClipboard = (key: string) => {
-        navigator.clipboard.writeText(key);
-        toast.success('API key copied to clipboard!');
-    };
-
-    const maskKey = (key: string) => {
-        return key.substring(0, 12) + '•••••••••••••••';
-    };
-
-    return (
-        <>
-            <div className="min-h-[calc(100vh-5rem)] bg-page-bg font-['DM_Sans']">
-                <div className="max-w-5xl mx-auto px-4 py-12">
-                    {/* Header */}
-                    <div className="mb-8">
-                        <h1 className="text-4xl font-bold text-text-primary mb-2">Widget API Keys</h1>
-                        <p className="text-text-secondary">Embed UX audits directly on your website</p>
-                    </div>
-
-                    {/* Widget Info Section - Always visible */}
-                    <div className="bg-white rounded-lg border-2 border-border-main shadow-neo-hover p-8 mb-8">
-                        <div className="flex items-start gap-3 mb-6">
-                            <Code className="w-6 h-6 text-brand shrink-0 mt-1" />
-                            <div>
-                                <h2 className="text-2xl font-bold text-text-primary mb-2">How to Use the Widget</h2>
-                                <p className="text-text-secondary mb-4">
-                                    Add our widget to your website and let your users run UX audits without leaving your platform.
-                                </p>
-                            </div>
-                        </div>
-
-                        {/* Steps */}
-                        <div className="space-y-6">
-                            <div className="flex gap-4">
-                                <div className="shrink-0 w-8 h-8 bg-brand text-white rounded-full flex items-center justify-center font-bold">
-                                    1
-                                </div>
-                                <div>
-                                    <h3 className="font-bold text-text-primary mb-2">Generate your API Key</h3>
-                                    <p className="text-text-secondary text-sm">
-                                        Click the "Generate API Key" button below to create your unique widget key.
-                                    </p>
-                                </div>
-                            </div>
-
-                            <div className="flex gap-4">
-                                <div className="shrink-0 w-8 h-8 bg-brand text-white rounded-full flex items-center justify-center font-bold">
-                                    2
-                                </div>
-                                <div>
-                                    <h3 className="font-bold text-text-primary mb-2">Add the Widget Script</h3>
-                                    <p className="text-text-secondary text-sm mb-3">
-                                        Copy this code snippet and paste it into your website's HTML, just before the closing &lt;/body&gt; tag:
-                                    </p>
-                                    <div className="bg-slate-900 text-slate-100 p-4 rounded-lg font-mono text-sm overflow-x-auto">
-                                        <code>{`<script src="https://api.myuxscore.com/widget.js"></script>
-<script>
-  window.addEventListener('load', function() {
-    AuditWidget.mount({
-      container: '#audit-widget-root',
-      apiKey: 'YOUR_API_KEY_HERE'
-    });
-  });
-</script>`}</code>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div className="flex gap-4">
-                                <div className="shrink-0 w-8 h-8 bg-brand text-white rounded-full flex items-center justify-center font-bold">
-                                    3
-                                </div>
-                                <div>
-                                    <h3 className="font-bold text-text-primary mb-2">Start Receiving Audits</h3>
-                                    <p className="text-text-secondary text-sm">
-                                        The widget will appear on your site and users can trigger UX audits. All results will be available in your dashboard.
-                                    </p>
-                                </div>
-                            </div>
-                        </div>
-
-                        {/* Features List */}
-                        <div className="mt-8 pt-8 border-t-2 border-slate-200">
-                            <h3 className="font-bold text-text-primary mb-4 flex items-center gap-2">
-                                <Zap className="w-5 h-5 text-brand" />
-                                Widget Features
-                            </h3>
-                            <ul className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm text-text-secondary">
-                                <li className="flex items-start gap-2">
-                                    <span className="text-brand mt-1">✓</span>
-                                    <span>Customizable button placement</span>
-                                </li>
-                                <li className="flex items-start gap-2">
-                                    <span className="text-brand mt-1">✓</span>
-                                    <span>Real-time audit results</span>
-                                </li>
-                                <li className="flex items-start gap-2">
-                                    <span className="text-brand mt-1">✓</span>
-                                    <span>Branded UI matching your site</span>
-                                </li>
-                                <li className="flex items-start gap-2">
-                                    <span className="text-brand mt-1">✓</span>
-                                    <span>Analytics and tracking</span>
-                                </li>
-                            </ul>
-                        </div>
-                    </div>
-
-                    {/* Generate API Key Button */}
-                    <div className="mb-8 text-center">
-                        <button
-                            onClick={handleGenerateKey}
-                            className="px-8 py-4 bg-brand text-white font-bold text-lg rounded-lg hover:bg-brand-hover transition-colors border-2 border-border-main shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] active:shadow-neo-hover"
-                        >
-                            {user ? '+ Generate New API Key' : '🔐 Login to Generate API Key'}
-                        </button>
-                        {!user && (
-                            <p className="mt-3 text-sm text-text-secondary">
-                                You need to be logged in to generate API keys
-                            </p>
-                        )}
-                    </div>
-
-                    {/* API Keys Section - Only visible when logged in */}
-                    {user && (
-                        <>
-                            <h2 className="text-2xl font-bold text-text-primary mb-4">Your API Keys</h2>
-
-                            {/* Info Banner */}
-                            <div className="bg-blue-50 border-2 border-blue-200 rounded-lg p-4 mb-6">
-                                <div className="flex items-start gap-3">
-                                    <Key className="w-5 h-5 text-blue-600 shrink-0 mt-0.5" />
-                                    <div>
-                                        <h3 className="font-semibold text-blue-900 mb-1">Keep your API keys secure</h3>
-                                        <p className="text-sm text-blue-800">
-                                            Never share your API keys publicly. Store them securely and rotate them regularly.
-                                        </p>
-                                    </div>
-                                </div>
-                            </div>
-
-                            {/* Loading State */}
-                            {isLoading && (
-                                <div className="text-center py-12">
-                                    <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-brand"></div>
-                                    <p className="mt-4 text-text-secondary">Loading API keys...</p>
-                                </div>
-                            )}
-
-                            {/* Empty State */}
-                            {!isLoading && apiKeys.length === 0 && (
-                                <div className="text-center py-12 bg-white rounded-lg border-2 border-border-main shadow-neo-hover">
-                                    <Key className="w-12 h-12 text-text-secondary mx-auto mb-4" />
-                                    <h3 className="text-lg font-bold text-text-primary mb-2">No API Keys Yet</h3>
-                                    <p className="text-text-secondary mb-4">Generate your first API key to get started with the widget.</p>
-                                </div>
-                            )}
-
-                            {/* Keys List */}
-                            {!isLoading && apiKeys.length > 0 && (
-                                <div className="space-y-4">
-                                    {apiKeys.map((apiKey) => (
-                                        <div
-                                            key={apiKey.id}
-                                            className={`bg-white rounded-lg border-2 border-border-main shadow-neo-hover p-6 ${!apiKey.isActive ? 'opacity-60' : ''}`}
-                                        >
-                                            <div className="mb-4 flex items-start justify-between">
-                                                <div>
-                                                    <h3 className="text-lg font-bold text-text-primary mb-1">
-                                                        {apiKey.name}
-                                                        {!apiKey.isActive && (
-                                                            <span className="ml-2 text-sm bg-red-100 text-red-800 px-2 py-1 rounded">Inactive</span>
-                                                        )}
-                                                    </h3>
-                                                    <p className="text-sm text-text-secondary">
-                                                        Created {new Date(apiKey.createdAt).toLocaleDateString()}
-                                                        {apiKey.lastUsedAt && ` • Last used ${new Date(apiKey.lastUsedAt).toLocaleDateString()}`}
-                                                        {apiKey.usageCount > 0 && ` • ${apiKey.usageCount} uses`}
-                                                    </p>
-                                                </div>
-                                                {apiKey.isActive && (
-                                                    <button
-                                                        onClick={() => handleDeactivateKey(apiKey.id, apiKey.name)}
-                                                        className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                                                        title="Deactivate key"
-                                                    >
-                                                        <Trash2 className="w-5 h-5" />
-                                                    </button>
-                                                )}
-                                            </div>
-
-                                            <div className="flex items-center gap-2">
-                                                <div className="flex-1 bg-slate-50 border-2 border-slate-200 rounded-lg px-4 py-3 font-mono text-sm">
-                                                    {showKey[apiKey.id] ? apiKey.key : maskKey(apiKey.key)}
-                                                </div>
-                                                <button
-                                                    onClick={() => toggleKeyVisibility(apiKey.id)}
-                                                    className="p-3 bg-white border-2 border-border-main rounded-lg hover:bg-slate-50 transition-colors"
-                                                >
-                                                    {showKey[apiKey.id] ? (
-                                                        <EyeOff className="w-5 h-5 text-text-secondary" />
-                                                    ) : (
-                                                        <Eye className="w-5 h-5 text-text-secondary" />
-                                                    )}
-                                                </button>
-                                                <button
-                                                    onClick={() => copyToClipboard(apiKey.key)}
-                                                    className="p-3 bg-text-primary text-white border-2 border-border-main rounded-lg hover:bg-[#374151] transition-colors"
-                                                >
-                                                    <Copy className="w-5 h-5" />
-                                                </button>
-                                            </div>
-                                        </div>
-                                    ))}
-                                </div>
-                            )}
-                        </>
-                    )}
-
-                    {/* Documentation Link */}
-                    <div className="mt-8 p-6 bg-white rounded-lg border-2 border-border-main shadow-neo-hover">
-                        <div className="flex items-start gap-3">
-                            <BookOpen className="w-6 h-6 text-brand shrink-0" />
-                            <div className="flex-1">
-                                <h3 className="text-lg font-bold text-text-primary mb-2">Need Help?</h3>
-                                <p className="text-text-secondary mb-4">
-                                    Check out our comprehensive widget documentation for advanced configuration options and troubleshooting.
-                                </p>
-                                <a
-                                    href="/docs/widget"
-                                    className="inline-block px-6 py-2 bg-text-primary text-white font-semibold rounded-lg hover:bg-[#374151] transition-colors"
-                                >
-                                    View Widget Docs
-                                </a>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+  return (
+    <>
+      {/* Block flow only (like PricingPage). Avoid min-h-screen + flex-col inside Layout main —
+         that combo fights the scrollable main (flex-1 min-h-0 overflow-y-auto) and can pin/overlap the footer on the hero. */}
+      <div className="w-full font-['DM_Sans']" style={{ backgroundColor: "#f5f5f5" }}>
+        <div className="relative w-full overflow-x-hidden pb-16 md:pb-20 lg:pb-24">
+          <img
+            src="/ring-top-left.png"
+            alt=""
+            aria-hidden
+            className="absolute top-0 left-0 w-[56px] sm:w-[64px] md:w-[80px] h-auto z-0 pointer-events-none select-none object-contain opacity-70"
+          />
+          <img
+            src="/ring-top-right.png"
+            alt=""
+            aria-hidden
+            className="absolute top-0 right-0 w-[72px] sm:w-[88px] md:w-[120px] h-auto z-0 pointer-events-none select-none object-contain opacity-70"
+          />
+          <div className="relative z-[1] flex flex-col items-center w-full gap-12 px-4 pt-14 sm:px-6 md:gap-16 md:pt-16 lg:gap-20 lg:pt-20">
+            <div
+              className="flex flex-col items-center justify-center text-center shrink-0"
+              style={{ gap: 16 }}
+            >
+              <h1
+                className="font-bold text-[#1a1a1a] capitalize max-w-[601px] w-full"
+                style={{
+                  fontSize: 40,
+                  letterSpacing: "-1px",
+                  lineHeight: "normal",
+                }}
+              >
+                Turn your website into an active lead-generation engine,
+              </h1>
+              <p
+                className="font-medium text-black whitespace-normal md:whitespace-nowrap"
+                style={{
+                  fontSize: 20,
+                  letterSpacing: "-0.5px",
+                  lineHeight: "normal",
+                }}
+              >
+                {` by embedding our UX audit directly on your site.`}
+              </p>
             </div>
 
-            {/* Name Modal */}
-            {showNameModal && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
-                    <div className="bg-white rounded-lg border-2 border-border-main shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] p-6 max-w-md w-full">
-                        <h3 className="text-xl font-bold text-text-primary mb-4">Name Your API Key</h3>
-                        <p className="text-sm text-text-secondary mb-4">
-                            Give your API key a descriptive name to help you identify it later.
-                        </p>
-                        <input
-                            type="text"
-                            value={newKeyName}
-                            onChange={(e) => setNewKeyName(e.target.value)}
-                            placeholder="e.g., Production Widget Key"
-                            className="w-full px-4 py-2 border-2 border-slate-300 rounded-lg focus:ring-2 focus:ring-brand focus:border-brand outline-none mb-4"
-                            autoFocus
-                            onKeyPress={(e) => e.key === 'Enter' && handleConfirmGenerate()}
-                        />
-                        <div className="flex gap-3">
-                            <button
-                                onClick={() => setShowNameModal(false)}
-                                className="flex-1 px-4 py-2 bg-white text-text-primary border-2 border-border-main font-semibold rounded-lg hover:bg-slate-50 transition-colors"
-                            >
-                                Cancel
-                            </button>
-                            <button
-                                onClick={handleConfirmGenerate}
-                                disabled={isGenerating || !newKeyName.trim()}
-                                className="flex-1 px-4 py-2 bg-brand text-white font-semibold rounded-lg hover:bg-brand-hover transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                            >
-                                {isGenerating ? 'Generating...' : 'Generate'}
-                            </button>
+            {isLoggedIn ? (
+              <div
+                className="flex flex-col w-full items-center"
+                style={{ gap: 64 }}
+              >
+                <div
+                  className="flex flex-col w-full mx-auto"
+                  style={{ maxWidth: API_KEYS_PAGE_CONTENT_MAX, gap: 64 }}
+                >
+                  <div
+                    className="flex flex-col w-full"
+                    style={{
+                      backgroundColor: "#ffffff",
+                      border: "1px solid rgba(0,0,0,0.1)",
+                      borderRadius: 12,
+                      padding: 32,
+                    }}
+                  >
+                    <div className="flex flex-col w-full" style={{ gap: 20 }}>
+                      <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 sm:gap-6">
+                        <div className="flex flex-col" style={{ gap: 6 }}>
+                          <h2
+                            className="font-bold text-[#1a1a1a] capitalize"
+                            style={{
+                              fontSize: 20,
+                              letterSpacing: "-0.5px",
+                              lineHeight: 1.2,
+                            }}
+                          >
+                            Widget API Keys
+                          </h2>
+                          <p
+                            className="font-normal text-[#666666]"
+                            style={{ fontSize: 16, lineHeight: 1.45 }}
+                          >
+                            Embed our audit tool directly into your website
+                          </p>
                         </div>
+                        <button
+                          type="button"
+                          onClick={handleGenerateKey}
+                          className="flex items-center justify-center gap-2 hover:opacity-90 transition-opacity shrink-0 sm:self-start"
+                          style={{
+                            backgroundColor: "#6366f1",
+                            border: "none",
+                            borderRadius: 8,
+                            padding: "10px 16px",
+                            boxShadow: "0 1px 2px rgba(0,0,0,0.06)",
+                          }}
+                        >
+                          <Plus
+                            className="w-4 h-4 text-white"
+                            strokeWidth={2.5}
+                          />
+                          <span
+                            className="font-bold text-white"
+                            style={{ fontSize: 15 }}
+                          >
+                            Generate API Key
+                          </span>
+                        </button>
+                      </div>
+
+                      <div className="flex flex-col" style={{ gap: 20 }}>
+                        {isLoading ? (
+                          <div className="flex items-center justify-center py-8">
+                            <div className="w-6 h-6 rounded-full border-2 border-[#6366f1] border-t-transparent animate-spin" />
+                          </div>
+                        ) : apiKeys.length === 0 ? (
+                          <div
+                            className="flex items-center justify-center py-8"
+                            style={{
+                              border: "1px dashed #cccccc",
+                              borderRadius: 8,
+                            }}
+                          >
+                            <p
+                              className="font-medium text-[#999999]"
+                              style={{ fontSize: 13 }}
+                            >
+                              No API keys yet — generate your first key above.
+                            </p>
+                          </div>
+                        ) : (
+                          apiKeys.map((k) => (
+                            <KeyRow
+                              key={k.id}
+                              apiKey={k}
+                              visible={!!showKey[k.id]}
+                              onToggle={() =>
+                                setShowKey((p) => ({ ...p, [k.id]: !p[k.id] }))
+                              }
+                              onCopy={() => {
+                                navigator.clipboard.writeText(k.key);
+                                toast.success("Copied!");
+                              }}
+                              onDeactivate={() =>
+                                handleDeactivate(k.id, k.name)
+                              }
+                            />
+                          ))
+                        )}
+                      </div>
                     </div>
+                  </div>
+
+                  <div className="flex flex-col w-full" style={{ gap: 48 }}>
+                    <div className="flex flex-col w-full" style={{ gap: 16 }}>
+                      {setupHowToTitle}
+                      <div className="flex flex-col w-full" style={{ gap: 12 }}>
+                        <SetupCard
+                          step="01"
+                          title="Generate your API Key"
+                          description='Click the "Generate API Key" button to create your unique widget key.'
+                        />
+                        <SetupCard
+                          step="02"
+                          title="Add the Widget Script"
+                          description="Copy this code snippet and paste it into your website's HTML, just before the closing </body> tag:"
+                          code={embedCode}
+                        />
+                        <SetupCard
+                          step="03"
+                          title="Start Receiving Audits"
+                          description={`The widget will appear on your site and users can trigger UX audits.\nAll results will be available in your dashboard.`}
+                        />
+                      </div>
+                    </div>
+
+                    <div
+                      className="flex flex-col w-full pb-8"
+                      style={{ gap: 16 }}
+                    >
+                      <div className="flex flex-col w-full" style={{ gap: 16 }}>
+                        <div
+                          className="flex flex-col max-w-[656px]"
+                          style={{ gap: 2, lineHeight: 1.5 }}
+                        >
+                          <p
+                            className="font-semibold text-[#1a1a1a]"
+                            style={{ fontSize: 16, letterSpacing: "-0.5px" }}
+                          >
+                            Still not sure about the widget?
+                          </p>
+                          <p
+                            className="font-medium text-[#1a1a1a]"
+                            style={{ fontSize: 14 }}
+                          >
+                            Check out our comprehensive widget documentation for
+                            advanced configuration options and troubleshooting.
+                          </p>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => navigate("/docs/widget")}
+                          className="flex items-center gap-2 self-start hover:opacity-90 transition-opacity"
+                          style={{
+                            backgroundColor: "#6366f1",
+                            border: "none",
+                            borderRadius: 8,
+                            padding: "10px 16px",
+                            boxShadow: "0 1px 2px rgba(0,0,0,0.08)",
+                          }}
+                        >
+                          <ExternalLink
+                            className="w-4 h-4 shrink-0 text-white"
+                            strokeWidth={2}
+                          />
+                          <span
+                            className="font-bold text-white"
+                            style={{ fontSize: 12 }}
+                          >
+                            View Widget Docs
+                          </span>
+                        </button>
+                      </div>
+                    </div>
+                  </div>
                 </div>
+
+                {valueCardsRowMain}
+              </div>
+            ) : (
+              <>
+                {valueCardsRowWide}
+
+                <div
+                  className="mx-auto flex w-full max-w-[1440px] flex-col px-4 sm:px-8 lg:px-[200px]"
+                  style={{ gap: 64 }}
+                >
+                  <div className="flex w-full flex-col" style={{ gap: 16 }}>
+                    {setupHowToTitle}
+                    <div className="flex w-full flex-col" style={{ gap: 12 }}>
+                      <SetupCard
+                        step="01"
+                        title="Generate your API Key"
+                        description='Click the "Generate API Key" button below to create your unique widget key.'
+                      />
+                      <SetupCard
+                        step="02"
+                        title="Add the Widget Script"
+                        description="Copy this code snippet and paste it into your website's HTML, just before the closing </body> tag:"
+                        code={embedCode}
+                      />
+                      <SetupCard
+                        step="03"
+                        title="Start Receiving Audits"
+                        description={`The widget will appear on your site and users can trigger UX audits.\nAll results will be available in your dashboard.`}
+                      />
+                    </div>
+                  </div>
+
+                  {/* Same column width as setup cards (1440 + gutters), not 1046 */}
+                  <div className="flex w-full flex-col">
+                    <div
+                      className="flex w-full flex-col"
+                      style={{
+                        backgroundColor: "#ffffff",
+                        border: "1px solid rgba(0,0,0,0.2)",
+                        borderRadius: 12,
+                        padding: 32,
+                      }}
+                    >
+                      <div className="flex w-full flex-col gap-4 sm:flex-row sm:items-start sm:justify-between sm:gap-6">
+                        <div className="flex flex-col" style={{ gap: 4 }}>
+                          <h2
+                            className="font-bold text-[#1a1a1a] capitalize"
+                            style={{
+                              fontSize: 20,
+                              letterSpacing: "-0.5px",
+                              lineHeight: "normal",
+                            }}
+                          >
+                            Widget API Keys
+                          </h2>
+                          <p
+                            className="font-medium text-black"
+                            style={{
+                              fontSize: 16,
+                              letterSpacing: "-0.4px",
+                              lineHeight: "normal",
+                            }}
+                          >
+                            Embed our audit tool directly into your website
+                          </p>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={handleGenerateKey}
+                          className="flex shrink-0 items-center justify-center hover:opacity-90 transition-opacity sm:self-start"
+                          style={{
+                            gap: 8,
+                            backgroundColor: "#6366f1",
+                            border: "1px solid rgba(0,0,0,0.1)",
+                            borderRadius: 12,
+                            padding: 12,
+                          }}
+                        >
+                          <Plus
+                            className="w-5 h-5 text-white"
+                            strokeWidth={2.5}
+                          />
+                          <span
+                            className="whitespace-nowrap font-bold text-white"
+                            style={{ fontSize: 16 }}
+                          >
+                            Generate API Key
+                          </span>
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </>
             )}
-        </>
-    );
+          </div>
+        </div>
+
+        <div className="w-full bg-[#f5f5f5] pt-10 md:pt-14 lg:pt-20">
+          <Footer />
+        </div>
+      </div>
+
+      {/* Generate key modal */}
+      <GenerateModal
+        isOpen={showModal}
+        onClose={() => setShowModal(false)}
+        onConfirm={handleConfirmGenerate}
+        isGenerating={isGenerating}
+      />
+    </>
+  );
 };
 
 export default APIKeysPage;

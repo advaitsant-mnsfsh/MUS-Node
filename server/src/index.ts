@@ -62,6 +62,7 @@ app.use(cors({
     origin: function (origin, callback) {
         const allowedOrigins = [
             'http://localhost:5173',
+            'http://localhost:5174',
             'http://beta.localhost:5173',
             'http://localhost:3000',
             'http://beta.localhost:3000',
@@ -73,7 +74,8 @@ app.use(cors({
         // Railway's proxy or healthcheck sometimes injects its own origin. 
         // Returning true natively handles `Vary: Origin` and correctly signs the preflight 
         // with the requested origin *only* if it is valid, avoiding CDN caching issues.
-        if (!origin || allowedOrigins.includes(origin) || origin.endsWith('.railway.app') || origin.endsWith('.vercel.app') || /^http:\/\/192\.168\.\d+\.\d+(:\d+)?$/.test(origin) || /^http:\/\/10\.\d+\.\d+\.\d+(:\d+)?$/.test(origin)) {
+        const isLocalhost = /^http:\/\/localhost(:\d+)?$/.test(origin || '') || /^http:\/\/127\.0\.0\.1(:\d+)?$/.test(origin || '');
+        if (!origin || allowedOrigins.includes(origin) || isLocalhost || origin.endsWith('.railway.app') || origin.endsWith('.vercel.app') || /^http:\/\/192\.168\.\d+\.\d+(:\d+)?$/.test(origin) || /^http:\/\/10\.\d+\.\d+\.\d+(:\d+)?$/.test(origin)) {
             callback(null, true);
         } else {
             console.warn(`[CORS] Blocked unrecognized origin: ${origin}`);

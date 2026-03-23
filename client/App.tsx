@@ -19,34 +19,47 @@ class ErrorBoundary extends React.Component<{ children: React.ReactNode }, { has
     componentDidCatch(error: any, errorInfo: any) { console.error("Uncaught error:", error, errorInfo); }
     render() {
         if (this.state.hasError) {
+            const cardBorder = { border: '0.5px solid var(--high-grey, #1A1A1A)', boxShadow: 'none' } as const;
             return (
-                <div className="min-h-screen flex items-center justify-center bg-[#FFFBF0] p-4 font-sans">
-                    <div className="max-w-xl w-full bg-white border-4 border-black p-10 shadow-[12px_12px_0px_0px_rgba(0,0,0,1)] relative">
-                        <div className="absolute top-0 left-0 w-full h-3 bg-red-500 border-b-4 border-black"></div>
-
-                        <div className="flex items-center gap-4 mb-6 mt-4">
-                            <div className="w-12 h-12 bg-red-500 border-2 border-black flex items-center justify-center shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
-                                <span className="text-white text-2xl font-black">!</span>
+                <div className="flex min-h-dvh items-center justify-center bg-page-bg p-4 font-sans text-text-primary">
+                    <div
+                        className="w-full max-w-lg rounded-lg bg-white p-8 md:p-10"
+                        style={cardBorder}
+                    >
+                        <div className="mb-6 flex items-start gap-4">
+                            <div
+                                className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-red-50 text-red-600"
+                                aria-hidden
+                            >
+                                <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                                </svg>
                             </div>
-                            <h1 className="text-3xl md:text-4xl font-black text-black uppercase tracking-tighter leading-none">
-                                Application<br />Crashed
-                            </h1>
+                            <div className="min-w-0 pt-0.5">
+                                <h1 className="text-xl font-bold tracking-tight text-text-primary md:text-2xl">
+                                    Something went wrong
+                                </h1>
+                                <p className="mt-1 text-sm text-text-secondary leading-snug">
+                                    The page hit an unexpected error. You can go home and try again.
+                                </p>
+                            </div>
                         </div>
 
-                        <p className="mb-6 text-black font-bold text-lg leading-snug">
-                            Something went wrong while rendering the interface. Our team has been notified.
-                        </p>
-
-                        <div className="bg-[#FEFCE8] p-4 border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] overflow-auto max-h-64 text-xs font-mono text-black mb-8">
-                            <div className="font-black uppercase text-[10px] mb-2 opacity-50 border-b border-black/10 pb-1">Error Details</div>
-                            {this.state.error?.toString() || "Unknown Error"}
-                        </div>
+                        <details className="mb-8 rounded-lg bg-slate-50/80 p-4 text-left" style={cardBorder}>
+                            <summary className="cursor-pointer text-xs font-semibold uppercase tracking-wide text-text-secondary">
+                                Technical details
+                            </summary>
+                            <pre className="mt-3 max-h-48 overflow-auto whitespace-pre-wrap break-all font-mono text-[11px] leading-relaxed text-text-primary">
+                                {this.state.error?.toString() || 'Unknown error'}
+                            </pre>
+                        </details>
 
                         <button
-                            onClick={() => window.location.href = '/'}
-                            className="w-full py-4 bg-black text-white font-black uppercase tracking-widest text-sm hover:translate-x-1 hover:translate-y-1 hover:shadow-none transition-all shadow-[6px_6px_0px_0px_rgba(100,100,100,1)]"
+                            type="button"
+                            onClick={() => { window.location.href = '/'; }}
+                            className="flex h-12 w-full items-center justify-center rounded-lg bg-[#1A1A1A] text-sm font-bold text-white transition-colors hover:bg-black"
                         >
-                            Back to Home
+                            Back to home
                         </button>
                     </div>
                 </div>
@@ -92,11 +105,17 @@ const App: React.FC = () => {
 
         let title = "Analysis Failed";
         let message: React.ReactNode = (
-            <div className="text-left text-red-700 mt-2 text-sm space-y-2">
-                <p>Please try again. If the issue persists, please <Link to="/feedback" className="font-bold underline text-red-900 hover:text-red-950">give us a feedback here</Link>.</p>
-                <details className="mt-4 opacity-70">
-                    <summary className="cursor-pointer font-bold uppercase text-[10px]">Debug Details</summary>
-                    <pre className="whitespace-pre-wrap bg-red-50/50 p-2 rounded text-[11px] font-mono break-all mt-2 max-h-40 overflow-auto border border-red-200">{error}</pre>
+            <div className="mt-2 space-y-2 text-left text-sm text-text-secondary">
+                <p className="text-text-primary">
+                    Please try again. If it keeps happening,{' '}
+                    <Link to="/feedback" className="font-semibold text-brand underline decoration-brand/30 underline-offset-2 hover:text-brand-hover">
+                        send us feedback
+                    </Link>
+                    .
+                </p>
+                <details className="mt-4 rounded-lg bg-slate-50/80 p-3" style={{ border: '0.5px solid var(--high-grey, #1A1A1A)', boxShadow: 'none' }}>
+                    <summary className="cursor-pointer text-xs font-semibold uppercase tracking-wide text-text-secondary">Debug details</summary>
+                    <pre className="mt-2 max-h-40 overflow-auto whitespace-pre-wrap break-all font-mono text-[11px] text-text-primary">{error}</pre>
                 </details>
             </div>
         );
@@ -110,12 +129,19 @@ const App: React.FC = () => {
             error.toUpperCase().includes('ERR_HTTP2_PROTOCOL_ERROR')) {
             title = "Website Unreachable (Anti-Bot Protection)";
             message = (
-                <div className="text-left text-red-700 mt-2 text-sm space-y-3">
-                    <div className="bg-red-100 p-3 rounded-lg border border-red-200">
-                        <p className="font-bold text-base text-red-900 mb-1">Action Required: Use Screenshots Instead</p>
-                        <p className="text-red-800">This website is actively blocking our automated analysis agents (Error: <code>ERR_HTTP2_PROTOCOL_ERROR</code>). </p>
-                    </div>
-                    <p>To audit this page, please return to the homepage and <strong>upload high-quality screenshots</strong> of the interface instead of using the URL.</p>
+                <div className="mt-2 space-y-2 text-left text-sm text-text-secondary">
+                    <p className="font-semibold text-text-primary">
+                        Action required: use screenshots instead
+                    </p>
+                    <p>
+                        Some sites block automated access (for example{" "}
+                        <code className="rounded bg-slate-100 px-1 text-xs text-text-primary">
+                            ERR_HTTP2_PROTOCOL_ERROR
+                        </code>
+                        ). Return to the homepage and{" "}
+                        <strong>upload high-quality screenshots</strong> of the
+                        interface instead of using the URL.
+                    </p>
                 </div>
             );
         }
@@ -123,9 +149,9 @@ const App: React.FC = () => {
         else if (error.toLowerCase().includes('timed out') || error.toLowerCase().includes('timeout')) {
             title = "Analysis Timed Out";
             message = (
-                <div className="text-left text-red-700 mt-2 text-sm space-y-2">
-                    <p className="font-bold text-lg">Please refresh the page.</p>
-                    <p>Our AI experts took too long to respond. Refreshing usually resolves this by resuming the progress from the dashboard.</p>
+                <div className="mt-2 space-y-2 text-left text-sm text-text-secondary">
+                    <p className="text-lg font-semibold text-text-primary">Please refresh the page.</p>
+                    <p>The analysis step took too long. Refreshing usually resumes progress from your dashboard.</p>
                 </div>
             );
         }
@@ -133,24 +159,34 @@ const App: React.FC = () => {
         else if (error.includes('Failed to fetch') || error.includes('NetworkError')) {
             title = "Network Connection Error";
             message = (
-                <div className="text-left text-red-700 mt-2 text-sm space-y-2">
-                    <p>We couldn't connect to our analysis server. Checking your internet or disabling ad-blockers often helps.</p>
-                    <button onClick={() => window.location.reload()} className="px-4 py-2 bg-red-600 text-white font-bold rounded mt-2 hover:bg-red-700 transition-colors">
-                        Refresh Page
+                <div className="mt-2 space-y-3 text-left text-sm text-text-secondary">
+                    <p className="text-text-primary">We could not reach the analysis server. Check your connection or try disabling ad blockers for this site.</p>
+                    <button
+                        type="button"
+                        onClick={() => window.location.reload()}
+                        className="inline-flex h-11 items-center justify-center rounded-lg bg-[#1A1A1A] px-5 text-sm font-bold text-white transition-colors hover:bg-black"
+                    >
+                        Refresh page
                     </button>
                 </div>
             );
         }
 
         return (
-            <div className="mt-8 max-w-2xl mx-auto p-6 bg-red-50 border-2 border-red-200 rounded-xl shadow-lg animate-in zoom-in-95 duration-200">
-                <div className="flex items-center gap-3 mb-3 border-b border-red-200 pb-3">
-                    <div className="bg-red-100 p-2 rounded-full">
-                        <svg className="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            <div
+                className="mx-auto mt-8 max-w-2xl animate-in rounded-lg bg-white p-6 zoom-in-95 duration-200"
+                style={{ border: '0.5px solid var(--high-grey, #1A1A1A)', boxShadow: 'none' }}
+            >
+                <div
+                    className="mb-4 flex items-center gap-3 pb-4"
+                    style={{ borderBottom: '0.5px solid var(--high-grey, #1A1A1A)' }}
+                >
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-red-50 text-red-600">
+                        <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                         </svg>
                     </div>
-                    <h3 className="font-black text-red-900 uppercase tracking-tight text-lg">{title}</h3>
+                    <h3 className="text-lg font-bold tracking-tight text-text-primary">{title}</h3>
                 </div>
                 {message}
             </div>
@@ -194,7 +230,7 @@ const App: React.FC = () => {
     // Show this if specifically loading OR if we have an ID but data isn't here yet.
     if (isLoading || (auditId && !report)) {
         return (
-            <div className="relative">
+            <div className="relative flex min-h-0 flex-1 flex-col">
                 <AnalysisView
                     progress={progress}
                     loadingMessage={error ? 'Analysis Aborted' : loadingMessage}

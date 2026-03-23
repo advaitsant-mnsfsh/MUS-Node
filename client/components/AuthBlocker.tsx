@@ -251,7 +251,7 @@ export const AuthBlocker: React.FC<AuthBlockerProps> = ({ onUnlock, isUnlocked, 
     return (
         <div className="fixed inset-0 z-9999 flex items-center justify-center p-4 font-['DM_Sans']">
             {/* Backdrop with stronger blur and dark overlay */}
-            <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-md"></div>
+            <div className="absolute inset-0 bg-slate-900/35 backdrop-blur-sm"></div>
 
             {/* Modal Card - Neo Brutalist Style */}
             <div className="relative z-10 w-full max-w-md bg-white border-2 border-black shadow-neo p-6 md:p-8">

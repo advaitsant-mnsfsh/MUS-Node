@@ -27,24 +27,46 @@ const AnimatedMeter = ({ title, numbers, texts, isYou, inView }: { title: string
     const offset = circum * (1 - fillPercent);
 
     return (
-        <div className={`flex flex-col items-center justify-center flex-1 w-full pt-8 pb-4 ${!isYou ? 'opacity-80' : 'opacity-100'}`}>
-            <h4 className={`text-[#1A1A1A] text-[1.25rem] md:text-[1.5rem] font-bold tracking-wide mb-8 ${!isYou ? 'opacity-60' : ''}`}>
+        <div
+            className={`flex flex-col items-center justify-center w-full max-w-[14rem] mx-auto sm:max-w-none md:flex-1 min-w-0 pt-4 pb-2 md:pt-8 md:pb-4 ${!isYou ? 'opacity-80' : 'opacity-100'}`}
+        >
+            <h4
+                className={`text-[#1A1A1A] text-lg sm:text-[1.25rem] md:text-[1.5rem] font-bold tracking-wide mb-4 md:mb-8 ${!isYou ? 'opacity-60' : ''}`}
+            >
                 {title}
             </h4>
 
             {/* Meter & Number */}
-            <div className="relative w-[12rem] h-[6rem] flex justify-center">
-                <svg viewBox="0 0 100 50" className="w-[10rem] absolute top-0 left-1/2 -translate-x-1/2 overflow-visible">
+            <div className="relative w-[10rem] h-[5rem] sm:w-[12rem] sm:h-[6rem] flex justify-center shrink-0">
+                <svg
+                    viewBox="0 0 100 50"
+                    className="w-[8.25rem] sm:w-[10rem] absolute top-0 left-1/2 -translate-x-1/2 overflow-visible"
+                    aria-hidden
+                >
                     <path d="M 5 50 A 45 45 0 0 1 95 50" fill="none" stroke="rgba(26,26,26,0.15)" strokeWidth="10" />
-                    <path d="M 5 50 A 45 45 0 0 1 95 50" fill="none" stroke={isYou ? '#1A1A1A' : 'rgba(26,26,26,0.3)'} strokeWidth="10" strokeDasharray={circum} strokeDashoffset={offset} className="transition-all duration-[2000ms] ease-out" />
+                    <path
+                        d="M 5 50 A 45 45 0 0 1 95 50"
+                        fill="none"
+                        stroke={isYou ? '#1A1A1A' : 'rgba(26,26,26,0.3)'}
+                        strokeWidth="10"
+                        strokeDasharray={circum}
+                        strokeDashoffset={offset}
+                        className="transition-all duration-[2000ms] ease-out"
+                    />
                 </svg>
 
                 {/* Number Slot Machine */}
-                <div className="absolute bottom-2 left-0 right-0 flex justify-center">
-                    <div className="h-[4rem] overflow-hidden">
-                        <div className="flex flex-col transition-transform duration-[2000ms] ease-out" style={{ transform: `translateY(-${activeIndex * 4}rem)` }}>
+                <div className="absolute bottom-1 sm:bottom-2 left-0 right-0 flex justify-center">
+                    <div className="h-16 overflow-hidden">
+                        <div
+                            className="flex flex-col transition-transform duration-[2000ms] ease-out"
+                            style={{ transform: `translateY(-${activeIndex * 4}rem)` }}
+                        >
                             {numbers.map((num, i) => (
-                                <div key={i} className={`h-[4rem] flex flex-col items-center justify-center text-[#1A1A1A] font-bold text-[3.5rem] leading-none ${!isYou && i === numbers.length - 1 ? 'opacity-50' : ''}`}>
+                                <div
+                                    key={i}
+                                    className={`h-16 flex flex-col items-center justify-center text-[#1A1A1A] font-bold text-[2.85rem] sm:text-[3.5rem] leading-none ${!isYou && i === numbers.length - 1 ? 'opacity-50' : ''}`}
+                                >
                                     {num}
                                 </div>
                             ))}
@@ -53,12 +75,18 @@ const AnimatedMeter = ({ title, numbers, texts, isYou, inView }: { title: string
                 </div>
             </div>
 
-            {/* Text Slot Machine */}
-            <div className="h-[1.5rem] overflow-hidden mt-6">
-                <div className="flex flex-col transition-transform duration-[2000ms] ease-out" style={{ transform: `translateY(-${activeIndex * 1.5}rem)` }}>
+            {/* Text slot: fixed row height matches translateY (2.5rem) for all breakpoints */}
+            <div className="h-10 overflow-hidden mt-4 sm:mt-6 w-full max-w-[13rem] mx-auto">
+                <div
+                    className="flex flex-col transition-transform duration-[2000ms] ease-out"
+                    style={{ transform: `translateY(-${activeIndex * 2.5}rem)` }}
+                >
                     {texts.map((t, i) => (
-                        <div key={i} className={`h-[1.5rem] flex items-center justify-center text-[#1A1A1A] font-bold text-[0.875rem] md:text-[1rem] leading-none ${!isYou && i === texts.length - 1 ? 'opacity-50' : 'opacity-80'}`}>
-                            {t}
+                        <div
+                            key={i}
+                            className={`h-10 flex items-center justify-center text-center text-[#1A1A1A] font-bold text-[0.7rem] sm:text-[0.8rem] md:text-[1rem] leading-tight px-1 ${!isYou && i === texts.length - 1 ? 'opacity-50' : 'opacity-80'}`}
+                        >
+                            <span className="line-clamp-2">{t}</span>
                         </div>
                     ))}
                 </div>
@@ -86,18 +114,14 @@ const AdvantageTwoAnimation = ({ onMouseEnter }: { onMouseEnter?: () => void }) 
     }, []);
 
     return (
-        <div ref={containerRef} onMouseEnter={onMouseEnter} className="flex-1 w-full md:w-[50%] self-stretch flex items-end justify-start bg-[#FBD24E] min-h-[494px] rounded-sm relative overflow-hidden pt-[4rem]">
+        <div ref={containerRef} onMouseEnter={onMouseEnter} className="flex-1 w-full md:w-[50%] self-stretch flex items-end justify-start bg-[#FBD24E] min-h-[280px] md:min-h-[494px] rounded-sm relative overflow-x-hidden overflow-y-hidden pt-8 md:pt-[4rem]">
             {/* Image container holds proportion to let badge sit relative to it */}
             <div className="relative w-[90%] md:w-[85%] flex justify-start items-end">
 
                 {/* The Animated Logo Badge */}
                 <div
-                    className={`absolute z-20 flex items-center justify-center gap-2 px-3 py-1.5 md:px-4 md:py-2 transition-all duration-1000 ease-out border-2 border-dashed w-[11rem] md:w-[13rem] h-[2.5rem] md:h-[3rem]
+                    className={`absolute z-20 flex items-center justify-center gap-2 px-3 py-1.5 md:px-4 md:py-2 transition-all duration-1000 ease-out border-2 border-dashed w-[11rem] md:w-[13rem] h-[2.5rem] md:h-[3rem] top-[5.5%] right-[6%] md:top-[10.5%] md:right-[7.5%]
                     ${inView ? 'translate-y-0 translate-x-0 bg-[#FBD24E] border-[#1A1A1A] text-[#1A1A1A] shadow-md scale-100' : '-translate-y-[200%] md:-translate-y-[250%] translate-x-[10%] bg-white/70 border-gray-400 text-gray-500 scale-110'}`}
-                    style={{
-                        top: '10.5%', // Target Y relative to the image where 'myuxscore' logo sits
-                        right: '7.5%', // Target X relative to the right structural edge
-                    }}
                 >
                     {/* The Triangle Logo Icon */}
                     <div className={`w-0 h-0 border-l-[6px] border-r-[6px] border-b-[10px] border-l-transparent border-r-transparent transition-colors duration-1000 ${inView ? 'border-b-[#1A1A1A]' : 'border-b-gray-400'}`}></div>
@@ -145,15 +169,21 @@ const AdvantageThreeAnimation = ({ onMouseEnter }: { onMouseEnter?: () => void }
     }, [step]);
 
     return (
-        <div ref={containerRef} onMouseEnter={onMouseEnter} className="flex-1 w-full md:w-[50%] self-stretch flex items-center justify-center bg-[#FBD24E] min-h-[494px] rounded-sm relative overflow-hidden">
+        <div ref={containerRef} onMouseEnter={onMouseEnter} className="flex-1 w-full md:w-[50%] self-stretch flex items-center justify-center bg-[#FBD24E] min-h-[320px] md:min-h-[494px] rounded-sm relative overflow-x-hidden overflow-y-visible">
+            {/* Scale wrapper: fixed Figma rem layout fits small viewports */}
+            <div className="w-full max-w-full flex justify-center items-center px-1 sm:px-2 py-4 md:py-0 overflow-x-hidden">
+            <div className="origin-center scale-[0.42] sm:scale-[0.55] md:scale-100 transition-transform">
             {/* Animation Container */}
-            <div className="relative w-full max-w-[40rem] aspect-[4/3] mx-auto flex items-center justify-center">
+            <div className="relative w-[30.101rem] h-[26rem] shrink-0 mx-auto flex items-center justify-center">
 
                 {/* 1. Browser Frame (Slides from Right to Center) */}
                 <div
-                    className={`absolute z-10 bg-[#363636] rounded-t-xl shadow-2xl overflow-hidden flex flex-col transition-transform duration-1000 ease-out items-start
-                    ${step > 0 ? 'translate-x-[5%] md:translate-x-0' : 'translate-x-[60%]'}
-                    w-[30.101rem] h-[23.51644rem]`}
+                    className={`absolute z-10 bg-[#363636] rounded-t-xl shadow-2xl overflow-hidden flex flex-col transition-transform duration-1000 ease-out items-start w-[30.101rem] max-w-full h-[23.51644rem] shrink-0
+                    max-md:left-1/2
+                    ${step > 0
+                        ? 'max-md:-translate-x-1/2 md:left-auto md:translate-x-0'
+                        : 'max-md:-translate-x-1/2 md:left-auto md:translate-x-[60%]'
+                    }`}
                 >
                     {/* Mac Browser Header */}
                     <div className="bg-[#F6F6F6] w-full px-4 py-3 flex items-center border-b border-gray-300">
@@ -178,24 +208,25 @@ const AdvantageThreeAnimation = ({ onMouseEnter }: { onMouseEnter?: () => void }
                         </div>
                     </div>
 
-                    {/* Browser Content */}
-                    <div className="w-full flex-1 relative flex flex-col items-center justify-start pt-[2rem]">
-                        <div className={`bg-[#5AC8FA] p-[0.625rem] rounded-[4rem] shadow-sm mb-4 inline-flex justify-center items-center gap-[0.625rem] transition-transform duration-1000
+                    {/* Browser Content — extra top + bottom gap on small viewports (scaled) so pill doesn’t sit on the card */}
+                    <div className="w-full flex-1 relative flex flex-col items-center justify-start pt-10 pb-2 md:pt-[2rem] md:pb-0">
+                        <div className={`bg-[#5AC8FA] p-[0.625rem] rounded-[4rem] shadow-sm mb-8 md:mb-4 inline-flex max-w-[92%] justify-center items-center gap-[0.625rem] transition-transform duration-1000
                             ${step < 2 ? 'scale-90' : 'scale-100'}`}>
-                            <span className="text-[#3D3D3D] font-black text-[1.5rem] tracking-tight">Your Design Agency</span>
+                            <span className="text-[#3D3D3D] font-black text-[1.1rem] sm:text-[1.35rem] md:text-[1.5rem] tracking-tight text-center px-1">Your Design Agency</span>
                         </div>
                     </div>
                 </div>
 
                 <div
-                    className={`absolute z-20 flex flex-col items-start transition-all duration-1000 ease-in-out origin-center w-[28.80406rem]
+                    className={`absolute z-20 flex flex-col items-start transition-all duration-1000 ease-in-out origin-center w-[28.80406rem] max-w-[min(100%,28.80406rem)]
+                    max-md:left-1/2
                     ${step === 0
-                            ? '-translate-x-[80%] scale-100 opacity-100 bg-white rounded-[1.2rem] border-[2px] border-[#1A1A1A] p-[1.65888rem] gap-[0.82944rem] shadow-[0_20px_80px_rgba(0,0,0,0.15)] mt-0'
+                            ? '-translate-x-[52%] md:-translate-x-[80%] scale-100 opacity-100 bg-white rounded-[1.2rem] border-[2px] border-[#1A1A1A] p-[1.65888rem] gap-[0.82944rem] shadow-[0_20px_80px_rgba(0,0,0,0.15)] mt-0'
                             : step === 1
-                                ? 'translate-x-[0%] scale-100 opacity-100 bg-white rounded-[1.2rem] border-[2px] border-[#1A1A1A] p-[1.65888rem] gap-[0.82944rem] shadow-[0_30px_90px_rgba(0,0,0,0.25)] mt-[2.5rem]'
+                                ? '-translate-x-1/2 md:translate-x-0 scale-100 opacity-100 bg-white rounded-[1.2rem] border-[2px] border-[#1A1A1A] p-[1.65888rem] gap-[0.82944rem] shadow-[0_30px_90px_rgba(0,0,0,0.25)] mt-[3.25rem] md:mt-[2.5rem] md:left-auto'
                                 : step === 2
-                                    ? 'translate-x-[0%] scale-50 opacity-100 bg-white rounded-[1.2rem] border-[2px] border-[#1A1A1A] p-[1.65888rem] gap-[0.82944rem] shadow-none mt-[4.5rem]'
-                                    : 'translate-x-[0%] scale-50 opacity-100 bg-[#363636] rounded-[1.2rem] border-[4px] border-[#5AC8FA] p-[1.65888rem] gap-[0.82944rem] shadow-[0_2px_18px_rgba(90,200,250,0.15)] mt-[4.5rem]'
+                                    ? '-translate-x-1/2 md:translate-x-0 scale-50 opacity-100 bg-white rounded-[1.2rem] border-[2px] border-[#1A1A1A] p-[1.65888rem] gap-[0.82944rem] shadow-none mt-[5.25rem] md:mt-[4.5rem] md:left-auto'
+                                    : '-translate-x-1/2 md:translate-x-0 scale-50 opacity-100 bg-[#363636] rounded-[1.2rem] border-[4px] border-[#5AC8FA] p-[1.65888rem] gap-[0.82944rem] shadow-[0_2px_18px_rgba(90,200,250,0.15)] mt-[5.25rem] md:mt-[4.5rem] md:left-auto'
                         }`}
                 >
                     {/* Input Field Mock */}
@@ -231,6 +262,8 @@ const AdvantageThreeAnimation = ({ onMouseEnter }: { onMouseEnter?: () => void }
                         my<span className="font-bold tracking-tight">ux</span>score
                     </div>
                 </div>
+            </div>
+            </div>
             </div>
         </div>
     );
@@ -288,10 +321,10 @@ const AboutUnfairAdvantage: React.FC = () => {
     };
 
     return (
-        <section className="relative w-full bg-[#FFFEF9] py-20 px-6 font-['DM_Sans']">
+        <section className="relative w-full max-w-full min-w-0 overflow-x-hidden bg-[#FFFEF9] py-16 md:py-20 px-4 sm:px-6 font-['DM_Sans']">
             <div className="flex flex-col items-center gap-16 self-stretch w-full max-w-[1271px] mx-auto">
                 {/* Main Section Heading */}
-                <h2 className="text-[#1A1A1A] text-center text-[2.5rem] font-bold tracking-tight m-0">
+                <h2 className="text-[#1A1A1A] text-center text-2xl sm:text-3xl md:text-[2.5rem] font-bold tracking-tight m-0 text-balance px-2">
                     Your New Unfair Advantages
                 </h2>
 
@@ -302,7 +335,7 @@ const AboutUnfairAdvantage: React.FC = () => {
 
                         {/* Heading & Subheading Parent */}
                         <div className="flex flex-col items-start gap-[1rem] self-stretch">
-                            <h3 className="text-[#1A1A1A] text-[2.25rem] font-bold leading-tight m-0">
+                            <h3 className="text-[#1A1A1A] text-xl sm:text-2xl md:text-[2.25rem] font-bold leading-tight m-0 text-balance">
                                 Want to know where you really stand?
                             </h3>
                             <p className="text-[#1A1A1A] text-[1rem] font-semibold leading-normal m-0 opacity-80">
@@ -318,14 +351,24 @@ const AboutUnfairAdvantage: React.FC = () => {
 
                     {/* Right: Animation Box — hover remounts meters (locked until animation finishes) */}
                     <motion.div
-                        className="flex-1 w-full md:w-[50%] self-stretch flex items-center justify-center bg-[#FBD24E] min-h-[494px] rounded-sm py-12 px-2"
+                        className="flex-1 w-full md:w-[50%] self-stretch flex items-center justify-center bg-[#FBD24E] min-h-[min(420px,70vh)] md:min-h-[494px] rounded-sm py-8 md:py-12 px-2 overflow-x-hidden"
                         onMouseEnter={handleHover1}
                     >
-                        <div key={animKey1} className="flex w-full max-w-[32rem] mx-auto items-center">
+                        <div
+                            key={animKey1}
+                            className="flex flex-col md:flex-row w-full max-w-full md:max-w-[36rem] mx-auto items-center justify-center gap-6 md:gap-0 md:items-stretch px-1 sm:px-2"
+                        >
                             <AnimatedMeter title="YOU" numbers={YOU_NUMBERS} texts={YOU_TEXTS} isYou={true} inView={inView} />
 
-                            {/* Divider */}
-                            <div className="w-[1px] self-stretch min-h-[200px] bg-[#1A1A1A] opacity-20 mx-4 md:mx-0"></div>
+                            {/* Divider: horizontal on mobile, vertical on md+ */}
+                            <div
+                                className="h-px w-[min(100%,12rem)] shrink-0 bg-[#1A1A1A] opacity-20 md:hidden"
+                                aria-hidden
+                            />
+                            <div
+                                className="hidden md:block w-px self-stretch min-h-[200px] bg-[#1A1A1A] opacity-20 mx-5 shrink-0"
+                                aria-hidden
+                            />
 
                             <AnimatedMeter title="THEM" numbers={THEM_NUMBERS} texts={THEM_TEXTS} isYou={false} inView={inView} />
                         </div>
@@ -339,7 +382,7 @@ const AboutUnfairAdvantage: React.FC = () => {
 
                         {/* Heading & Subheading Parent */}
                         <div className="flex flex-col items-start gap-[1rem] self-stretch">
-                            <h3 className="text-[#1A1A1A] text-[2.25rem] font-bold leading-tight m-0">
+                            <h3 className="text-[#1A1A1A] text-xl sm:text-2xl md:text-[2.25rem] font-bold leading-tight m-0 text-balance">
                                 Your Brand. Your Report.<br />Our Engine.
                             </h3>
                             <p className="text-[#1A1A1A] text-[1rem] font-semibold leading-normal m-0 opacity-80">
@@ -364,7 +407,7 @@ const AboutUnfairAdvantage: React.FC = () => {
 
                         {/* Heading & Subheading Parent */}
                         <div className="flex flex-col items-start gap-[1rem] self-stretch">
-                            <h3 className="text-[#1A1A1A] text-[2.25rem] font-bold leading-tight m-0">
+                            <h3 className="text-[#1A1A1A] text-xl sm:text-2xl md:text-[2.25rem] font-bold leading-tight m-0 text-balance">
                                 Turn Visitors into Paying Clients
                             </h3>
                             <p className="text-[#1A1A1A] text-[1rem] font-semibold leading-normal m-0 opacity-80">

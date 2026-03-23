@@ -129,7 +129,7 @@ export const StandardInputControl: React.FC<StandardInputControlProps> = ({
 
     return (
         <div className="space-y-2">
-            <div className={`group relative flex items-center bg-white border-2 rounded-lg shadow-sm transition-all duration-200 focus-within:shadow-neo-hover hover:shadow-neo-hover focus-within:border-accent-cyan ${remainingSlots === 0 ? 'border-[#DDDDDD] bg-slate-50 opacity-70 cursor-not-allowed' : 'border-border-main hover:border-accent-cyan hover:bg-accent-cyan/5'}`}>
+            <div className={`group relative flex items-center bg-white border rounded-lg shadow-sm transition-all duration-200 focus-within:shadow-neo-hover hover:shadow-neo-hover focus-within:border-accent-cyan ${remainingSlots === 0 ? 'border-[#DDDDDD] bg-slate-50 opacity-70 cursor-not-allowed' : 'border-border-main hover:border-accent-cyan hover:bg-accent-cyan/5'}`}>
                 <input
                     type="url"
                     value={currentUrl}
@@ -163,7 +163,11 @@ export const StandardInputControl: React.FC<StandardInputControlProps> = ({
             {queue.length > 0 && (
                 <div className="flex flex-wrap gap-2">
                     {queue.map((item: any, index: number) => (
-                        <div key={item.id} className="flex items-center gap-1.5 px-2.5 py-1.5 bg-white border-2 border-border-main rounded-md text-sm font-bold text-text-primary shadow-neo group/pill">
+                        <div
+                            key={item.id}
+                            className="flex items-center gap-1.5 px-2.5 py-1.5 bg-white rounded-lg text-sm font-bold text-text-primary group/pill"
+                            style={{ border: '1px solid var(--high-grey, #1A1A1A)', boxShadow: 'none' }}
+                        >
                             {item.type === 'url' ? <Globe className="w-3 h-3 text-brand" /> : <FileImage className="w-3 h-3 text-[#10B981]" />}
 
                             {editingId === item.id ? (

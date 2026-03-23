@@ -1,38 +1,42 @@
 import React from 'react';
 
 /**
- * PricingHero Component
+ * PricingHero — top spacing & type scale aligned with API Keys page hero.
  */
 const PricingHero = () => {
     return (
-        <section className="relative pt-20 pb-12 px-4 overflow-hidden bg-[#FFFEF9]">
-            <div className="max-w-4xl mx-auto text-center relative z-10">
-                <h1 className="text-4xl md:text-5xl lg:text-5xl font-normal text-gray-900 tracking-tight leading-tight">
-                    Find the Truth behind User <span className="relative inline-block">Friction.
-                        <img
-                            src="/Logo-figma.png"
-                            alt="Logo"
-                            className="absolute -top-6 -right-12 w-12 h-10 md:w-16 md:h-12 object-contain pointer-events-none select-none"
-                        />
-                    </span>
-                </h1>
-                <p className="text-4xl md:text-5xl lg:text-5xl font-light text-gray-800 mt-2">
-                    No Guesswork, <span className="font-bold">Clear Insights.</span>
-                </p>
-            </div>
-
-            {/* Decorative Ring Elements */}
+        <section className="relative w-full overflow-hidden bg-[#FFFEF9] py-14 md:py-16 lg:py-20 px-4 sm:px-6 font-['DM_Sans']">
             <img
                 src="/ring-top-left.png"
                 alt=""
-                className="absolute top-0 left-0 w-[60px] md:w-[80px] h-auto pointer-events-none select-none z-0"
+                aria-hidden
+                className="absolute top-0 left-0 w-[60px] md:w-[80px] h-auto z-0 pointer-events-none select-none object-contain"
             />
             <img
                 src="/ring-top-right.png"
                 alt=""
-                className="absolute top-0 right-0 w-[80px] md:w-[120px] h-auto pointer-events-none select-none z-0"
+                aria-hidden
+                className="absolute top-0 right-0 w-[80px] md:w-[120px] h-auto z-0 pointer-events-none select-none object-contain"
             />
-
+            <div className="relative z-[1] flex flex-col items-center justify-center text-center shrink-0 mx-auto w-full">
+                {/* Ek hi heading — do lines <br /> se, alag p nahi */}
+                <h1
+                    className="font-normal text-[#1a1a1a] w-full max-w-[601px] m-0 text-[32px] sm:text-[40px] leading-[1.15] sm:leading-snug"
+                    style={{ letterSpacing: '-1px' }}
+                >
+                    Find the Truth behind User{' '}
+                    <span className="relative inline-block font-bold">
+                        Friction.
+                        <img
+                            src="/Logo-figma.png"
+                            alt=""
+                            className="absolute -top-5 -right-10 md:-right-12 w-10 h-8 md:w-14 md:h-11 object-contain pointer-events-none select-none"
+                        />
+                    </span>
+                    <br />
+                    No Guesswork, <span className="font-bold">Clear Insights.</span>
+                </h1>
+            </div>
         </section>
     );
 };

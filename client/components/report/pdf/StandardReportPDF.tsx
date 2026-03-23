@@ -1,7 +1,7 @@
 import React, { useMemo } from 'react';
 import { Document, Page, Text, View, StyleSheet, Image, Svg, Path, Font } from '@react-pdf/renderer';
 import { AnalysisReport, Screenshot, ScoredParameter } from '../../../types';
-import { getBaseUrlForStatic } from '../../../services/config';
+import { getThemeStyles } from '../ScoreComponents';
 
 // --- DESIGN TOKENS (Matching Web Report) ---
 const COLORS = {
@@ -28,9 +28,15 @@ const COLORS = {
     borderGray: '#E5E7EB'
 };
 
+const PDF_PAGE_PAD_X = 30;
+/** Space reserved below fixed header (logo row + label + URL wrap + divider) */
+const PDF_HEADER_RESERVE_TOP = 120;
+
 const styles = StyleSheet.create({
     page: {
-        padding: 30,
+        paddingHorizontal: PDF_PAGE_PAD_X,
+        paddingBottom: 30,
+        paddingTop: PDF_HEADER_RESERVE_TOP,
         backgroundColor: COLORS.pageBg,
         fontFamily: 'Helvetica',
     },
@@ -48,60 +54,52 @@ const styles = StyleSheet.create({
         color: COLORS.black,
     },
 
-    // --- NEW HEADER STYLES ---
-    newHeaderContainer: {
-        marginBottom: 20,
+    // --- FIXED PAGE HEADER (repeats on every page via `fixed`) ---
+    pdfHeaderFixed: {
+        position: 'absolute',
+        top: PDF_PAGE_PAD_X,
+        left: PDF_PAGE_PAD_X,
+        right: PDF_PAGE_PAD_X,
+    },
+    pdfHeaderInner: {
         width: '100%',
     },
-    newHeaderTop: {
+    headerTopRow: {
         flexDirection: 'row',
-        justifyContent: 'flex-end',
+        justifyContent: 'space-between',
         alignItems: 'center',
         marginBottom: 8,
-        height: 24,
     },
     headerLogoImage: {
-        height: '100%',
-        width: 120,
+        height: 26,
+        width: 132,
         objectFit: 'contain',
-        objectPosition: 'right',
+        objectPosition: 'left',
     },
     headerDivider: {
         height: 1,
         backgroundColor: COLORS.slate200,
-        marginBottom: 10,
         width: '100%',
-    },
-    newHeaderBottom: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'flex-end',
-    },
-    headerLeft: {
-        flexDirection: 'column',
+        marginTop: 10,
     },
     headerLabel: {
-        fontSize: 10, // Small label
+        fontSize: 10,
         color: COLORS.slate500,
-        fontWeight: 'bold',
-        marginBottom: 2,
+        fontWeight: 'normal',
+        marginBottom: 4,
     },
     headerUrl: {
-        fontSize: 20, // Large URL
-        fontWeight: 'black',
+        fontSize: 11,
+        fontWeight: 'bold',
         color: COLORS.black,
     },
     headerRight: {
         flexDirection: 'column',
         alignItems: 'flex-end',
+        justifyContent: 'center',
     },
     headerDate: {
-        fontSize: 8,
-        color: COLORS.slate400,
-        marginBottom: 2,
-    },
-    headerAuthor: {
-        fontSize: 8,
+        fontSize: 9,
         color: COLORS.slate400,
     },
 
@@ -109,8 +107,8 @@ const styles = StyleSheet.create({
     footer: {
         position: 'absolute',
         bottom: 20,
-        left: 30,
-        right: 30,
+        left: PDF_PAGE_PAD_X,
+        right: PDF_PAGE_PAD_X,
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
@@ -154,65 +152,108 @@ const styles = StyleSheet.create({
         textTransform: 'uppercase',
         marginBottom: 4,
     },
+    auditSectionHeadingRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginBottom: 6,
+        flexWrap: 'wrap',
+    },
+    auditSectionTitleText: {
+        fontSize: 16,
+        fontWeight: 'bold',
+        color: COLORS.black,
+    },
+    auditSectionTitleDivider: {
+        width: 1,
+        height: 16,
+        backgroundColor: COLORS.slate300,
+        marginHorizontal: 10,
+    },
+    categoryScoreBadge: {
+        paddingHorizontal: 12,
+        paddingVertical: 5,
+        borderRadius: 999,
+    },
+    categoryScoreBadgeText: {
+        fontSize: 12,
+        fontWeight: 'bold',
+    },
     sectionSubtitle: {
         fontSize: 9,
         color: COLORS.slate600,
     },
 
-    // --- TWO COLUMN LAYOUT ---
-    mainRow: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-    },
-    leftCol: {
-        width: '54%',
-    },
-    rightCol: {
-        width: '46%',
-    },
-
-    // --- DASHBOARD DASHBOARD ---
-    dashboardBox: {
+    // --- HERO CARD (MATCHING WEB REPORT) ---
+    heroCard: {
         width: '100%',
-        height: 140, // Increased to fit 120 content + 20 padding
         flexDirection: 'row',
-        borderTopWidth: 0.5,
-        borderBottomWidth: 0.5,
-        borderColor: '#4B5563',
-        paddingVertical: 10,
-        paddingLeft: 10,
-        paddingRight: 4,
-        marginBottom: 10,
-        alignItems: 'flex-start', // Top align ensures perfect row alignment
+        borderTopWidth: 1,
+        borderLeftWidth: 1,
+        borderRightWidth: 1,
+        borderBottomWidth: 1,
+        borderColor: '#D4D4D4',
+        backgroundColor: COLORS.white,
+        marginBottom: 14,
+        overflow: 'hidden',
+        height: 368, // ~80pt shorter than prior hero + preview block
+    },
+    heroLeft: {
+        width: '54%',
+        paddingTop: 6,
+        paddingBottom: 6,
+        paddingHorizontal: 12,
+        borderTopWidth: 0,
+        borderBottomWidth: 0,
+        borderLeftWidth: 0,
+        borderRightWidth: 1,
+        borderRightColor: '#D4D4D4',
         justifyContent: 'flex-start',
+    },
+    heroRight: {
+        width: '46%',
+        backgroundColor: '#F1F5F9',
+        borderTopWidth: 1,
+        borderRightWidth: 0,
+        borderBottomWidth: 0,
+        borderLeftWidth: 0,
+        borderTopColor: COLORS.black,
+        minHeight: 0,
+        position: 'relative',
+        overflow: 'hidden',
     },
 
     // --- SCORE SECTION ---
     mainScoreBox: {
-        width: '26%', // Widened to fit wider badge
-        height: 120,
-        marginRight: '2%',
+        width: '100%',
         alignItems: 'center',
         justifyContent: 'center',
-        borderWidth: 1,
-        borderColor: COLORS.black,
-        position: 'relative',
+        marginBottom: 2,
     },
+    // NOTE: Don't hard-limit gauge wrapper heights; it clips the HalfGauge and misaligns the score text.
     largeGaugeContainer: {
         width: '100%',
-        height: 46, // Tight fit for 86px/2 gauge
         position: 'relative',
         alignItems: 'center',
         justifyContent: 'center',
-        overflow: 'hidden',
     },
     miniGaugeContainer: {
-        width: 80,
-        height: 27, // Tight fit for 49px/2 gauge
+        width: '100%',
         position: 'relative',
         alignItems: 'center',
         justifyContent: 'center',
-        overflow: 'hidden',
+    },
+
+    heroOverallGaugeWrap: {
+        width: '100%',
+        alignItems: 'center',
+        justifyContent: 'center',
+        marginTop: 2,
+    },
+    heroMiniGaugeWrap: {
+        width: '100%',
+        alignItems: 'center',
+        justifyContent: 'center',
+        marginTop: 2,
     },
     overallScoreText: {
         fontSize: 27,
@@ -222,70 +263,61 @@ const styles = StyleSheet.create({
         bottom: 0,
     },
     overallLabel: {
-        fontSize: 7,
+        fontSize: 9,
         fontWeight: 'bold',
         color: COLORS.black,
-        marginTop: 2,
+        marginTop: 4,
         textTransform: 'uppercase',
+        letterSpacing: 0.3,
     },
-    // --- MAIN BADGE (Shadow Effect) ---
-    mainBadgeWrapper: {
-        width: 110, // Increased to definitely fit text
-        height: 18,
-        position: 'relative',
+    scoreSectionDivider: {
+        width: '100%',
+        height: 1,
+        backgroundColor: COLORS.slate200,
         marginTop: 6,
+        marginBottom: 8,
     },
-    mainBadgeShadow: {
-        position: 'absolute',
-        top: 1.5,
-        left: 1.5,
-        width: '100%',
-        height: '100%',
-        backgroundColor: COLORS.black,
-    },
-    mainBadgeMain: {
-        position: 'absolute',
-        top: 0,
-        left: 0,
-        width: '100%',
-        height: '100%',
-        borderWidth: 1,
-        borderColor: COLORS.black,
-        justifyContent: 'center',
+    // --- STATUS PILLS (Match web report: tinted bg, no border) ---
+    statusPill: {
+        paddingHorizontal: 10,
+        paddingVertical: 4,
+        marginTop: 6,
+        borderRadius: 2,
         alignItems: 'center',
+        justifyContent: 'center',
     },
-    mainStatusText: {
+    statusPillText: {
         fontSize: 7,
         fontWeight: 'black',
         textTransform: 'uppercase',
         textAlign: 'center',
-        lineHeight: 1,
-        letterSpacing: 0.5,
+        letterSpacing: 0.6,
     },
 
-    // --- CATEGORY GRID ---
+    // --- CATEGORY GRID: 2×2 (two gauges top, two bottom) ---
     categoryGrid: {
-        width: '36%', // Adjusted
-        height: 120, // Reduced from 150
-        marginRight: '2%', // Reduced gap
+        width: '100%',
         flexDirection: 'row',
         flexWrap: 'wrap',
         justifyContent: 'space-between',
-        alignContent: 'center', // Center vertically with smaller gap
+        alignItems: 'flex-start',
+        alignContent: 'flex-start',
+        marginTop: 0,
     },
     miniGaugeItem: {
         width: '48%',
         alignItems: 'center',
-        marginBottom: 6, // Uniform gap
+        marginBottom: 10,
         flexDirection: 'column',
     },
     miniGaugeLabel: {
-        marginTop: 2,
-        fontSize: 6,
+        marginTop: 4,
+        fontSize: 6.5,
         fontWeight: 'bold',
         textTransform: 'uppercase',
         color: COLORS.black,
         marginBottom: 2,
+        textAlign: 'center',
     },
     miniGaugeValue: {
         fontSize: 12,
@@ -294,39 +326,20 @@ const styles = StyleSheet.create({
         position: 'absolute',
         bottom: 0,
     },
-    // --- BADGE STYLES (Shadow Effect) ---
-    badgeWrapper: {
-        width: 75, // Widened for single line
-        height: 14,
-        position: 'relative',
+    statusPillSmall: {
+        paddingHorizontal: 8,
+        paddingVertical: 3,
         marginTop: 4,
-    },
-    badgeShadow: {
-        position: 'absolute',
-        top: 1.5,
-        left: 1.5,
-        width: '100%',
-        height: '100%',
-        backgroundColor: COLORS.black,
-    },
-    badgeMain: {
-        position: 'absolute',
-        top: 0,
-        left: 0,
-        width: '100%',
-        height: '100%',
-        borderWidth: 1,
-        borderColor: COLORS.black,
-        justifyContent: 'center',
+        borderRadius: 2,
         alignItems: 'center',
+        justifyContent: 'center',
     },
-    miniStatusText: {
-        fontSize: 5,
+    statusPillSmallText: {
+        fontSize: 5.5,
         fontWeight: 'black',
         textTransform: 'uppercase',
         textAlign: 'center',
-        lineHeight: 1,
-        letterSpacing: 0.5,
+        letterSpacing: 0.6,
     },
 
     // --- EXECUTIVE SUMMARY ---
@@ -362,8 +375,11 @@ const styles = StyleSheet.create({
     },
     summaryHeaderMain: {
         height: 16,
-        borderWidth: 1,
-        borderColor: COLORS.black,
+        borderTopWidth: 1,
+        borderRightWidth: 1,
+        borderBottomWidth: 1,
+        borderLeftWidth: 1,
+        borderColor: COLORS.borderGray,
         justifyContent: 'center',
         paddingHorizontal: 6,
         backgroundColor: COLORS.white,
@@ -399,11 +415,170 @@ const styles = StyleSheet.create({
         width: '100%',
     },
     contextTitle: {
-        fontSize: 16,
+        fontSize: 22,
         fontWeight: 'black',
         color: COLORS.black,
-        marginBottom: 8, // Reduced
-        textTransform: 'uppercase',
+        marginBottom: 18,
+    },
+    contextSectionTitle: {
+        fontSize: 14,
+        fontWeight: 'black',
+        color: COLORS.black,
+        marginBottom: 10,
+    },
+    contextSubsectionRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginBottom: 8,
+        marginTop: 12,
+    },
+    contextSubsectionIcon: {
+        width: 14,
+        height: 14,
+        marginRight: 8,
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    contextSubsectionTitle: {
+        fontSize: 11,
+        fontWeight: 'bold',
+        color: '#B45309', // amber-ish like screenshot
+    },
+    contextNumberedItem: {
+        flexDirection: 'row',
+        marginBottom: 10,
+        paddingRight: 10,
+    },
+    contextNumber: {
+        width: 14,
+        fontSize: 10,
+        fontWeight: 'bold',
+        color: COLORS.black,
+    },
+    contextItemText: {
+        flex: 1,
+        fontSize: 10,
+        lineHeight: 1.45,
+        color: '#111827',
+    },
+
+    // --- TARGET AUDIENCE (PAGE 3) ---
+    targetTitle: {
+        fontSize: 22,
+        fontWeight: 'black',
+        color: COLORS.black,
+        marginBottom: 10,
+    },
+    targetRow: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        marginTop: 8,
+    },
+    targetColLeft: {
+        width: '52%',
+        paddingRight: 12,
+    },
+    targetColRight: {
+        width: '45%',
+    },
+    targetSectionHeading: {
+        fontSize: 14,
+        fontWeight: 'black',
+        color: '#B45309',
+        marginBottom: 8,
+        flexDirection: 'row',
+        alignItems: 'center',
+    },
+    targetSectionIconDot: {
+        width: 6,
+        height: 6,
+        borderRadius: 3,
+        backgroundColor: '#B45309',
+        marginRight: 6,
+    },
+    targetNumberedItem: {
+        flexDirection: 'row',
+        marginBottom: 8,
+    },
+    targetNumber: {
+        width: 14,
+        fontSize: 10,
+        fontWeight: 'bold',
+        color: COLORS.slate500,
+    },
+    targetItemText: {
+        flex: 1,
+        fontSize: 10,
+        lineHeight: 1.45,
+        color: COLORS.slate800,
+    },
+
+    // --- USER PERSONAS (PAGE) ---
+    personaTitle: {
+        fontSize: 22,
+        fontWeight: 'black',
+        color: COLORS.black,
+        marginBottom: 14,
+    },
+    personaGrid: {
+        width: '100%',
+        flexDirection: 'column',
+        marginTop: 6,
+    },
+    personaCard: {
+        width: '100%',
+        borderTopWidth: 1,
+        borderRightWidth: 1,
+        borderBottomWidth: 1,
+        borderLeftWidth: 1,
+        borderColor: COLORS.borderGray,
+        backgroundColor: COLORS.white,
+        borderRadius: 4,
+        padding: 12,
+        marginBottom: 12,
+    },
+    personaCardLast: {
+        marginBottom: 0,
+    },
+    /** Name · age · role · location on one horizontal line */
+    personaIdentityRow: {
+        flexDirection: 'row',
+        flexWrap: 'wrap',
+        alignItems: 'baseline',
+        marginBottom: 10,
+    },
+    personaName: {
+        fontSize: 12,
+        fontWeight: 'black',
+        color: COLORS.black,
+    },
+    personaMetaInline: {
+        fontSize: 9,
+        color: COLORS.slate600,
+        marginLeft: 2,
+    },
+    personaSectionTitle: {
+        fontSize: 10,
+        fontWeight: 'bold',
+        color: COLORS.slate900,
+        marginTop: 8,
+        marginBottom: 5,
+    },
+    personaNumberedRow: {
+        flexDirection: 'row',
+        marginBottom: 4,
+    },
+    personaNumber: {
+        width: 12,
+        fontSize: 8.5,
+        fontWeight: 'bold',
+        color: COLORS.slate500,
+    },
+    personaText: {
+        flex: 1,
+        fontSize: 9,
+        lineHeight: 1.4,
+        color: COLORS.slate800,
     },
     subHeaderRow: {
         flexDirection: 'row',
@@ -457,135 +632,163 @@ const styles = StyleSheet.create({
         lineHeight: 1.4,
         color: COLORS.slate700,
     },
-    // Numbered List
-    numberedItem: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        marginBottom: 6,
-    },
-    numberBadgeContainer: {
-        width: 18,
-        height: 18,
-        marginRight: 8,
+    // (legacy numbered styles removed from usage on page 2)
+
+    // --- SCREENSHOT COLUMN ---
+    screenshotContainer: {
         position: 'relative',
+        width: '100%',
+        height: '100%',
     },
-    numberBadgeShadow: {
-        position: 'absolute',
-        top: 1,
-        left: 1,
-        width: 16,
-        height: 16,
-        backgroundColor: COLORS.black,
-    },
-    numberBadgeMain: {
+    screenshotImg: {
         position: 'absolute',
         top: 0,
         left: 0,
-        width: 16,
-        height: 16,
-        backgroundColor: '#FDE047', // Yellow-300
-        borderWidth: 1,
-        borderColor: COLORS.black,
-        alignItems: 'center',
-        justifyContent: 'center',
-    },
-    numberText: {
-        fontSize: 9,
-        fontWeight: 'bold',
-        color: COLORS.black,
-    },
-
-    // --- SCREENSHOT ---
-    screenshotThumbnail: {
-        width: '33%', // Adjusted
-        height: 120,
-        // borderRadius removed
-        overflow: 'hidden',
-    },
-    thumbnailImg: {
+        right: 0,
+        bottom: 0,
         width: '100%',
-        height: 'auto',
-        minHeight: '100%',
+        height: '100%',
         objectFit: 'cover',
-        objectPosition: 'top left', // Reset to top left
+        objectPosition: 'top left',
+    },
+    analyzedBadgeWrapper: {
+        position: 'absolute',
+        right: 12,
+        bottom: 12,
+        alignItems: 'flex-end',
+    },
+    analyzedBadge: {
+        fontSize: 8,
+        fontWeight: 'black',
+        textTransform: 'uppercase',
+        color: COLORS.black,
+        backgroundColor: COLORS.white,
+        borderTopWidth: 1,
+        borderRightWidth: 1,
+        borderBottomWidth: 1,
+        borderLeftWidth: 1,
+        borderColor: COLORS.borderGray,
+        paddingHorizontal: 4,
+        paddingVertical: 2,
     },
 
 
-    // --- PARAMETER CARDS (Minimal Design) ---
+    // --- PARAMETER CARDS (white card; Observation / Recommendation sub-panels) ---
     paramCard: {
         backgroundColor: COLORS.white,
-        borderTopWidth: 2,
-        borderLeftWidth: 2,
-        borderBottomWidth: 2,
-        borderRightWidth: 2,
-        borderColor: COLORS.black,
-        marginBottom: 10,
-        padding: 14,
+        borderTopWidth: 1,
+        borderRightWidth: 1,
+        borderBottomWidth: 1,
+        borderLeftWidth: 1,
+        borderColor: COLORS.slate200,
+        borderRadius: 12,
+        marginBottom: 14,
+        paddingVertical: 12,
+        paddingHorizontal: 12,
     },
     paramHeader: {
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
         marginBottom: 10,
-        paddingBottom: 8,
-        borderBottomWidth: 1,
-        borderBottomColor: COLORS.slate300,
     },
-    paramTitleRow: {
-        flex: 1,
-    },
-    auditTypeLabel: {
-        fontSize: 7,
-        fontWeight: 'bold',
-        color: COLORS.slate500,
-        textTransform: 'uppercase',
-        letterSpacing: 1,
-        marginBottom: 4,
-    },
-    paramTitle: {
-        fontSize: 13,
-        fontWeight: 'bold',
-        color: COLORS.black,
-        lineHeight: 1.3,
-    },
-    scoreBox: {
+    paramHeadingLeft: {
         flexDirection: 'row',
         alignItems: 'center',
+        flex: 1,
+        minWidth: 0,
     },
-    confidenceBadge: {
-        paddingHorizontal: 6,
-        paddingVertical: 2,
-        borderWidth: 1,
-        borderColor: COLORS.black,
-        marginRight: 6,
-    },
-    confidenceText: {
-        fontSize: 6,
-        fontWeight: 'bold',
-        textTransform: 'uppercase',
-    },
-    scorePill: {
-        paddingHorizontal: 8,
-        paddingVertical: 4,
-        borderWidth: 1,
-        borderColor: COLORS.black,
-        backgroundColor: COLORS.slate100,
-    },
-    scoreValue: {
-        fontSize: 12,
+    paramTitle: {
+        fontSize: 15,
         fontWeight: 'bold',
         color: COLORS.black,
+        lineHeight: 1.25,
+        flexShrink: 1,
+    },
+    paramHeadingDivider: {
+        width: 1,
+        height: 14,
+        backgroundColor: COLORS.slate300,
+        marginHorizontal: 8,
+        flexShrink: 0,
+    },
+    paramConfidenceText: {
+        fontSize: 7,
+        fontWeight: 'bold',
+        textTransform: 'uppercase',
+        letterSpacing: 0.4,
+        flexShrink: 0,
+    },
+    paramHeaderScorePill: {
+        paddingHorizontal: 10,
+        paddingVertical: 5,
+        borderRadius: 999,
+        flexShrink: 0,
+        marginLeft: 8,
+    },
+    paramHeaderScorePillText: {
+        fontSize: 12,
+        fontWeight: 'bold',
+    },
+    paramDualColumnRow: {
+        flexDirection: 'row',
+        alignItems: 'stretch',
+        width: '100%',
+        marginTop: 2,
+    },
+    paramSubCard: {
+        flex: 1,
+        minWidth: 0,
+        backgroundColor: COLORS.white,
+        borderRadius: 8,
+        borderTopWidth: 1,
+        borderRightWidth: 1,
+        borderBottomWidth: 1,
+        borderLeftWidth: 1,
+        borderColor: COLORS.slate200,
+        paddingVertical: 8,
+        paddingHorizontal: 8,
+        marginRight: 4,
+    },
+    paramSubCardLast: {
+        marginRight: 0,
+    },
+    paramCitationBlock: {
+        marginTop: 10,
+        paddingTop: 6,
+    },
+    paramCitationLabel: {
+        fontSize: 8,
+        fontStyle: 'italic',
+        color: COLORS.slate500,
+        marginBottom: 6,
+    },
+    paramCitationItem: {
+        fontSize: 8,
+        fontStyle: 'italic',
+        color: COLORS.slate600,
+        lineHeight: 1.45,
+        marginBottom: 4,
     },
 
     // --- ICONS (Helpers) ---
     iconContainer: {
         width: 16,
         height: 16,
-        borderWidth: 1,
-        borderColor: COLORS.black,
         alignItems: 'center',
         justifyContent: 'center',
         marginRight: 6,
+    },
+    editorialLabelRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginBottom: 4,
+    },
+    editorialLabelText: {
+        fontSize: 9,
+        fontWeight: 'bold',
+        color: COLORS.black,
+        letterSpacing: 0.2,
     },
 
     // Content sections (stacked with subtle dividers)
@@ -593,25 +796,16 @@ const styles = StyleSheet.create({
         paddingTop: 8,
         paddingBottom: 8,
         borderTopWidth: 1,
+        borderRightWidth: 0,
+        borderBottomWidth: 0,
+        borderLeftWidth: 0,
         borderTopColor: COLORS.slate200,
-    },
-    contentLabel: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        marginBottom: 4,
     },
     contentIcon: {
         width: 8,
         height: 8,
         marginRight: 5,
         backgroundColor: COLORS.slate400,
-    },
-    contentLabelText: {
-        fontSize: 7,
-        fontWeight: 'bold',
-        textTransform: 'uppercase',
-        color: COLORS.slate600,
-        letterSpacing: 0.5,
     },
     contentText: {
         fontSize: 9,
@@ -623,20 +817,9 @@ const styles = StyleSheet.create({
     overviewSection: {
         marginBottom: 8,
     },
-    overviewLabel: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        marginBottom: 5,
-    },
-    overviewIcon: {
-        width: 10,
-        height: 10,
-        backgroundColor: COLORS.black,
-        marginRight: 5,
-    },
     overviewText: {
         fontSize: 9,
-        lineHeight: 1.5,
+        lineHeight: 1.55,
         color: COLORS.slate800,
     },
 
@@ -644,13 +827,6 @@ const styles = StyleSheet.create({
 });
 
 // --- HELPERS ---
-const getScoreInfo = (score: number) => {
-    if (score >= 9) return { color: COLORS.veryGood, lightColor: '#D1FAE5', label: 'VERY GOOD' };
-    if (score >= 7) return { color: COLORS.satisfactory, lightColor: '#FFF7ED', label: 'SATISFACTORY' };
-    if (score >= 5) return { color: COLORS.needsImprovement, lightColor: '#FFEDD5', label: 'NEEDS IMPROVEMENT' };
-    return { color: COLORS.critical, lightColor: '#FEE2E2', label: 'CRITICAL' };
-};
-
 const getConfidenceStyles = (conf: string | undefined) => {
     const c = (conf || 'high').toLowerCase();
     if (c === 'high') return { bg: '#ECFDF5', text: 'HIGH CONFIDENCE' };
@@ -658,23 +834,32 @@ const getConfidenceStyles = (conf: string | undefined) => {
     return { bg: '#FEF2F2', text: 'LOW CONFIDENCE' };
 };
 
+const getConfidenceTextColor = (conf: string | undefined) => {
+    const c = (conf || 'high').toLowerCase();
+    if (c === 'high') return '#166534';
+    if (c === 'medium') return '#B45309';
+    return '#B91C1C';
+};
+
 const formatTitle = (text: string) => text.replace(/([A-Z])/g, ' $1').trim();
 
-const formatDate = () => {
+const ordinalSuffix = (d: number) => {
+    if (d > 3 && d < 21) return 'th';
+    switch (d % 10) {
+        case 1: return 'st';
+        case 2: return 'nd';
+        case 3: return 'rd';
+        default: return 'th';
+    }
+};
+
+/** e.g. "3rd March 2026" for PDF header */
+const formatPdfHeaderDate = () => {
     const date = new Date();
     const day = date.getDate();
-    const month = date.toLocaleString('default', { month: 'short' });
+    const month = date.toLocaleString('en-GB', { month: 'long' });
     const year = date.getFullYear();
-    const suffix = (d: number) => {
-        if (d > 3 && d < 21) return 'th';
-        switch (d % 10) {
-            case 1: return "st";
-            case 2: return "nd";
-            case 3: return "rd";
-            default: return "th";
-        }
-    };
-    return `${day}${suffix(day)} ${month} ${year} `;
+    return `${day}${ordinalSuffix(day)} ${month} ${year}`;
 };
 
 const HalfGauge = ({ score, size = 110, strokeWidth = 14, fontSize = 24 }: { score: number, size?: number, strokeWidth?: number, fontSize?: number }) => {
@@ -683,7 +868,7 @@ const HalfGauge = ({ score, size = 110, strokeWidth = 14, fontSize = 24 }: { sco
     const r = (size - strokeWidth) / 2;
     const cappedScore = Math.max(0, Math.min(10, score));
 
-    // Background Track (180deg sweep)
+    // Background Track (180deg sweep) — match web ScoreGauge: black @ 10% opacity
     const trackPath = `M ${strokeWidth / 2} ${cy} A ${r} ${r} 0 0 1 ${size - strokeWidth / 2} ${cy} `;
 
     // Progress Arc (Angle PI to 0)
@@ -691,26 +876,23 @@ const HalfGauge = ({ score, size = 110, strokeWidth = 14, fontSize = 24 }: { sco
     const endX = cx + r * Math.cos(angle);
     const endY = cy - r * Math.sin(angle);
 
-    // Large arc flag is 0 for semi-circles since angle <= PI
     const progressPath = `M ${strokeWidth / 2} ${cy} A ${r} ${r} 0 0 1 ${endX} ${endY} `;
-    const { color } = getScoreInfo(score);
+    const theme = getThemeStyles(score);
 
     return (
         <View style={{ width: size, height: (size / 2) + (strokeWidth / 2), alignItems: 'center', justifyContent: 'flex-start', overflow: 'hidden' }}>
             <Svg width={size} height={(size / 2) + (strokeWidth / 2)}>
-                {/* Background Track */}
                 <Path
                     d={trackPath}
                     fill="none"
-                    stroke="#EEEEEE"
+                    stroke={COLORS.slate300}
                     strokeWidth={strokeWidth}
                     strokeLinecap="butt"
                 />
-                {/* Progress Arc */}
                 <Path
                     d={progressPath}
                     fill="none"
-                    stroke={color}
+                    stroke={theme.solid}
                     strokeWidth={strokeWidth}
                     strokeLinecap="butt"
                 />
@@ -727,6 +909,91 @@ const HalfGauge = ({ score, size = 110, strokeWidth = 14, fontSize = 24 }: { sco
         </View>
     );
 };
+
+const ICON_AMBER = '#B45309';
+
+const IconPrimaryPurpose = () => (
+    <Svg width="14" height="14" viewBox="0 0 24 24">
+        <Path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10Z" fill="none" stroke={ICON_AMBER} strokeWidth={2} />
+        <Path d="M12 16a4 4 0 1 0 0-8 4 4 0 0 0 0 8Z" fill="none" stroke={ICON_AMBER} strokeWidth={2} />
+    </Svg>
+);
+
+const IconKeyObjectives = () => (
+    <Svg width="14" height="14" viewBox="0 0 24 24">
+        <Path d="M4 7h16M4 12h16M4 17h16" fill="none" stroke={ICON_AMBER} strokeWidth={2} strokeLinecap="round" />
+        <Path d="M7 4v16" fill="none" stroke={ICON_AMBER} strokeWidth={2} strokeLinecap="round" opacity={0.0} />
+    </Svg>
+);
+
+const IconDomainAnalysis = () => (
+    <Svg width="14" height="14" viewBox="0 0 24 24">
+        <Path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10Z" fill="none" stroke={ICON_AMBER} strokeWidth={2} />
+        <Path d="M2 12h20" fill="none" stroke={ICON_AMBER} strokeWidth={2} strokeLinecap="round" />
+        <Path d="M12 2c2.761 2.67 4.5 6.24 4.5 10s-1.739 7.33-4.5 10c-2.761-2.67-4.5-6.24-4.5-10S9.239 4.67 12 2Z" fill="none" stroke={ICON_AMBER} strokeWidth={2} />
+    </Svg>
+);
+
+/** Repeats on every page when placed inside each `<Page>` (react-pdf `fixed`). */
+const StandardPdfPageHeaderFixed = ({
+    whiteLabelLogo,
+    cleanUrl,
+}: {
+    whiteLabelLogo?: string | null;
+    cleanUrl: string;
+}) => {
+    const defaultLogoSrc = `${window.location.origin}/logo.png`;
+    return (
+        <View style={styles.pdfHeaderFixed} fixed>
+            <View style={styles.pdfHeaderInner}>
+                <View style={styles.headerTopRow}>
+                    {whiteLabelLogo ? (
+                        <Image src={whiteLabelLogo} style={styles.headerLogoImage} />
+                    ) : (
+                        <Image src={defaultLogoSrc} style={styles.headerLogoImage} />
+                    )}
+                    <View style={styles.headerRight}>
+                        <Text style={styles.headerDate}>{formatPdfHeaderDate()}</Text>
+                    </View>
+                </View>
+                <Text style={styles.headerLabel}>Detailed assessment</Text>
+                <Text style={styles.headerUrl}>{cleanUrl}</Text>
+                <View style={styles.headerDivider} />
+            </View>
+        </View>
+    );
+};
+
+// --- AUDIT CARD ICONS (match report visual: shapes / eye / yellow + bulb) ---
+const OverviewIcon = () => (
+    <Svg width="14" height="14" viewBox="0 0 20 20">
+        <Path d="M10 2.5 L6.2 9.2 H13.8 Z" fill={COLORS.black} />
+        <Path d="M3.5 11 H8.5 V16 H3.5 Z" fill={COLORS.black} />
+        <Path d="M14 11 m-2.2 0 a2.2 2.2 0 1 0 4.4 0 a2.2 2.2 0 1 0-4.4 0" fill={COLORS.black} />
+    </Svg>
+);
+
+const ObservationIcon = () => (
+    <Svg width="14" height="14" viewBox="0 0 20 20">
+        <Path
+            d="M2.5 10 C4.5 6.5 7.5 5 10 5 C12.5 5 15.5 6.5 17.5 10 C15.5 13.5 12.5 15 10 15 C7.5 15 4.5 13.5 2.5 10 Z"
+            fill="none"
+            stroke={COLORS.black}
+            strokeWidth={1.4}
+        />
+        <Path d="M10 10 m-1.85 0 a1.85 1.85 0 1 0 3.7 0 a1.85 1.85 0 1 0-3.7 0" fill={COLORS.black} />
+    </Svg>
+);
+
+const RecommendationIcon = () => (
+    <Svg width="16" height="16" viewBox="0 0 18 18">
+        <Path d="M0 0 H18 V18 H0 Z" fill={COLORS.yellowAccent} />
+        <Path
+            d="M9 3.5 C7 3.5 5.5 5.2 5.5 7.2 C5.5 9 6.5 10.2 7.2 11 L7.2 12.2 H10.8 L10.8 11 C11.5 10.2 12.5 9 12.5 7.2 C12.5 5.2 11 3.5 9 3.5 Z M7.5 13.5 H10.5 V14.8 H7.5 Z M7 15.5 H11 V16.5 H7 Z"
+            fill={COLORS.black}
+        />
+    </Svg>
+);
 
 const parseExecutiveSummary = (text: string = '') => {
     const workingMatch = text.match(/WHAT IS WORKING:([\s\S]*?)(?=WHAT IS (NOT WORKING|NEEDS WORK|NOT WORKING):|$)/i);
@@ -748,74 +1015,98 @@ const parseExecutiveSummary = (text: string = '') => {
     };
 };
 
-// Parameter Card - Matching Web UI Structure
-const ParameterCard = ({ param, auditType }: { param: ScoredParameter, auditType: string }) => {
+const AuditSectionHeading = ({
+    title,
+    subtitle,
+    categoryScore,
+}: {
+    title: string;
+    subtitle: string;
+    categoryScore: number;
+}) => {
+    const theme = getThemeStyles(categoryScore);
+    return (
+        <View style={styles.sectionHeader}>
+            <View style={styles.auditSectionHeadingRow}>
+                <Text style={styles.auditSectionTitleText}>{title}</Text>
+                <View style={styles.auditSectionTitleDivider} />
+                <View style={[styles.categoryScoreBadge, { backgroundColor: theme.pill }]}>
+                    <Text style={[styles.categoryScoreBadgeText, { color: theme.solid }]}>
+                        {categoryScore.toFixed(1)}/10
+                    </Text>
+                </View>
+            </View>
+            <Text style={styles.sectionSubtitle}>{subtitle}</Text>
+        </View>
+    );
+};
+
+// Parameter Card — light gray shell; Observation + Recommendation side-by-side (reference UI)
+const ParameterCard = ({ param }: { param: ScoredParameter }) => {
     if (param.Score === 0) return null;
 
-    const displayScore = Math.round(param.Score * 10);
     const confStyle = getConfidenceStyles(param.Confidence || 'High');
+    const confColor = getConfidenceTextColor(param.Confidence);
+    const scoreVal = typeof param.Score === 'number' ? param.Score : 0;
+    const paramTheme = getThemeStyles(scoreVal);
+    const scoreDisplay = `${Math.min(10, Math.max(0, Math.round(scoreVal)))}/10`;
 
     return (
         <View style={styles.paramCard} wrap={false}>
-            {/* Header: Title + Score */}
             <View style={styles.paramHeader}>
-                <View style={styles.paramTitleRow}>
-                    <Text style={styles.auditTypeLabel}>{auditType}</Text>
+                <View style={styles.paramHeadingLeft}>
                     <Text style={styles.paramTitle}>{formatTitle(param.ParameterName || 'Analysis Parameter')}</Text>
+                    <View style={styles.paramHeadingDivider} />
+                    <Text style={[styles.paramConfidenceText, { color: confColor }]}>{confStyle.text}</Text>
                 </View>
-                <View style={styles.scoreBox}>
-                    <View style={[styles.confidenceBadge, { backgroundColor: confStyle.bg }]}>
-                        <Text style={styles.confidenceText}>{confStyle.text}</Text>
-                    </View>
-                    <View style={styles.scorePill}>
-                        <Text style={styles.scoreValue}>{displayScore}/100</Text>
-                    </View>
+                <View style={[styles.paramHeaderScorePill, { backgroundColor: paramTheme.pill }]}>
+                    <Text style={[styles.paramHeaderScorePillText, { color: paramTheme.solid }]}>
+                        {scoreDisplay}
+                    </Text>
                 </View>
             </View>
 
-            {/* Overview */}
             <View style={styles.overviewSection}>
-                <View style={styles.overviewLabel}>
-                    <View style={styles.overviewIcon} />
-                    <Text style={styles.contentLabelText}>OVERVIEW</Text>
+                <View style={styles.editorialLabelRow}>
+                    <View style={styles.iconContainer}>
+                        <OverviewIcon />
+                    </View>
+                    <Text style={styles.editorialLabelText}>Overview</Text>
                 </View>
                 <Text style={styles.overviewText}>{param.Analysis}</Text>
             </View>
 
-            {/* Observation + Recommendation - Stacked with Dividers */}
-            {(param.KeyFinding || param.Recommendation) && (
-                <View>
-                    {param.KeyFinding && (
-                        <View style={styles.contentSection}>
-                            <View style={styles.contentLabel}>
-                                <View style={[styles.contentIcon, { backgroundColor: COLORS.blue500 }]} />
-                                <Text style={styles.contentLabelText}>OBSERVATION</Text>
-                            </View>
-                            <Text style={styles.contentText}>{param.KeyFinding}</Text>
+            <View style={styles.paramDualColumnRow}>
+                <View style={styles.paramSubCard}>
+                    <View style={styles.editorialLabelRow}>
+                        <View style={styles.iconContainer}>
+                            <ObservationIcon />
                         </View>
-                    )}
-                    {param.Recommendation && (
-                        <View style={styles.contentSection}>
-                            <View style={styles.contentLabel}>
-                                <View style={[styles.contentIcon, { backgroundColor: COLORS.yellowAccent }]} />
-                                <Text style={styles.contentLabelText}>RECOMMENDATION</Text>
-                            </View>
-                            <Text style={styles.contentText}>{param.Recommendation}</Text>
-                        </View>
-                    )}
-                </View>
-            )}
-
-            {/* Citations */}
-            {param.Citations && param.Citations.length > 0 && (
-                <View style={{ marginTop: 8 }}>
-                    <View style={styles.contentLabel}>
-                        <View style={[styles.contentIcon, { backgroundColor: COLORS.slate200 }]} />
-                        <Text style={styles.contentLabelText}>CITATION</Text>
+                        <Text style={styles.editorialLabelText}>Observation</Text>
                     </View>
+                    <Text style={styles.contentText}>
+                        {param.KeyFinding?.trim() || 'No specific observation recorded.'}
+                    </Text>
+                </View>
+                <View style={[styles.paramSubCard, styles.paramSubCardLast]}>
+                    <View style={styles.editorialLabelRow}>
+                        <View style={styles.iconContainer}>
+                            <RecommendationIcon />
+                        </View>
+                        <Text style={styles.editorialLabelText}>Recommendation</Text>
+                    </View>
+                    <Text style={styles.contentText}>
+                        {param.Recommendation?.trim() || 'No specific recommendation provided.'}
+                    </Text>
+                </View>
+            </View>
+
+            {param.Citations && param.Citations.length > 0 && (
+                <View style={styles.paramCitationBlock}>
+                    <Text style={styles.paramCitationLabel}>Citation</Text>
                     {param.Citations.slice(0, 3).map((cite, i) => (
-                        <Text key={i} style={[styles.contentText, { fontSize: 8, color: COLORS.slate600, marginTop: 3 }]}>
-                            {i + 1}. "{cite}"
+                        <Text key={i} style={styles.paramCitationItem}>
+                            {cite}
                         </Text>
                     ))}
                 </View>
@@ -827,29 +1118,40 @@ const ParameterCard = ({ param, auditType }: { param: ScoredParameter, auditType
 // Critical Issue Card for Accessibility
 const CriticalIssueCard = ({ issue }: { issue: { Issue: string, Impact: string, Recommendation: string } }) => {
     return (
-        <View style={[styles.paramCard, { borderLeftWidth: 4, borderLeftColor: COLORS.critical }]} wrap={false}>
-            <View style={styles.paramHeader}>
-                <View style={styles.paramTitleRow}>
-                    <Text style={styles.auditTypeLabel}>CRITICAL ISSUE</Text>
-                    <Text style={[styles.paramTitle, { color: COLORS.critical }]}>{issue.Issue}</Text>
-                </View>
+        <View
+            style={[
+                styles.paramCard,
+                {
+                    borderTopWidth: 0,
+                    borderRightWidth: 0,
+                    borderBottomWidth: 0,
+                    borderLeftWidth: 4,
+                    borderLeftColor: COLORS.critical,
+                },
+            ]}
+            wrap={false}
+        >
+            <View style={{ marginBottom: 10 }}>
+                <Text style={[styles.paramTitle, { color: COLORS.critical }]}>{issue.Issue}</Text>
             </View>
 
-            {/* Impact */}
             <View style={styles.overviewSection}>
-                <View style={styles.overviewLabel}>
-                    <View style={[styles.overviewIcon, { backgroundColor: COLORS.critical }]} />
-                    <Text style={styles.contentLabelText}>IMPACT</Text>
+                <View style={styles.editorialLabelRow}>
+                    <View style={styles.iconContainer}>
+                        <OverviewIcon />
+                    </View>
+                    <Text style={styles.editorialLabelText}>Impact</Text>
                 </View>
                 <Text style={styles.overviewText}>{issue.Impact}</Text>
             </View>
 
-            {/* Recommendation */}
             {issue.Recommendation && (
                 <View style={styles.contentSection}>
-                    <View style={styles.contentLabel}>
-                        <View style={[styles.contentIcon, { backgroundColor: COLORS.yellowAccent }]} />
-                        <Text style={styles.contentLabelText}>RECOMMENDATION</Text>
+                    <View style={styles.editorialLabelRow}>
+                        <View style={styles.iconContainer}>
+                            <RecommendationIcon />
+                        </View>
+                        <Text style={styles.editorialLabelText}>Recommendation</Text>
                     </View>
                     <Text style={styles.contentText}>{issue.Recommendation}</Text>
                 </View>
@@ -886,7 +1188,7 @@ export const StandardReportPDF: React.FC<StandardReportPDFProps> = ({ report, ur
             // Must dynamically import or require if this gets tricky, but we can assume we'll just use the same logic
             // Oh wait, getBaseUrlForStatic needs to be imported:
             // Let's just fix it by declaring a simple check here since getBaseUrlForStatic relies on window which might not be available in PDF renderer if it runs server side, but this is client side React PDF so window exists.
-            let baseUrl = import.meta.env.VITE_BACKEND_URL || import.meta.env.VITE_API_URL || (import.meta.env.PROD ? 'https://api.myuxscore.com' : 'http://localhost:3000');
+            let baseUrl = import.meta.env.VITE_BACKEND_URL || import.meta.env.VITE_API_URL || (import.meta.env.PROD ? 'https://api.myuxscore.com' : 'http://localhost:8080');
             if (baseUrl.endsWith('/')) baseUrl = baseUrl.slice(0, -1);
             if (baseUrl.endsWith('/api/v1')) baseUrl = baseUrl.slice(0, -7);
             else if (baseUrl.endsWith('/api')) baseUrl = baseUrl.slice(0, -4);
@@ -929,93 +1231,68 @@ export const StandardReportPDF: React.FC<StandardReportPDFProps> = ({ report, ur
     const accessibilityParams = getAuditParams(accessibility, ['AutomatedCompliance', 'ScreenReaderExperience', 'VisualAccessibility']);
 
     const summary = parseExecutiveSummary(strategy?.ExecutiveSummary);
+    const targetAudience = (strategy as any)?.TargetAudience;
+    const userPersonas = (strategy as any)?.UserPersonas || [];
 
     return (
         <Document title={`UX Audit Report - ${cleanUrl}`}>
             {/* PAGE 1: HERO + EXECUTIVE SUMMARY */}
             <Page size="A4" style={styles.page}>
-                {/* NEW HEADER */}
-                <View style={styles.newHeaderContainer}>
-                    {/* Top Row: Logo */}
-                    <View style={styles.newHeaderTop}>
-                        {whiteLabelLogo ? (
-                            <Image src={whiteLabelLogo} style={styles.headerLogoImage} />
-                        ) : (
-                            <Image src={`${window.location.origin}/logo.png`} style={styles.headerLogoImage} />
-                        )}
-                    </View>
+                <StandardPdfPageHeaderFixed whiteLabelLogo={whiteLabelLogo} cleanUrl={cleanUrl} />
 
-                    {/* Divider */}
-                    <View style={styles.headerDivider} />
+                {/* HERO CARD: Overall Score + 4 Rings + Screenshot (matching web layout) */}
+                <View style={styles.heroCard}>
+                    {/* LEFT: Overall Score + 4 Category Rings */}
+                    <View style={styles.heroLeft}>
+                        <View style={styles.mainScoreBox}>
+                            <View style={styles.heroOverallGaugeWrap}>
+                                <HalfGauge score={overallScore} size={108} strokeWidth={11} fontSize={28} />
+                            </View>
+                            <Text style={styles.overallLabel}>Overall Score</Text>
 
-                    {/* Bottom Row: Info */}
-                    <View style={styles.newHeaderBottom}>
-                        <View style={styles.headerLeft}>
-                            <Text style={styles.headerLabel}>Deep assessment</Text>
-                            <Text style={styles.headerUrl}>{cleanUrl}</Text>
-                        </View>
-                        <View style={styles.headerRight}>
-                            <Text style={styles.headerDate}>{formatDate()}</Text>
-                            <Text style={styles.headerAuthor}>Prepared by Monsoonfish</Text>
-                        </View>
-                    </View>
-                </View>
-
-                {/* Dashboard: All-in-one horizontal row */}
-                <View style={styles.dashboardBox}>
-                    {/* 1. Main Score Gauge */}
-                    <View style={styles.mainScoreBox}>
-                        <View style={styles.largeGaugeContainer}>
-                            <HalfGauge score={overallScore} size={86} strokeWidth={8} fontSize={27} />
-                        </View>
-                        <Text style={styles.overallLabel}>Overall Score</Text>
-
-                        {/* Neo-Brutalist Shadow Badge (Main) */}
-                        <View style={[styles.mainBadgeWrapper, { height: 18, width: 110 }]}>
-                            {/* Main Layer */}
-                            <View style={[styles.mainBadgeMain, { borderWidth: 1, borderColor: COLORS.black, backgroundColor: COLORS.white }]}>
-                                <Text style={styles.mainStatusText}>{getScoreInfo(overallScore).label}</Text>
+                            <View style={[styles.statusPill, { backgroundColor: getThemeStyles(overallScore).pill }]}>
+                                <Text style={[styles.statusPillText, { color: getThemeStyles(overallScore).solid }]}>{getThemeStyles(overallScore).label}</Text>
                             </View>
                         </View>
-                        {/* Accent Bar REmoved */}
-                    </View>
 
-                    {/* 2. Category Grid */}
-                    <View style={styles.categoryGrid}>
-                        {[
-                            { label: 'UX Audit', score: ux?.CategoryScore || 0 },
-                            { label: 'Visual Design', score: visual?.CategoryScore || 0 },
-                            { label: 'Product Audit', score: product?.CategoryScore || 0 },
-                            { label: 'Accessibility', score: accessibility?.CategoryScore || 0 }
-                        ].map((item, idx) => (
-                            <View key={idx} style={styles.miniGaugeItem}>
-                                <View style={styles.miniGaugeContainer}>
-                                    <HalfGauge score={item.score} size={49} strokeWidth={5} fontSize={13} />
-                                </View>
+                        <View style={styles.scoreSectionDivider} />
 
-                                <Text style={styles.miniGaugeLabel}>{item.label}</Text>
-
-                                {/* Neo-Brutalist Shadow Badge */}
-                                <View style={styles.badgeWrapper}>
-                                    {/* Main Layer */}
-                                    <View style={[styles.badgeMain, { backgroundColor: COLORS.white }]}>
-                                        <Text style={styles.miniStatusText}>{getScoreInfo(item.score).label}</Text>
+                        {/* Four category rings — single row like web (md:grid-cols-4) */}
+                        <View style={styles.categoryGrid}>
+                            {[
+                                { label: 'UX and Heuristics', score: ux?.CategoryScore || 0 },
+                                { label: 'Product Fit', score: product?.CategoryScore || 0 },
+                                { label: 'Visual Design', score: visual?.CategoryScore || 0 },
+                                { label: 'Accessibility', score: accessibility?.CategoryScore || 0 }
+                            ].map((item, idx) => {
+                                const t = getThemeStyles(item.score);
+                                return (
+                                    <View key={idx} style={styles.miniGaugeItem}>
+                                        <View style={styles.heroMiniGaugeWrap}>
+                                            <HalfGauge score={item.score} size={58} strokeWidth={5} fontSize={14} />
+                                        </View>
+                                        <Text style={styles.miniGaugeLabel}>{item.label}</Text>
+                                        <View style={[styles.statusPillSmall, { backgroundColor: t.pill }]}>
+                                            <Text style={[styles.statusPillSmallText, { color: t.solid }]}>{t.label}</Text>
+                                        </View>
                                     </View>
-                                </View>
-                            </View>
-                        ))}
+                                );
+                            })}
+                        </View>
                     </View>
 
-                    {/* 3. Screenshot Thumbnail */}
-                    <View style={styles.screenshotThumbnail}>
-                        {screenshotSrc ? (
-                            <Image
-                                src={screenshotSrc}
-                                style={styles.thumbnailImg}
-                            />
-                        ) : (
-                            <View style={{ height: '100%', backgroundColor: '#f3f4f6' }} />
-                        )}
+                    {/* RIGHT: Screenshot preview */}
+                    <View style={styles.heroRight}>
+                        <View style={styles.screenshotContainer}>
+                            {screenshotSrc ? (
+                                <Image src={screenshotSrc} style={styles.screenshotImg} />
+                            ) : (
+                                <View style={{ width: '100%', height: '100%', backgroundColor: '#F9FAFB' }} />
+                            )}
+                            <View style={styles.analyzedBadgeWrapper}>
+                                <Text style={styles.analyzedBadge}>Analyzed Website</Text>
+                            </View>
+                        </View>
                     </View>
                 </View>
 
@@ -1076,102 +1353,72 @@ export const StandardReportPDF: React.FC<StandardReportPDFProps> = ({ report, ur
 
             {/* PAGE 2: CONTEXT CAPTURE */}
             <Page size="A4" style={styles.page}>
-                {/* NEW HEADER */}
-                <View style={styles.newHeaderContainer}>
-                    {/* Top Row: Logo */}
-                    <View style={styles.newHeaderTop}>
-                        {whiteLabelLogo ? (
-                            <Image src={whiteLabelLogo} style={styles.headerLogoImage} />
-                        ) : (
-                            <Image src={`${window.location.origin}/logo.png`} style={styles.headerLogoImage} />
-                        )}
-                    </View>
-
-                    {/* Divider */}
-                    <View style={styles.headerDivider} />
-
-
-                </View>
+                <StandardPdfPageHeaderFixed whiteLabelLogo={whiteLabelLogo} cleanUrl={cleanUrl} />
 
                 {/* Context Capture Section */}
                 <View style={styles.contextBox}>
-                    <Text style={styles.contextTitle}>CONTEXT CAPTURE</Text>
+                    <Text style={styles.contextTitle}>Context Capture</Text>
 
-                    <View style={styles.summaryRow}>
-                        {/* LEFT COLUMN: PURPOSE ANALYSIS (64%) */}
-                        <View style={[styles.summaryCol, { width: '50%' }]}>
-                            <View style={styles.subHeaderRow}>
-                                <Text style={styles.subHeaderTitle}>PURPOSE ANALYSIS</Text>
-                                {strategy?.PurposeAnalysis?.Confidence && (
-                                    <Text style={styles.contextConfidenceText}>{strategy.PurposeAnalysis.Confidence} CONFIDENCE</Text>
-                                )}
-                            </View>
+                    <Text style={styles.contextSectionTitle}>Purpose Analysis</Text>
 
-                            {/* Primary Purpose */}
-                            <View style={{ marginBottom: 16 }}>
-                                <View style={styles.sectionLabel}>
-                                    <View style={[styles.iconContainer, { backgroundColor: '#bfdbfe' }]}>
-                                        <Svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="black" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                                            <Path d="M12 12m-3 0a3 3 0 1 0 6 0a3 3 0 1 0 -6 0" />
-                                            <Path d="M12 12m-8 0a8 8 0 1 0 16 0a8 8 0 1 0 -16 0" />
-                                        </Svg>
-                                    </View>
-                                    <Text style={{ fontSize: 10, fontWeight: 'bold' }}>PRIMARY PURPOSE</Text>
-                                </View>
-
-                                <View style={{ marginTop: 4 }}>
-                                    {strategy?.PurposeAnalysis?.PrimaryPurpose?.map((p, i) => (
-                                        <View key={i} style={{ flexDirection: 'row', marginBottom: 6, alignItems: 'flex-start' }}>
-                                            <Text style={{ fontSize: 9, lineHeight: 1.4, color: '#1e293b' }}>• {p}</Text>
-                                        </View>
-                                    ))}
-                                </View>
-                            </View>
-
-                            {/* Key Objectives */}
-                            <View>
-                                <View style={styles.sectionLabel}>
-                                    <View style={[styles.iconContainer, { backgroundColor: '#e9d5ff' }]}>
-                                        <Svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="black" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                                            <Path d="M12 12m-9 0a9 9 0 1 0 18 0a9 9 0 1 0 -18 0" />
-                                            <Path d="M3.6 9h16.8" />
-                                            <Path d="M3.6 15h16.8" />
-                                            <Path d="M11.5 3a17 17 0 0 0 0 18" />
-                                            <Path d="M12.5 3a17 17 0 0 1 0 18" />
-                                        </Svg>
-                                    </View>
-                                    <Text style={{ fontSize: 10, fontWeight: 'bold' }}>KEY OBJECTIVES</Text>
-                                </View>
-                                <View style={{ marginTop: 4 }}>
-                                    <Text style={{ fontSize: 9, lineHeight: 1.4, color: '#1e293b' }}>
-                                        {strategy?.PurposeAnalysis?.KeyObjectives || "No key objectives identified."}
-                                    </Text>
-                                </View>
-                            </View>
+                    {/* Primary Purpose */}
+                    <View style={styles.contextSubsectionRow}>
+                        <View style={styles.contextSubsectionIcon}>
+                            <IconPrimaryPurpose />
                         </View>
-
-                        {/* VERTICAL DIVIDER */}
-                        <View style={{ width: 0.5, backgroundColor: '#4B5563', marginHorizontal: 15 }} />
-
-                        {/* RIGHT COLUMN: DOMAIN ANALYSIS (32%) */}
-                        <View style={[styles.summaryCol, { width: '45%' }]}>
-                            <View style={styles.subHeaderRow}>
-                                <Text style={styles.subHeaderTitle}>DOMAIN ANALYSIS</Text>
-                                <Text style={styles.contextConfidenceText}>HIGH CONFIDENCE</Text>
-                            </View>
-
-                            {strategy?.DomainAnalysis?.Items?.map((item, i) => (
-                                <View key={i} style={styles.numberedItem}>
-                                    <View style={styles.numberBadgeContainer}>
-                                        <View style={styles.numberBadgeMain}>
-                                            <Text style={styles.numberText}>{i + 1}</Text>
-                                        </View>
-                                    </View>
-                                    <Text style={styles.bulletText}>{item}</Text>
-                                </View>
-                            ))}
-                        </View>
+                        <Text style={styles.contextSubsectionTitle}>Primary Purpose</Text>
                     </View>
+                    {(strategy?.PurposeAnalysis?.PrimaryPurpose || []).length > 0 ? (
+                        (strategy?.PurposeAnalysis?.PrimaryPurpose || []).map((p, i) => (
+                            <View key={i} style={styles.contextNumberedItem}>
+                                <Text style={styles.contextNumber}>{i + 1}.</Text>
+                                <Text style={styles.contextItemText}>{p}</Text>
+                            </View>
+                        ))
+                    ) : (
+                        <Text style={styles.contextItemText}>No primary purpose identified.</Text>
+                    )}
+
+                    {/* Key Objectives */}
+                    <View style={styles.contextSubsectionRow}>
+                        <View style={styles.contextSubsectionIcon}>
+                            <IconKeyObjectives />
+                        </View>
+                        <Text style={styles.contextSubsectionTitle}>Key Objectives</Text>
+                    </View>
+                    {strategy?.PurposeAnalysis?.KeyObjectives ? (
+                        String(strategy.PurposeAnalysis.KeyObjectives)
+                            .split(/\n+/)
+                            .map((line, idx) => line.trim())
+                            .filter((line) => line.length > 0)
+                            .slice(0, 6)
+                            .map((line, i) => (
+                                <View key={i} style={styles.contextNumberedItem}>
+                                    <Text style={styles.contextNumber}>{i + 1}.</Text>
+                                    <Text style={styles.contextItemText}>{line}</Text>
+                                </View>
+                            ))
+                    ) : (
+                        <Text style={styles.contextItemText}>No key objectives identified.</Text>
+                    )}
+
+                    {/* Domain Analysis */}
+                    <View style={styles.contextSubsectionRow}>
+                        <View style={styles.contextSubsectionIcon}>
+                            <IconDomainAnalysis />
+                        </View>
+                        <Text style={styles.contextSubsectionTitle}>Domain Analysis</Text>
+                    </View>
+                    {(strategy?.DomainAnalysis?.Items || []).length > 0 ? (
+                        (strategy?.DomainAnalysis?.Items || []).map((item, i) => (
+                            <View key={i} style={styles.contextNumberedItem}>
+                                <Text style={styles.contextNumber}>{i + 1}.</Text>
+                                <Text style={styles.contextItemText}>{item}</Text>
+                            </View>
+                        ))
+                    ) : (
+                        <Text style={styles.contextItemText}>No domain analysis identified.</Text>
+                    )}
                 </View>
                 {/* FOOTER - PAGE 2 */}
                 <View style={styles.footer} fixed>
@@ -1183,26 +1430,129 @@ export const StandardReportPDF: React.FC<StandardReportPDFProps> = ({ report, ur
             </Page>
 
 
-            {/* PAGE 3+: UX AUDIT PARAMETERS */}
+            {/* PAGE 3: Target Audience + User Personas (single page) */}
+            {(targetAudience || userPersonas.length > 0) && (
+                <Page size="A4" style={styles.page}>
+                    <StandardPdfPageHeaderFixed whiteLabelLogo={whiteLabelLogo} cleanUrl={cleanUrl} />
+
+                    <View style={styles.contextBox}>
+                        {targetAudience && (
+                            <>
+                                <Text style={styles.targetTitle}>Target Audience</Text>
+
+                                <View style={styles.targetRow}>
+                                    <View style={styles.targetColLeft}>
+                                        <View style={styles.targetSectionHeading}>
+                                            <View style={styles.targetSectionIconDot} />
+                                            <Text style={styles.targetSectionHeading}>Primary Audience</Text>
+                                        </View>
+
+                                        {(targetAudience.Primary || []).map((p: string, i: number) => (
+                                            <View key={i} style={styles.targetNumberedItem}>
+                                                <Text style={styles.targetNumber}>{i + 1}.</Text>
+                                                <Text style={styles.targetItemText}>{p}</Text>
+                                            </View>
+                                        ))}
+                                    </View>
+
+                                    <View style={styles.targetColRight}>
+                                        <View style={styles.targetSectionHeading}>
+                                            <View style={styles.targetSectionIconDot} />
+                                            <Text style={styles.targetSectionHeading}>Demographics</Text>
+                                        </View>
+                                        <Text style={styles.targetItemText}>
+                                            {targetAudience.DemographicsPsychographics || 'No demographics information provided.'}
+                                        </Text>
+                                    </View>
+                                </View>
+                            </>
+                        )}
+
+                        {userPersonas.length > 0 && (
+                            <>
+                                <Text
+                                    style={[
+                                        styles.personaTitle,
+                                        targetAudience ? { marginTop: 22 } : { marginTop: 0 },
+                                    ]}
+                                >
+                                    User Personas
+                                </Text>
+
+                                <View style={styles.personaGrid}>
+                                    {userPersonas.slice(0, 3).map((p: any, idx: number, arr: any[]) => {
+                                        const goals = String(p.UserNeedsBehavior || '')
+                                            .split(/(?<=\.)\s+/)
+                                            .map((t: string) => t.trim())
+                                            .filter((t: string) => t.length > 0)
+                                            .slice(0, 4);
+                                        const pains = String(p.PainPointOpportunity || '')
+                                            .split(/(?<=\.)\s+/)
+                                            .map((t: string) => t.trim())
+                                            .filter((t: string) => t.length > 0)
+                                            .slice(0, 4);
+                                        const name = p.Name || `Persona ${idx + 1}`;
+                                        const whoBits = [p.Age ? String(p.Age) : '', p.Occupation || ''].filter(Boolean).join(' · ');
+                                        return (
+                                            <View
+                                                key={idx}
+                                                style={[styles.personaCard, idx === arr.length - 1 ? styles.personaCardLast : {}]}
+                                                wrap={false}
+                                            >
+                                                <View style={styles.personaIdentityRow}>
+                                                    <Text style={styles.personaName}>{name}</Text>
+                                                    {whoBits ? (
+                                                        <Text style={styles.personaMetaInline}>{` · ${whoBits}`}</Text>
+                                                    ) : null}
+                                                    {p.Location ? (
+                                                        <Text style={styles.personaMetaInline}>{` · ${p.Location}`}</Text>
+                                                    ) : null}
+                                                </View>
+
+                                                <Text style={[styles.personaSectionTitle, { marginTop: 0 }]}>Goals and Needs</Text>
+                                                {goals.map((t: string, i: number) => (
+                                                    <View key={i} style={styles.personaNumberedRow}>
+                                                        <Text style={styles.personaNumber}>{i + 1}.</Text>
+                                                        <Text style={styles.personaText}>{t}</Text>
+                                                    </View>
+                                                ))}
+
+                                                <Text style={styles.personaSectionTitle}>Pain Points</Text>
+                                                {pains.map((t: string, i: number) => (
+                                                    <View key={i} style={styles.personaNumberedRow}>
+                                                        <Text style={styles.personaNumber}>{i + 1}.</Text>
+                                                        <Text style={styles.personaText}>{t}</Text>
+                                                    </View>
+                                                ))}
+                                            </View>
+                                        );
+                                    })}
+                                </View>
+                            </>
+                        )}
+                    </View>
+
+                    <View style={styles.footer} fixed>
+                        <Text style={styles.footerTextLeft}>scores are AI generated and represent an overall assessment based on 110+ factors</Text>
+                        <Text style={styles.footerTextRight} render={({ pageNumber }) => (
+                            `Page ${pageNumber}`
+                        )} />
+                    </View>
+                </Page>
+            )}
+
+            {/* PAGE 5+: UX AUDIT PARAMETERS */}
             {uxParams.length > 0 && (
                 <Page size="A4" style={styles.page}>
-                    <View style={styles.newHeaderContainer}>
-                        <View style={styles.newHeaderTop}>
-                            {whiteLabelLogo ? (
-                                <Image src={whiteLabelLogo} style={styles.headerLogoImage} />
-                            ) : (
-                                <Image src={`${window.location.origin}/logo.png`} style={styles.headerLogoImage} />
-                            )}
-                        </View>
-                        <View style={styles.headerDivider} />
-                    </View>
+                    <StandardPdfPageHeaderFixed whiteLabelLogo={whiteLabelLogo} cleanUrl={cleanUrl} />
 
-                    <View style={styles.sectionHeader}>
-                        <Text style={styles.sectionTitle}>UX Audit</Text>
-                        <Text style={styles.sectionSubtitle}>Usability Heuristics · Metrics · Accessibility</Text>
-                    </View>
+                    <AuditSectionHeading
+                        title="UX Audit"
+                        subtitle="Usability Heuristics · Metrics · Accessibility"
+                        categoryScore={ux?.CategoryScore ?? 0}
+                    />
 
-                    {uxParams.map((p, i) => <ParameterCard key={i} param={p} auditType="UX AUDIT" />)}
+                    {uxParams.map((p, i) => <ParameterCard key={i} param={p} />)}
 
                     <View style={styles.footer} fixed>
                         <Text style={styles.footerTextLeft}>scores are AI generated and represent an overall assessment based on 110+ factors</Text>
@@ -1216,23 +1566,15 @@ export const StandardReportPDF: React.FC<StandardReportPDFProps> = ({ report, ur
             {/* PAGE 4+: VISUAL DESIGN PARAMETERS */}
             {visualParams.length > 0 && (
                 <Page size="A4" style={styles.page}>
-                    <View style={styles.newHeaderContainer}>
-                        <View style={styles.newHeaderTop}>
-                            {whiteLabelLogo ? (
-                                <Image src={whiteLabelLogo} style={styles.headerLogoImage} />
-                            ) : (
-                                <Image src={`${window.location.origin}/logo.png`} style={styles.headerLogoImage} />
-                            )}
-                        </View>
-                        <View style={styles.headerDivider} />
-                    </View>
+                    <StandardPdfPageHeaderFixed whiteLabelLogo={whiteLabelLogo} cleanUrl={cleanUrl} />
 
-                    <View style={styles.sectionHeader}>
-                        <Text style={styles.sectionTitle}>Visual Design</Text>
-                        <Text style={styles.sectionSubtitle}>Consistency · Aesthetics · Responsiveness</Text>
-                    </View>
+                    <AuditSectionHeading
+                        title="Visual Design"
+                        subtitle="Consistency · Aesthetics · Responsiveness"
+                        categoryScore={visual?.CategoryScore ?? 0}
+                    />
 
-                    {visualParams.map((p, i) => <ParameterCard key={i} param={p} auditType="VISUAL DESIGN" />)}
+                    {visualParams.map((p, i) => <ParameterCard key={i} param={p} />)}
 
                     <View style={styles.footer} fixed>
                         <Text style={styles.footerTextLeft}>scores are AI generated and represent an overall assessment based on 110+ factors</Text>
@@ -1246,23 +1588,15 @@ export const StandardReportPDF: React.FC<StandardReportPDFProps> = ({ report, ur
             {/* PAGE 5+: PRODUCT AUDIT PARAMETERS */}
             {productParams.length > 0 && (
                 <Page size="A4" style={styles.page}>
-                    <View style={styles.newHeaderContainer}>
-                        <View style={styles.newHeaderTop}>
-                            {whiteLabelLogo ? (
-                                <Image src={whiteLabelLogo} style={styles.headerLogoImage} />
-                            ) : (
-                                <Image src={`${window.location.origin}/logo.png`} style={styles.headerLogoImage} />
-                            )}
-                        </View>
-                        <View style={styles.headerDivider} />
-                    </View>
+                    <StandardPdfPageHeaderFixed whiteLabelLogo={whiteLabelLogo} cleanUrl={cleanUrl} />
 
-                    <View style={styles.sectionHeader}>
-                        <Text style={styles.sectionTitle}>Product Audit</Text>
-                        <Text style={styles.sectionSubtitle}>Market Fit · Retention · Conversion</Text>
-                    </View>
+                    <AuditSectionHeading
+                        title="Product Audit"
+                        subtitle="Market Fit · Retention · Conversion"
+                        categoryScore={product?.CategoryScore ?? 0}
+                    />
 
-                    {productParams.map((p, i) => <ParameterCard key={i} param={p} auditType="PRODUCT AUDIT" />)}
+                    {productParams.map((p, i) => <ParameterCard key={i} param={p} />)}
 
                     <View style={styles.footer} fixed>
                         <Text style={styles.footerTextLeft}>scores are AI generated and represent an overall assessment based on 110+ factors</Text>
@@ -1276,31 +1610,18 @@ export const StandardReportPDF: React.FC<StandardReportPDFProps> = ({ report, ur
             {/* PAGE 6+: ACCESSIBILITY AUDIT */}
             {accessibilityParams.length > 0 && (
                 <Page size="A4" style={styles.page}>
-                    <View style={styles.newHeaderContainer}>
-                        <View style={styles.newHeaderTop}>
-                            {whiteLabelLogo ? (
-                                <Image src={whiteLabelLogo} style={styles.headerLogoImage} />
-                            ) : (
-                                <Image src={`${window.location.origin}/logo.png`} style={styles.headerLogoImage} />
-                            )}
-                        </View>
-                        <View style={styles.headerDivider} />
-                    </View>
+                    <StandardPdfPageHeaderFixed whiteLabelLogo={whiteLabelLogo} cleanUrl={cleanUrl} />
 
-                    <View style={styles.sectionHeader}>
-                        <Text style={styles.sectionTitle}>Accessibility Audit</Text>
-                        <Text style={styles.sectionSubtitle}>WCAG Compliance · Critical Issues · Best Practices</Text>
-                    </View>
+                    <AuditSectionHeading
+                        title="Accessibility Audit"
+                        subtitle="WCAG Compliance · Critical Issues · Best Practices"
+                        categoryScore={accessibility?.CategoryScore ?? 0}
+                    />
 
-
-
-                    {/* All Parameters */}
                     {accessibilityParams.length > 0 && (
                         <View>
-                            <Text style={[styles.paramTitle, { marginBottom: 10 }]}>
-                                Detailed Assessment
-                            </Text>
-                            {accessibilityParams.map((p, i) => <ParameterCard key={i} param={p} auditType="ACCESSIBILITY" />)}
+                            <Text style={[styles.paramTitle, { marginBottom: 10 }]}>Detailed Assessment</Text>
+                            {accessibilityParams.map((p, i) => <ParameterCard key={i} param={p} />)}
                         </View>
                     )}
 
