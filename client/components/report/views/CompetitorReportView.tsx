@@ -558,16 +558,16 @@ export const CompetitorReportView: React.FC<CompetitorReportViewProps> = ({
         <div
           className={`sticky ${stickyTopClass} z-20 w-full bg-white border border-report-border-muted px-4 sm:px-6 py-6 mb-12 rounded-lg shadow-none transition-all duration-300`}
         >
-          <div className="flex flex-col md:flex-row items-center justify-between gap-6">
-            <div>
+          <div className="flex flex-col items-stretch gap-6 md:flex-row md:items-center md:justify-between">
+            <div className="shrink-0">
               <h3 className="text-2xl font-black text-black uppercase">
                 Detailed Face-off
               </h3>
             </div>
 
-            {/* Filter Navbar */}
+            {/* Filter Navbar — full width + scroll on small screens; hug content + right on md+ */}
             <nav
-              className="flex w-full min-w-0 max-w-full flex-nowrap items-center gap-2 overflow-x-auto bg-white p-1 no-scrollbar [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
+              className="flex min-w-0 max-w-full flex-nowrap items-center gap-2 overflow-x-auto bg-white p-1 no-scrollbar [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden max-md:w-full md:ml-auto md:w-auto md:shrink-0"
               aria-label="Face-off categories"
             >
               {TABS.map((tab) => {
