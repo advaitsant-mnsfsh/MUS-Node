@@ -83,7 +83,7 @@ export const GlobalNavbar: React.FC = () => {
           {/* Left: Logo */}
           <div className="shrink-0 z-10">
             <Link to="/">
-              <Logo imgClass="h-8" />
+              <Logo imgClass="h-6 w-auto sm:h-7 md:h-8" />
             </Link>
           </div>
 
