@@ -104,64 +104,40 @@ export const BetaAccessPage: React.FC<BetaAccessPageProps> = ({ onAuthorized }) 
                 aria-hidden
             />
 
-            <main className="relative z-10 mx-auto flex w-full max-w-6xl grow flex-col justify-center px-5 pb-16 pt-20 md:px-8 lg:pt-28 lg:pb-20">
-                <div className="grid w-full grid-cols-1 items-stretch gap-12 lg:grid-cols-2 lg:gap-10">
-                    {/* Left column */}
-                    <div className="flex flex-col justify-between gap-10 py-1">
-                        <div>
-                            <img
-                                src="/logo.png"
-                                alt="MyUXScore"
-                                className="mb-5 h-11 w-auto object-contain md:h-12 lg:h-14"
-                            />
-                            <div className="space-y-4">
-                                <p className="text-xs font-semibold uppercase tracking-[0.2em] text-text-secondary">
-                                    Private beta
-                                </p>
-                                <h1 className="text-4xl font-bold leading-[1.05] tracking-tight text-text-primary md:text-5xl lg:text-[3.25rem]">
-                                    Measure UX
-                                    <br />
-                                    <span className="relative inline-block">
-                                        <span
-                                            className="relative z-10 inline-block rounded-lg bg-accent-yellow/90 px-3 py-1 text-text-primary"
-                                            style={SURFACE}
-                                        >
-                                            like a pro
-                                        </span>
+            <main className="relative z-10 mx-auto flex w-full max-w-6xl grow flex-col justify-start px-5 pb-16 pt-20 md:px-8 lg:justify-center lg:pt-28 lg:pb-20">
+                <div className="grid w-full grid-cols-1 items-start gap-10 lg:grid-cols-2 lg:grid-rows-[auto_1fr] lg:items-stretch lg:gap-10">
+                    {/* Hero — mobile: first; desktop: left column row 1 */}
+                    <div className="order-1 py-1 lg:order-0 lg:col-start-1 lg:row-start-1">
+                        <img
+                            src="/logo.png"
+                            alt="MyUXScore"
+                            className="mb-5 h-11 w-auto object-contain md:h-12 lg:h-14"
+                        />
+                        <div className="space-y-4">
+                            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-text-secondary">
+                                Private beta
+                            </p>
+                            <h1 className="text-4xl font-bold leading-[1.05] tracking-tight text-text-primary md:text-5xl lg:text-[3.25rem]">
+                                Measure UX
+                                <br />
+                                <span className="relative inline-block">
+                                    <span
+                                        className="relative z-10 inline-block rounded-lg bg-accent-yellow/90 px-3 py-1 text-text-primary"
+                                        style={SURFACE}
+                                    >
+                                        like a pro
                                     </span>
-                                </h1>
-                                <p className="max-w-md text-base leading-relaxed text-text-secondary md:text-lg">
-                                    Professional-grade UX insights from our framework — available to a limited number of teams
-                                    during this beta.
-                                </p>
-                            </div>
-                        </div>
-
-                        <div className="flex flex-wrap items-center gap-4 border-t border-slate-200/80 pt-8">
-                            <div className="flex -space-x-2">
-                                <div
-                                    className="flex h-11 w-11 items-center justify-center overflow-hidden rounded-full bg-slate-100 ring-2 ring-page-bg"
-                                    style={inputOutline}
-                                />
-                                <div
-                                    className="flex h-11 w-11 items-center justify-center overflow-hidden rounded-full bg-slate-200/80 ring-2 ring-page-bg"
-                                    style={inputOutline}
-                                />
-                                <div
-                                    className="flex h-11 w-11 items-center justify-center rounded-full bg-accent-yellow/80 text-xs font-bold text-text-primary ring-2 ring-page-bg"
-                                    style={inputOutline}
-                                >
-                                    1k+
-                                </div>
-                            </div>
-                            <p className="max-w-[200px] text-[11px] font-semibold uppercase leading-snug tracking-wider text-text-secondary">
-                                Trusted by UX designers &amp; product teams
+                                </span>
+                            </h1>
+                            <p className="max-w-md text-base leading-relaxed text-text-secondary md:text-lg">
+                                Professional-grade UX insights from our framework — available to a limited number of teams
+                                during this beta.
                             </p>
                         </div>
                     </div>
 
-                    {/* Right column — form card */}
-                    <div className="relative flex justify-start lg:justify-end">
+                    {/* Form — mobile: after hero; desktop: right column spans both rows */}
+                    <div className="relative order-2 flex justify-start lg:order-0 lg:col-start-2 lg:row-span-2 lg:row-start-1 lg:justify-end">
                         <div
                             className="absolute -top-2 right-0 z-20 max-w-44 rounded-full bg-white px-3 py-2 text-center"
                             style={{
@@ -236,6 +212,29 @@ export const BetaAccessPage: React.FC<BetaAccessPageProps> = ({ onAuthorized }) 
                                 </div>
                             </div>
                         </div>
+                    </div>
+
+                    {/* Trusted by — mobile: after form; desktop: left column row 2, bottom-aligned vs tall form */}
+                    <div className="order-3 flex flex-wrap items-center gap-4 border-t border-slate-200/80 pt-8 lg:order-0 lg:col-start-1 lg:row-start-2 lg:self-end">
+                        <div className="flex -space-x-2">
+                            <div
+                                className="flex h-11 w-11 items-center justify-center overflow-hidden rounded-full bg-slate-100 ring-2 ring-page-bg"
+                                style={inputOutline}
+                            />
+                            <div
+                                className="flex h-11 w-11 items-center justify-center overflow-hidden rounded-full bg-slate-200/80 ring-2 ring-page-bg"
+                                style={inputOutline}
+                            />
+                            <div
+                                className="flex h-11 w-11 items-center justify-center rounded-full bg-accent-yellow/80 text-xs font-bold text-text-primary ring-2 ring-page-bg"
+                                style={inputOutline}
+                            >
+                                1k+
+                            </div>
+                        </div>
+                        <p className="max-w-[200px] text-[11px] font-semibold uppercase leading-snug tracking-wider text-text-secondary">
+                            Trusted by UX designers &amp; product teams
+                        </p>
                     </div>
                 </div>
             </main>
