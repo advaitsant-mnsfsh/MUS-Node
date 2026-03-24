@@ -126,10 +126,10 @@ export const URLInputForm: React.FC<URLInputFormProps> = ({
         className="bg-white rounded-lg overflow-hidden font-sans"
         style={{ border: '1px solid var(--high-grey, #1A1A1A)' }}
       >
-        <div className="p-6 md:p-8 space-y-4">
+        <div className="space-y-4 p-6 md:p-8">
 
           {/* Header & Mode Switch */}
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 pb-6 border-b border-slate-300">
+          <div className="flex flex-col items-start justify-between gap-4 border-b border-slate-300 pb-6 sm:flex-row sm:items-center">
             <div>
               <h2 className="text-h3 font-bold text-text-primary">
                 {competitorMode ? "Enter Websites to Compare" : "Enter Website URL"}
@@ -171,11 +171,11 @@ export const URLInputForm: React.FC<URLInputFormProps> = ({
 
             {competitorMode ? (
               // --- COMPETITOR MODE INPUTS (DUAL QUEUES) ---
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 animate-in fade-in slide-in-from-top-2">
+              <div className="grid animate-in fade-in slide-in-from-top-2 grid-cols-1 gap-6 md:grid-cols-2">
 
                 {/* PRIMARY QUEUE */}
-                <div className="bg-white p-5 rounded-lg border-1 border-border-main hover:shadow-neo">
-                  <h3 className="text-sm font-bold text-text-primary mb-4 flex items-center gap-2">
+                <div className="rounded-lg border-1 border-border-main bg-white p-5 hover:shadow-neo">
+                  <h3 className="mb-4 flex items-center gap-2 text-sm font-bold text-text-primary">
                     <Globe className="w-4 h-4 text-brand" /> Your Website
                   </h3>
                   <CompetitorMultiInput
@@ -191,8 +191,8 @@ export const URLInputForm: React.FC<URLInputFormProps> = ({
                 </div>
 
                 {/* COMPETITOR QUEUE */}
-                <div className="bg-white p-5 rounded-lg border-1 border-border-main hover:shadow-neo">
-                  <h3 className="text-sm font-bold text-text-primary mb-4 flex items-center gap-2">
+                <div className="rounded-lg border-1 border-border-main bg-white p-5 hover:shadow-neo">
+                  <h3 className="mb-4 flex items-center gap-2 text-sm font-bold text-text-primary">
                     <Swords className="w-4 h-4 text-[#EF4444]" /> Competitor Website
                   </h3>
                   <CompetitorMultiInput
@@ -233,7 +233,7 @@ export const URLInputForm: React.FC<URLInputFormProps> = ({
             )}
 
             {/* Footer Section: Brand Stamp + Actions */}
-            <div className={`pt-4 border-t border-slate-300 ${!competitorMode ? 'mt-3!' : ''}`}>
+            <div className={`border-t border-slate-300 pt-4 ${!competitorMode ? 'mt-3!' : ''}`}>
 
               {/* Action Container */}
               <div className="flex flex-col gap-3">
