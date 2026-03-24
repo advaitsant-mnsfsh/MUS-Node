@@ -142,9 +142,9 @@ export const BetaAccessPage: React.FC<BetaAccessPageProps> = ({ onAuthorized }) 
                             className="relative w-full max-w-md overflow-visible rounded-lg bg-white"
                             style={SURFACE}
                         >
-                            {/* Centered on card top edge (half above, half on card) — same mobile + desktop */}
+                            {/* Top-right on card, half above top edge — same mobile + desktop */}
                             <div
-                                className="absolute left-1/2 top-0 z-20 max-w-[min(100%,11rem)] -translate-x-1/2 -translate-y-1/2 rounded-full bg-white px-3 py-1.5 text-center sm:py-2"
+                                className="absolute right-3 top-0 z-20 max-w-[calc(100%-1.5rem)] -translate-y-1/2 rounded-full bg-white px-3 py-1.5 text-center sm:right-4 sm:py-2"
                                 style={{
                                     boxShadow: 'none',
                                     border: '0.5px solid rgb(99 102 241 / 0.35)',
