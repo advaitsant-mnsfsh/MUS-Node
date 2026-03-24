@@ -64,10 +64,10 @@ export const ScanningPreview: React.FC<ScanningPreviewProps> = ({ screenshot, pr
         : '0.5px solid var(--high-grey, #1A1A1A)';
 
     return (
-        <div className="relative w-full max-w-4xl mx-auto">
+        <div className="relative mx-auto flex w-full max-w-4xl max-lg:h-full max-lg:min-h-0 max-lg:flex-col">
             {/* Browser frame: single hairline border, no drop shadow (matches refined inputs / cards) */}
             <div
-                className="relative rounded-xl overflow-hidden bg-white"
+                className="relative flex max-h-full min-h-0 w-full flex-col overflow-hidden rounded-xl bg-white max-lg:flex-1 max-lg:rounded-2xl"
                 style={{ border: frameBorder, boxShadow: 'none' }}
             >
                 {/* Browser Chrome (Top Bar) */}
@@ -100,8 +100,8 @@ export const ScanningPreview: React.FC<ScanningPreviewProps> = ({ screenshot, pr
                     </div>
                 </div>
 
-                {/* Screenshot / analyzing stage */}
-                <div className="relative bg-white overflow-hidden aspect-[16/10]">
+                {/* Screenshot / analyzing stage — desktop: wide 16/10; mobile: portrait reel (9/16) + height floor */}
+                <div className="relative aspect-16/10 overflow-hidden bg-white max-lg:aspect-9/16 max-lg:min-h-[min(58dvh,520px)] max-lg:max-h-[min(78dvh,720px)] max-lg:w-full max-lg:flex-1">
                     {screenshot ? (
                         <div className="relative w-full h-full">
                             <img
@@ -151,7 +151,7 @@ export const ScanningPreview: React.FC<ScanningPreviewProps> = ({ screenshot, pr
                                         }}
                                     >
                                         <span className="text-sm font-bold text-text-primary text-center">
-                                            <h2 className={`text-xl md:text-2xl font-black ${isError ? 'text-red-700' : 'text-black'} mb-2 uppercase tracking-tight`}>
+                                            <h2 className={`text-2xl font-black ${isError ? 'text-red-700' : 'text-black'} mb-2 uppercase tracking-tight max-lg:leading-tight md:text-2xl`}>
                                                 {isError ? 'Analysis Failed' : 'Analyzing your website'}
                                             </h2>
                                             <p className={`text-sm ${isError ? 'text-red-500' : 'text-slate-500'} mb-0`}>

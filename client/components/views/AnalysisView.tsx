@@ -40,6 +40,13 @@ export const AnalysisView: React.FC<AnalysisViewProps> = ({
     user
 }) => {
     const [isDismissed, setIsDismissed] = useState(false);
+    const showQueueNoticeCard = (queuePosition > 5 || isLongWait) && !isError && !isDismissed;
+    const showDefaultLoginCard =
+        !isError &&
+        (queuePosition <= 5 || !queuePosition || isDismissed) &&
+        !fullWidth &&
+        !showQueueNoticeCard;
+
     return (
         <SplitLayout
             progress={progress}
@@ -56,7 +63,7 @@ export const AnalysisView: React.FC<AnalysisViewProps> = ({
             <div className="flex flex-col items-center justify-center w-full h-full animate-in fade-in duration-500 py-6">
                 <div className="w-full max-w-md space-y-8 px-4">
                     {/* Queue Notice & Email Opt-in */}
-                    {(queuePosition > 5 || isLongWait) && !isError && !isDismissed && (
+                    {showQueueNoticeCard && (
                         <div
                             className="bg-white rounded-lg p-8 animate-in slide-in-from-bottom-8 duration-700 relative overflow-hidden"
                             style={{ border: '0.5px solid var(--high-grey, #1A1A1A)', boxShadow: 'none' }}
@@ -141,22 +148,10 @@ export const AnalysisView: React.FC<AnalysisViewProps> = ({
                         </div>
                     )}
 
-                    {!isError && (queuePosition <= 5 || !queuePosition || isDismissed) && !fullWidth && (
-                        <div
-                            className="bg-white/50 backdrop-blur-sm rounded-lg p-8 overflow-hidden"
-                            style={{ border: '0.5px solid var(--high-grey, #1A1A1A)', boxShadow: 'none' }}
-                        >
-                            <LoginPanel auditId={auditId} />
-                        </div>
-                    )}
+                    {showDefaultLoginCard && <LoginPanel auditId={auditId} />}
 
                     {isError && !user && (
-                        <div
-                            className="bg-white/50 backdrop-blur-sm rounded-lg p-8 overflow-hidden"
-                            style={{ border: '0.5px solid var(--high-grey, #1A1A1A)', boxShadow: 'none' }}
-                        >
-                            <LoginPanel auditId={auditId} />
-                        </div>
+                        <LoginPanel auditId={auditId} />
                     )}
                 </div>
             </div>

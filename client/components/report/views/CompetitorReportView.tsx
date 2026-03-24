@@ -218,18 +218,24 @@ export const CompetitorReportView: React.FC<CompetitorReportViewProps> = ({
       );
 
     return (
-      <div className="bg-white border border-report-border overflow-hidden md:overflow-visible animate-in fade-in slide-in-from-bottom-2 duration-300">
-        <div className="overflow-x-auto md:overflow-visible">
-          <table className="w-full text-left border-collapse">
+      <div className="animate-in fade-in slide-in-from-bottom-2 duration-300 rounded-lg border border-report-border bg-white overflow-visible">
+        {/*
+          Mobile + horizontal scroll: any `overflow-x-auto` ancestor becomes a scrollport;
+          browsers then treat `position:sticky` on `th` relative to that box — header “drops”
+          mid-table. Fix: `max-md:static` on headers; keep `md:sticky` when inner is
+          `md:overflow-visible` (no trapping scrollport).
+        */}
+        <div className="overflow-x-auto [-webkit-overflow-scrolling:touch] md:overflow-visible">
+          <table className="w-full max-md:min-w-[640px] text-left border-collapse">
             <thead>
               <tr className="bg-[#F0F4F8] border-b border-report-border">
                 <th
-                  className={`p-5 w-1/4 sticky ${stickyTopClass} z-10 bg-[#F0F4F8] border-r border-report-border text-sm font-black text-black uppercase tracking-wider align-middle`}
+                  className={`max-md:static md:sticky ${stickyTopClass} z-10 w-1/4 border-r border-report-border bg-[#F0F4F8] p-5 text-sm font-black uppercase tracking-wider text-black align-middle`}
                 >
                   Parameter
                 </th>
                 <th
-                  className={`p-5 w-24 text-center sticky ${stickyTopClass} z-10 bg-[#F0F4F8] border-r border-report-border align-middle`}
+                  className={`max-md:static md:sticky ${stickyTopClass} z-10 w-24 border-r border-report-border bg-[#F0F4F8] p-5 text-center align-middle`}
                 >
                   <div className="flex items-center justify-center">
                     <SiteLogo
@@ -240,7 +246,7 @@ export const CompetitorReportView: React.FC<CompetitorReportViewProps> = ({
                   </div>
                 </th>
                 <th
-                  className={`p-5 w-24 text-center sticky ${stickyTopClass} z-10 bg-[#F0F4F8] border-r border-report-border align-middle`}
+                  className={`max-md:static md:sticky ${stickyTopClass} z-10 w-24 border-r border-report-border bg-[#F0F4F8] p-5 text-center align-middle`}
                 >
                   <div className="flex items-center justify-center">
                     <SiteLogo
@@ -251,7 +257,7 @@ export const CompetitorReportView: React.FC<CompetitorReportViewProps> = ({
                   </div>
                 </th>
                 <th
-                  className={`p-5 min-w-[300px] sticky ${stickyTopClass} z-10 bg-[#F0F4F8] text-sm font-black text-black uppercase tracking-wider align-middle`}
+                  className={`max-md:static md:sticky ${stickyTopClass} z-10 min-w-[300px] bg-[#F0F4F8] p-5 text-sm font-black uppercase tracking-wider text-black align-middle`}
                 >
                   Observations
                 </th>
@@ -560,7 +566,10 @@ export const CompetitorReportView: React.FC<CompetitorReportViewProps> = ({
             </div>
 
             {/* Filter Navbar */}
-            <nav className="flex space-x-2 bg-white overflow-x-auto no-scrollbar max-w-full p-1">
+            <nav
+              className="flex w-full min-w-0 max-w-full flex-nowrap items-center gap-2 overflow-x-auto bg-white p-1 no-scrollbar [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
+              aria-label="Face-off categories"
+            >
               {TABS.map((tab) => {
                 const Icon = tab.icon;
                 const isActive = activeTab === tab.id;

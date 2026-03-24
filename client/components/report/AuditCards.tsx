@@ -8,6 +8,10 @@ import {
   Lightbulb,
   Quote,
 } from "lucide-react";
+import {
+  formatScoreOutOf10Display,
+  normalizeScoreTo10,
+} from "./ScoreComponents";
 
 // --- TYPOGRAPHY CONSTANTS ---
 const LABEL_STYLE =
@@ -54,7 +58,7 @@ const EditorialCard = ({
     return "text-red-700";
   };
 
-  // Get score background and shadow based on score (0-100 scale)
+  // Banding on 0–10 scale (same cut points as former ×10 → /100: 8+, 5+, else)
   const getScoreStyle = (score: number, confidence?: string) => {
     if (score === 0 || confidence?.toLowerCase() === "low") {
       return {
@@ -62,27 +66,25 @@ const EditorialCard = ({
         shadow: "shadow-[2px_2px_0px_0px_#CBD5E1]",
       };
     }
-    const displayScore = Math.round(score * 10);
-    if (displayScore >= 80) {
+    const s = normalizeScoreTo10(score);
+    if (s >= 8) {
       return {
         bg: "bg-[#DAF6D5]",
         shadow: "shadow-[2px_2px_0px_0px_#9ae68d]",
       };
-    } else if (displayScore >= 50) {
+    }
+    if (s >= 5) {
       return {
         bg: "bg-[#F6E8D5]",
         shadow: "shadow-[2px_2px_0px_0px_#e8c696]",
       };
-    } else {
-      return {
-        bg: "bg-[#F1D0D0]",
-        shadow: "shadow-[2px_2px_0px_0px_#e8a4a4]",
-      };
     }
+    return {
+      bg: "bg-[#F1D0D0]",
+      shadow: "shadow-[2px_2px_0px_0px_#e8a4a4]",
+    };
   };
 
-  // Calculate score for display (0-100)
-  const displayScore = Math.round(score * 10);
   const isNA = score === 0 || confidence?.toLowerCase() === "low";
 
   return (
@@ -91,31 +93,29 @@ const EditorialCard = ({
     >
       {/* --- HEADER (Always Visible) --- */}
       <div
-        className={`flex flex-col md:flex-row items-start md:items-center justify-between p-6 cursor-pointer transition-colors gap-4 select-none ${isOpen ? "bg-white" : "hover:bg-yellow-50"}`}
+        className={`flex flex-col items-start gap-3 p-4 sm:gap-4 sm:p-6 md:flex-row md:items-center md:justify-between cursor-pointer transition-colors select-none ${isOpen ? "bg-white" : "hover:bg-yellow-50"}`}
         onClick={() => setIsOpen(!isOpen)}
       >
         {/* Left: Title */}
         <div className="flex flex-col gap-2 flex-1 min-w-0">
-          <h3 className="text-[20px] font-black text-black leading-tight pr-4">
+          <h3 className="text-[18px] sm:text-[20px] font-black text-black leading-tight md:pr-4">
             {title}
           </h3>
         </div>
 
         {/* Right: Confidence, Score & Toggle */}
-        <div className="flex items-center gap-3 shrink-0">
+        <div className="flex w-full items-center justify-between gap-3 shrink-0 md:w-auto md:justify-end">
           {/* Score Pill (Colored Background Based on Score) */}
           <div
-            className={`flex items-center justify-center px-3 py-1.5 min-w-[70px] rounded-full  ${isNA ? "text-slate-500" : "text-black"} ${getScoreStyle(score, confidence).bg}`}
+            className={`flex items-center justify-center px-3.5 py-1.5 min-w-[4.5rem] rounded-full ${isNA ? "text-slate-500" : "text-black"} ${getScoreStyle(score, confidence).bg}`}
           >
-            <span className="text-[20px] font-bold leading-none">
+            <span className="font-['DM_Sans'] text-[20px] font-bold tabular-nums leading-none">
               {isNA ? (
                 "N/A"
               ) : (
                 <>
-                  {displayScore}
-                  <span className="text-slate-500 text-[10px] ml-0.5 align-middle">
-                    /100
-                  </span>
+                  {formatScoreOutOf10Display(score)}
+                  /10
                 </>
               )}
             </span>
@@ -134,10 +134,10 @@ const EditorialCard = ({
 
       {/* --- COLLAPSIBLE CONTENT --- */}
       {isOpen && (
-        <div className="px-6 pb-6 pt-6 flex flex-col gap-6 animate-in slide-in-from-top-2 duration-200 relative">
+        <div className="px-4 sm:px-6 pb-6 pt-6 flex flex-col gap-6 animate-in slide-in-from-top-2 duration-200 relative">
           {/* Confidence Pill - Absolute Bottom Right (Saved space) */}
           {confidence && (
-            <div className="absolute bottom-6 right-6 pointer-events-none">
+            <div className="static sm:absolute sm:bottom-6 sm:right-6 pointer-events-none order-last sm:order-none self-start sm:self-auto mt-1 sm:mt-0">
               <span
                 className={`px-3 py-1.5 rounded-full text-[10px] font-bold tracking-wider uppercase whitespace-nowrap ${getConfidenceBadgeStyle(confidence)}`}
               >
