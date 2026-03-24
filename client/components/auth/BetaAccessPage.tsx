@@ -137,27 +137,28 @@ export const BetaAccessPage: React.FC<BetaAccessPageProps> = ({ onAuthorized }) 
                     </div>
 
                     {/* Form — mobile: after hero; desktop: right column spans both rows */}
-                    <div className="relative order-2 flex justify-start lg:order-0 lg:col-start-2 lg:row-span-2 lg:row-start-1 lg:justify-end">
+                    <div className="relative order-2 flex justify-start max-lg:mt-1 lg:order-0 lg:col-start-2 lg:row-span-2 lg:row-start-1 lg:mt-0 lg:justify-end">
                         <div
-                            className="absolute -top-2 right-0 z-20 max-w-44 rounded-full bg-white px-3 py-2 text-center"
-                            style={{
-                                boxShadow: 'none',
-                                border: '0.5px solid rgb(99 102 241 / 0.35)',
-                            }}
-                        >
-                            <span className="text-[10px] font-semibold uppercase leading-tight tracking-wide text-brand">
-                                Limited capacity
-                            </span>
-                        </div>
-
-                        <div
-                            className="relative mt-6 w-full max-w-md overflow-hidden rounded-lg bg-white lg:mt-0"
+                            className="relative w-full max-w-md overflow-visible rounded-lg bg-white"
                             style={SURFACE}
                         >
-                            <div className="h-1 w-full bg-brand" aria-hidden />
-                            <div className="p-8 lg:p-10">
-                                <div className="mb-8">
-                                    <h2 className="mb-2 text-2xl font-bold tracking-tight text-text-primary">
+                            {/* Centered on card top edge (half above, half on card) — same mobile + desktop */}
+                            <div
+                                className="absolute left-1/2 top-0 z-20 max-w-[min(100%,11rem)] -translate-x-1/2 -translate-y-1/2 rounded-full bg-white px-3 py-1.5 text-center sm:py-2"
+                                style={{
+                                    boxShadow: 'none',
+                                    border: '0.5px solid rgb(99 102 241 / 0.35)',
+                                }}
+                            >
+                                <span className="text-[10px] font-semibold uppercase leading-tight tracking-wide text-brand">
+                                    Limited capacity
+                                </span>
+                            </div>
+
+                            <div className="h-1 w-full shrink-0 bg-brand" aria-hidden />
+                            <div className="px-5 pb-5 pt-5 sm:px-7 sm:pb-7 sm:pt-6 lg:px-10 lg:pb-10 lg:pt-8">
+                                <div className="mb-4 sm:mb-5 lg:mb-8">
+                                    <h2 className="mb-1.5 text-xl font-bold tracking-tight text-text-primary sm:mb-2 sm:text-2xl">
                                         Enter your invite
                                     </h2>
                                     <p className="text-sm text-text-secondary">
@@ -165,11 +166,11 @@ export const BetaAccessPage: React.FC<BetaAccessPageProps> = ({ onAuthorized }) 
                                     </p>
                                 </div>
 
-                                <form className="space-y-6" onSubmit={handleSubmit}>
+                                <form className="space-y-4 sm:space-y-5 lg:space-y-6" onSubmit={handleSubmit}>
                                     <div>
                                         <label
                                             htmlFor="beta-code"
-                                            className="mb-2 block text-xs font-semibold uppercase tracking-wide text-text-secondary"
+                                            className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-text-secondary sm:mb-2"
                                         >
                                             Access code
                                         </label>
@@ -192,7 +193,7 @@ export const BetaAccessPage: React.FC<BetaAccessPageProps> = ({ onAuthorized }) 
                                 </form>
 
                                 <div
-                                    className="mt-8 flex flex-col items-start gap-2 border-t border-slate-100 pt-8"
+                                    className="mt-5 flex flex-col items-start gap-2 border-t border-slate-100 pt-5 sm:mt-6 sm:pt-6 lg:mt-8 lg:pt-8"
                                     style={{ borderTopWidth: '0.5px' }}
                                 >
                                     <span className="text-xs font-semibold uppercase tracking-wide text-text-secondary">
