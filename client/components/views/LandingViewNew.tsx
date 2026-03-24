@@ -24,10 +24,10 @@ export const LandingView: React.FC<LandingViewProps> = ({
         <div className="flex-1 min-h-0 w-full flex flex-col relative bg-page-bg font-sans overflow-x-hidden overflow-y-auto custom-scrollbar">
 
             {/* Main Content (Hero + Input) */}
-            <main className="w-full flex-1 flex flex-col items-center pt-16 md:pt-[8vh] px-4 pb-20 animate-in fade-in duration-500 z-10 min-h-0">
+            <main className="w-full flex-1 flex flex-col items-center pt-10 pb-28 px-4 md:pt-[8vh] md:pb-20 animate-in fade-in duration-500 z-10 min-h-0">
                 <LandingHero />
 
-                <div className="w-full max-w-4xl mt-8 space-y-6">
+                <div className="mt-5 w-full max-w-4xl space-y-4 md:mt-8 md:space-y-6">
                     {/* Error Display */}
                     {error && (
                         <div className="w-full flex justify-center">
