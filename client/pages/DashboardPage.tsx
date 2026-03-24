@@ -42,9 +42,6 @@ const formatAuditDate = (iso: string) => {
   return `${day} ${mon} ${year}`;
 };
 
-/** Design: All + Platform + 4 API pills = 6 source tabs; pad with links when fewer keys exist */
-const SOURCE_API_PILL_SLOTS = 4;
-
 const DashboardPage: React.FC = () => {
   const [allAudits, setAllAudits] = useState<UserAudit[]>([]);
   const [filteredAudits, setFilteredAudits] = useState<DisplayAudit[]>([]);
@@ -63,6 +60,7 @@ const DashboardPage: React.FC = () => {
     initialLogo: string | null;
   } | null>(null);
   const navigate = useNavigate();
+  const activeApiKeys = apiKeys.filter((apiKey) => apiKey.isActive);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -218,14 +216,19 @@ const DashboardPage: React.FC = () => {
     return primary;
   };
 
+  useEffect(() => {
+    if (
+      selectedFilter !== "all" &&
+      selectedFilter !== "direct" &&
+      !activeApiKeys.some((apiKey) => apiKey.id === selectedFilter)
+    ) {
+      setSelectedFilter("all");
+    }
+  }, [activeApiKeys, selectedFilter]);
+
   /** Pills: single-line friendly padding, full pill radius, warm yellow active */
   const filterChipClass = (active: boolean) =>
     `inline-flex shrink-0 items-center justify-center rounded-[8px] border border-black px-5 py-2.5 text-sm font-semibold text-[#1a1a1a] transition-colors whitespace-nowrap ${active ? "bg-[#f2d36b]" : "bg-white hover:bg-neutral-50"}`;
-
-  const sourceApiFillers =
-    apiKeys.length < SOURCE_API_PILL_SLOTS
-      ? SOURCE_API_PILL_SLOTS - apiKeys.length
-      : 0;
 
   const getAuditTypeBadge = (mode: string) => {
     if (mode === "competitor") {
@@ -348,46 +351,39 @@ const DashboardPage: React.FC = () => {
             </div>
           </div>
 
-          <div className="flex min-w-0 flex-col gap-3">
-            <p className="text-base font-bold tracking-[-0.4px] text-black">
-              Assessment source
-            </p>
-            <div className="-mx-1 flex min-w-0 flex-nowrap items-center gap-2.5 overflow-x-auto px-1 pb-0.5 [scrollbar-width:thin] sm:gap-3">
-              <button
-                type="button"
-                onClick={() => setSelectedFilter("all")}
-                className={filterChipClass(selectedFilter === "all")}
-              >
-                All
-              </button>
-              <button
-                type="button"
-                onClick={() => setSelectedFilter("direct")}
-                className={filterChipClass(selectedFilter === "direct")}
-              >
-                Platform
-              </button>
-              {apiKeys.map((apiKey) => (
+          {activeApiKeys.length > 0 && (
+            <div className="flex min-w-0 flex-col gap-3">
+              <p className="text-base font-bold tracking-[-0.4px] text-black">
+                Assessment source
+              </p>
+              <div className="-mx-1 flex min-w-0 flex-nowrap items-center gap-2.5 overflow-x-auto px-1 pb-0.5 [scrollbar-width:thin] sm:gap-3">
                 <button
-                  key={apiKey.id}
                   type="button"
-                  onClick={() => setSelectedFilter(apiKey.id)}
-                  className={filterChipClass(selectedFilter === apiKey.id)}
+                  onClick={() => setSelectedFilter("all")}
+                  className={filterChipClass(selectedFilter === "all")}
                 >
-                  API: {apiKey.name}
+                  All
                 </button>
-              ))}
-              {Array.from({ length: sourceApiFillers }).map((_, i) => (
-                <Link
-                  key={`api-slot-${i}`}
-                  to="/api-keys"
-                  className={`${filterChipClass(false)} no-underline`}
+                <button
+                  type="button"
+                  onClick={() => setSelectedFilter("direct")}
+                  className={filterChipClass(selectedFilter === "direct")}
                 >
-                  API: New
-                </Link>
-              ))}
+                  Platform
+                </button>
+                {activeApiKeys.map((apiKey) => (
+                  <button
+                    key={apiKey.id}
+                    type="button"
+                    onClick={() => setSelectedFilter(apiKey.id)}
+                    className={filterChipClass(selectedFilter === apiKey.id)}
+                  >
+                    API: {apiKey.name}
+                  </button>
+                ))}
+              </div>
             </div>
-          </div>
+          )}
         </div>
 
         {loading && (
