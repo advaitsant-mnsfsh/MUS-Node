@@ -1,22 +1,24 @@
 import React, { useState, useMemo } from "react";
-import { AnalysisReport, Screenshot } from "../../../types";
+import { AnalysisReport } from "../../../types";
 import { SkeletonLoader } from "../../SkeletonLoader";
 import { ScoreDisplayCard } from "../ScoreComponents";
 import { CriticalIssueCard } from "../AuditCards";
 import { DetailedAuditView, DetailedAuditType } from "../DetailedAuditView";
 import AccessibilityAuditView from "../AccessibilityAuditView";
-import {
-  LayoutGrid,
-  PenTool,
-  Palette,
-  Box,
-  Accessibility,
-  Target,
-} from "lucide-react";
+import { PenTool, Palette, Box, Accessibility, Target } from "lucide-react";
 import { ExecutiveSummaryDisplay } from "../ExecutiveSummaryDisplay";
 import {
   REPORT_CANVAS_BG_CLASS,
   REPORT_STICKY_BELOW_ACTION_BAR,
+  REPORT_STICKY_FILTER_BAR_CORE,
+  REPORT_STICKY_FILTER_BAR_SPACING_BELOW,
+  REPORT_STICKY_FILTER_INNER_ROW,
+  REPORT_STICKY_FILTER_NAV,
+  REPORT_STICKY_FILTER_TAB_ACTIVE,
+  REPORT_STICKY_FILTER_TAB_BASE,
+  REPORT_STICKY_FILTER_TAB_IDLE,
+  REPORT_STICKY_FILTER_TITLE,
+  REPORT_STICKY_FILTER_TITLE_WRAP,
 } from "../reportChrome";
 
 interface StandardReportViewProps {
@@ -25,7 +27,64 @@ interface StandardReportViewProps {
   isSharedView?: boolean;
 }
 
-// ... imports
+/** DOM ids for Score Breakdown tabs — must match section roots below (no `&` in ids). */
+const SECTION_ELEMENT_IDS: Record<string, string> = {
+  "UX & Heuristics": "section-ux-heuristics",
+  "Visual Design": "section-visual-design",
+  "Product Fit": "section-product-fit",
+  "Accessibility Audit": "section-accessibility-audit",
+};
+
+const SECTION_SCROLL_SPY: { id: string; elementId: string }[] = [
+  { id: "UX & Heuristics", elementId: "section-ux-heuristics" },
+  { id: "Visual Design", elementId: "section-visual-design" },
+  { id: "Product Fit", elementId: "section-product-fit" },
+  { id: "Accessibility Audit", elementId: "section-accessibility-audit" },
+];
+
+/**
+ * App shell scrolls inside Layout `<main data-app-scroll-root>` (overflow-y-auto).
+ * Routes without Layout (e.g. `/shared/:id`) use the document/window scroller.
+ */
+function getAppScrollRoot(): HTMLElement {
+  const marked = document.querySelector("[data-app-scroll-root]");
+  if (marked instanceof HTMLElement) return marked;
+  return document.documentElement;
+}
+
+function getScrollTop(container: HTMLElement): number {
+  if (
+    container === document.documentElement ||
+    container === document.body
+  ) {
+    return window.scrollY;
+  }
+  return container.scrollTop;
+}
+
+function scrollTopOfElementInContainer(
+  element: HTMLElement,
+  container: HTMLElement,
+): number {
+  return (
+    element.getBoundingClientRect().top -
+    container.getBoundingClientRect().top +
+    getScrollTop(container)
+  );
+}
+
+function scrollContainerToY(container: HTMLElement, top: number) {
+  const y = Math.max(0, top);
+  if (
+    container === document.documentElement ||
+    container === document.body
+  ) {
+    window.scrollTo({ top: y, behavior: "smooth" });
+  } else {
+    container.scrollTo({ top: y, behavior: "smooth" });
+  }
+}
+
 export const StandardReportView: React.FC<StandardReportViewProps> = ({
   report,
   primaryScreenshotSrc,
@@ -43,11 +102,6 @@ export const StandardReportView: React.FC<StandardReportViewProps> = ({
   const isClickScrolling = React.useRef(false);
   const scrollTimeout = React.useRef<ReturnType<typeof setTimeout> | null>(
     null,
-  );
-  console.log("[StandardReportView] Active Tab:", activeTab);
-  console.log(
-    "[StandardReportView] UX Data:",
-    ux ? Object.keys(ux) : "Missing",
   );
 
   const TABS = [
@@ -96,89 +150,96 @@ export const StandardReportView: React.FC<StandardReportViewProps> = ({
     }
   };
 
-  // --- SCROLL SPY LOGIC ---
-  // --- SCROLL SPY LOGIC ---
-  // 1. Click Handler: Smooth scroll to section
+  /** Navbar + action bar + Score Breakdown sticky — lower = section sits slightly higher in view */
+  const SCROLL_OFFSET_PX = 220;
+
   const handleTabClick = (tabId: string) => {
+    const elementId = SECTION_ELEMENT_IDS[tabId];
+    const element = elementId ? document.getElementById(elementId) : null;
+    if (!element) return;
+
     isClickScrolling.current = true;
     setActiveTab(tabId);
 
     if (scrollTimeout.current) clearTimeout(scrollTimeout.current);
     scrollTimeout.current = setTimeout(() => {
       isClickScrolling.current = false;
-    }, 1000); // Wait for smooth scroll to finish
+    }, 1800);
 
-    // Handle specific sections
-    const sectionId = `section-${tabId.replace(/\s+/g, "-").toLowerCase()}`;
-    const element = document.getElementById(sectionId);
-    if (element) {
-      const offset = 260; // Increased to 260px (Global Nav + Action + Filter + buffer)
-      const elementPosition =
-        element.getBoundingClientRect().top + window.scrollY;
-      window.scrollTo({
-        top: elementPosition - offset,
-        behavior: "smooth",
-      });
-    }
+    const runScroll = () => {
+      const root = getAppScrollRoot();
+      const targetTop =
+        scrollTopOfElementInContainer(element, root) - SCROLL_OFFSET_PX;
+      scrollContainerToY(root, targetTop);
+    };
+    requestAnimationFrame(() => {
+      requestAnimationFrame(runScroll);
+    });
   };
 
-  // Scroll to top on mount to fix Dashboard navigation retention
   React.useEffect(() => {
-    window.scrollTo(0, 0);
+    const root = getAppScrollRoot();
+    if (root === document.documentElement) {
+      window.scrollTo(0, 0);
+    } else {
+      root.scrollTop = 0;
+    }
   }, []);
 
-  // 2. Scroll Listener: Update active tab based on viewport
   React.useEffect(() => {
+    const root = getAppScrollRoot();
+    const scrollEventTarget: EventTarget =
+      root === document.documentElement ? window : root;
+
     const handleScroll = () => {
       if (isClickScrolling.current) return;
 
-      // Optimization: Don't check on every single pixel, but fairly often is needed for responsiveness
-      // Use a higher offset to trigger the change earlier as the user scrolls down
-      const scrollPosition = window.scrollY + 300;
-
-      // Define sections to check
-      const sections = [
-        { id: "UX & Heuristics", elementId: "section-ux-&-heuristics" },
-        { id: "Visual Design", elementId: "section-visual-design" },
-        { id: "Product Fit", elementId: "section-product-fit" },
-        { id: "Accessibility Audit", elementId: "section-accessibility-audit" },
-      ];
-
-      // Default to first section
+      const scrollTop = getScrollTop(root);
+      const scrollPosition = scrollTop + 300;
       let currentSection = "UX & Heuristics";
 
-      // Find the last section that we have scrolled past
-      for (const section of sections) {
+      for (const section of SECTION_SCROLL_SPY) {
         const element = document.getElementById(section.elementId);
         if (element) {
-          const { offsetTop } = element;
-          // If we have scrolled past the top of this section (minus some buffer), it is the candidate
-          if (scrollPosition >= offsetTop) {
+          const top = scrollTopOfElementInContainer(element, root);
+          if (scrollPosition >= top) {
             currentSection = section.id;
           }
         }
       }
 
-      // Special check: If we are not yet past the first real section, ensure we are on first tab
-      const firstSection = document.getElementById(sections[0].elementId);
-      if (firstSection && scrollPosition < firstSection.offsetTop) {
-        currentSection = "UX & Heuristics";
+      const firstEl = document.getElementById(SECTION_SCROLL_SPY[0].elementId);
+      if (firstEl) {
+        const firstTop = scrollTopOfElementInContainer(firstEl, root);
+        if (scrollPosition < firstTop) {
+          currentSection = "UX & Heuristics";
+        }
       }
 
-      // Special check: If we are at the very bottom, and the last section is visible, activate it
-      if (
-        window.innerHeight + window.scrollY >=
-        document.body.offsetHeight - 50
-      ) {
-        if (accessibility) currentSection = "Accessibility Audit";
+      const viewH =
+        root === document.documentElement
+          ? window.innerHeight
+          : root.clientHeight;
+      const scrollHeight =
+        root === document.documentElement
+          ? document.documentElement.scrollHeight
+          : root.scrollHeight;
+      const scrollBottom = scrollTop + viewH;
+      const maxScroll = Math.max(0, scrollHeight - 2);
+      if (scrollBottom >= maxScroll - 50 && accessibility) {
+        currentSection = "Accessibility Audit";
       }
 
       setActiveTab(currentSection);
     };
 
-    window.addEventListener("scroll", handleScroll);
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, [ux, visual, product, accessibility]);
+    scrollEventTarget.addEventListener("scroll", handleScroll, {
+      passive: true,
+    });
+    handleScroll();
+    return () =>
+      scrollEventTarget.removeEventListener("scroll", handleScroll);
+  }, [ux, visual, product, accessibility, report]);
 
   return (
     <>
@@ -312,40 +373,41 @@ export const StandardReportView: React.FC<StandardReportViewProps> = ({
 
         {/* 3. BOTTOM SECTION: Score Breakdown & Detailed Cards */}
         <div className="pt-2">
-          {/* Header & Tabs - Sticky */}
-          <div
-            className={`sticky ${stickyTopClass} z-20 w-full bg-white border border-report-border-muted px-4 sm:px-6 py-4 sm:py-5 mb-10 sm:mb-12 rounded-lg shadow-none transition-all duration-300`}
-          >
-            <div className="flex flex-col items-start gap-4 md:flex-row md:items-center md:justify-between md:gap-6">
-              <div className="w-full md:w-auto">
-                <h3 className="text-xl sm:text-2xl font-black text-black uppercase">
-                  Score Breakdown
-                </h3>
-                {/* <p className="text-slate-600 font-bold text-sm">Detailed parameter analysis.</p> */}
-              </div>
+          <div className={REPORT_STICKY_FILTER_BAR_SPACING_BELOW}>
+            <div
+              className={`sticky ${stickyTopClass} ${REPORT_STICKY_FILTER_BAR_CORE}`}
+            >
+              <div className={REPORT_STICKY_FILTER_INNER_ROW}>
+                <div className={REPORT_STICKY_FILTER_TITLE_WRAP}>
+                  <h3 className={REPORT_STICKY_FILTER_TITLE}>
+                    Score Breakdown
+                  </h3>
+                </div>
 
-              <nav className="flex w-full md:w-auto items-center gap-2 overflow-x-auto no-scrollbar pb-1 md:pb-0 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
-                {TABS.map((tab) => {
-                  const Icon = tab.icon;
-                  const isActive = activeTab === tab.id;
-                  return (
-                    <button
-                      key={tab.id}
-                      onClick={() => handleTabClick(tab.id)}
-                      className={`shrink-0 flex items-center gap-[6px] whitespace-nowrap py-2.5 px-3 font-medium text-[12px] leading-none transition-all border rounded-lg ${
-                        isActive
-                          ? "bg-accent-yellow text-black  border-black"
-                          : "bg-transparent text-slate-600 border-report-border-muted hover:bg-slate-50 hover:text-black hover:border-slate-300"
-                      }`}
-                    >
-                      <Icon
-                        className={`w-4 h-4 ${isActive ? "text-black" : "text-slate-500"}`}
-                      />
-                      {tab.label}
-                    </button>
-                  );
-                })}
-              </nav>
+                <nav className={REPORT_STICKY_FILTER_NAV}>
+                  {TABS.map((tab) => {
+                    const Icon = tab.icon;
+                    const isActive = activeTab === tab.id;
+                    return (
+                      <button
+                        type="button"
+                        key={tab.id}
+                        onClick={() => handleTabClick(tab.id)}
+                        className={`${REPORT_STICKY_FILTER_TAB_BASE} ${
+                          isActive
+                            ? REPORT_STICKY_FILTER_TAB_ACTIVE
+                            : REPORT_STICKY_FILTER_TAB_IDLE
+                        }`}
+                      >
+                        <Icon
+                          className={`w-4 h-4 ${isActive ? "text-black" : "text-slate-500"}`}
+                        />
+                        {tab.label}
+                      </button>
+                    );
+                  })}
+                </nav>
+              </div>
             </div>
           </div>
 
@@ -355,7 +417,7 @@ export const StandardReportView: React.FC<StandardReportViewProps> = ({
             className="flex flex-col gap-16 animate-in nav-fade-in duration-300 pb-20 w-full"
           >
             {/* Section 1: UX & Heuristics */}
-            <div id="section-ux-&-heuristics" className="scroll-mt-40">
+            <div id="section-ux-heuristics" className="scroll-mt-[220px]">
               <div className="flex items-center gap-3 mb-6">
                 <div className="p-2 bg-brand text-white border border-slate-200 shadow-none">
                   <PenTool className="w-5 h-5" />
@@ -368,7 +430,7 @@ export const StandardReportView: React.FC<StandardReportViewProps> = ({
             </div>
 
             {/* Section 2: Visual Design */}
-            <div id="section-visual-design" className="scroll-mt-40">
+            <div id="section-visual-design" className="scroll-mt-[220px]">
               <div className="flex items-center gap-3 mb-6">
                 <div className="p-2 bg-purple-500 text-white border border-slate-200 shadow-none">
                   <Palette className="w-5 h-5" />
@@ -384,7 +446,7 @@ export const StandardReportView: React.FC<StandardReportViewProps> = ({
             </div>
 
             {/* Section 3: Product Fit */}
-            <div id="section-product-fit" className="scroll-mt-40">
+            <div id="section-product-fit" className="scroll-mt-[220px]">
               <div className="flex items-center gap-3 mb-6">
                 <div className="p-2 bg-amber-500 text-white border border-slate-200 shadow-none">
                   <Box className="w-5 h-5" />
@@ -400,7 +462,7 @@ export const StandardReportView: React.FC<StandardReportViewProps> = ({
             </div>
 
             {/* Section 4: Accessibility */}
-            <div id="section-accessibility-audit" className="scroll-mt-40">
+            <div id="section-accessibility-audit" className="scroll-mt-[220px]">
               <div className="flex items-center gap-3 mb-6">
                 <div className="p-2 bg-blue-500 text-white border border-slate-200 shadow-none">
                   <Accessibility className="w-5 h-5" />

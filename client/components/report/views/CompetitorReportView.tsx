@@ -1,5 +1,4 @@
-import React, { useState } from "react";
-import { useGlobalAudit } from "../../../contexts/AuditContext";
+import React, { useLayoutEffect, useRef, useState } from "react";
 import {
   CompetitorAnalysisData,
   CompetitorComparisonItem,
@@ -23,6 +22,14 @@ import SiteLogo from "../../SiteLogo";
 import {
   REPORT_CANVAS_BG_CLASS,
   REPORT_STICKY_BELOW_ACTION_BAR,
+  REPORT_STICKY_FILTER_BAR_CORE,
+  REPORT_STICKY_FILTER_INNER_ROW,
+  REPORT_STICKY_FILTER_NAV,
+  REPORT_STICKY_FILTER_TAB_ACTIVE,
+  REPORT_STICKY_FILTER_TAB_BASE,
+  REPORT_STICKY_FILTER_TAB_IDLE,
+  REPORT_STICKY_FILTER_TITLE,
+  REPORT_STICKY_FILTER_TITLE_WRAP,
   REPORT_STICKY_TABLE_HEADER_ROW,
 } from "../reportChrome";
 
@@ -74,6 +81,21 @@ export const CompetitorReportView: React.FC<CompetitorReportViewProps> = ({
   const [activeTab, setActiveTab] = useState<
     "UX" | "Product" | "Visual" | "Strategy" | "Accessibility"
   >("UX");
+
+  /** Measured height of sticky “Detailed Face-off” bar — drives table `<thead>` sticky `top`. */
+  const faceOffFilterRef = useRef<HTMLDivElement>(null);
+  const [faceOffFilterHeightPx, setFaceOffFilterHeightPx] = useState(0);
+
+  useLayoutEffect(() => {
+    const el = faceOffFilterRef.current;
+    if (!el) return;
+    const measure = () =>
+      setFaceOffFilterHeightPx(Math.max(0, Math.round(el.offsetHeight)));
+    measure();
+    const ro = new ResizeObserver(measure);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
 
   const getDisplayName = (urlStr: string) => {
     if (
@@ -312,9 +334,17 @@ export const CompetitorReportView: React.FC<CompetitorReportViewProps> = ({
     );
   };
 
+  const faceOffHeightStyle =
+    faceOffFilterHeightPx > 0
+      ? ({
+          ["--report-competitor-filter-bar-height" as string]: `${faceOffFilterHeightPx}px`,
+        } as React.CSSProperties)
+      : undefined;
+
   return (
     <div
       className={`font-['DM_Sans'] space-y-12 pb-12 ${REPORT_CANVAS_BG_CLASS}`}
+      style={faceOffHeightStyle}
     >
       {/* 1. TOP SECTION: same top rhythm as StandardReportView hero (`pt-6 md:pt-8`) */}
       <div className="animate-in fade-in slide-in-from-bottom-4 w-full pt-6 md:pt-8 duration-300">
@@ -552,22 +582,21 @@ export const CompetitorReportView: React.FC<CompetitorReportViewProps> = ({
         </div>
       </div>
 
-      {/* 4. DETAILED COMPARISON TABLE */}
+      {/* 4. DETAILED COMPARISON TABLE — face-off `sticky` under action bar; no large mb between bar & table (avoids tbody “above” header gap). */}
       <div className="pt-2">
-        {/* Header & Tabs - Sticky (mirror StandardReportView) */}
         <div
-          className={`sticky ${stickyTopClass} z-20 w-full bg-white border border-report-border-muted px-4 sm:px-6 py-6 mb-12 rounded-lg shadow-none transition-all duration-300`}
+          ref={faceOffFilterRef}
+          className={`sticky ${stickyTopClass} ${REPORT_STICKY_FILTER_BAR_CORE}`}
         >
-          <div className="flex flex-col items-stretch gap-6 md:flex-row md:items-center md:justify-between">
-            <div className="shrink-0">
-              <h3 className="text-2xl font-black text-black uppercase">
+          <div className={REPORT_STICKY_FILTER_INNER_ROW}>
+            <div className={REPORT_STICKY_FILTER_TITLE_WRAP}>
+              <h3 className={REPORT_STICKY_FILTER_TITLE}>
                 Detailed Face-off
               </h3>
             </div>
 
-            {/* Filter Navbar — full width + scroll on small screens; hug content + right on md+ */}
             <nav
-              className="flex min-w-0 max-w-full flex-nowrap items-center gap-2 overflow-x-auto bg-white p-1 no-scrollbar [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden max-md:w-full md:ml-auto md:w-auto md:shrink-0"
+              className={REPORT_STICKY_FILTER_NAV}
               aria-label="Face-off categories"
             >
               {TABS.map((tab) => {
@@ -575,12 +604,13 @@ export const CompetitorReportView: React.FC<CompetitorReportViewProps> = ({
                 const isActive = activeTab === tab.id;
                 return (
                   <button
+                    type="button"
                     key={tab.id}
                     onClick={() => setActiveTab(tab.id as any)}
-                    className={`flex items-center gap-[6px] whitespace-nowrap py-3 px-2 font-medium text-[12px] transition-all border rounded-md ${
+                    className={`${REPORT_STICKY_FILTER_TAB_BASE} ${
                       isActive
-                        ? "bg-accent-yellow text-black  border-black"
-                        : "bg-transparent text-slate-600 border-report-border-muted hover:bg-slate-50 hover:text-black hover:border-slate-300"
+                        ? REPORT_STICKY_FILTER_TAB_ACTIVE
+                        : REPORT_STICKY_FILTER_TAB_IDLE
                     }`}
                   >
                     <Icon
@@ -594,8 +624,8 @@ export const CompetitorReportView: React.FC<CompetitorReportViewProps> = ({
           </div>
         </div>
 
-        {/* Render Active Table (separate content container, like StandardReportView) */}
-        <div className="flex flex-col gap-10 pb-12 w-full">
+        {/* `-mt-px` overlaps table top border with face-off card so there’s no double grey band */}
+        <div className="-mt-px flex flex-col gap-10 pb-12 w-full">
           {activeTab === "UX" && (
             <ComparisonTable
               items={data.UXComparison}
