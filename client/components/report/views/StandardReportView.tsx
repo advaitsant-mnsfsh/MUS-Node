@@ -314,17 +314,17 @@ export const StandardReportView: React.FC<StandardReportViewProps> = ({
         <div className="pt-2">
           {/* Header & Tabs - Sticky */}
           <div
-            className={`sticky ${stickyTopClass} z-20 w-full bg-white border border-report-border-muted px-4 sm:px-6 py-6 mb-12 rounded-lg shadow-none transition-all duration-300`}
+            className={`sticky ${stickyTopClass} z-20 w-full bg-white border border-report-border-muted px-4 sm:px-6 py-4 sm:py-5 mb-10 sm:mb-12 rounded-lg shadow-none transition-all duration-300`}
           >
-            <div className="flex flex-col md:flex-row items-center justify-between gap-6">
-              <div>
-                <h3 className="text-2xl font-black text-black uppercase">
+            <div className="flex flex-col items-start gap-4 md:flex-row md:items-center md:justify-between md:gap-6">
+              <div className="w-full md:w-auto">
+                <h3 className="text-xl sm:text-2xl font-black text-black uppercase">
                   Score Breakdown
                 </h3>
                 {/* <p className="text-slate-600 font-bold text-sm">Detailed parameter analysis.</p> */}
               </div>
 
-              <nav className="flex space-x-2 bg-white overflow-x-auto no-scrollbar max-w-full p-1">
+              <nav className="flex w-full md:w-auto items-center gap-2 overflow-x-auto no-scrollbar pb-1 md:pb-0 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
                 {TABS.map((tab) => {
                   const Icon = tab.icon;
                   const isActive = activeTab === tab.id;
@@ -332,7 +332,7 @@ export const StandardReportView: React.FC<StandardReportViewProps> = ({
                     <button
                       key={tab.id}
                       onClick={() => handleTabClick(tab.id)}
-                      className={`flex items-center gap-[6px] whitespace-nowrap py-3 px-2 font-medium text-[12px] transition-all border rounded-lg ${
+                      className={`shrink-0 flex items-center gap-[6px] whitespace-nowrap py-2.5 px-3 font-medium text-[12px] leading-none transition-all border rounded-lg ${
                         isActive
                           ? "bg-accent-yellow text-black  border-black"
                           : "bg-transparent text-slate-600 border-report-border-muted hover:bg-slate-50 hover:text-black hover:border-slate-300"

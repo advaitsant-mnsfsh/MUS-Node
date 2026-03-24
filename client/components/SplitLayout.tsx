@@ -74,16 +74,35 @@ export const SplitLayout: React.FC<SplitLayoutProps> = ({
         );
     }
 
+    // Mobile (<lg): analysis in progress → only LHS preview (no login column). Complete + report → only RHS (blur + login).
+    // Rare complete-without-report keeps legacy stacked two rows.
+    const hideRightOnMobile = !isAnalysisComplete;
+    const hideLeftOnMobile = !!(isAnalysisComplete && report);
+    const mobileStackedLegacy = isAnalysisComplete && !report;
+
     // Split: one screen tall; report scrolls inside RHS only (minmax(0,1fr) row + min-h-0 cells)
     return (
         <div className={shellClass}>
             <div
-                className="grid min-h-0 w-full flex-1 grid-cols-1 gap-0 overflow-hidden max-lg:grid-rows-[minmax(200px,auto)_minmax(0,1fr)] lg:grid-cols-2 lg:grid-rows-[minmax(0,1fr)]"
+                className={`grid min-h-0 w-full flex-1 grid-cols-1 gap-0 overflow-hidden lg:grid-cols-2 lg:grid-rows-[minmax(0,1fr)] ${
+                    mobileStackedLegacy
+                        ? 'max-lg:grid-rows-[minmax(200px,auto)_minmax(0,1fr)]'
+                        : 'max-lg:grid-rows-1'
+                }`}
             >
                 {/* Left: browser / scan preview */}
                 <div
-                    className="flex min-h-0 min-w-0 items-center justify-center overflow-y-auto overflow-x-hidden bg-page-bg p-4 lg:h-full lg:max-h-full max-lg:max-h-[min(42vh,360px)]"
-                    style={{ borderRight: '0.5px solid var(--high-grey, #1A1A1A)' }}
+                    className={`flex min-h-0 min-w-0 items-center justify-center overflow-y-auto overflow-x-hidden bg-page-bg p-4 sm:p-5 lg:h-full lg:max-h-full lg:[border-right:0.5px_solid_var(--high-grey,#1A1A1A)] ${
+                        hideLeftOnMobile ? 'hidden lg:flex' : 'flex'
+                    } ${
+                        hideRightOnMobile && !hideLeftOnMobile
+                            ? 'max-lg:min-h-0 max-lg:flex-1'
+                            : ''
+                    } ${
+                        mobileStackedLegacy
+                            ? 'max-lg:max-h-[min(42vh,360px)]'
+                            : ''
+                    }`}
                 >
                     <ScanningPreview
                         screenshot={screenshot || null}
@@ -96,7 +115,11 @@ export const SplitLayout: React.FC<SplitLayoutProps> = ({
                 </div>
 
                 {/* Right: login during analysis, or blurred report + login when complete */}
-                <div className="flex min-h-0 min-w-0 flex-col items-stretch justify-center overflow-hidden bg-white p-4 lg:h-full lg:max-h-full lg:p-8">
+                <div
+                    className={`min-h-0 min-w-0 flex-col items-stretch justify-center overflow-hidden bg-white lg:flex lg:h-full lg:max-h-full ${
+                        hideRightOnMobile ? 'hidden lg:flex' : 'flex'
+                    } ${hideLeftOnMobile ? 'max-lg:flex-1' : ''}`}
+                >
                     {isAnalysisComplete && report ? (
                         <div className="relative h-full min-h-0 w-full min-w-0 overflow-hidden">
                             <div className="h-full min-h-0 overflow-y-auto overscroll-contain pointer-events-none">

@@ -70,18 +70,10 @@ export const ReportResultView: React.FC<ReportResultViewProps> = ({
                 isError={!!error}
             >
                 <div className="flex w-full flex-col items-center justify-center animate-in fade-in duration-500">
-                    <div
-                        className="w-full bg-white/50 backdrop-blur-sm rounded-lg p-8 overflow-hidden"
-                        style={{
-                            border: '0.5px solid var(--high-grey, #1A1A1A)',
-                            boxShadow: 'none',
-                        }}
-                    >
-                        <LoginPanel
-                            auditId={uiAuditId || auditId}
-                            ownerId={ownerId}
-                        />
-                    </div>
+                    <LoginPanel
+                        auditId={uiAuditId || auditId}
+                        ownerId={ownerId}
+                    />
                 </div>
             </SplitLayout>
         );

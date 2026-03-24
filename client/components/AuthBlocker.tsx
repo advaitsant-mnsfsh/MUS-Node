@@ -7,13 +7,13 @@ import { X } from 'lucide-react';
 
 /** Modal + form chrome aligned with Beta / app shell — thin border, no neo shadow */
 const AUTH_MODAL_CLASS =
-    'relative z-10 w-full max-w-md rounded-lg border border-slate-200 bg-white p-6 shadow-none md:p-8';
+    'relative z-10 w-full max-w-md rounded-lg border border-slate-300 bg-white p-6 shadow-none md:p-8';
 
 const AUTH_INPUT =
-    'w-full rounded-lg border border-slate-300 bg-white px-4 text-base text-text-primary outline-none transition-shadow placeholder:text-slate-400 focus-visible:border-slate-300 focus-visible:ring-2 focus-visible:ring-brand/25 disabled:opacity-60';
+    'w-full rounded-lg border border-slate-300 bg-white px-4 text-base text-text-primary outline-none transition-colors placeholder:text-slate-400 focus-visible:border-slate-300 focus-visible:ring-2 focus-visible:ring-brand/25 disabled:opacity-60';
 
 const AUTH_BTN_PRIMARY =
-    'flex h-14 w-full items-center justify-center gap-2 rounded-lg border-0 bg-[#1E293B] text-base font-bold text-white shadow-none transition-colors hover:bg-[#334155] disabled:cursor-not-allowed disabled:opacity-70';
+    'flex h-14 w-full items-center justify-center gap-2 rounded-lg border border-slate-900/10 bg-brand text-base font-bold text-white shadow-none transition-colors hover:bg-brand-hover disabled:cursor-not-allowed disabled:opacity-70';
 
 interface AuthBlockerProps {
     onUnlock: () => void;
@@ -278,7 +278,7 @@ export const AuthBlocker: React.FC<AuthBlockerProps> = ({ onUnlock, isUnlocked, 
                     <X size={22} strokeWidth={2} />
                 </button>
 
-                <div className="mb-8 text-center">
+                <div className="mb-8 pr-10 text-center">
                     <h2 className="text-2xl font-bold tracking-tight text-text-primary">
                         {isLoginMode ? 'Welcome Back' : 'Unlock Full Audit Report'}
                     </h2>

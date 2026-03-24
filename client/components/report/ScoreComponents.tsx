@@ -1,6 +1,18 @@
 import React from "react";
 import { SkeletonLoader } from "../SkeletonLoader";
 
+/** Raw score is 0–10; values &gt; 10 are treated as 0–100 scaled down for display. */
+export function normalizeScoreTo10(raw: number): number {
+  if (!Number.isFinite(raw)) return 0;
+  const x = raw > 10 ? raw / 10 : raw;
+  return Math.min(10, Math.max(0, x));
+}
+
+export function formatScoreOutOf10Display(raw: number): string {
+  const n = Math.round(normalizeScoreTo10(raw) * 10) / 10;
+  return Number.isInteger(n) ? String(n) : n.toFixed(1);
+}
+
 // --- 🎨 PREMIUM THEME PALETTE ---
 // Logic: Custom colors based on score range (Matches your UI design)
 export const getThemeStyles = (score: number) => {
@@ -257,8 +269,8 @@ export function LinearScoreDisplay({
       />
     );
 
-  // Theme logic - simplistic to match wireframe/clean aesthetic
-  const theme = getThemeStyles(score);
+  const score10 = normalizeScoreTo10(score);
+  const theme = getThemeStyles(score10);
 
   return (
     <div
@@ -271,9 +283,9 @@ export function LinearScoreDisplay({
           {label}
         </span>
         <span
-          className={`font-black ${isLarge ? "text-2xl" : "text-xl text-slate-900"}`}
+          className={`font-['DM_Sans'] font-bold tabular-nums text-slate-900 ${isLarge ? "text-2xl" : "text-[20px]"}`}
         >
-          {Math.round(score * 10)}/100
+          {formatScoreOutOf10Display(score10)}/10
         </span>
       </div>
 
@@ -285,7 +297,7 @@ export function LinearScoreDisplay({
         <div
           className="h-full rounded-full transition-all duration-1000 ease-out"
           style={{
-            width: `${Math.min(100, Math.max(0, score * 10))}%`,
+            width: `${Math.min(100, Math.max(0, score10 * 10))}%`,
             backgroundColor: theme.solid,
           }}
         />
