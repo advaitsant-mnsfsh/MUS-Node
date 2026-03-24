@@ -32,8 +32,41 @@ export const REPORT_STICKY_BELOW_ACTION_BAR =
   "top-[var(--report-action-bar-height,4.5rem)]" as const;
 
 /**
- * Competitor table `<thead>`: action bar + “Detailed Face-off” sticky block. The second term
- * matches `py-6` + title + tab row (~column on small screens, single row on `md+`).
+ * Shared shell for “Score Breakdown” (standard) and “Detailed Face-off” (competitor):
+ * padding, title weight/size, tab pills — keep in sync via these tokens.
+ * Pair with `sticky` + `REPORT_STICKY_BELOW_ACTION_BAR` on the outer element.
+ */
+/** Sticky card only — no bottom margin (margin lives on outer wrapper so `<thead>` sticky `top` math matches visible bar). */
+export const REPORT_STICKY_FILTER_BAR_CORE =
+  "z-30 w-full bg-white border border-report-border-muted px-4 sm:px-6 py-4 sm:py-5 rounded-lg shadow-none transition-all duration-300" as const;
+
+/** Space below the filter strip (non-sticky wrapper). */
+export const REPORT_STICKY_FILTER_BAR_SPACING_BELOW = "mb-10 sm:mb-12" as const;
+
+export const REPORT_STICKY_FILTER_INNER_ROW =
+  "flex flex-col items-start gap-4 md:flex-row md:items-center md:justify-between md:gap-6" as const;
+
+export const REPORT_STICKY_FILTER_TITLE_WRAP = "w-full md:w-auto" as const;
+
+export const REPORT_STICKY_FILTER_TITLE =
+  "text-xl sm:text-2xl font-black text-black uppercase" as const;
+
+export const REPORT_STICKY_FILTER_NAV =
+  "relative z-50 flex w-full md:w-auto items-center gap-2 overflow-x-auto no-scrollbar pb-1 md:pb-0 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden" as const;
+
+/** Tab pill base — icon `w-4 h-4`; active/idle classes below */
+export const REPORT_STICKY_FILTER_TAB_BASE =
+  "shrink-0 flex items-center gap-[6px] whitespace-nowrap py-2.5 px-3 font-medium text-[12px] leading-none transition-all border rounded-lg" as const;
+
+export const REPORT_STICKY_FILTER_TAB_ACTIVE =
+  "bg-accent-yellow text-black border-black" as const;
+
+export const REPORT_STICKY_FILTER_TAB_IDLE =
+  "bg-transparent text-slate-600 border-report-border-muted hover:bg-slate-50 hover:text-black hover:border-slate-300" as const;
+
+/**
+ * Competitor table `<thead>`: sticks flush under the sticky “Detailed Face-off” bar.
+ * `--report-competitor-filter-bar-height` = measured face-off `offsetHeight` (px), no extra fudge.
  */
 export const REPORT_STICKY_TABLE_HEADER_ROW =
-  "top-[calc(var(--report-action-bar-height,4.5rem)+9.75rem)] md:top-[calc(var(--report-action-bar-height,4.75rem)+6.25rem)]" as const;
+  "top-[calc(var(--report-action-bar-height,4.5rem)+var(--report-competitor-filter-bar-height,7rem))]" as const;
