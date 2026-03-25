@@ -5,7 +5,7 @@ import React from 'react';
  */
 const PricingHero = () => {
     return (
-        <section className="relative w-full overflow-hidden bg-[#FFFEF9] px-4 pb-10 pt-12 font-['DM_Sans'] sm:px-6 sm:pb-12 sm:pt-14 md:pb-16 md:pt-16 lg:pb-20 lg:pt-20">
+        <section className="relative w-full overflow-hidden bg-[#FFFEF9] px-4 pb-6 pt-12 font-['DM_Sans'] sm:px-6 sm:pb-7 sm:pt-14 md:pb-8 md:pt-16 lg:pb-10 lg:pt-20">
             <img
                 src="/ring-top-left.png"
                 alt=""
