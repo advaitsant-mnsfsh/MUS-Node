@@ -331,7 +331,7 @@ const AboutUnfairAdvantage: React.FC = () => {
                 {/* Advantage 1 Container */}
                 <div className="flex flex-col md:flex-row w-full max-w-6xl min-h-[514px] p-[10px] justify-between items-center gap-8 md:gap-12 mx-auto" ref={containerRef}>
                     {/* Left: Text Content */}
-                    <div className="flex flex-col justify-center items-start gap-[3rem] p-0 md:p-[3rem_1.5rem] flex-1 self-stretch">
+                    <div className="flex flex-col justify-center items-start gap-4 md:gap-5 p-0 md:p-[3rem_1.5rem] flex-1 self-stretch">
 
                         {/* Heading & Subheading Parent */}
                         <div className="flex flex-col items-start gap-[1rem] self-stretch">
@@ -378,7 +378,7 @@ const AboutUnfairAdvantage: React.FC = () => {
                 {/* Advantage 2 Container */}
                 <div className="flex flex-col md:flex-row w-full max-w-[72rem] min-h-[514px] p-[10px] justify-between items-center gap-8 md:gap-12 mt-8 md:mt-12 mx-auto">
                     {/* Left: Text Content */}
-                    <div className="flex flex-col justify-center items-start gap-[3rem] p-0 md:p-[3rem_1.5rem] flex-1 self-stretch">
+                    <div className="flex flex-col justify-center items-start gap-4 md:gap-5 p-0 md:p-[3rem_1.5rem] flex-1 self-stretch">
 
                         {/* Heading & Subheading Parent */}
                         <div className="flex flex-col items-start gap-[1rem] self-stretch">
@@ -403,7 +403,7 @@ const AboutUnfairAdvantage: React.FC = () => {
                 {/* Advantage 3 Container */}
                 <div className="flex flex-col md:flex-row w-full max-w-6xl min-h-[514px] p-[10px] justify-between items-center gap-8 md:gap-12 mt-8 md:mt-12 mx-auto">
                     {/* Left: Text Content */}
-                    <div className="flex flex-col justify-center items-start gap-[3rem] p-0 md:p-[3rem_1.5rem] flex-1 self-stretch">
+                    <div className="flex flex-col justify-center items-start gap-4 md:gap-5 p-0 md:p-[3rem_1.5rem] flex-1 self-stretch">
 
                         {/* Heading & Subheading Parent */}
                         <div className="flex flex-col items-start gap-[1rem] self-stretch">
