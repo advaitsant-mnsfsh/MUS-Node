@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import {
@@ -23,8 +24,9 @@ type NavItem = {
   authOnly?: boolean;
 };
 
-const MOBILE_DRAWER_EASE = [0.25, 0.1, 0.25, 1] as const;
-const MOBILE_DRAWER_DURATION = 0.26;
+/** Portal + tween (no spring): springs + nested nav paint often “step” on phones. */
+const MOBILE_NAV_MS = 0.2;
+const MOBILE_NAV_EASE = [0.4, 0, 0.2, 1] as const;
 
 const MOBILE_MAIN_NAV: NavItem[] = [
   { to: "/", label: "Assess Now", icon: Sparkles },
@@ -60,10 +62,13 @@ export const GlobalNavbar: React.FC = () => {
 
   useEffect(() => {
     if (!isMobileMenuOpen) return;
-    const prevOverflow = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
+    const prev = document.body.style.overflow;
+    const raf = requestAnimationFrame(() => {
+      document.body.style.overflow = "hidden";
+    });
     return () => {
-      document.body.style.overflow = prevOverflow;
+      cancelAnimationFrame(raf);
+      document.body.style.overflow = prev;
     };
   }, [isMobileMenuOpen]);
 
@@ -217,136 +222,130 @@ export const GlobalNavbar: React.FC = () => {
         </div>
       </div>
 
-      {/* Mobile: drawer + full-bleed scrim (same warm family as shell — no cold blur sheet) */}
-      <AnimatePresence>
-        {isMobileMenuOpen && (
-          <motion.div
-            key="mobile-nav-overlay"
-            className="fixed inset-x-0 top-16 bottom-0 z-40 md:hidden"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{
-              type: "tween",
-              duration: MOBILE_DRAWER_DURATION,
-              ease: MOBILE_DRAWER_EASE,
-            }}
-          >
-            {/* Full-bleed scrim: warm dim only (no backdrop-blur) so it doesn’t read as a separate “glass” layer vs. the drawer */}
-            <motion.button
-              type="button"
-              aria-label="Close navigation menu"
-              className="absolute inset-0 z-0 cursor-pointer border-0 bg-amber-950/15 p-0 transition-colors hover:bg-amber-950/20"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{
-                type: "tween",
-                duration: MOBILE_DRAWER_DURATION * 0.85,
-                ease: MOBILE_DRAWER_EASE,
-              }}
-              onClick={closeMobileMenu}
-            />
-            <motion.aside
-              id="mobile-nav-drawer"
-              role="dialog"
-              aria-modal="true"
-              aria-label="Main navigation"
-              className="relative z-10 flex h-full w-[min(88vw,20rem)] max-w-[20rem] flex-col border-r border-slate-200/80 bg-page-bg shadow-[4px_0_28px_-6px_rgba(15,23,42,0.12)]"
-              initial={{ x: "-100%" }}
-              animate={{ x: 0 }}
-              transition={{
-                type: "tween",
-                duration: MOBILE_DRAWER_DURATION,
-                ease: MOBILE_DRAWER_EASE,
-              }}
-            >
-              <div className="flex min-h-0 flex-1 flex-col overflow-y-auto overscroll-contain px-4 pb-6 pt-5">
-                <p className="mb-1 text-[0.65rem] font-bold uppercase tracking-[0.2em] text-text-secondary">
-                  Navigate
-                </p>
-                <p className="mb-4 text-xs text-text-secondary/90">
-                  Jump to any section of the app.
-                </p>
+      {/* Mobile menu: portal → body so transforms aren’t composited with <nav> repaints; tween only (no spring). */}
+      {createPortal(
+        <AnimatePresence>
+          {isMobileMenuOpen && (
+            <>
+              <motion.button
+                key="mobile-nav-scrim"
+                type="button"
+                aria-label="Close navigation menu"
+                className="fixed inset-x-0 top-16 bottom-0 z-[60] cursor-pointer border-0 bg-amber-950/15 p-0 hover:bg-amber-950/20 md:hidden"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{
+                  type: "tween",
+                  duration: MOBILE_NAV_MS,
+                  ease: MOBILE_NAV_EASE,
+                }}
+                onClick={closeMobileMenu}
+              />
+              <motion.aside
+                key="mobile-nav-drawer"
+                id="mobile-nav-drawer"
+                role="dialog"
+                aria-modal="true"
+                aria-label="Main navigation"
+                className="fixed top-16 bottom-0 left-0 z-[70] flex w-[min(88vw,20rem)] max-w-[20rem] flex-col overflow-hidden border-r border-slate-200/80 bg-page-bg shadow-[4px_0_28px_-6px_rgba(15,23,42,0.12)] md:hidden [backface-visibility:hidden]"
+                initial={{ x: "-100%" }}
+                animate={{ x: 0 }}
+                exit={{ x: "-100%" }}
+                transition={{
+                  type: "tween",
+                  duration: MOBILE_NAV_MS,
+                  ease: MOBILE_NAV_EASE,
+                }}
+              >
+                <div className="flex min-h-0 flex-1 flex-col overflow-y-auto overscroll-contain px-4 pb-6 pt-5">
+                  <p className="mb-1 text-[0.65rem] font-bold uppercase tracking-[0.2em] text-text-secondary">
+                    Navigate
+                  </p>
+                  <p className="mb-4 text-xs text-text-secondary/90">
+                    Jump to any section of the app.
+                  </p>
 
-                <nav className="flex flex-col gap-1" aria-label="Primary">
-                  {MOBILE_MAIN_NAV.filter((item) => !item.authOnly || user).map(
-                    ({ to, label, icon: Icon }) => {
-                      const active = isActive(to);
-                      return (
-                        <Link
-                          key={to}
-                          to={to}
-                          onClick={closeMobileMenu}
-                          className={`group flex items-center gap-3 rounded-lg px-3 py-2.5 text-left text-sm font-semibold transition-colors ${
-                            active
-                              ? "bg-white text-brand ring-1 ring-slate-200/80"
-                              : "text-text-primary hover:bg-white/80 hover:text-text-primary"
-                          }`}
-                        >
-                          <span
-                            className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-md border border-slate-200 bg-white transition-transform group-active:scale-[0.97] ${
-                              active ? "text-brand" : "text-text-secondary"
+                  <nav className="flex flex-col gap-1" aria-label="Primary">
+                    {MOBILE_MAIN_NAV.filter((item) => !item.authOnly || user).map(
+                      ({ to, label, icon: Icon }) => {
+                        const active = isActive(to);
+                        return (
+                          <Link
+                            key={to}
+                            to={to}
+                            onClick={closeMobileMenu}
+                            className={`group flex items-center gap-3 rounded-lg px-3 py-2.5 text-left text-sm font-semibold transition-colors ${
+                              active
+                                ? "bg-white text-brand ring-1 ring-slate-200/80"
+                                : "text-text-primary hover:bg-white/80 hover:text-text-primary"
                             }`}
                           >
-                            <Icon className="h-4 w-4" strokeWidth={2} />
-                          </span>
-                          <span className="min-w-0 flex-1">{label}</span>
-                          {active && (
                             <span
-                              className="h-1.5 w-1.5 shrink-0 rounded-full bg-brand"
-                              aria-hidden
-                            />
-                          )}
-                        </Link>
-                      );
-                    },
-                  )}
-                </nav>
-              </div>
+                              className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-md border border-slate-200 bg-white transition-transform group-active:scale-[0.97] ${
+                                active ? "text-brand" : "text-text-secondary"
+                              }`}
+                            >
+                              <Icon className="h-4 w-4" strokeWidth={2} />
+                            </span>
+                            <span className="min-w-0 flex-1">{label}</span>
+                            {active && (
+                              <span
+                                className="h-1.5 w-1.5 shrink-0 rounded-full bg-brand"
+                                aria-hidden
+                              />
+                            )}
+                          </Link>
+                        );
+                      },
+                    )}
+                  </nav>
+                </div>
 
-              <div className="shrink-0 border-t border-slate-200/90 bg-page-bg px-4 py-4">
-                <p className="mb-3 text-[0.65rem] font-bold uppercase tracking-[0.2em] text-text-secondary">
-                  Account
-                </p>
-                {user ? (
-                  <div className="flex items-center gap-3">
-                    <UserBadge />
-                    <span className="min-w-0 truncate text-xs font-medium text-text-secondary">
-                      {user.email}
-                    </span>
-                  </div>
-                ) : (
-                  <div className="flex flex-col gap-2">
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setAuthInitialMode(false);
-                        setShowAuthModal(true);
-                        closeMobileMenu();
-                      }}
-                      className="w-full rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-sm font-bold text-text-primary transition-colors hover:bg-slate-50"
-                    >
-                      Sign Up
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setAuthInitialMode(true);
-                        setShowAuthModal(true);
-                        closeMobileMenu();
-                      }}
-                      className="w-full rounded-lg border border-slate-900/10 bg-brand px-4 py-2.5 text-sm font-bold text-white transition-colors hover:bg-brand-hover"
-                    >
-                      Login
-                    </button>
-                  </div>
-                )}
-              </div>
-            </motion.aside>
-          </motion.div>
-        )}
-      </AnimatePresence>
+                <div className="shrink-0 border-t border-slate-200/90 bg-page-bg px-4 py-4">
+                  <p className="mb-3 text-[0.65rem] font-bold uppercase tracking-[0.2em] text-text-secondary">
+                    Account
+                  </p>
+                  {user ? (
+                    <div className="flex items-center gap-3">
+                      <UserBadge openMenuAbove />
+                      <span className="min-w-0 flex-1 truncate text-xs font-medium text-text-secondary">
+                        {user.email}
+                      </span>
+                    </div>
+                  ) : (
+                    <div className="flex flex-col gap-2">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setAuthInitialMode(false);
+                          setShowAuthModal(true);
+                          closeMobileMenu();
+                        }}
+                        className="w-full rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-sm font-bold text-text-primary transition-colors hover:bg-slate-50"
+                      >
+                        Sign Up
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setAuthInitialMode(true);
+                          setShowAuthModal(true);
+                          closeMobileMenu();
+                        }}
+                        className="w-full rounded-lg border border-slate-900/10 bg-brand px-4 py-2.5 text-sm font-bold text-white transition-colors hover:bg-brand-hover"
+                      >
+                        Login
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </motion.aside>
+            </>
+          )}
+        </AnimatePresence>,
+        document.body,
+      )}
 
       {/* Auth Modal */}
       {showAuthModal && (

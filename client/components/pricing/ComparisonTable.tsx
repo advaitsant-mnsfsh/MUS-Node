@@ -18,16 +18,20 @@ const ComparisonTable = () => {
     ];
 
     return (
-        <div className="mt-32 max-w-[1440px] mx-auto px-4 lg:px-[144px]">
-            <div className="mb-16">
-                <p className="text-sm font-medium text-gray-500 mb-4 uppercase tracking-widest">Compare plans</p>
-                <h2 className="text-4xl md:text-5xl font-bold text-gray-900 leading-[1.1]">
-                    Pick your poison,<br />to match your team's needs
+        <div className="font-['DM_Sans'] mx-auto mt-16 max-w-[1440px] px-4 sm:mt-24 sm:px-6 md:mt-28 lg:mt-32 lg:px-16 xl:px-[144px]">
+            <div className="mb-8 sm:mb-12 md:mb-16">
+                <p className="mb-2 text-xs font-medium uppercase tracking-widest text-gray-500 sm:mb-3 sm:text-sm md:mb-4">
+                    Compare plans
+                </p>
+                <h2 className="text-[1.65rem] font-bold leading-[1.12] tracking-tight text-[#1a1a1a] sm:text-3xl sm:leading-[1.1] md:text-4xl lg:text-5xl">
+                    Pick your poison,
+                    <br />
+                    to match your team&apos;s needs
                 </h2>
             </div>
 
             <div className="w-full">
-                <div className="sticky top-[60px] z-20 bg-[#FFFEF9]/95 backdrop-blur-sm border-b border-gray-100 flex justify-between py-4 lg:py-8 font-sans w-full max-w-[1152px]">
+                <div className="sticky top-[52px] z-20 flex w-full max-w-[1152px] justify-between border-b border-gray-100 bg-[#FFFEF9]/95 py-3 backdrop-blur-sm sm:top-[60px] sm:py-4 lg:py-8">
                     <div className="w-2/5 lg:w-[360px] shrink-0 pr-2 lg:pr-4"></div>
                     <div className="w-1/5 lg:w-[188px] shrink-0 text-left">
                         <h4 className="text-[16px] lg:text-[20px] font-bold text-[#1A1A1A] mb-1 leading-tight">Begin</h4>
@@ -61,7 +65,7 @@ const ComparisonTable = () => {
 
                 <div className="flex flex-col">
                     {features.map((feature, idx) => (
-                        <div key={idx} className="flex justify-between items-center py-4 lg:py-8 border-b border-gray-100 hover:bg-gray-50/50 transition-colors w-full max-w-[1152px]">
+                        <div key={idx} className="flex w-full max-w-[1152px] items-center justify-between border-b border-gray-100 py-3 transition-colors hover:bg-gray-50/50 sm:py-4 lg:py-8">
                             <div className="w-2/5 lg:w-[360px] shrink-0 pr-2 lg:pr-4">
                                 <span className="text-[#1A1A1A] font-bold text-[13px] lg:text-[16px] leading-tight">{feature.name}</span>
                             </div>

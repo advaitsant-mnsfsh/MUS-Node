@@ -595,24 +595,10 @@ export const APIKeysPage: React.FC = () => {
               className="flex flex-col items-center justify-center text-center shrink-0"
               style={{ gap: 16 }}
             >
-              <h1
-                className="font-bold text-[#1a1a1a] capitalize max-w-[601px] w-full"
-                style={{
-                  fontSize: 40,
-                  letterSpacing: "-1px",
-                  lineHeight: "normal",
-                }}
-              >
+              <h1 className="w-full max-w-[601px] text-center text-[26px] font-bold capitalize leading-[1.2] tracking-[-0.04em] text-[#1a1a1a] sm:text-[30px] sm:leading-[1.15] md:text-[36px] lg:text-[40px] lg:tracking-[-1px]">
                 Turn your website into an active lead-generation engine,
               </h1>
-              <p
-                className="font-medium text-black whitespace-normal md:whitespace-nowrap"
-                style={{
-                  fontSize: 20,
-                  letterSpacing: "-0.5px",
-                  lineHeight: "normal",
-                }}
-              >
+              <p className="text-center text-base font-medium leading-normal tracking-[-0.35px] text-black whitespace-normal sm:text-lg md:whitespace-nowrap md:text-xl md:tracking-[-0.5px]">
                 {` by embedding our UX audit directly on your site.`}
               </p>
             </div>
@@ -757,7 +743,7 @@ export const APIKeysPage: React.FC = () => {
                         >
                           <p
                             className="font-semibold text-[#1a1a1a]"
-                            style={{ fontSize: 16, letterSpacing: "-0.5px" }}
+                            style={{ fontSize: 18, letterSpacing: "-0.5px" }}
                           >
                             Still not sure about the widget?
                           </p>

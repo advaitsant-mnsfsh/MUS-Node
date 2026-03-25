@@ -50,19 +50,19 @@ const AboutHero = () => {
   return (
     <section
       aria-labelledby="hero-heading"
-      className="relative w-full max-w-full min-w-0 overflow-hidden bg-[#FFFEF9] px-4 py-14 font-['DM_Sans'] sm:px-6 md:py-16 lg:py-20"
+      className="relative w-full max-w-full min-w-0 overflow-hidden bg-[#FFFEF9] px-4 pb-10 pt-12 font-['DM_Sans'] sm:px-6 sm:pb-12 sm:pt-14 md:pb-16 md:pt-16 lg:pb-20 lg:pt-20"
     >
       <img
         src="/ring-top-left.png"
         alt=""
         aria-hidden
-        className="pointer-events-none absolute left-0 top-0 z-0 h-auto w-[60px] select-none object-contain md:w-[80px]"
+        className="pointer-events-none absolute left-0 top-0 z-0 h-auto w-[56px] select-none object-contain opacity-70 sm:w-[64px] md:w-[80px]"
       />
       <img
         src="/ring-top-right.png"
         alt=""
         aria-hidden
-        className="pointer-events-none absolute right-0 top-0 z-0 h-auto w-[80px] select-none object-contain md:w-[120px]"
+        className="pointer-events-none absolute right-0 top-0 z-0 h-auto w-[72px] select-none object-contain opacity-70 sm:w-[88px] md:w-[120px]"
       />
       {/* Main Content Wrapper — vertical rhythm aligned with API Keys / Pricing heroes */}
       <div className="relative z-[1] mx-auto flex w-full max-w-[1173px] flex-col items-center gap-16 md:gap-28">
@@ -71,8 +71,7 @@ const AboutHero = () => {
           <div className="relative z-[1] mx-auto flex w-full shrink-0 flex-col items-center justify-center text-center">
             <h1
               id="hero-heading"
-              className="m-0 w-full max-w-[601px] font-normal text-[32px] leading-[1.15] text-[#1a1a1a] sm:text-[40px] sm:leading-snug"
-              style={{ letterSpacing: "-1px" }}
+              className="m-0 w-full max-w-[601px] text-center text-[26px] font-normal leading-[1.2] tracking-[-0.04em] text-[#1a1a1a] sm:text-[30px] sm:leading-[1.15] sm:tracking-[-0.05em] md:text-[36px] lg:text-[40px] lg:tracking-[-0.025em]"
             >
               Find the Truth behind User{" "}
               <span className="relative inline-block font-bold">
@@ -80,7 +79,7 @@ const AboutHero = () => {
                 <img
                   src="/Logo-figma.png"
                   alt=""
-                  className="pointer-events-none absolute -right-10 -top-5 h-8 w-10 select-none object-contain md:-right-12 md:h-11 md:w-14"
+                  className="pointer-events-none absolute -right-8 -top-4 h-6 w-8 select-none object-contain sm:-right-10 sm:h-8 sm:w-10 md:-right-12 md:h-11 md:w-14"
                 />
               </span>
               <br />
