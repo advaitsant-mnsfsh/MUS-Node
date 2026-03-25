@@ -466,7 +466,7 @@ export const ReportLayout: React.FC<ReportLayoutProps> = ({
                   isLocked && teaserMode
                     ? "pointer-events-none select-none"
                     : isLocked
-                      ? "blur-sm pointer-events-none select-none h-[600px] overflow-hidden"
+                      ? "blur-sm pointer-events-none select-none"
                       : ""
                 }`}
               >
