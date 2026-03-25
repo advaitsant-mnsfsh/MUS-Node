@@ -89,7 +89,7 @@ const AboutHero = () => {
 
           {/* Stats — one horizontal row on all breakpoints (equal thirds on small screens) */}
           <div
-            className="flex w-full max-w-xl flex-row flex-nowrap items-stretch justify-between gap-1.5 sm:max-w-2xl sm:gap-3 md:w-[42.25rem] md:max-w-none md:items-center md:gap-0"
+            className="flex w-full max-w-xl flex-row flex-nowrap items-start justify-between gap-1.5 sm:max-w-2xl sm:gap-3 md:w-[42.25rem] md:max-w-none md:gap-0"
             role="list"
           >
             <StatItem value="20+" label="Years of Combined Experience" />
@@ -131,7 +131,7 @@ const AboutHero = () => {
 // font-size: 0.875rem; font-weight: 600;
 const StatItem = ({ value, label }: { value: string; label: string }) => (
   <article
-    className="flex min-w-0 flex-1 flex-col items-center justify-center px-0.5 text-center sm:px-1"
+    className="flex min-w-0 flex-1 flex-col items-center justify-start px-0.5 text-center sm:px-1"
     role="listitem"
   >
     <span className="block font-['DM_Sans'] text-lg font-bold leading-none tracking-tight text-[#1A1A1A] sm:text-2xl md:text-[1.75rem] md:font-[700] md:leading-[normal] md:tracking-[-0.125rem]">
