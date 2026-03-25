@@ -41,10 +41,10 @@ const FAQSection = () => {
         <section className="font-['DM_Sans'] mx-auto mt-20 w-full max-w-[1440px] px-4 pb-12 sm:mt-28 sm:px-6 sm:pb-16 md:mt-36 md:pb-20 lg:px-16 xl:px-[144px]">
             <div className="grid grid-cols-1 gap-10 lg:grid-cols-12 lg:gap-16 xl:gap-28">
                 <div className="lg:col-span-4">
-                    <p className="mb-1 text-xs font-medium uppercase tracking-widest text-gray-500 sm:mb-2 sm:text-sm">
+                    <p className="mb-1 text-xs font-medium uppercase tracking-widest text-gray-500 sm:mb-2 sm:text-sm md:mb-4">
                         FAQs
                     </p>
-                    <h2 className="text-2xl font-bold leading-tight tracking-tight text-balance text-[#1A1A1A] md:text-[40px]">
+                    <h2 className="text-xl font-bold leading-tight tracking-tight text-balance text-[#1A1A1A] sm:text-2xl md:text-[40px]">
                         Still have Questions?
                     </h2>
                 </div>
@@ -58,14 +58,21 @@ const FAQSection = () => {
                                     onClick={() => setOpenIndex(isOpen ? null : index)}
                                     className="group flex w-full items-start gap-3 py-4 text-left sm:gap-5 sm:py-5 md:gap-6 md:py-6"
                                 >
-                                    <div className={`
-                    mt-1 flex h-6 w-6 shrink-0 items-center justify-center rounded-full border-1 border-border-main/20 transition-colors
+                                    <div
+                                        className={`
+                    mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-1 border-border-main/20 transition-colors sm:mt-1 sm:h-6 sm:w-6
                     ${isOpen ? 'bg-text-primary text-white shadow-sm' : 'border-border-main/15 bg-gray-100 text-gray-600 group-hover:bg-gray-200'}
-                  `}>
-
-                                        {isOpen ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
+                  `}
+                                    >
+                                        {isOpen ? (
+                                            <ChevronDown className="size-[11px] sm:size-[14px]" strokeWidth={2.25} aria-hidden />
+                                        ) : (
+                                            <ChevronRight className="size-[11px] sm:size-[14px]" strokeWidth={2.25} aria-hidden />
+                                        )}
                                     </div>
-                                    <span className={`text-base font-medium transition-colors sm:text-lg md:text-xl ${isOpen ? 'text-black' : 'text-gray-500 group-hover:text-gray-800'}`}>
+                                    <span
+                                        className={`text-[15px] font-bold leading-snug transition-colors sm:text-base md:text-lg ${isOpen ? 'text-[#1A1A1A]' : 'text-[#1A1A1A]/55 group-hover:text-[#1A1A1A]/80'}`}
+                                    >
                                         {faq.question}
                                     </span>
                                 </button>
@@ -74,14 +81,14 @@ const FAQSection = () => {
                                     className={`grid transition-all duration-300 ease-in-out ${isOpen ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0'}`}
                                 >
                                     <div className="overflow-hidden">
-                                        <div className="max-w-2xl pb-6 pl-11 sm:pl-14 sm:pb-8 md:pb-10">
+                                        <div className="max-w-2xl pb-6 pl-8 sm:pl-14 sm:pb-8 md:pb-10">
                                             {faq.answerHeader && (
-                                                <p className="mb-2 text-lg font-bold text-gray-800 sm:mb-3 sm:text-xl">
+                                                <p className="mb-2 text-base font-bold leading-snug text-[#1A1A1A] sm:mb-2.5 sm:text-lg">
                                                     {faq.answerHeader}
                                                 </p>
                                             )}
                                             {faq.answerDetail && (
-                                                <p className="text-sm font-medium leading-relaxed text-gray-500 sm:text-base">
+                                                <p className="text-[13px] font-normal leading-relaxed text-[#1A1A1A]/70 sm:text-sm md:text-base">
                                                     {faq.answerDetail}
                                                 </p>
                                             )}

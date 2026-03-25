@@ -83,16 +83,16 @@ const styles = StyleSheet.create({
         marginTop: 10,
     },
     headerLabel: {
-        fontSize: 10,
-        color: COLORS.slate500,
+        fontSize: 11,
+        color: COLORS.slate600,
         fontWeight: 'normal',
         marginBottom: 4,
     },
     headerUrl: {
-        fontSize: 11,
-        fontWeight: 'normal',
+        fontSize: 12,
+        fontWeight: '600',
         color: COLORS.black,
-        lineHeight: 1.35,
+        lineHeight: 1.4,
     },
     headerRight: {
         flexDirection: 'column',
@@ -101,7 +101,7 @@ const styles = StyleSheet.create({
     },
     headerDate: {
         fontSize: 9,
-        color: COLORS.slate400,
+        color: COLORS.slate500,
     },
 
     // --- FOOTER ---
@@ -196,12 +196,12 @@ const styles = StyleSheet.create({
         backgroundColor: COLORS.white,
         marginBottom: 14,
         overflow: 'hidden',
-        height: 368, // ~80pt shorter than prior hero + preview block
+        height: 342, // reduce top-section height (~26pt)
     },
     heroLeft: {
         width: '54%',
-        paddingTop: 6,
-        paddingBottom: 6,
+        paddingTop: 4,
+        paddingBottom: 4,
         paddingHorizontal: 12,
         borderTopWidth: 0,
         borderBottomWidth: 0,
@@ -363,7 +363,7 @@ const styles = StyleSheet.create({
     },
     // Header Badges
     summaryHeaderWrapper: {
-        marginBottom: 15,
+        marginBottom: 10,
         alignSelf: 'flex-start',
     },
     summaryHeaderShadow: {
@@ -376,13 +376,8 @@ const styles = StyleSheet.create({
     },
     summaryHeaderMain: {
         height: 16,
-        borderTopWidth: 1,
-        borderRightWidth: 1,
-        borderBottomWidth: 1,
-        borderLeftWidth: 1,
-        borderColor: COLORS.borderGray,
         justifyContent: 'center',
-        paddingHorizontal: 6,
+        paddingHorizontal: 4,
         backgroundColor: COLORS.white,
     },
     summaryHeaderText: {
@@ -397,15 +392,33 @@ const styles = StyleSheet.create({
         fontSize: 9,
         lineHeight: 1.4,
         color: COLORS.black,
-        marginBottom: 4,
+        marginBottom: 2,
     },
     summaryPointContainer: {
-        marginBottom: 12,
+        marginBottom: 8,
     },
     citationSmall: {
         fontSize: 7,
-        color: '#666',
-        marginTop: 2,
+        color: COLORS.slate500,
+        marginTop: 0,
+    },
+
+    citationLine: {
+        flexDirection: 'row',
+        alignItems: 'baseline',
+        marginTop: 0,
+    },
+    citationLabel: {
+        fontSize: 8,
+        fontWeight: 'bold',
+        color: COLORS.slate500,
+        textTransform: 'uppercase',
+        letterSpacing: 0.2,
+    },
+    citationValue: {
+        fontSize: 8.5,
+        color: COLORS.slate600,
+        fontStyle: 'italic',
     },
 
 
@@ -759,16 +772,16 @@ const styles = StyleSheet.create({
         paddingTop: 6,
     },
     paramCitationLabel: {
-        fontSize: 8,
+        fontSize: 9,
         fontStyle: 'italic',
         color: COLORS.slate500,
         marginBottom: 6,
     },
     paramCitationItem: {
-        fontSize: 8,
+        fontSize: 9,
         fontStyle: 'italic',
         color: COLORS.slate600,
-        lineHeight: 1.45,
+        lineHeight: 1.4,
         marginBottom: 4,
     },
 
@@ -1303,9 +1316,10 @@ export const StandardReportPDF: React.FC<StandardReportPDFProps> = ({ report, ur
                 <View style={{ width: '100%' }}>
                     <Text style={styles.summaryTitle}>EXECUTIVE SUMMARY</Text>
 
-                    <View style={styles.summaryRow}>
-                        {/* LEFT COLUMN: WHAT'S WORKING */}
-                        <View style={styles.summaryCol}>
+                    {/* Stack vertically to prevent overlap on page 1 */}
+                    <View style={{ width: '100%', flexDirection: 'column' }}>
+                        {/* TOP: WHAT'S WORKING */}
+                        <View style={[styles.summaryCol, { width: '100%' }]}>
                             <View style={styles.summaryHeaderWrapper}>
                                 <View style={styles.summaryHeaderMain}>
                                     <Text style={styles.summaryHeaderText}>WHAT IS WORKING</Text>
@@ -1314,18 +1328,31 @@ export const StandardReportPDF: React.FC<StandardReportPDFProps> = ({ report, ur
 
                             {summary.working.length > 0 ? summary.working.map((p, i) => (
                                 <View key={i} style={styles.summaryPointContainer}>
-                                    <Text style={styles.summaryPoint}>{p.split('(Citation:')[0].trim()}</Text>
-                                    {p.includes('(Citation:') && (
-                                        <Text style={styles.citationSmall}>Citation: {p.split('(Citation:')[1].replace(/\)$/, '')}</Text>
-                                    )}
+                                    {(() => {
+                                        const textPart = p.split('(Citation:')[0].trim();
+                                        const citationPart = p.includes('(Citation:')
+                                            ? p.split('(Citation:')[1].replace(/\)$/, '').trim()
+                                            : '';
+                                        return (
+                                            <>
+                                                <Text style={styles.summaryPoint}>{textPart}</Text>
+                                                {citationPart && (
+                                                    <View style={styles.citationLine}>
+                                                        <Text style={styles.citationLabel}>Citation:</Text>
+                                                        <Text style={styles.citationValue}>{citationPart}</Text>
+                                                    </View>
+                                                )}
+                                            </>
+                                        );
+                                    })()}
                                 </View>
                             )) : (
                                 <Text style={styles.summaryPoint}>No specific strengths identified.</Text>
                             )}
                         </View>
 
-                        {/* RIGHT COLUMN: WHAT IS NOT WORKING */}
-                        <View style={styles.summaryCol}>
+                        {/* BOTTOM: WHAT IS NOT WORKING */}
+                        <View style={[styles.summaryCol, { width: '100%', marginTop: 10 }]}>
                             <View style={styles.summaryHeaderWrapper}>
                                 <View style={styles.summaryHeaderMain}>
                                     <Text style={styles.summaryHeaderText}>WHAT IS NOT WORKING</Text>
@@ -1334,10 +1361,23 @@ export const StandardReportPDF: React.FC<StandardReportPDFProps> = ({ report, ur
 
                             {summary.needsWork.length > 0 ? summary.needsWork.map((p, i) => (
                                 <View key={i} style={styles.summaryPointContainer}>
-                                    <Text style={styles.summaryPoint}>{p.split('(Citation:')[0].trim()}</Text>
-                                    {p.includes('(Citation:') && (
-                                        <Text style={styles.citationSmall}>Citation: {p.split('(Citation:')[1].replace(/\)$/, '')}</Text>
-                                    )}
+                                    {(() => {
+                                        const textPart = p.split('(Citation:')[0].trim();
+                                        const citationPart = p.includes('(Citation:')
+                                            ? p.split('(Citation:')[1].replace(/\)$/, '').trim()
+                                            : '';
+                                        return (
+                                            <>
+                                                <Text style={styles.summaryPoint}>{textPart}</Text>
+                                                {citationPart && (
+                                                    <View style={styles.citationLine}>
+                                                        <Text style={styles.citationLabel}>Citation:</Text>
+                                                        <Text style={styles.citationValue}>{citationPart}</Text>
+                                                    </View>
+                                                )}
+                                            </>
+                                        );
+                                    })()}
                                 </View>
                             )) : (
                                 <Text style={styles.summaryPoint}>No critical issues identified.</Text>
