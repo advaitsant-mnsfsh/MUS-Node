@@ -267,7 +267,7 @@ const styles = StyleSheet.create({
         fontSize: 9,
         fontWeight: 'bold',
         color: COLORS.black,
-        marginTop: 4,
+        marginTop: 2,
         textTransform: 'uppercase',
         letterSpacing: 0.3,
     },
@@ -282,7 +282,7 @@ const styles = StyleSheet.create({
     statusPill: {
         paddingHorizontal: 10,
         paddingVertical: 4,
-        marginTop: 6,
+        marginTop: 4,
         borderRadius: 2,
         alignItems: 'center',
         justifyContent: 'center',
@@ -1270,8 +1270,6 @@ export const StandardReportPDF: React.FC<StandardReportPDFProps> = ({ report, ur
                                 <Text style={[styles.statusPillText, { color: getThemeStyles(overallScore).solid }]}>{getThemeStyles(overallScore).label}</Text>
                             </View>
                         </View>
-
-                        <View style={styles.scoreSectionDivider} />
 
                         {/* Four category rings — single row like web (md:grid-cols-4) */}
                         <View style={styles.categoryGrid}>
