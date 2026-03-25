@@ -87,10 +87,9 @@ const AboutHero = () => {
             </h1>
           </div>
 
-          {/* Stats Section */}
-          {/* display: flex; width: 42.25rem; justify-content: space-between; align-items: center; */}
+          {/* Stats — one horizontal row on all breakpoints (equal thirds on small screens) */}
           <div
-            className="flex flex-col md:flex-row justify-center md:justify-between items-center w-full md:w-[42.25rem] gap-8 md:gap-0"
+            className="flex w-full max-w-xl flex-row flex-nowrap items-stretch justify-between gap-1.5 sm:max-w-2xl sm:gap-3 md:w-[42.25rem] md:max-w-none md:items-center md:gap-0"
             role="list"
           >
             <StatItem value="20+" label="Years of Combined Experience" />
@@ -100,18 +99,16 @@ const AboutHero = () => {
         </div>
 
         {/* --- Bottom Section: Brand Logos --- */}
-        {/* Brand Logos Main Parent: flex, col, w-73.3125rem, center, gap-0.75rem */}
-        <div className="flex flex-col items-center justify-center w-full max-w-[min(100%,73.3125rem)] gap-[0.75rem] pb-16 md:pb-[153px] relative z-10 mx-auto">
-          <p className="font-['DM_Sans'] font-semibold text-[#1A1A1A] m-0 text-base md:text-[16px]">
+        <div className="relative z-10 mx-auto flex w-full max-w-[min(100%,73.3125rem)] flex-col items-center justify-center gap-5 pb-16 sm:gap-6 md:gap-7 md:pb-[153px]">
+          <p className="m-0 font-['DM_Sans'] text-base font-semibold text-[#1A1A1A] md:text-[16px]">
             Our Audits are trusted by:
           </p>
 
-          {/* Brand Logos Inner Container: flex, center, start, gap-2rem, self-stretch */}
-          <div className="flex flex-wrap lg:flex-nowrap justify-center items-start self-stretch w-full gap-[0.5rem] md:gap-[2rem] ">
+          <div className="flex w-full flex-wrap items-start justify-center gap-x-5 gap-y-7 self-stretch sm:gap-x-6 sm:gap-y-8 md:gap-x-8 lg:flex-nowrap lg:gap-[2rem]">
             {brands.map((brand) => (
               <figure
                 key={brand.id}
-                className="flex flex-col justify-between items-center bg-transparent m-0 w-[40%] sm:w-[30%] md:w-[11.375rem] h-[4rem] md:h-[7.5rem] shrink-0"
+                className="m-0 flex h-[4rem] w-[40%] shrink-0 flex-col items-center justify-between bg-transparent sm:w-[30%] md:h-[7.5rem] md:w-[11.375rem]"
               >
                 <img
                   src={brand.path}
@@ -134,13 +131,13 @@ const AboutHero = () => {
 // font-size: 0.875rem; font-weight: 600;
 const StatItem = ({ value, label }: { value: string; label: string }) => (
   <article
-    className="flex flex-col items-center justify-center min-w-0 max-w-[11rem] sm:max-w-none px-1"
+    className="flex min-w-0 flex-1 flex-col items-center justify-center px-0.5 text-center sm:px-1"
     role="listitem"
   >
-    <span className="font-['DM_Sans'] text-[#1A1A1A] text-center block text-3xl md:text-[1.75rem] font-bold md:font-[700] leading-[normal] tracking-tight md:tracking-[-0.125rem]">
+    <span className="block font-['DM_Sans'] text-lg font-bold leading-none tracking-tight text-[#1A1A1A] sm:text-2xl md:text-[1.75rem] md:font-[700] md:leading-[normal] md:tracking-[-0.125rem]">
       {value}
     </span>
-    <span className="font-['DM_Sans'] text-[#1A1A1A] text-[12px] md:text-[0.875rem] font-semibold md:font-[600] leading-[normal] mt-1 md:mt-2">
+    <span className="mt-1 font-['DM_Sans'] text-[10px] font-semibold leading-snug text-[#1A1A1A] sm:text-xs md:mt-2 md:text-[0.875rem] md:font-[600] md:leading-[normal]">
       {label}
     </span>
   </article>

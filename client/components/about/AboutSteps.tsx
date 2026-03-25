@@ -15,7 +15,8 @@ const AboutSteps: React.FC = () => {
 
             {/* Steps Parent Container: flex-col, center, gap-5.25rem, self-stretch */}
             <div className="flex flex-col items-center gap-12 md:gap-20 lg:gap-[5.25rem] self-stretch w-full max-w-[1271px] mx-auto">
-                <h2 className="text-[#1A1A1A] text-center text-3xl md:text-[40px] font-bold tracking-tight">
+                {/* Content-tier section title (not hero scale) — same pattern as other About sections */}
+                <h2 className="m-0 px-2 text-center text-2xl font-bold tracking-tight text-balance text-[#1A1A1A] md:text-[40px]">
                     From URL to UX roadmap in 4 steps
                 </h2>
 
@@ -58,7 +59,7 @@ const AboutSteps: React.FC = () => {
 
                         {/* Right: Text Content */}
                         <div className="flex flex-col items-start gap-[0.25rem] w-full md:w-[33.625rem] shrink-0 pt-[1.375rem]">
-                            <h3 className="text-[#1A1A1A] text-2xl md:text-[1.5rem] font-bold leading-normal m-0">
+                            <h3 className="text-[#1A1A1A] text-xl md:text-[1.5rem] font-bold leading-normal m-0">
                                 Input & Contextualization
                             </h3>
                             <p className="text-[#1A1A1A] text-base md:text-[1rem] font-normal leading-normal opacity-70 m-0">
@@ -75,7 +76,7 @@ const AboutSteps: React.FC = () => {
                         </div>
                         {/* Left: Text Content (Right Aligned) */}
                         <div className="flex flex-col items-start md:items-end gap-[0.5rem] w-full md:w-[37rem] shrink-0 text-left md:text-right min-w-0">
-                            <h3 className="text-[#1A1A1A] text-2xl md:text-[1.5rem] font-bold leading-normal m-0 w-full text-right">
+                            <h3 className="text-[#1A1A1A] text-xl md:text-[1.5rem] font-bold leading-normal m-0 w-full text-right">
                                 The 5-Aspect Deep Dive
                             </h3>
                             <p className="text-[#1A1A1A] text-base md:text-[1rem] font-normal leading-normal opacity-70 m-0 w-full text-right">
@@ -115,39 +116,39 @@ const AboutSteps: React.FC = () => {
                         </div>
                         {/* Left: Meters */}
                         {/* Parent: flex, col, center, w-37rem, gap-2.5rem */}
-                        <div className="flex flex-col items-center gap-[2.5rem] w-full md:w-[37rem] shrink-0 pt-4">
-                            {/* Top meter: w-13.9375rem, h-7rem */}
-                            <div className="w-[13.9375rem] h-[7rem] relative">
+                        <div className="flex flex-col items-center gap-5 w-full px-1 md:px-0 md:gap-[2.5rem] md:w-[37rem] shrink-0 pt-4">
+                            {/* Top "Overall" meter — compact on mobile, design size md+ */}
+                            <div className="relative mx-auto h-[4.75rem] w-[min(100%,10.5rem)] md:h-[7rem] md:w-[13.9375rem]">
                                 <ScoreArc score={7.8} max={10} color="#E67E22" />
-                                <div className="absolute bottom-0 left-0 w-full flex flex-col items-center pb-1">
-                                    <span className="text-[#1A1A1A] font-bold text-[2rem] leading-none mb-1 font-['DM_Sans']">7.8</span>
-                                    <span className="text-[#1A1A1A] font-bold text-[0.7rem] uppercase tracking-widest font-['DM_Sans']">Overall Score</span>
+                                <div className="absolute bottom-0 left-0 flex w-full flex-col items-center pb-0.5 md:pb-1">
+                                    <span className="mb-0.5 font-['DM_Sans'] text-[1.375rem] font-bold leading-none text-[#1A1A1A] md:mb-1 md:text-[2rem]">7.8</span>
+                                    <span className="font-['DM_Sans'] text-[0.55rem] font-bold uppercase tracking-widest text-[#1A1A1A] md:text-[0.7rem]">Overall Score</span>
                                 </div>
                             </div>
-                            {/* Bottom 3 meters parent: flex, center, gap-2rem, self-stretch */}
-                            <div className="flex flex-wrap justify-center items-center gap-[2rem] self-stretch">
+                            {/* Three aspect meters: one row on mobile (flex-1), wrap + fixed width md+ */}
+                            <div className="flex w-full max-w-full flex-row flex-nowrap items-end justify-center gap-1.5 md:flex-wrap md:gap-[2rem] md:self-stretch">
                                 {/* UX Audit */}
-                                <div className="w-[11rem] h-[5.5rem] relative">
+                                <div className="relative h-[3.5rem] min-w-0 flex-1 md:h-[5.5rem] md:w-[11rem] md:flex-none">
                                     <ScoreArc score={5} max={10} color="#E67E22" />
-                                    <div className="absolute bottom-0 left-0 w-full flex flex-col items-center pb-1">
-                                        <span className="text-[#1A1A1A] font-bold text-[1.5rem] leading-none mb-1 font-['DM_Sans']">5</span>
-                                        <span className="text-[#1A1A1A] font-bold text-[0.6rem] uppercase tracking-widest font-['DM_Sans']">UX Audit</span>
+                                    <div className="absolute bottom-0 left-0 flex w-full flex-col items-center px-0.5 pb-0.5 md:pb-1">
+                                        <span className="mb-0.5 font-['DM_Sans'] text-[0.9375rem] font-bold leading-none text-[#1A1A1A] md:mb-1 md:text-[1.5rem]">5</span>
+                                        <span className="text-center font-['DM_Sans'] text-[0.45rem] font-bold uppercase leading-tight tracking-wider text-[#1A1A1A] md:text-[0.6rem] md:tracking-widest">UX Audit</span>
                                     </div>
                                 </div>
                                 {/* Visual Design */}
-                                <div className="w-[11rem] h-[5.5rem] relative">
+                                <div className="relative h-[3.5rem] min-w-0 flex-1 md:h-[5.5rem] md:w-[11rem] md:flex-none">
                                     <ScoreArc score={9.2} max={10} color="#00B050" />
-                                    <div className="absolute bottom-0 left-0 w-full flex flex-col items-center pb-1">
-                                        <span className="text-[#1A1A1A] font-bold text-[1.5rem] leading-none mb-1 font-['DM_Sans']">9.2</span>
-                                        <span className="text-[#1A1A1A] font-bold text-[0.6rem] uppercase tracking-widest font-['DM_Sans']">Visual Design</span>
+                                    <div className="absolute bottom-0 left-0 flex w-full flex-col items-center px-0.5 pb-0.5 md:pb-1">
+                                        <span className="mb-0.5 font-['DM_Sans'] text-[0.9375rem] font-bold leading-none text-[#1A1A1A] md:mb-1 md:text-[1.5rem]">9.2</span>
+                                        <span className="text-center font-['DM_Sans'] text-[0.45rem] font-bold uppercase leading-tight tracking-wider text-[#1A1A1A] md:text-[0.6rem] md:tracking-widest">Visual Design</span>
                                     </div>
                                 </div>
                                 {/* Accessibility */}
-                                <div className="w-[11rem] h-[5.5rem] relative">
+                                <div className="relative h-[3.5rem] min-w-0 flex-1 md:h-[5.5rem] md:w-[11rem] md:flex-none">
                                     <ScoreArc score={3.5} max={10} color="#FF0000" />
-                                    <div className="absolute bottom-0 left-0 w-full flex flex-col items-center pb-1">
-                                        <span className="text-[#1A1A1A] font-bold text-[1.5rem] leading-none mb-1 font-['DM_Sans']">3.5</span>
-                                        <span className="text-[#1A1A1A] font-bold text-[0.6rem] uppercase tracking-widest font-['DM_Sans']">Accessibility</span>
+                                    <div className="absolute bottom-0 left-0 flex w-full flex-col items-center px-0.5 pb-0.5 md:pb-1">
+                                        <span className="mb-0.5 font-['DM_Sans'] text-[0.9375rem] font-bold leading-none text-[#1A1A1A] md:mb-1 md:text-[1.5rem]">3.5</span>
+                                        <span className="text-center font-['DM_Sans'] text-[0.45rem] font-bold uppercase leading-tight tracking-wider text-[#1A1A1A] md:text-[0.6rem] md:tracking-widest">Accessibility</span>
                                     </div>
                                 </div>
                             </div>
@@ -163,7 +164,7 @@ const AboutSteps: React.FC = () => {
                         {/* Right: Text Content */}
                         {/* Parent: flex, w-33.625rem, col, start, gap-0.5rem */}
                         <div className="flex flex-col items-start gap-[0.5rem] w-full md:w-[33.625rem] shrink-0 pt-4">
-                            <h3 className="text-[#1A1A1A] text-2xl md:text-[1.5rem] font-bold leading-normal m-0">
+                            <h3 className="text-[#1A1A1A] text-xl md:text-[1.5rem] font-bold leading-normal m-0">
                                 Synthesis & Scoring
                             </h3>
                             <p className="text-[#1A1A1A] text-base md:text-[1rem] font-normal leading-normal opacity-70 m-0">
@@ -180,7 +181,7 @@ const AboutSteps: React.FC = () => {
                         </div>
                         {/* Left: Text Content (Right Aligned) */}
                         <div className="flex flex-col items-start md:items-end gap-[0.5rem] w-full md:w-[37rem] shrink-0 text-left md:text-right md:pt-[1.5rem] min-w-0">
-                            <h3 className="text-[#1A1A1A] text-2xl md:text-[1.5rem] font-bold leading-normal m-0 w-full text-right">
+                            <h3 className="text-[#1A1A1A] text-xl md:text-[1.5rem] font-bold leading-normal m-0 w-full text-right">
                                 Actionable Reporting
                             </h3>
                             <p className="text-[#1A1A1A] text-base md:text-[1rem] font-normal leading-normal opacity-70 m-0 w-full text-right">

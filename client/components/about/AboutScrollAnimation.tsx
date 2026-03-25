@@ -17,10 +17,10 @@ const AboutScrollAnimation: React.FC = () => {
                 SECTION 1: Subjectivity
             ====================================================== */}
       <section className="relative w-full min-h-[22vh] md:h-[30vh] bg-[#FFFEF9] flex flex-col items-center justify-end text-center px-4 sm:px-6 py-10 md:py-0">
-        <h2 className="text-[1.8rem] md:text-[2.5rem] font-bold text-[#1A1A1A] leading-snug mb-3">
+        <h2 className="mb-3 px-2 text-balance text-2xl font-bold leading-snug tracking-tight text-[#1A1A1A] md:text-[40px]">
           Since the beginning of time,
         </h2>
-        <p className="text-[1rem] md:text-[1.2rem] text-[#555555] max-w-[520px] leading-relaxed">
+        <p className="max-w-[520px] text-[1rem] leading-relaxed text-[#555555] md:text-[1.2rem]">
           Good User Experience has been subjective...
         </p>
       </section>
@@ -479,7 +479,7 @@ const AboutScrollAnimation: React.FC = () => {
         whileInView="visible"
         viewport={{ once: true, margin: "-100px" }}
       >
-        <h2 className="relative z-20 shrink-0 text-[1.75rem] sm:text-[2.2rem] md:text-[3rem] font-extrabold leading-tight text-[#1A1A1A] max-w-[700px] text-balance px-2 pb-4 md:pb-6">
+        <h2 className="relative z-20 max-w-[700px] shrink-0 px-2 pb-4 text-balance text-2xl font-extrabold leading-tight tracking-tight text-[#1A1A1A] md:pb-6 md:text-[40px]">
           MyUXScore bypasses
           <br />
           the guesswork.
