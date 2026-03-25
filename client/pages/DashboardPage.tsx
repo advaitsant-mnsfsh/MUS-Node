@@ -304,10 +304,10 @@ const DashboardPage: React.FC = () => {
         {/* Title + CTA */}
         <div className="mb-8 flex flex-col gap-6 sm:flex-row sm:items-start sm:justify-between">
           <div className="min-w-0">
-            <h1 className="text-[2.5rem] font-bold capitalize leading-tight tracking-[-1px] text-[#1a1a1a] md:text-[40px]">
+            <h1 className="text-[26px] font-bold capitalize leading-[1.15] tracking-[-0.04em] text-[#1a1a1a] sm:text-[30px] md:text-[36px] lg:text-[40px] lg:tracking-[-1px]">
               My Assessments
             </h1>
-            <p className="mt-1 text-lg font-medium tracking-[-0.5px] text-black md:text-xl">
+            <p className="mt-1 text-base font-medium tracking-[-0.35px] text-black sm:text-lg md:text-xl md:tracking-[-0.5px]">
               Your UX Scores, all in one place
             </p>
           </div>

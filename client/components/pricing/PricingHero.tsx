@@ -5,32 +5,28 @@ import React from 'react';
  */
 const PricingHero = () => {
     return (
-        <section className="relative w-full overflow-hidden bg-[#FFFEF9] py-14 md:py-16 lg:py-20 px-4 sm:px-6 font-['DM_Sans']">
+        <section className="relative w-full overflow-hidden bg-[#FFFEF9] px-4 pb-10 pt-12 font-['DM_Sans'] sm:px-6 sm:pb-12 sm:pt-14 md:pb-16 md:pt-16 lg:pb-20 lg:pt-20">
             <img
                 src="/ring-top-left.png"
                 alt=""
                 aria-hidden
-                className="absolute top-0 left-0 w-[60px] md:w-[80px] h-auto z-0 pointer-events-none select-none object-contain"
+                className="pointer-events-none absolute left-0 top-0 z-0 h-auto w-[56px] select-none object-contain opacity-70 sm:w-[64px] md:w-[80px]"
             />
             <img
                 src="/ring-top-right.png"
                 alt=""
                 aria-hidden
-                className="absolute top-0 right-0 w-[80px] md:w-[120px] h-auto z-0 pointer-events-none select-none object-contain"
+                className="pointer-events-none absolute right-0 top-0 z-0 h-auto w-[72px] select-none object-contain opacity-70 sm:w-[88px] md:w-[120px]"
             />
-            <div className="relative z-[1] flex flex-col items-center justify-center text-center shrink-0 mx-auto w-full">
-                {/* Ek hi heading — do lines <br /> se, alag p nahi */}
-                <h1
-                    className="font-normal text-[#1a1a1a] w-full max-w-[601px] m-0 text-[32px] sm:text-[40px] leading-[1.15] sm:leading-snug"
-                    style={{ letterSpacing: '-1px' }}
-                >
+            <div className="relative z-[1] mx-auto flex w-full max-w-[601px] shrink-0 flex-col items-center justify-center text-center">
+                <h1 className="m-0 w-full text-center text-[26px] font-normal leading-[1.2] tracking-[-0.04em] text-[#1a1a1a] sm:text-[30px] sm:leading-[1.15] sm:tracking-[-0.05em] md:text-[36px] lg:text-[40px] lg:tracking-[-0.025em]">
                     Find the Truth behind User{' '}
                     <span className="relative inline-block font-bold">
                         Friction.
                         <img
                             src="/Logo-figma.png"
                             alt=""
-                            className="absolute -top-5 -right-10 md:-right-12 w-10 h-8 md:w-14 md:h-11 object-contain pointer-events-none select-none"
+                            className="pointer-events-none absolute -right-8 -top-4 h-6 w-8 select-none object-contain sm:-right-10 sm:h-8 sm:w-10 md:-right-12 md:h-11 md:w-14"
                         />
                     </span>
                     <br />

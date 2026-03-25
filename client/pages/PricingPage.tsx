@@ -55,23 +55,25 @@ const PricingPage: React.FC = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-[#FFFEF9] font-sans relative overflow-x-hidden">
+    <div className="relative w-full overflow-x-hidden bg-[#FFFEF9] font-['DM_Sans']">
       <PricingHero />
 
-      {/* Inter-Section Decorative Rings */}
+      {/* Inter-Section Decorative Rings — scale like API Keys page */}
       <img
         src="/ring-left-center.png"
         alt=""
-        className="absolute top-[400px] left-0 w-[60px] md:w-[80px] h-auto pointer-events-none select-none z-0"
+        className="pointer-events-none absolute left-0 top-[min(52vh,420px)] z-0 h-auto w-[48px] select-none sm:w-[56px] md:top-[400px] md:w-[64px] lg:w-[80px]"
+        aria-hidden
       />
       <img
         src="/ring-right-center.png"
         alt=""
-        className="absolute top-[550px] right-0 w-[60px] md:w-[80px] h-auto pointer-events-none select-none z-0"
+        className="pointer-events-none absolute right-0 top-[min(60vh,520px)] z-0 h-auto w-[48px] select-none sm:w-[56px] md:top-[550px] md:w-[64px] lg:w-[80px]"
+        aria-hidden
       />
 
-      <div className="w-full max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-[140px] mt-14 md:mt-16 lg:mt-20 relative z-10">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="relative z-10 mx-auto mt-10 w-full max-w-[1440px] px-4 sm:mt-12 sm:px-6 md:mt-16 lg:mt-20 lg:px-16 xl:px-[140px]">
+        <div className="grid grid-cols-1 items-stretch gap-4 sm:gap-5 md:grid-cols-3 md:gap-6">
           {plans.map((plan, index) => (
             <PricingCard key={index} {...plan} />
           ))}

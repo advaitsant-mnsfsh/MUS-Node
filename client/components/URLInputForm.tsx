@@ -141,28 +141,27 @@ export const URLInputForm: React.FC<URLInputFormProps> = ({
               </p>
             </div>
 
-            {/* Mode Toggle */}
-            <div className="flex gap-3">
+            {/* Mode toggle: w-full on small screens so flex-1 buttons span card; sm+ same width as before */}
+            <div className="flex w-full min-w-0 shrink-0 gap-3 sm:w-auto">
               <button
                 type="button"
                 onClick={() => setCompetitorMode(false)}
-                className={`flex-1 px-6 py-2 text-sm font-bold rounded-xm transition-all border-1 border-border-main hover:shadow-neo ${!competitorMode
+                className={`flex flex-1 basis-0 items-center justify-center px-6 py-2 text-center text-sm font-bold transition-all border-1 border-border-main rounded-xm hover:shadow-neo ${!competitorMode
                   ? 'bg-accent-yellow shadow-neo text-text-primary'
                   : 'bg-white text-text-secondary hover:bg-[#F5F5F5]'
                   }`}
               >
-                Deep<br></br>Assessment
+                Deep<br />Assessment
               </button>
               <button
                 type="button"
                 onClick={() => setCompetitorMode(true)}
-                className={`flex-1 px-6 py-2 text-sm font-bold rounded-xm transition-all border-1 border-border-main flex items-center justify-center gap-2 hover:shadow-neo ${competitorMode
+                className={`flex flex-1 basis-0 items-center justify-center gap-2 px-6 py-2 text-center text-sm font-bold transition-all border-1 border-border-main rounded-xm hover:shadow-neo ${competitorMode
                   ? 'bg-accent-yellow shadow-neo text-text-primary'
                   : 'bg-white text-text-secondary hover:bg-[#F5F5F5]'
                   }`}
               >
-                {/* <Swords className="w-4 h-4" /> */}
-                Competitor<br></br>Assessment
+                Competitor<br />Assessment
               </button>
             </div>
           </div>
@@ -290,17 +289,17 @@ export const URLInputForm: React.FC<URLInputFormProps> = ({
                 <button
                   type="submit"
                   disabled={isLoading}
-                  className="w-full px-6 py-4 bg-text-primary text-white font-bold text-body rounded-lg border-1 border-border-main shadow-neo hover:shadow-neo-hover hover:-translate-x-px hover:-translate-y-px active:shadow-none active:translate-x-0 active:translate-y-0 disabled:bg-slate-300 disabled:text-slate-500 disabled:shadow-none disabled:cursor-not-allowed transition-all duration-200 flex items-center justify-center gap-3"
+                  className="w-full px-5 py-3 text-sm md:px-6 md:py-4 md:text-body bg-text-primary text-white font-bold rounded-lg border-1 border-border-main shadow-neo hover:shadow-neo-hover hover:-translate-x-px hover:-translate-y-px active:shadow-none active:translate-x-0 active:translate-y-0 disabled:bg-slate-300 disabled:text-slate-500 disabled:shadow-none disabled:cursor-not-allowed transition-all duration-200 flex items-center justify-center gap-2 md:gap-3"
                 >
                   {isLoading ? (
                     <>
-                      <Loader2 className="w-5 h-5 animate-spin text-white" />
+                      <Loader2 className="w-4 h-4 md:w-5 md:h-5 animate-spin text-white" />
                       Running...
                     </>
                   ) : (
                     <>
                       <span>{competitorMode ? "Start Comparison" : "Start Assessing"}</span>
-                      <span className="text-xl">→</span>
+                      <span className="text-lg md:text-xl">→</span>
                     </>
                   )}
                 </button>
