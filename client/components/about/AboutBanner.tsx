@@ -5,7 +5,7 @@ const AboutBanner: React.FC = () => {
         <section className="w-full max-w-full min-w-0 overflow-x-hidden flex flex-col items-center justify-center text-center py-16 md:py-24 px-4 sm:px-6">
 
             {/* Headline */}
-            <h2 className="text-[1.65rem] sm:text-[2rem] md:text-[2.6rem] font-extrabold text-[#1A1A1A] leading-snug max-w-[620px] text-balance">
+            <h2 className="max-w-[620px] px-2 text-balance text-2xl font-extrabold leading-snug tracking-tight text-[#1A1A1A] md:text-[40px]">
                 Hear what you need to. No BS.<br />
                 Just Actionable Insights.
             </h2>

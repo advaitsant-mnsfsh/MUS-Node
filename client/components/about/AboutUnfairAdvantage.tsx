@@ -324,7 +324,7 @@ const AboutUnfairAdvantage: React.FC = () => {
         <section className="relative w-full max-w-full min-w-0 overflow-x-hidden bg-[#FFFEF9] py-16 md:py-20 px-4 sm:px-6 font-['DM_Sans']">
             <div className="flex flex-col items-center gap-16 self-stretch w-full max-w-[1271px] mx-auto">
                 {/* Main Section Heading */}
-                <h2 className="text-[#1A1A1A] text-center text-2xl sm:text-3xl md:text-[2.5rem] font-bold tracking-tight m-0 text-balance px-2">
+                <h2 className="m-0 px-2 text-center text-2xl font-bold tracking-tight text-balance text-[#1A1A1A] md:text-[40px]">
                     Your New Unfair Advantages
                 </h2>
 

@@ -72,8 +72,10 @@ const AboutWhatWeCheck: React.FC = () => {
 
             {/* Heading */}
             <div className="text-center mt-8 mb-4 px-4">
-                <h2 className="text-[2rem] md:text-[2rem] font-extrabold text-[#1A1A1A]">What We Check</h2>
-                <p className="mt-3 text-[0.95rem] md:text-[1rem] text-[#555] font-normal max-w-[33rem] mx-auto leading-relaxed">
+                <h2 className="m-0 px-2 text-center text-2xl font-extrabold tracking-tight text-balance text-[#1A1A1A] md:text-[40px]">
+                    What We Check
+                </h2>
+                <p className="mx-auto mt-3 max-w-[33rem] text-[0.95rem] font-normal leading-relaxed text-[#555] md:text-[1rem]">
                     We dig deeper than surface-level metrics.&nbsp; Our AI Agents calculate up
                     <br />to 110+ specific parameters across:
                 </p>
