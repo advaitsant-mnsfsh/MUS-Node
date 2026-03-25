@@ -89,9 +89,10 @@ const styles = StyleSheet.create({
   },
   heroAssessment: {
     fontSize: 12,
-    fontWeight: "bold",
+    fontWeight: "600",
     color: COLORS.black,
     marginBottom: 14,
+    lineHeight: 1.4,
   },
 
   // Head-to-head preview row
@@ -119,7 +120,7 @@ const styles = StyleSheet.create({
   },
   siteLabelText: {
     fontSize: 11,
-    fontWeight: "bold",
+    fontWeight: "600",
     color: COLORS.black,
   },
   screenshotFrame: {
@@ -465,7 +466,7 @@ const styles = StyleSheet.create({
   footerText: {
     fontSize: 8,
     color: COLORS.slate500,
-    fontWeight: "bold",
+    fontWeight: "normal",
   },
 });
 
@@ -649,9 +650,17 @@ export const CompetitorReportPDF: React.FC<CompetitorReportPDFProps> = ({
 }) => {
   const leftLabel = url || "";
   const rightLabel = competitorUrl || "Competitor Website";
-  const assessmentText = rightLabel
-    ? `${leftLabel} vs ${rightLabel}`
-    : leftLabel;
+
+  const truncateUrlForPdf = (text: string, maxLen = 55) => {
+    const t = (text || "").trim();
+    if (t.length <= maxLen) return t;
+    if (maxLen <= 3) return t.slice(0, maxLen);
+    return `${t.slice(0, maxLen - 3)}...`;
+  };
+
+  const leftLabelDisplay = truncateUrlForPdf(leftLabel);
+  const rightLabelDisplay = truncateUrlForPdf(rightLabel);
+  const assessmentText = `${leftLabelDisplay} vs ${rightLabelDisplay}`;
 
   const renderFaceOffPage = (
     pageNumber: number,
@@ -735,7 +744,7 @@ export const CompetitorReportPDF: React.FC<CompetitorReportPDFProps> = ({
           <View style={styles.headToHeadColLeft}>
             <View style={styles.siteLabelRow}>
               <LogoBadge label={leftLabel} />
-              <Text style={styles.siteLabelText}>{leftLabel}</Text>
+              <Text style={styles.siteLabelText}>{leftLabelDisplay}</Text>
             </View>
             <View style={styles.screenshotFrame}>
               {primaryScreenshotUrl && (
@@ -754,7 +763,7 @@ export const CompetitorReportPDF: React.FC<CompetitorReportPDFProps> = ({
           {/* Right: Competitor */}
           <View style={styles.headToHeadColRight}>
             <View style={[styles.siteLabelRow, { justifyContent: "flex-end" }]}>
-              <Text style={styles.siteLabelText}>{rightLabel}</Text>
+              <Text style={styles.siteLabelText}>{rightLabelDisplay}</Text>
               <LogoBadge label={rightLabel} />
             </View>
             <View style={styles.screenshotFrame}>

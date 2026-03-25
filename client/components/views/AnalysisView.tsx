@@ -65,14 +65,13 @@ export const AnalysisView: React.FC<AnalysisViewProps> = ({
                     {/* Queue Notice & Email Opt-in */}
                     {showQueueNoticeCard && (
                         <div
-                            className="bg-white rounded-lg p-8 animate-in slide-in-from-bottom-8 duration-700 relative overflow-hidden"
-                            style={{ border: '0.5px solid var(--high-grey, #1A1A1A)', boxShadow: 'none' }}
+                            className="bg-white rounded-lg p-8 animate-in slide-in-from-bottom-8 duration-700 relative overflow-hidden border border-slate-200 shadow-none"
                         >
                             {/* Close Button */}
                             <button
                                 type="button"
                                 onClick={() => setIsDismissed(true)}
-                                className="absolute top-4 right-4 p-2 rounded-lg text-[#1A1A1A] hover:bg-neutral-100 transition-colors"
+                                className="absolute top-4 right-4 p-2 rounded-lg text-text-secondary hover:bg-slate-100 hover:text-text-primary transition-colors"
                                 aria-label="Dismiss"
                             >
                                 <X className="w-5 h-5" />
@@ -102,8 +101,7 @@ export const AnalysisView: React.FC<AnalysisViewProps> = ({
                             </div>
 
                             <p
-                                className="text-[#1A1A1A] font-medium text-sm leading-snug mb-8 pl-4 py-2 bg-slate-50 italic rounded-lg"
-                                style={{ borderLeft: '3px solid var(--color-accent-yellow, #fcd34d)' }}
+                                className="text-text-primary font-medium text-sm leading-snug mb-8 pl-4 py-2 bg-brand/5 italic rounded-lg border-l-4 border-brand"
                             >
                                 This analysis is intensive and may take up to 20 minutes. Send the report link to your inbox.
                             </p>
@@ -111,24 +109,22 @@ export const AnalysisView: React.FC<AnalysisViewProps> = ({
                             {user ? (
                                 <div className="space-y-6">
                                     <div
-                                        className="bg-[#FEFCE8] rounded-lg p-4 flex items-center gap-4"
-                                        style={{ border: '0.5px solid var(--high-grey, #1A1A1A)', boxShadow: 'none' }}
+                                        className="bg-white rounded-lg p-4 flex items-center gap-4 border border-slate-200"
                                     >
                                         <div
-                                            className="w-10 h-10 rounded-lg bg-white flex items-center justify-center text-sm font-black text-[#1A1A1A] shrink-0"
-                                            style={{ border: '0.5px solid var(--high-grey, #1A1A1A)' }}
+                                            className="w-10 h-10 rounded-lg bg-white flex items-center justify-center text-sm font-black text-text-primary shrink-0 border border-slate-200"
                                         >
                                             {user.name?.[0] || user.email?.[0]}
                                         </div>
                                         <div className="flex-1 min-w-0">
-                                            <p className="text-[10px] text-[#1A1A1A]/50 font-black uppercase tracking-widest mb-0.5">Destination</p>
-                                            <p className="text-sm font-black text-[#1A1A1A] truncate">{user.email}</p>
+                                            <p className="text-[10px] text-text-secondary/70 font-black uppercase tracking-widest mb-0.5">Destination</p>
+                                            <p className="text-sm font-black text-text-primary truncate">{user.email}</p>
                                         </div>
                                     </div>
                                     <button
                                         type="button"
                                         onClick={() => onEmailOptIn?.()}
-                                        className="w-full rounded-lg bg-[#1A1A1A] text-white font-black uppercase tracking-widest py-4 text-sm transition-all hover:bg-black active:scale-[0.99]"
+                                        className="w-full rounded-lg bg-brand text-white font-black uppercase tracking-widest py-4 text-sm transition-colors hover:bg-brand-hover active:scale-[0.99] border border-slate-900/10 shadow-none"
                                         style={{ boxShadow: 'none' }}
                                     >
                                         Confirm & Send Email
