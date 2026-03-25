@@ -59,8 +59,8 @@ const FAQSection = () => {
                                     className="group flex w-full items-start gap-3 py-4 text-left sm:gap-5 sm:py-5 md:gap-6 md:py-6"
                                 >
                                     <div className={`
-                    mt-1 w-6 h-6 rounded-full flex items-center justify-center shrink-0 transition-colors
-                    ${isOpen ? 'bg-black text-white' : 'bg-gray-300 text-gray-600 group-hover:bg-gray-400'}
+                    mt-1 flex h-6 w-6 shrink-0 items-center justify-center rounded-full border-1 border-border-main/20 transition-colors
+                    ${isOpen ? 'bg-text-primary text-white shadow-sm' : 'border-border-main/15 bg-gray-100 text-gray-600 group-hover:bg-gray-200'}
                   `}>
 
                                         {isOpen ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
