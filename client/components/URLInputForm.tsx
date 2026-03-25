@@ -10,6 +10,9 @@ import {
 } from 'lucide-react';
 import { StandardInputControl } from './inputs/StandardInputControl';
 import { CompetitorMultiInput } from './inputs/CompetitorMultiInput';
+import { tryAddUploadToQueue } from './inputs/uploadQueueHelpers';
+
+type ScreenshotModalTarget = 'standard' | 'primary' | 'competitor';
 
 // --- HELPER: VALIDATORS (Exposed for submit logic) ---
 const isValidUrl = (string: string) => {
@@ -36,6 +39,8 @@ export const URLInputForm: React.FC<URLInputFormProps> = ({
   onWhiteLabelLogoChange,
 }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [screenshotModalTarget, setScreenshotModalTarget] =
+    useState<ScreenshotModalTarget | null>(null);
 
   // Mode State
   const [competitorMode, setCompetitorMode] = useState(false);
@@ -60,6 +65,23 @@ export const URLInputForm: React.FC<URLInputFormProps> = ({
 
   const handleSaveLogo = (logoData: string) => {
     onWhiteLabelLogoChange(logoData || null);
+  };
+
+  const handleScreenshotModalSave = (file: File) => {
+    if (!screenshotModalTarget) return;
+    if (screenshotModalTarget === 'standard') {
+      tryAddUploadToQueue(queue, setQueue, setErrorMsg, file);
+    } else if (screenshotModalTarget === 'primary') {
+      tryAddUploadToQueue(primaryQueue, setPrimaryQueue, setPrimaryError, file);
+    } else {
+      tryAddUploadToQueue(
+        competitorQueue,
+        setCompetitorQueue,
+        setCompetitorError,
+        file,
+      );
+    }
+    setScreenshotModalTarget(null);
   };
 
   // --- HANDLER: SUBMIT ---
@@ -186,6 +208,10 @@ export const URLInputForm: React.FC<URLInputFormProps> = ({
                     setErrorMsg={setPrimaryError}
                     placeholder="Your URL..."
                     colorClass="indigo"
+                    useScreenshotModal
+                    onRequestScreenshotModal={() =>
+                      setScreenshotModalTarget('primary')
+                    }
                   />
                 </div>
 
@@ -203,6 +229,10 @@ export const URLInputForm: React.FC<URLInputFormProps> = ({
                     setErrorMsg={setCompetitorError}
                     placeholder="Competitor URL..."
                     colorClass="red"
+                    useScreenshotModal
+                    onRequestScreenshotModal={() =>
+                      setScreenshotModalTarget('competitor')
+                    }
                   />
                 </div>
               </div>
@@ -216,6 +246,10 @@ export const URLInputForm: React.FC<URLInputFormProps> = ({
                   setCurrentUrl={setCurrentUrl}
                   errorMsg={errorMsg}
                   setErrorMsg={setErrorMsg}
+                  useScreenshotModal
+                  onRequestScreenshotModal={() =>
+                    setScreenshotModalTarget('standard')
+                  }
                 />
                 <p className="text-sm text-text-secondary">
                   Alternatively, you can add screenshots of your website as well
@@ -311,10 +345,18 @@ export const URLInputForm: React.FC<URLInputFormProps> = ({
       </section>
 
       <WhiteLabelModal
+        variant="logo"
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         onSave={handleSaveLogo}
         initialLogo={whiteLabelLogo}
+      />
+
+      <WhiteLabelModal
+        variant="screenshot"
+        isOpen={screenshotModalTarget !== null}
+        onClose={() => setScreenshotModalTarget(null)}
+        onSaveUpload={handleScreenshotModalSave}
       />
     </>
   );
