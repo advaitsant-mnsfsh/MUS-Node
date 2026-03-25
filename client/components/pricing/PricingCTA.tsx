@@ -10,7 +10,7 @@ const PricingCTA = () => {
 
   return (
     <section className="font-['DM_Sans'] relative flex w-full flex-col items-center justify-center gap-10 overflow-hidden bg-[#FFFEF9] px-4 py-[4.25rem] sm:gap-11 md:gap-12 md:py-[4.75rem] lg:py-20">
-      <h2 className="relative z-10 max-w-4xl px-2 text-center text-[1.7rem] font-bold leading-tight tracking-tight text-[#1a1a1a] sm:text-3xl md:text-4xl lg:text-5xl">
+      <h2 className="relative z-10 max-w-4xl px-2 text-center text-2xl font-bold leading-tight tracking-tight text-balance text-[#1A1A1A] md:text-[40px]">
         Hear what you need. No BS.
         <br />
         Just Actionable Insights.
