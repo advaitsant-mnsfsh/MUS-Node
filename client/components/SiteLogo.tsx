@@ -3,7 +3,7 @@ import { Image as ImageIcon } from 'lucide-react';
 
 interface SiteLogoProps {
     domain: string;
-    size?: 'tiny' | 'small' | 'medium' | 'large';
+    size?: 'tiny' | 'compact' | 'small' | 'medium' | 'large';
     className?: string;
     customIcon?: string | null;
 }
@@ -59,24 +59,33 @@ export default function SiteLogo({ domain, size = 'medium', className = '', cust
     // Size mapping
     const sizeClasses = {
         tiny: 'w-8 h-8',
+        compact: 'w-10 h-10',
         small: 'w-14 h-14',
         medium: 'w-20 h-20',
         large: 'w-32 h-32'
     };
 
-    const iconSize = {
-        tiny: '32px',
-        small: '56px',
-        medium: '80px',
-        large: '128px'
-    };
-
     const fontSize = {
         tiny: 'text-sm',
+        compact: 'text-lg',
         small: 'text-2xl',
         medium: 'text-3xl',
         large: 'text-5xl'
     };
+
+    const imgPadClass =
+        size === 'tiny' ? 'p-0.5' : size === 'compact' ? 'p-1' : 'p-2';
+
+    const imageIconClass =
+        size === 'tiny'
+            ? 'w-4 h-4'
+            : size === 'compact'
+              ? 'w-6 h-6'
+              : size === 'small'
+                ? 'w-8 h-8'
+                : size === 'medium'
+                  ? 'w-10 h-10'
+                  : 'w-16 h-16';
 
     // Generate consistent color from domain
     const getColorFromDomain = (domain: string): string => {
@@ -114,7 +123,7 @@ export default function SiteLogo({ domain, size = 'medium', className = '', cust
                 <img
                     src={resolvedCustomIcon as string}
                     alt="Custom logo"
-                    className={`w-full h-full object-contain ${size === 'tiny' ? 'p-0.5' : 'p-2'}`}
+                    className={`w-full h-full object-contain ${imgPadClass}`}
                     onError={() => {
                         setLogoSource('google');
                     }}
@@ -130,7 +139,7 @@ export default function SiteLogo({ domain, size = 'medium', className = '', cust
                 <div
                     className={`${sizeClasses[size]} flex items-center justify-center rounded-lg bg-brand text-white shadow-md ${className}`}
                 >
-                    <ImageIcon className={size === 'tiny' ? 'w-4 h-4' : size === 'small' ? 'w-8 h-8' : size === 'medium' ? 'w-10 h-10' : 'w-16 h-16'} />
+                    <ImageIcon className={imageIconClass} />
                 </div>
             )
         }
@@ -151,7 +160,7 @@ export default function SiteLogo({ domain, size = 'medium', className = '', cust
             <img
                 src={googleFaviconUrl}
                 alt={`${cleanDomain} logo`}
-                className={`w-full h-full object-contain ${size === 'tiny' ? 'p-0.5' : 'p-2'}`}
+                className={`w-full h-full object-contain ${imgPadClass}`}
                 onError={handleImageError}
                 loading="lazy"
             />

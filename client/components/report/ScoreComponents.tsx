@@ -1,6 +1,22 @@
 import React from "react";
 import { SkeletonLoader } from "../SkeletonLoader";
 
+/** Matches Tailwind `md` — score blocks shrink & tighten spacing on small viewports */
+function useMinMd(): boolean {
+  const [matches, setMatches] = React.useState(() =>
+    typeof window !== "undefined"
+      ? window.matchMedia("(min-width: 768px)").matches
+      : true,
+  );
+  React.useEffect(() => {
+    const mq = window.matchMedia("(min-width: 768px)");
+    const onChange = () => setMatches(mq.matches);
+    mq.addEventListener("change", onChange);
+    return () => mq.removeEventListener("change", onChange);
+  }, []);
+  return matches;
+}
+
 /** Raw score is 0–10; values &gt; 10 are treated as 0–100 scaled down for display. */
 export function normalizeScoreTo10(raw: number): number {
   if (!Number.isFinite(raw)) return 0;
@@ -156,22 +172,46 @@ export function ScoreDisplayCard({
   isHero?: boolean;
   isPdf?: boolean;
 }) {
+  const mdUp = useMinMd();
+  /** PDF render should not follow phone breakpoints */
+  const compact = !isPdf && !mdUp;
+
   if (score === undefined)
-    return <SkeletonLoader className="h-32 flex-1 border-2 border-black" />;
+    return (
+      <SkeletonLoader className="h-28 md:h-32 flex-1 border-2 border-black" />
+    );
 
   const theme = getThemeStyles(score);
 
-  // --- SIZING LOGIC ---
-  const gaugeSize = isHero ? 220 : 110;
-  const gaugeStroke = isHero ? 22 : 14;
-  const fontSize = isHero ? "text-[64px]" : "text-[28px]";
-  const labelSize = isHero ? "text-lg" : "text-sm";
-  const badgeSize = isHero ? "text-sm px-6 py-2" : "text-[10px] px-3 py-1";
+  // --- SIZING LOGIC (compact on < md) ---
+  const gaugeSize = isHero ? (compact ? 172 : 220) : compact ? 88 : 110;
+  const gaugeStroke = isHero ? (compact ? 17 : 22) : compact ? 11 : 14;
+  const fontSize = isHero
+    ? compact
+      ? "text-[44px]"
+      : "text-[64px]"
+    : compact
+      ? "text-[21px]"
+      : "text-[28px]";
+  const labelSize = isHero
+    ? compact
+      ? "text-sm leading-tight"
+      : "text-lg"
+    : compact
+      ? "text-[11px] leading-tight"
+      : "text-sm";
+  const badgeSize = isHero
+    ? compact
+      ? "text-xs px-4 py-1.5 tracking-wide"
+      : "text-sm px-6 py-2"
+    : compact
+      ? "text-[9px] px-2.5 py-0.5 tracking-wide"
+      : "text-[10px] px-3 py-1";
 
   // Container: hero vs row cards (row = fixed alignment so rings + tags line up)
   const containerClasses = isHero
-    ? `flex flex-col items-center justify-center ${isPdf ? "pt-0 pb-1" : "py-8"} w-full h-full`
-    : "flex flex-1 flex-col items-center justify-center py-5 px-2 h-full min-h-0";
+    ? `flex flex-col items-center justify-center ${isPdf ? "pt-0 pb-1" : compact ? "py-3" : "py-8"} w-full h-full`
+    : `flex flex-1 flex-col items-center justify-center h-full min-h-0 ${compact ? "py-2.5 px-1" : "py-5 px-2"}`;
 
   // --- Pill: screenshot style — no shadow, no border, tinted bg ---
   let badgeClasses = `font-semibold uppercase tracking-widest ${badgeSize} rounded-md text-center`;
@@ -184,7 +224,7 @@ export function ScoreDisplayCard({
     <div className={containerClasses}>
       {/* 1. Gauge & Score Number */}
       <div
-        className={`flex flex-col items-center relative ${isHero ? (isPdf ? "mb-2" : "mb-6") : "mb-3"}`}
+        className={`flex flex-col items-center relative ${isHero ? (isPdf ? "mb-2" : compact ? "mb-2" : "mb-6") : compact ? "mb-1.5" : "mb-3"}`}
       >
         <div
           style={{
@@ -205,7 +245,15 @@ export function ScoreDisplayCard({
           <span
             className={`absolute inset-x-0 text-center font-black leading-none text-black ${fontSize}`}
             style={{
-              bottom: isHero ? (isPdf ? "5px" : "-8px") : "-4px",
+              bottom: isHero
+                ? isPdf
+                  ? "5px"
+                  : compact
+                    ? "-5px"
+                    : "-8px"
+                : compact
+                  ? "-2px"
+                  : "-4px",
             }}
           >
             {score.toFixed(1)}
@@ -215,7 +263,17 @@ export function ScoreDisplayCard({
 
       {/* 2. Label — fixed min-height so 1-line vs 2-line doesn't shift the pill */}
       <div
-        className={`flex items-center justify-center text-center ${isHero ? (isPdf ? "mt-1" : "mt-2") : "min-h-11"} mb-3`}
+        className={`flex items-center justify-center text-center ${
+          isHero
+            ? isPdf
+              ? "mt-1 mb-2"
+              : mdUp
+                ? "mt-2 mb-3"
+                : "mt-0 mb-1.5"
+            : mdUp
+              ? "min-h-11 mb-3"
+              : "min-h-[2.25rem] mb-1.5"
+        }`}
       >
         <span
           className={`font-black uppercase tracking-tight text-black ${labelSize}`}
@@ -226,7 +284,7 @@ export function ScoreDisplayCard({
 
       {/* 3. Rating Pill — fixed min-height so 1-line vs 2-line tag aligns across cards */}
       <div
-        className={`${badgeClasses} ${!isHero ? "min-h-9 flex items-center justify-center" : ""}`}
+        className={`${badgeClasses} ${!isHero ? `${compact ? "min-h-7" : "min-h-9"} flex items-center justify-center` : ""}`}
         style={{
           ...badgeStyle,
           display: isPdf ? "inline-block" : isHero ? "block" : "flex",
