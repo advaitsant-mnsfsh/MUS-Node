@@ -1,4 +1,6 @@
 import React, { useRef } from 'react';
+import type { AuditInput } from '../../types';
+import { tryAddUploadToQueue } from './uploadQueueHelpers';
 import {
     ImagePlus,
     Globe,
@@ -28,13 +30,16 @@ const getDomain = (urlString: string) => {
 };
 
 interface StandardInputControlProps {
-    queue: any[];
-    setQueue: React.Dispatch<React.SetStateAction<any[]>>;
+    queue: AuditInput[];
+    setQueue: React.Dispatch<React.SetStateAction<AuditInput[]>>;
     currentUrl: string;
     setCurrentUrl: (url: string) => void;
     errorMsg: string | null;
     setErrorMsg: (msg: string | null) => void;
     placeholder?: string;
+    /** Opens branded upload modal instead of the native file picker */
+    useScreenshotModal?: boolean;
+    onRequestScreenshotModal?: () => void;
 }
 
 export const StandardInputControl: React.FC<StandardInputControlProps> = ({
@@ -44,7 +49,9 @@ export const StandardInputControl: React.FC<StandardInputControlProps> = ({
     setCurrentUrl,
     errorMsg,
     setErrorMsg,
-    placeholder
+    placeholder,
+    useScreenshotModal = false,
+    onRequestScreenshotModal,
 }) => {
     const fileInputRef = useRef<HTMLInputElement>(null);
     const [editingId, setEditingId] = React.useState<string | null>(null);
@@ -72,13 +79,13 @@ export const StandardInputControl: React.FC<StandardInputControlProps> = ({
             setErrorMsg("Limit reached!");
             return;
         }
-        const isDuplicate = queue.some((item: any) => item.url?.toLowerCase() === trimmedUrl.toLowerCase());
+        const isDuplicate = queue.some((item) => item.url?.toLowerCase() === trimmedUrl.toLowerCase());
         if (isDuplicate) {
             setErrorMsg("Duplicate URL.");
             return;
         }
 
-        setQueue((prev: any) => [...prev, {
+        setQueue((prev) => [...prev, {
             id: Date.now().toString() + Math.random().toString(36).substring(2),
             type: 'url',
             url: trimmedUrl
@@ -89,39 +96,22 @@ export const StandardInputControl: React.FC<StandardInputControlProps> = ({
     const addFile = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (!file) return;
-        setErrorMsg(null);
-
-        if (remainingSlots <= 0) {
-            setErrorMsg("Limit reached!");
-            return;
-        }
-        // Check duplicate file
-        if (queue.some((item: any) => item.files?.some((f: File) => f.name === file.name && f.size === file.size))) {
-            setErrorMsg("File already added.");
-            return;
-        }
-
-        setQueue((prev: any) => [...prev, {
-            id: Date.now().toString() + Math.random().toString(36).substring(2),
-            type: 'upload',
-            files: [file],
-            file: file
-        }]);
+        tryAddUploadToQueue(queue, setQueue, setErrorMsg, file, MAX_INPUTS);
         e.target.value = '';
     };
 
     const remove = (index: number) => {
-        setQueue((prev: any) => prev.filter((_: any, i: number) => i !== index));
+        setQueue((prev) => prev.filter((_, i) => i !== index));
         setErrorMsg(null);
     };
 
-    const startRenaming = (item: any) => {
+    const startRenaming = (item: AuditInput) => {
         setEditingId(item.id);
         setTempName(item.customName || (item.url ? (getDomain(item.url) || item.url) : item.files?.[0]?.name));
     };
 
     const saveName = (id: string) => {
-        setQueue((prev: any) => prev.map((item: any) =>
+        setQueue((prev) => prev.map((item) =>
             item.id === id ? { ...item, customName: tempName.trim() || undefined } : item
         ));
         setEditingId(null);
@@ -142,7 +132,13 @@ export const StandardInputControl: React.FC<StandardInputControlProps> = ({
                 <div className="absolute right-2 flex items-center gap-1 h-full py-1.5">
                     <div className="w-px h-5 bg-[#DDDDDD] mx-1"></div>
                     <input type="file" ref={fileInputRef} hidden accept="image/*" onChange={addFile} />
-                    <button type="button" onClick={() => fileInputRef.current?.click()} disabled={remainingSlots === 0} className="p-1.5 text-text-secondary hover:text-brand hover:bg-[#F5F5F5] rounded transition-colors" title="Upload Screenshot">
+                    <button type="button" onClick={() => {
+                        if (useScreenshotModal && onRequestScreenshotModal) {
+                            onRequestScreenshotModal();
+                            return;
+                        }
+                        fileInputRef.current?.click();
+                    }} disabled={remainingSlots === 0} className="p-1.5 text-text-secondary hover:text-brand hover:bg-[#F5F5F5] rounded transition-colors" title="Upload Screenshot">
                         <ImagePlus className="w-4 h-4" />
                     </button>
                     <button type="button" onClick={addItem} disabled={remainingSlots === 0 || !currentUrl.trim()} className="p-1.5 bg-[#F5F5F5] border border-[#DDDDDD] text-text-primary rounded hover:bg-brand hover:text-white hover:border-brand transition-colors shadow-sm disabled:opacity-50">
@@ -162,7 +158,7 @@ export const StandardInputControl: React.FC<StandardInputControlProps> = ({
             {/* QUEUE PILLS */}
             {queue.length > 0 && (
                 <div className="flex flex-wrap gap-2">
-                    {queue.map((item: any, index: number) => (
+                    {queue.map((item, index) => (
                         <div
                             key={item.id}
                             className="flex items-center gap-1.5 px-2.5 py-1.5 bg-white rounded-lg text-sm font-bold text-text-primary group/pill"

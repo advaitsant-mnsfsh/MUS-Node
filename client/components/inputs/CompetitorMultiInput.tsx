@@ -10,6 +10,8 @@ interface CompetitorMultiInputProps {
     setErrorMsg: (msg: string | null) => void;
     placeholder?: string;
     colorClass?: string;
+    useScreenshotModal?: boolean;
+    onRequestScreenshotModal?: () => void;
 }
 
 export const CompetitorMultiInput: React.FC<CompetitorMultiInputProps> = ({
@@ -20,7 +22,9 @@ export const CompetitorMultiInput: React.FC<CompetitorMultiInputProps> = ({
     errorMsg,
     setErrorMsg,
     placeholder,
-    colorClass
+    colorClass,
+    useScreenshotModal,
+    onRequestScreenshotModal,
 }) => {
     return (
         <StandardInputControl
@@ -31,6 +35,8 @@ export const CompetitorMultiInput: React.FC<CompetitorMultiInputProps> = ({
             errorMsg={errorMsg}
             setErrorMsg={setErrorMsg}
             placeholder={placeholder}
+            useScreenshotModal={useScreenshotModal}
+            onRequestScreenshotModal={onRequestScreenshotModal}
         />
     );
 };
