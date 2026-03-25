@@ -347,43 +347,52 @@ export const CompetitorReportView: React.FC<CompetitorReportViewProps> = ({
       style={faceOffHeightStyle}
     >
       {/* 1. TOP SECTION: same top rhythm as StandardReportView hero (`pt-6 md:pt-8`) */}
-      <div className="animate-in fade-in slide-in-from-bottom-4 w-full pt-6 md:pt-8 duration-300">
+      <div className="animate-in fade-in slide-in-from-bottom-4 w-full pt-4 md:pt-8 duration-300">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-0 border border-report-border bg-white relative">
-          {/* VS Badge (Absolute Center) */}
-          <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-20">
-            <div className="w-14 h-14 bg-accent-yellow rounded-full border-1 border-black flex items-center justify-center text-black font-black italic text-xl">
+          {/* VS — desktop: centered on split; mobile: own row, vertically centered between panels */}
+          <div className="pointer-events-none absolute top-1/2 left-1/2 z-20 hidden -translate-x-1/2 -translate-y-1/2 md:block">
+            <div className="flex h-12 w-12 items-center justify-center rounded-full border border-black bg-accent-yellow text-base font-black italic text-black md:h-14 md:w-14 md:text-xl">
               VS
             </div>
           </div>
 
-          {/* Left: YOU */}
-          <div className="bg-white p-6 md:p-8 flex flex-col gap-4 border-b md:border-b-0 md:border-r border-report-border">
-            <div className="flex items-center gap-3 mb-2">
-              <div className="border-1 border-black overflow-hidden">
-                <SiteLogo
-                  domain={primaryUrl}
-                  size="small"
-                  className="shadow-none border-none rounded-none"
-                />
+          {/* Left: YOU — no full-column border on mobile (divider is only under screenshot + VS) */}
+          <div className="flex flex-col gap-3 bg-white p-4 md:gap-4 md:border-r md:p-8 border-report-border">
+            <div className="mb-1 flex items-center gap-2 md:mb-2 md:gap-3">
+              <div className="border-1 border-black overflow-hidden shrink-0">
+                <div className="md:hidden">
+                  <SiteLogo
+                    domain={primaryUrl}
+                    size="compact"
+                    className="shadow-none border-none rounded-none"
+                  />
+                </div>
+                <div className="hidden md:block">
+                  <SiteLogo
+                    domain={primaryUrl}
+                    size="small"
+                    className="shadow-none border-none rounded-none"
+                  />
+                </div>
               </div>
-              <div className="flex flex-col">
-                <h3 className="text-xl font-bold text-black break-all">
+              <div className="flex min-w-0 flex-col">
+                <h3 className="text-base font-bold text-black break-words md:text-xl">
                   {getDisplayName(primaryUrl)}
                 </h3>
               </div>
             </div>
-            {/* Primary Screenshot Area */}
-            <div className="w-full aspect-video bg-white border border-report-border overflow-hidden relative group">
+            {/* Primary screenshot */}
+            <div className="group relative aspect-[5/3] w-full max-md:max-h-[200px] overflow-hidden border border-report-border bg-white md:aspect-video md:max-h-none">
               {primaryScreenshot ? (
                 <img
                   src={primaryScreenshot}
                   onError={handleImageError}
-                  className="w-full h-full object-cover object-top transition-transform duration-700 group-hover:scale-105"
+                  className="h-full w-full object-cover object-top transition-transform duration-700 group-hover:scale-105"
                   alt="Primary Site"
                 />
               ) : (
-                <div className="w-full h-full flex items-center justify-center text-slate-300 bg-[radial-gradient(#00000022_1px,transparent_1px)] bg-size-[16px_16px]">
-                  <span className="text-sm font-bold text-black bg-white px-3 py-1 border-2 border-black">
+                <div className="flex h-full w-full items-center justify-center bg-[radial-gradient(#00000022_1px,transparent_1px)] bg-size-[16px_16px] text-slate-300">
+                  <span className="border-2 border-black bg-white px-3 py-1 text-sm font-bold text-black">
                     No Preview
                   </span>
                 </div>
@@ -391,24 +400,44 @@ export const CompetitorReportView: React.FC<CompetitorReportViewProps> = ({
             </div>
           </div>
 
+          {/* Mobile: one horizontal rule runs through the vertical center of the VS badge (same as desktop “on the line”) */}
+          <div className="relative z-30 flex items-center justify-center bg-[linear-gradient(180deg,#fff_0%,#f1f5f9_100%)] py-3 md:hidden">
+            <span
+              className="pointer-events-none absolute left-0 right-0 top-1/2 z-0 h-px -translate-y-1/2 bg-report-border"
+              aria-hidden
+            />
+            <div className="relative z-10 flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-black bg-accent-yellow text-sm font-black italic text-black shadow-[0_0_0_3px_#fff,0_0_0_4px_rgb(241_245_249)]">
+              VS
+            </div>
+          </div>
+
           {/* Right: THEM */}
-          <div className="bg-slate-100 p-6 md:p-8 flex flex-col gap-4">
-            <div className="flex items-center gap-3 mb-2 justify-end">
-              <div className="flex flex-col items-end">
-                <h3 className="text-xl font-bold text-black break-all text-right">
+          <div className="flex flex-col gap-3 bg-slate-100 p-4 md:gap-4 md:p-8">
+            <div className="mb-1 flex items-center justify-end gap-2 md:mb-2 md:gap-3">
+              <div className="flex min-w-0 flex-col items-end">
+                <h3 className="text-right text-base font-bold text-black break-words md:text-xl">
                   {getDisplayName(competitorUrl)}
                 </h3>
               </div>
-              <div className="border-1 border-black overflow-hidden">
-                <SiteLogo
-                  domain={competitorUrl}
-                  size="small"
-                  className="shadow-none border-none rounded-none"
-                />
+              <div className="border-1 border-black overflow-hidden shrink-0">
+                <div className="md:hidden">
+                  <SiteLogo
+                    domain={competitorUrl}
+                    size="compact"
+                    className="shadow-none border-none rounded-none"
+                  />
+                </div>
+                <div className="hidden md:block">
+                  <SiteLogo
+                    domain={competitorUrl}
+                    size="small"
+                    className="shadow-none border-none rounded-none"
+                  />
+                </div>
               </div>
             </div>
             {/* Competitor Screenshot Area */}
-            <div className="w-full aspect-video bg-white border border-report-border overflow-hidden relative group">
+            <div className="relative group aspect-[5/3] w-full max-md:max-h-[200px] overflow-hidden border border-report-border bg-white md:aspect-video md:max-h-none">
               {competitorScreenshot ? (
                 <img
                   src={competitorScreenshot}

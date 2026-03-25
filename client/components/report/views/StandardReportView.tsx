@@ -248,18 +248,18 @@ export const StandardReportView: React.FC<StandardReportViewProps> = ({
         <div className="flex flex-col animate-in fade-in slide-in-from-bottom-4 pt-6 md:pt-8 mb-12 w-full">
           <div className="relative flex flex-col lg:flex-row lg:items-stretch border border-report-border bg-white overflow-hidden">
             {/* LEFT COLUMN: Overall Score + 4 rings sab isi card ke andar (50%) */}
-            <div className="relative z-10 w-full lg:w-1/2 p-6 md:p-8 border-b lg:border-b-0 lg:border-r border-report-border flex flex-col overflow-visible lg:min-h-[520px]">
+            <div className="relative z-10 w-full lg:w-1/2 px-4 py-4 sm:px-5 sm:py-5 md:p-8 border-b lg:border-b-0 lg:border-r border-report-border flex flex-col overflow-visible lg:min-h-[520px]">
               {/* Decoration: scores area ke top-left & top-right */}
               <div
-                className="absolute top-0 left-0 w-36 h-36 md:w-44 md:h-44 bg-[#fefdeb] -translate-x-1/3 -translate-y-1/3 rotate-[38deg] z-0 pointer-events-none"
+                className="absolute top-0 left-0 w-28 h-28 sm:w-32 sm:h-32 md:w-44 md:h-44 bg-[#fefdeb] -translate-x-1/3 -translate-y-1/3 rotate-[38deg] z-0 pointer-events-none"
                 aria-hidden
               />
               <div
-                className="absolute top-0 right-0 w-36 h-36 md:w-44 md:h-44 bg-[#fefdeb] -translate-x-1/3 -translate-y-1/3 -rotate-[42deg] z-0 pointer-events-none"
+                className="absolute top-0 right-0 w-28 h-28 sm:w-32 sm:h-32 md:w-44 md:h-44 bg-[#fefdeb] -translate-x-1/3 -translate-y-1/3 -rotate-[42deg] z-0 pointer-events-none"
                 aria-hidden
               />
               {/* Overall Score — top, center */}
-              <div className="flex justify-center w-full py-4 md:py-6">
+              <div className="flex justify-center w-full py-1 md:py-6">
                 <ScoreDisplayCard
                   score={overallScore}
                   label="Overall Score"
@@ -267,14 +267,14 @@ export const StandardReportView: React.FC<StandardReportViewProps> = ({
                 />
               </div>
               {/* 4 category rings — isi card ke andar, Overall ke niche ek line me */}
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 w-full mt-2">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-x-2 gap-y-2 md:gap-4 w-full mt-0 md:mt-2">
                 {ux ? (
                   <ScoreDisplayCard
                     score={ux.CategoryScore}
                     label="UX and Heuristics"
                   />
                 ) : (
-                  <SkeletonLoader className="h-32 border border-report-border shadow-neo rounded-none" />
+                  <SkeletonLoader className="h-28 md:h-32 border border-report-border shadow-neo rounded-none" />
                 )}
                 {product ? (
                   <ScoreDisplayCard
@@ -282,7 +282,7 @@ export const StandardReportView: React.FC<StandardReportViewProps> = ({
                     label="Product Fit"
                   />
                 ) : (
-                  <SkeletonLoader className="h-32 border border-report-border shadow-neo rounded-none" />
+                  <SkeletonLoader className="h-28 md:h-32 border border-report-border shadow-neo rounded-none" />
                 )}
                 {visual ? (
                   <ScoreDisplayCard
@@ -290,7 +290,7 @@ export const StandardReportView: React.FC<StandardReportViewProps> = ({
                     label="Visual Design"
                   />
                 ) : (
-                  <SkeletonLoader className="h-32 border border-report-border shadow-neo rounded-none" />
+                  <SkeletonLoader className="h-28 md:h-32 border border-report-border shadow-neo rounded-none" />
                 )}
                 {accessibility ? (
                   <ScoreDisplayCard
@@ -298,7 +298,7 @@ export const StandardReportView: React.FC<StandardReportViewProps> = ({
                     label="Accessibility"
                   />
                 ) : (
-                  <SkeletonLoader className="h-32 border border-report-border shadow-neo rounded-none" />
+                  <SkeletonLoader className="h-28 md:h-32 border border-report-border shadow-neo rounded-none" />
                 )}
               </div>
             </div>
