@@ -1,23 +1,19 @@
-import React, { useState } from 'react';
-import { WhiteLabelModal } from './WhiteLabelModal';
-import { AuditInput } from '../types';
-import {
-  Globe,
-  Loader2,
-  Swords,
-  X,
-  Sparkles
-} from 'lucide-react';
-import { StandardInputControl } from './inputs/StandardInputControl';
-import { CompetitorMultiInput } from './inputs/CompetitorMultiInput';
-import { tryAddUploadToQueue } from './inputs/uploadQueueHelpers';
+import React, { useState } from "react";
+import { WhiteLabelModal } from "./WhiteLabelModal";
+import { AuditInput } from "../types";
+import { Globe, Loader2, Swords, X, Sparkles } from "lucide-react";
+import { StandardInputControl } from "./inputs/StandardInputControl";
+import { CompetitorMultiInput } from "./inputs/CompetitorMultiInput";
+import { tryAddUploadToQueue } from "./inputs/uploadQueueHelpers";
 
-type ScreenshotModalTarget = 'standard' | 'primary' | 'competitor';
+type ScreenshotModalTarget = "standard" | "primary" | "competitor";
 
 // --- HELPER: VALIDATORS (Exposed for submit logic) ---
 const isValidUrl = (string: string) => {
   try {
-    const url = new URL(string.startsWith('http') ? string : `https://${string}`);
+    const url = new URL(
+      string.startsWith("http") ? string : `https://${string}`,
+    );
     return url.protocol === "http:" || url.protocol === "https:";
   } catch (_) {
     return false;
@@ -25,7 +21,10 @@ const isValidUrl = (string: string) => {
 };
 
 interface URLInputFormProps {
-  onAnalyze: (inputs: AuditInput[], auditMode: 'standard' | 'competitor') => void;
+  onAnalyze: (
+    inputs: AuditInput[],
+    auditMode: "standard" | "competitor",
+  ) => void;
   isLoading: boolean;
   whiteLabelLogo: string | null;
   onWhiteLabelLogoChange: (logo: string | null) => void;
@@ -49,7 +48,7 @@ export const URLInputForm: React.FC<URLInputFormProps> = ({
   const [queue, setQueue] = useState<AuditInput[]>([]);
 
   // Input State
-  const [currentUrl, setCurrentUrl] = useState('');
+  const [currentUrl, setCurrentUrl] = useState("");
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   // Queue States (Competitor)
@@ -58,8 +57,8 @@ export const URLInputForm: React.FC<URLInputFormProps> = ({
   const [primaryError, setPrimaryError] = useState<string | null>(null);
   const [competitorError, setCompetitorError] = useState<string | null>(null);
 
-  const [primaryUrl, setPrimaryUrl] = useState('');
-  const [competitorUrl, setCompetitorUrl] = useState('');
+  const [primaryUrl, setPrimaryUrl] = useState("");
+  const [competitorUrl, setCompetitorUrl] = useState("");
 
   const remainingSlots = 5 - queue.length; // Re-calc logic for UI if needed globally, but used in component
 
@@ -69,9 +68,9 @@ export const URLInputForm: React.FC<URLInputFormProps> = ({
 
   const handleScreenshotModalSave = (file: File) => {
     if (!screenshotModalTarget) return;
-    if (screenshotModalTarget === 'standard') {
+    if (screenshotModalTarget === "standard") {
       tryAddUploadToQueue(queue, setQueue, setErrorMsg, file);
-    } else if (screenshotModalTarget === 'primary') {
+    } else if (screenshotModalTarget === "primary") {
       tryAddUploadToQueue(primaryQueue, setPrimaryQueue, setPrimaryError, file);
     } else {
       tryAddUploadToQueue(
@@ -98,12 +97,20 @@ export const URLInputForm: React.FC<URLInputFormProps> = ({
       // Auto-add any pending inputs
       let finalPrimaryQueue = [...primaryQueue];
       if (primaryUrl.trim() && isValidUrl(primaryUrl.trim())) {
-        finalPrimaryQueue.push({ id: `p_pending`, type: 'url', url: primaryUrl.trim() });
+        finalPrimaryQueue.push({
+          id: `p_pending`,
+          type: "url",
+          url: primaryUrl.trim(),
+        });
       }
 
       let finalCompetitorQueue = [...competitorQueue];
       if (competitorUrl.trim() && isValidUrl(competitorUrl.trim())) {
-        finalCompetitorQueue.push({ id: `c_pending`, type: 'url', url: competitorUrl.trim() });
+        finalCompetitorQueue.push({
+          id: `c_pending`,
+          type: "url",
+          url: competitorUrl.trim(),
+        });
       }
 
       if (finalPrimaryQueue.length === 0) {
@@ -117,18 +124,29 @@ export const URLInputForm: React.FC<URLInputFormProps> = ({
 
       // Merge with roles
       const mergedInputs: AuditInput[] = [
-        ...finalPrimaryQueue.map(i => ({ ...i, role: 'primary' as const })),
-        ...finalCompetitorQueue.map(i => ({ ...i, role: 'competitor' as const }))
+        ...finalPrimaryQueue.map((i) => ({ ...i, role: "primary" as const })),
+        ...finalCompetitorQueue.map((i) => ({
+          ...i,
+          role: "competitor" as const,
+        })),
       ];
 
-      onAnalyze(mergedInputs, 'competitor');
-
+      onAnalyze(mergedInputs, "competitor");
     } else {
       // Standard Mode Logic (Existing + Auto Add)
       let finalQueue = [...queue];
       if (currentUrl.trim() && isValidUrl(currentUrl.trim())) {
-        if (remainingSlots > 0 && !queue.some(i => i.url?.toLowerCase() === currentUrl.trim().toLowerCase())) {
-          finalQueue.push({ id: 'instant-submit', type: 'url', url: currentUrl.trim() });
+        if (
+          remainingSlots > 0 &&
+          !queue.some(
+            (i) => i.url?.toLowerCase() === currentUrl.trim().toLowerCase(),
+          )
+        ) {
+          finalQueue.push({
+            id: "instant-submit",
+            type: "url",
+            url: currentUrl.trim(),
+          });
         }
       }
 
@@ -137,7 +155,7 @@ export const URLInputForm: React.FC<URLInputFormProps> = ({
         return;
       }
 
-      onAnalyze(finalQueue, 'standard');
+      onAnalyze(finalQueue, "standard");
     }
   };
 
@@ -146,15 +164,16 @@ export const URLInputForm: React.FC<URLInputFormProps> = ({
       <section
         aria-label="Start Audit"
         className="bg-white rounded-lg overflow-hidden font-sans"
-        style={{ border: '1px solid var(--high-grey, #1A1A1A)' }}
+        style={{ border: "1px solid var(--high-grey, #1A1A1A)" }}
       >
         <div className="space-y-4 p-6 md:p-8">
-
           {/* Header & Mode Switch */}
           <div className="flex flex-col items-start justify-between gap-4 border-b border-slate-300 pb-6 sm:flex-row sm:items-center">
             <div>
               <h2 className="text-h3 font-bold text-text-primary">
-                {competitorMode ? "Enter Websites to Compare" : "Enter Website URL"}
+                {competitorMode
+                  ? "Enter Websites to Compare"
+                  : "Enter Website URL"}
               </h2>
               <p className="text-text-secondary text-sm mt-1">
                 {competitorMode
@@ -168,32 +187,36 @@ export const URLInputForm: React.FC<URLInputFormProps> = ({
               <button
                 type="button"
                 onClick={() => setCompetitorMode(false)}
-                className={`flex flex-1 basis-0 items-center justify-center px-6 py-2 text-center text-sm font-bold transition-all border-1 border-border-main rounded-xm hover:shadow-neo ${!competitorMode
-                  ? 'bg-accent-yellow shadow-neo text-text-primary'
-                  : 'bg-white text-text-secondary hover:bg-[#F5F5F5]'
-                  }`}
+                className={`flex flex-1 basis-0 items-center justify-center px-6 py-2 text-center text-sm font-bold transition-all border-1 border-border-main rounded-xm hover:shadow-neo ${
+                  !competitorMode
+                    ? "bg-accent-yellow shadow-neo text-text-primary"
+                    : "bg-white text-text-secondary hover:bg-[#F5F5F5]"
+                }`}
               >
-                Deep<br />Assessment
+                Deep
+                <br />
+                Assessment
               </button>
               <button
                 type="button"
                 onClick={() => setCompetitorMode(true)}
-                className={`flex flex-1 basis-0 items-center justify-center gap-2 px-6 py-2 text-center text-sm font-bold transition-all border-1 border-border-main rounded-xm hover:shadow-neo ${competitorMode
-                  ? 'bg-accent-yellow shadow-neo text-text-primary'
-                  : 'bg-white text-text-secondary hover:bg-[#F5F5F5]'
-                  }`}
+                className={`flex flex-1 basis-0 items-center justify-center gap-2 px-6 py-2 text-center text-sm font-bold transition-all border-1 border-border-main rounded-xm hover:shadow-neo ${
+                  competitorMode
+                    ? "bg-accent-yellow shadow-neo text-text-primary"
+                    : "bg-white text-text-secondary hover:bg-[#F5F5F5]"
+                }`}
               >
-                Competitor<br />Assessment
+                Competitor
+                <br />
+                Assessment
               </button>
             </div>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-6">
-
             {competitorMode ? (
               // --- COMPETITOR MODE INPUTS (DUAL QUEUES) ---
               <div className="grid animate-in fade-in slide-in-from-top-2 grid-cols-1 gap-6 md:grid-cols-2">
-
                 {/* PRIMARY QUEUE */}
                 <div className="rounded-lg border-1 border-border-main bg-white p-5 hover:shadow-neo">
                   <h3 className="mb-4 flex items-center gap-2 text-sm font-bold text-text-primary">
@@ -210,7 +233,7 @@ export const URLInputForm: React.FC<URLInputFormProps> = ({
                     colorClass="indigo"
                     useScreenshotModal
                     onRequestScreenshotModal={() =>
-                      setScreenshotModalTarget('primary')
+                      setScreenshotModalTarget("primary")
                     }
                   />
                 </div>
@@ -218,7 +241,8 @@ export const URLInputForm: React.FC<URLInputFormProps> = ({
                 {/* COMPETITOR QUEUE */}
                 <div className="rounded-lg border-1 border-border-main bg-white p-5 hover:shadow-neo">
                   <h3 className="mb-4 flex items-center gap-2 text-sm font-bold text-text-primary">
-                    <Swords className="w-4 h-4 text-[#EF4444]" /> Competitor Website
+                    <Swords className="w-4 h-4 text-[#EF4444]" /> Competitor
+                    Website
                   </h3>
                   <CompetitorMultiInput
                     queue={competitorQueue}
@@ -231,7 +255,7 @@ export const URLInputForm: React.FC<URLInputFormProps> = ({
                     colorClass="red"
                     useScreenshotModal
                     onRequestScreenshotModal={() =>
-                      setScreenshotModalTarget('competitor')
+                      setScreenshotModalTarget("competitor")
                     }
                   />
                 </div>
@@ -248,7 +272,7 @@ export const URLInputForm: React.FC<URLInputFormProps> = ({
                   setErrorMsg={setErrorMsg}
                   useScreenshotModal
                   onRequestScreenshotModal={() =>
-                    setScreenshotModalTarget('standard')
+                    setScreenshotModalTarget("standard")
                   }
                 />
                 <p className="text-sm text-text-secondary">
@@ -266,16 +290,16 @@ export const URLInputForm: React.FC<URLInputFormProps> = ({
             )}
 
             {/* Footer Section: Brand Stamp + Actions */}
-            <div className={`border-t border-slate-300 pt-4 ${!competitorMode ? 'mt-3!' : ''}`}>
-
+            <div
+              className={`border-t border-slate-300 pt-4 ${!competitorMode ? "mt-3!" : ""}`}
+            >
               {/* Action Container */}
               <div className="flex flex-col gap-3">
-
                 {/* Compact Logo Option - Single Line */}
                 <div className="text-center text-sm text-text-secondary min-h-[40px] flex items-center justify-center">
                   {!whiteLabelLogo ? (
                     <>
-                      Want a shareable report with custom branding? {' '}
+                      Want a shareable report with custom branding?{" "}
                       <button
                         type="button"
                         onClick={() => setIsModalOpen(true)}
@@ -287,7 +311,9 @@ export const URLInputForm: React.FC<URLInputFormProps> = ({
                   ) : (
                     <div className="flex items-center gap-4 animate-in fade-in zoom-in-95 duration-200">
                       <div className="flex items-center gap-2">
-                        <span className="font-bold text-text-primary">Logo added</span>
+                        <span className="font-bold text-text-primary">
+                          Logo added
+                        </span>
                         <button
                           type="button"
                           onClick={() => setIsModalOpen(true)}
@@ -332,14 +358,17 @@ export const URLInputForm: React.FC<URLInputFormProps> = ({
                     </>
                   ) : (
                     <>
-                      <span>{competitorMode ? "Start Comparison" : "Start Assessing"}</span>
+                      <span>
+                        {competitorMode
+                          ? "Start Comparison"
+                          : "Start Assessing"}
+                      </span>
                       <span className="text-lg md:text-xl">→</span>
                     </>
                   )}
                 </button>
               </div>
             </div>
-
           </form>
         </div>
       </section>

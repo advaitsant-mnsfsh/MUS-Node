@@ -41,10 +41,10 @@ const FAQSection = () => {
         <section className="font-['DM_Sans'] mx-auto mt-20 w-full max-w-[1440px] px-4 pb-12 sm:mt-28 sm:px-6 sm:pb-16 md:mt-36 md:pb-20 lg:px-16 xl:px-[144px]">
             <div className="grid grid-cols-1 gap-10 lg:grid-cols-12 lg:gap-16 xl:gap-28">
                 <div className="lg:col-span-4">
-                    <p className="mb-1 text-xs font-medium uppercase tracking-widest text-gray-500 sm:mb-2 sm:text-sm md:text-base">
+                    <p className="mb-1 text-xs font-medium uppercase tracking-widest text-gray-500 sm:mb-2 sm:text-sm">
                         FAQs
                     </p>
-                    <h2 className="text-[1.75rem] font-bold leading-tight tracking-tight text-[#1a1a1a] sm:text-3xl md:text-4xl lg:text-5xl">
+                    <h2 className="text-2xl font-bold leading-tight tracking-tight text-balance text-[#1A1A1A] md:text-[40px]">
                         Still have Questions?
                     </h2>
                 </div>
