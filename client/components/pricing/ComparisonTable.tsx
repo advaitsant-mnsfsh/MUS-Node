@@ -23,7 +23,7 @@ const ComparisonTable = () => {
                 <p className="mb-2 text-xs font-medium uppercase tracking-widest text-gray-500 sm:mb-3 sm:text-sm md:mb-4">
                     Compare plans
                 </p>
-                <h2 className="text-2xl font-bold leading-tight tracking-tight text-balance text-[#1A1A1A] md:text-[40px]">
+                <h2 className="text-xl font-bold leading-tight tracking-tight text-balance text-[#1A1A1A] sm:text-2xl md:text-[40px]">
                     Pick your poison,
                     <br />
                     to match your team&apos;s needs
@@ -31,10 +31,10 @@ const ComparisonTable = () => {
             </div>
 
             <div className="w-full">
-                <div className="flex w-full max-w-[1152px] justify-between border-b border-gray-100 bg-[#FFFEF9] py-3 sm:py-4 lg:py-8">
+                <div className="flex w-full max-w-[1152px] justify-between border-b border-gray-100 bg-[#FFFEF9] py-2.5 sm:py-4 lg:py-8">
                     <div className="w-2/5 lg:w-[360px] shrink-0 pr-2 lg:pr-4"></div>
                     <div className="w-1/5 lg:w-[188px] shrink-0 text-left">
-                        <h4 className="text-[16px] lg:text-[20px] font-bold text-[#1A1A1A] mb-1 leading-tight">Begin</h4>
+                        <h4 className="text-[14px] sm:text-[16px] lg:text-[20px] font-bold text-[#1A1A1A] mb-0.5 sm:mb-1 leading-tight">Begin</h4>
                         <p className="text-[#1A1A1A]/60 mb-2 lg:mb-4 text-[12px] lg:text-[14px] font-medium leading-tight">$0/m</p>
                         <a href="#" className="inline-flex items-center text-[#A18249] text-[14px] lg:text-[16px] font-bold hover:underline">
                             <span className="hidden md:inline">Try now</span>
@@ -43,7 +43,7 @@ const ComparisonTable = () => {
                         </a>
                     </div>
                     <div className="w-1/5 lg:w-[188px] shrink-0 text-left">
-                        <h4 className="text-[16px] lg:text-[20px] font-bold text-[#1A1A1A] mb-1 leading-tight">Grow</h4>
+                        <h4 className="text-[14px] sm:text-[16px] lg:text-[20px] font-bold text-[#1A1A1A] mb-0.5 sm:mb-1 leading-tight">Grow</h4>
                         <p className="text-[#1A1A1A]/60 mb-2 lg:mb-4 text-[12px] lg:text-[14px] font-medium leading-tight">$29/m</p>
                         <a href="#" className="inline-flex items-center text-[#A18249] text-[14px] lg:text-[16px] font-bold hover:underline">
                             <span className="hidden md:inline">Sign Up</span>
@@ -52,7 +52,7 @@ const ComparisonTable = () => {
                         </a>
                     </div>
                     <div className="w-1/5 lg:w-[188px] shrink-0 text-left">
-                        <h4 className="text-[16px] lg:text-[20px] font-bold text-[#1A1A1A] mb-1 leading-tight">Scale</h4>
+                        <h4 className="text-[14px] sm:text-[16px] lg:text-[20px] font-bold text-[#1A1A1A] mb-0.5 sm:mb-1 leading-tight">Scale</h4>
                         <p className="text-[#1A1A1A]/60 mb-2 lg:mb-4 text-[12px] lg:text-[14px] font-medium leading-tight hidden lg:block">Tailored for you :)</p>
                         <p className="text-[#1A1A1A]/60 mb-2 lg:mb-4 text-[12px] lg:text-[14px] font-medium leading-tight block lg:hidden">Custom</p>
                         <a href="#" className="inline-flex items-center text-[#A18249] text-[14px] lg:text-[16px] font-bold hover:underline">
@@ -65,7 +65,7 @@ const ComparisonTable = () => {
 
                 <div className="flex flex-col">
                     {features.map((feature, idx) => (
-                        <div key={idx} className="flex w-full max-w-[1152px] items-center justify-between border-b border-gray-100 py-3 transition-colors hover:bg-gray-50/50 sm:py-4 lg:py-8">
+                        <div key={idx} className="flex w-full max-w-[1152px] items-center justify-between border-b border-gray-100 py-2.5 transition-colors hover:bg-gray-50/50 sm:py-4 lg:py-8">
                             <div className="w-2/5 lg:w-[360px] shrink-0 pr-2 lg:pr-4">
                                 <span className="text-[#1A1A1A] font-bold text-[13px] lg:text-[16px] leading-tight">{feature.name}</span>
                             </div>

@@ -34,79 +34,83 @@ const PricingCard: React.FC<PricingCardProps> = ({
   return (
     <div
       className={`
-      font-['DM_Sans'] relative flex h-full w-full min-h-[24rem] flex-col gap-5 rounded-sm border-2 border-black bg-white p-6 transition-all
-      sm:min-h-[26rem] sm:gap-5 sm:p-7 md:h-full md:min-h-0 md:gap-6 md:border-[3.28px] md:p-8 lg:p-9
+      font-['DM_Sans'] relative flex w-full flex-col rounded-lg border-1 border-border-main bg-white px-4 py-4 transition-all
+      max-md:h-auto max-md:min-h-[22.5rem] max-md:overflow-visible max-md:p-[1.35rem] sm:max-md:p-6
+      md:h-full md:min-h-0 md:p-8 lg:p-9
       ${
         isHighlighted
-          ? "shadow-[4px_4px_0px_0px_#F4D067] sm:shadow-[6px_6px_0px_0px_#F4D067] md:shadow-[8px_8px_0px_0px_#F4D067]"
-          : "shadow-none"
+          ? "shadow-sm ring-1 ring-[#F4D067]/90 sm:ring-2 sm:ring-[#F4D067]/75"
+          : "shadow-sm"
       }
     `}
     >
-      {badge && (
-        <div className="absolute right-3 top-3 z-[1] border-2 border-black bg-[#F4D067] px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-black sm:right-4 sm:top-4 sm:px-3 sm:py-1 sm:text-xs">
-          {badge}
-        </div>
-      )}
-
-      <div className="flex shrink-0 flex-col gap-4 sm:gap-4 md:gap-5">
-        <h3 className="text-xl font-bold leading-tight tracking-tight text-black sm:text-2xl md:text-[1.65rem]">
-          {title}
-        </h3>
-        <div className="flex flex-wrap items-baseline gap-1">
-          {price === "Prices Tailored for you :)" ? (
-            <div className="text-lg font-normal leading-snug tracking-tight text-black sm:text-xl md:text-2xl">
-              Prices <span className="font-bold whitespace-nowrap">Tailored</span>
-              <br />
-              for you :)
-            </div>
-          ) : (
-            <>
-              <span className="text-4xl font-bold leading-none tracking-tighter text-black sm:text-5xl">
-                {price}
+      <div className="flex min-h-0 flex-1 flex-col gap-2.5 max-md:gap-2.5 md:h-full md:justify-start md:gap-6">
+        <div className="flex shrink-0 flex-col gap-2.5 sm:gap-4 md:gap-5">
+          <div className="flex flex-row items-start justify-between gap-2 sm:gap-3">
+            <h3 className="min-w-0 shrink text-lg font-bold leading-tight tracking-tight text-black sm:text-xl md:text-[1.65rem]">
+              {title}
+            </h3>
+            {badge ? (
+              <span className="max-w-[55%] shrink-0 rounded-md border-1 border-border-main bg-[#F4D067] px-1.5 py-0.5 text-center text-[9px] font-bold uppercase leading-tight tracking-wide text-black sm:max-w-none sm:px-2.5 sm:py-0.5 sm:text-[10px] md:rounded-lg md:px-3 md:py-1 md:text-xs">
+                {badge}
               </span>
-              {price.startsWith("$") && (
-                <span className="text-lg font-normal leading-none tracking-tighter text-black/60 sm:text-xl md:text-2xl">
-                  /month
+            ) : null}
+          </div>
+          <div className="flex flex-wrap items-baseline gap-1">
+            {price === "Prices Tailored for you :)" ? (
+              <div className="text-base font-normal leading-snug tracking-tight text-black sm:text-lg md:text-2xl">
+                Prices{" "}
+                <span className="font-bold whitespace-nowrap">Tailored</span>{" "}
+                for you :)
+              </div>
+            ) : (
+              <>
+                <span className="text-3xl font-bold leading-none tracking-tighter text-black sm:text-4xl md:text-5xl">
+                  {price}
                 </span>
-              )}
-            </>
-          )}
+                {price.startsWith("$") && (
+                  <span className="text-base font-normal leading-none tracking-tighter text-black/60 sm:text-lg md:text-2xl">
+                    /month
+                  </span>
+                )}
+              </>
+            )}
+          </div>
+          <p className="text-[13px] font-normal leading-snug tracking-normal text-black sm:text-sm sm:leading-normal md:text-base">
+            {description}
+          </p>
         </div>
-        <p className="mt-0.5 text-sm font-normal leading-snug tracking-normal text-black sm:text-base sm:leading-normal">
-          {description}
-        </p>
-      </div>
 
-      <button
-        type="button"
-        onClick={handleButtonClick}
-        className={`
-        flex h-12 w-full shrink-0 items-center justify-center gap-2 border-2 border-black px-5 py-3 text-sm font-bold transition-transform active:scale-[0.98]
-        sm:text-base sm:px-6 md:py-4
+        <button
+          type="button"
+          onClick={handleButtonClick}
+          className={`
+        flex h-10 w-full shrink-0 items-center justify-center gap-1.5 rounded-lg border-1 border-border-main px-4 py-2 text-xs font-bold transition-all active:scale-[0.98]
+        sm:h-11 sm:gap-2 sm:px-5 sm:py-2.5 sm:text-sm md:h-12 md:px-6 md:py-3 md:text-base md:leading-normal
         ${
           isHighlighted
-            ? "bg-[#F4D067] shadow-[3px_3px_0px_0px_#000] sm:shadow-[4px_4px_0px_0px_#000]"
-            : "bg-white hover:bg-gray-50"
+            ? "bg-[#F4D067] shadow-neo hover:shadow-neo-hover hover:-translate-x-px hover:-translate-y-px"
+            : "bg-white shadow-sm hover:bg-gray-50 hover:shadow-neo"
         }
       `}
-      >
-        {buttonText}
-      </button>
+        >
+          {buttonText}
+        </button>
 
-      <ul className="flex min-h-0 flex-1 flex-col gap-1 sm:gap-1.5">
-        {features.map((feature, index) => (
-          <li key={index} className="flex items-start gap-2.5 sm:gap-3">
-            <Check
-              className="mt-0.5 h-3.5 w-3.5 shrink-0 text-green-600 sm:mt-1.5 sm:h-4 sm:w-4"
-              strokeWidth={3}
-            />
-            <span className="text-sm font-medium leading-6 tracking-normal text-[#1A1A1A]/70 sm:text-base sm:leading-7">
-              {feature}
-            </span>
-          </li>
-        ))}
-      </ul>
+        <ul className="flex min-h-0 flex-1 flex-col gap-1 sm:gap-1.5 md:gap-1.5">
+          {features.map((feature, index) => (
+            <li key={index} className="flex items-start gap-2 sm:gap-2.5 md:gap-3">
+              <Check
+                className="mt-0.5 h-3 w-3 shrink-0 text-green-600 sm:h-3.5 sm:w-3.5 md:mt-1.5 md:h-4 md:w-4"
+                strokeWidth={3}
+              />
+              <span className="text-[13px] font-medium leading-snug tracking-normal text-[#1A1A1A]/70 sm:text-sm sm:leading-6 md:text-base md:leading-7">
+                {feature}
+              </span>
+            </li>
+          ))}
+        </ul>
+      </div>
     </div>
   );
 };
