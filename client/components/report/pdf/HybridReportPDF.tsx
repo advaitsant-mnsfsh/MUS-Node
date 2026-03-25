@@ -413,7 +413,7 @@ const styles = StyleSheet.create({
   footerTextRight: {
     fontSize: 8,
     color: COLORS.black,
-    fontWeight: "bold",
+    fontWeight: "normal",
   },
 });
 

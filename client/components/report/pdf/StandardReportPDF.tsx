@@ -90,8 +90,9 @@ const styles = StyleSheet.create({
     },
     headerUrl: {
         fontSize: 11,
-        fontWeight: 'bold',
+        fontWeight: 'normal',
         color: COLORS.black,
+        lineHeight: 1.35,
     },
     headerRight: {
         flexDirection: 'column',
@@ -120,7 +121,7 @@ const styles = StyleSheet.create({
     footerTextRight: {
         fontSize: 8,
         color: COLORS.black,
-        fontWeight: 'bold',
+        fontWeight: 'normal',
     },
 
     // Legacy/Inner Page Styles
@@ -1202,6 +1203,8 @@ export const StandardReportPDF: React.FC<StandardReportPDFProps> = ({ report, ur
     const primaryScreenshot = screenshots.find(s => !s.isMobile) || screenshots[0];
     const screenshotSrc = resolveImageSrc(primaryScreenshot);
     const cleanUrl = url?.replace(/^https?:\/\//, '')?.replace(/\/$/, '') || 'Analyzed Site';
+    // PDF me long URLs bahut zyada height le lete hain, isliye dashboard/web jaisa short display.
+    const cleanUrlDisplay = cleanUrl.length > 60 ? `${cleanUrl.slice(0, 57)}...` : cleanUrl;
 
     const overallScore = useMemo(() => {
         const scores = [ux?.CategoryScore, product?.CategoryScore, visual?.CategoryScore, accessibility?.CategoryScore]
@@ -1238,7 +1241,7 @@ export const StandardReportPDF: React.FC<StandardReportPDFProps> = ({ report, ur
         <Document title={`UX Audit Report - ${cleanUrl}`}>
             {/* PAGE 1: HERO + EXECUTIVE SUMMARY */}
             <Page size="A4" style={styles.page}>
-                <StandardPdfPageHeaderFixed whiteLabelLogo={whiteLabelLogo} cleanUrl={cleanUrl} />
+                <StandardPdfPageHeaderFixed whiteLabelLogo={whiteLabelLogo} cleanUrl={cleanUrlDisplay} />
 
                 {/* HERO CARD: Overall Score + 4 Rings + Screenshot (matching web layout) */}
                 <View style={styles.heroCard}>
@@ -1353,7 +1356,7 @@ export const StandardReportPDF: React.FC<StandardReportPDFProps> = ({ report, ur
 
             {/* PAGE 2: CONTEXT CAPTURE */}
             <Page size="A4" style={styles.page}>
-                <StandardPdfPageHeaderFixed whiteLabelLogo={whiteLabelLogo} cleanUrl={cleanUrl} />
+                <StandardPdfPageHeaderFixed whiteLabelLogo={whiteLabelLogo} cleanUrl={cleanUrlDisplay} />
 
                 {/* Context Capture Section */}
                 <View style={styles.contextBox}>
@@ -1433,7 +1436,7 @@ export const StandardReportPDF: React.FC<StandardReportPDFProps> = ({ report, ur
             {/* PAGE 3: Target Audience + User Personas (single page) */}
             {(targetAudience || userPersonas.length > 0) && (
                 <Page size="A4" style={styles.page}>
-                    <StandardPdfPageHeaderFixed whiteLabelLogo={whiteLabelLogo} cleanUrl={cleanUrl} />
+                    <StandardPdfPageHeaderFixed whiteLabelLogo={whiteLabelLogo} cleanUrl={cleanUrlDisplay} />
 
                     <View style={styles.contextBox}>
                         {targetAudience && (
@@ -1544,7 +1547,7 @@ export const StandardReportPDF: React.FC<StandardReportPDFProps> = ({ report, ur
             {/* PAGE 5+: UX AUDIT PARAMETERS */}
             {uxParams.length > 0 && (
                 <Page size="A4" style={styles.page}>
-                    <StandardPdfPageHeaderFixed whiteLabelLogo={whiteLabelLogo} cleanUrl={cleanUrl} />
+                    <StandardPdfPageHeaderFixed whiteLabelLogo={whiteLabelLogo} cleanUrl={cleanUrlDisplay} />
 
                     <AuditSectionHeading
                         title="UX Audit"
@@ -1566,7 +1569,7 @@ export const StandardReportPDF: React.FC<StandardReportPDFProps> = ({ report, ur
             {/* PAGE 4+: VISUAL DESIGN PARAMETERS */}
             {visualParams.length > 0 && (
                 <Page size="A4" style={styles.page}>
-                    <StandardPdfPageHeaderFixed whiteLabelLogo={whiteLabelLogo} cleanUrl={cleanUrl} />
+                    <StandardPdfPageHeaderFixed whiteLabelLogo={whiteLabelLogo} cleanUrl={cleanUrlDisplay} />
 
                     <AuditSectionHeading
                         title="Visual Design"
@@ -1588,7 +1591,7 @@ export const StandardReportPDF: React.FC<StandardReportPDFProps> = ({ report, ur
             {/* PAGE 5+: PRODUCT AUDIT PARAMETERS */}
             {productParams.length > 0 && (
                 <Page size="A4" style={styles.page}>
-                    <StandardPdfPageHeaderFixed whiteLabelLogo={whiteLabelLogo} cleanUrl={cleanUrl} />
+                    <StandardPdfPageHeaderFixed whiteLabelLogo={whiteLabelLogo} cleanUrl={cleanUrlDisplay} />
 
                     <AuditSectionHeading
                         title="Product Audit"
@@ -1610,7 +1613,7 @@ export const StandardReportPDF: React.FC<StandardReportPDFProps> = ({ report, ur
             {/* PAGE 6+: ACCESSIBILITY AUDIT */}
             {accessibilityParams.length > 0 && (
                 <Page size="A4" style={styles.page}>
-                    <StandardPdfPageHeaderFixed whiteLabelLogo={whiteLabelLogo} cleanUrl={cleanUrl} />
+                    <StandardPdfPageHeaderFixed whiteLabelLogo={whiteLabelLogo} cleanUrl={cleanUrlDisplay} />
 
                     <AuditSectionHeading
                         title="Accessibility Audit"
