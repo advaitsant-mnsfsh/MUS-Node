@@ -373,48 +373,48 @@ export const StandardReportView: React.FC<StandardReportViewProps> = ({
 
         {/* 3. BOTTOM SECTION: Score Breakdown & Detailed Cards */}
         <div className="pt-2">
-          <div className={REPORT_STICKY_FILTER_BAR_SPACING_BELOW}>
-            <div
-              className={`sticky ${stickyTopClass} ${REPORT_STICKY_FILTER_BAR_CORE}`}
-            >
-              <div className={REPORT_STICKY_FILTER_INNER_ROW}>
-                <div className={REPORT_STICKY_FILTER_TITLE_WRAP}>
-                  <h3 className={REPORT_STICKY_FILTER_TITLE}>
-                    Score Breakdown
-                  </h3>
-                </div>
-
-                <nav className={REPORT_STICKY_FILTER_NAV}>
-                  {TABS.map((tab) => {
-                    const Icon = tab.icon;
-                    const isActive = activeTab === tab.id;
-                    return (
-                      <button
-                        type="button"
-                        key={tab.id}
-                        onClick={() => handleTabClick(tab.id)}
-                        className={`${REPORT_STICKY_FILTER_TAB_BASE} ${
-                          isActive
-                            ? REPORT_STICKY_FILTER_TAB_ACTIVE
-                            : REPORT_STICKY_FILTER_TAB_IDLE
-                        }`}
-                      >
-                        <Icon
-                          className={`w-4 h-4 ${isActive ? "text-black" : "text-slate-500"}`}
-                        />
-                        {tab.label}
-                      </button>
-                    );
-                  })}
-                </nav>
+          <div
+            className={`sticky ${stickyTopClass} ${REPORT_STICKY_FILTER_BAR_CORE}`}
+          >
+            <div className={REPORT_STICKY_FILTER_INNER_ROW}>
+              <div className={REPORT_STICKY_FILTER_TITLE_WRAP}>
+                <h3 className={REPORT_STICKY_FILTER_TITLE}>
+                  Score Breakdown
+                </h3>
               </div>
+
+              <nav className={REPORT_STICKY_FILTER_NAV}>
+                {TABS.map((tab) => {
+                  const Icon = tab.icon;
+                  const isActive = activeTab === tab.id;
+                  return (
+                    <button
+                      type="button"
+                      key={tab.id}
+                      onClick={() => handleTabClick(tab.id)}
+                      className={`${REPORT_STICKY_FILTER_TAB_BASE} ${
+                        isActive
+                          ? REPORT_STICKY_FILTER_TAB_ACTIVE
+                          : REPORT_STICKY_FILTER_TAB_IDLE
+                      }`}
+                    >
+                      <Icon
+                        className={`w-4 h-4 ${
+                          isActive ? "text-black" : "text-slate-500"
+                        }`}
+                      />
+                      {tab.label}
+                    </button>
+                  );
+                })}
+              </nav>
             </div>
           </div>
 
           {/* All Content Stacked (Scroll Spy Container) */}
           <div
             id="report-sections-container"
-            className="flex flex-col gap-16 animate-in nav-fade-in duration-300 pb-20 w-full"
+            className="flex flex-col gap-16 animate-in nav-fade-in duration-300 pb-20 pt-6 sm:pt-8 w-full"
           >
             {/* Section 1: UX & Heuristics */}
             <div id="section-ux-heuristics" className="scroll-mt-[220px]">
