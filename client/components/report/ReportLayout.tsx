@@ -259,13 +259,15 @@ export const ReportLayout: React.FC<ReportLayoutProps> = ({
               {/* LEFT: Back + optional logo + two-line title (2nd design) */}
               <div className="flex items-center gap-3 md:gap-4 flex-1 min-w-0">
                 {/* Back — thin stroke, dark grey, no divider */}
-                <button
-                  onClick={() => navigate("/dashboard")}
-                  className="w-9 h-9 flex shrink-0 items-center justify-center text-slate-600 hover:text-slate-900 transition-colors"
-                  aria-label="Back"
-                >
-                  <ChevronLeft className="w-5 h-5 stroke-[1.25]" />
-                </button>
+                {!isSharedView && (
+                  <button
+                    onClick={() => navigate("/dashboard")}
+                    className="w-9 h-9 flex shrink-0 items-center justify-center text-slate-600 hover:text-slate-900 transition-colors"
+                    aria-label="Back"
+                  >
+                    <ChevronLeft className="w-5 h-5 stroke-[1.25]" />
+                  </button>
+                )}
 
                 {/* Left text area: differs for standard vs competitor */}
                 {auditMode === "standard" && (
