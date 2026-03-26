@@ -1,7 +1,21 @@
 import React, { useMemo } from 'react';
-import { Document, Page, Text, View, StyleSheet, Image, Svg, Path, Font } from '@react-pdf/renderer';
+import { Document, Page, Text, View, StyleSheet, Image, Svg, Path, Font, Circle, Rect } from '@react-pdf/renderer';
 import { AnalysisReport, Screenshot, ScoredParameter } from '../../../types';
 import { getThemeStyles } from '../ScoreComponents';
+
+Font.register({
+  family: "DM Sans Upright",
+  fonts: [
+    // Upright (Normal)
+    { src: "https://fonts.gstatic.com/s/dmsans/v17/rP2tp2ywxg089UriI5-g4vlH9VoD8CmcqZG40F9JadbnoEwAopxhTg.ttf", fontWeight: 400, fontStyle: "normal" },
+    { src: "https://fonts.gstatic.com/s/dmsans/v17/rP2tp2ywxg089UriI5-g4vlH9VoD8CmcqZG40F9JadbnoEwAkJxhTg.ttf", fontWeight: 500, fontStyle: "normal" },
+    { src: "https://fonts.gstatic.com/s/dmsans/v17/rP2tp2ywxg089UriI5-g4vlH9VoD8CmcqZG40F9JadbnoEwARZthTg.ttf", fontWeight: 700, fontStyle: "normal" },
+    // Italic
+    { src: "https://fonts.gstatic.com/s/dmsans/v17/rP2rp2ywxg089UriCZaSExd86J3t9jz86Mvy4qCRAL19DksVat-JDW3z.ttf", fontWeight: 400, fontStyle: "italic" },
+    { src: "https://fonts.gstatic.com/s/dmsans/v17/rP2rp2ywxg089UriCZaSExd86J3t9jz86Mvy4qCRAL19DksVat-7DW3z.ttf", fontWeight: 500, fontStyle: "italic" },
+    { src: "https://fonts.gstatic.com/s/dmsans/v17/rP2rp2ywxg089UriCZaSExd86J3t9jz86Mvy4qCRAL19DksVat9uCm3z.ttf", fontWeight: 700, fontStyle: "italic" },
+  ],
+});
 
 // --- DESIGN TOKENS (Matching Web Report) ---
 const COLORS = {
@@ -58,7 +72,7 @@ const styles = StyleSheet.create({
         paddingBottom: 30,
         paddingTop: PDF_HEADER_RESERVE_TOP,
         backgroundColor: COLORS.pageBg,
-        fontFamily: 'Helvetica',
+        fontFamily: 'DM Sans Upright',
     },
     headerRow: {
         marginBottom: 20,
@@ -999,8 +1013,8 @@ const StandardPdfPageHeaderFixed = ({
 const OverviewIcon = () => (
     <Svg width="14" height="14" viewBox="0 0 20 20">
         <Path d="M10 2.5 L6.2 9.2 H13.8 Z" fill={COLORS.black} />
-        <Path d="M3.5 11 H8.5 V16 H3.5 Z" fill={COLORS.black} />
-        <Path d="M14 11 m-2.2 0 a2.2 2.2 0 1 0 4.4 0 a2.2 2.2 0 1 0-4.4 0" fill={COLORS.black} />
+        <Rect x="3.5" y="11" width="5" height="5" fill={COLORS.black} />
+        <Circle cx="15" cy="13.5" r="2.5" fill={COLORS.black} />
     </Svg>
 );
 

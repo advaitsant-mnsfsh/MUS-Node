@@ -6,11 +6,26 @@ import {
   View,
   StyleSheet,
   Image,
+  Font,
 } from "@react-pdf/renderer";
 import {
   CompetitorAnalysisData,
   CompetitorComparisonItem,
 } from "../../../types";
+
+Font.register({
+  family: "DM Sans Upright",
+  fonts: [
+    // Upright (Normal)
+    { src: "https://fonts.gstatic.com/s/dmsans/v17/rP2tp2ywxg089UriI5-g4vlH9VoD8CmcqZG40F9JadbnoEwAopxhTg.ttf", fontWeight: 400, fontStyle: "normal" },
+    { src: "https://fonts.gstatic.com/s/dmsans/v17/rP2tp2ywxg089UriI5-g4vlH9VoD8CmcqZG40F9JadbnoEwAkJxhTg.ttf", fontWeight: 500, fontStyle: "normal" },
+    { src: "https://fonts.gstatic.com/s/dmsans/v17/rP2tp2ywxg089UriI5-g4vlH9VoD8CmcqZG40F9JadbnoEwARZthTg.ttf", fontWeight: 700, fontStyle: "normal" },
+    // Italic 
+    { src: "https://fonts.gstatic.com/s/dmsans/v17/rP2rp2ywxg089UriCZaSExd86J3t9jz86Mvy4qCRAL19DksVat-JDW3z.ttf", fontWeight: 400, fontStyle: "italic" },
+    { src: "https://fonts.gstatic.com/s/dmsans/v17/rP2rp2ywxg089UriCZaSExd86J3t9jz86Mvy4qCRAL19DksVat-7DW3z.ttf", fontWeight: 500, fontStyle: "italic" },
+    { src: "https://fonts.gstatic.com/s/dmsans/v17/rP2rp2ywxg089UriCZaSExd86J3t9jz86Mvy4qCRAL19DksVat9uCm3z.ttf", fontWeight: 700, fontStyle: "italic" },
+  ],
+});
 
 // --- DESIGN TOKENS ---
 const COLORS = {
@@ -52,11 +67,28 @@ const FO_COL = {
   obs: FOT_INNER_W - 128 - 62 - 62,
 } as const;
 
+/**
+ * TYPOGRAPHY SCALE (A4 PDF Standard — matches StandardReportPDF)
+ * ─────────────────────────────────────────────────────────────────
+ * Page / Section Title (H1)        : 16pt  bold/black
+ * Sub-Section Title (H2)           : 14pt  bold
+ * Card Title / Win Title (H3)      : 13pt  bold
+ * Sub-label / site label (H4)      : 11pt  bold
+ * ─────────────────────────────────────────────────────────────────
+ * Body Text (primary)              : 10pt  regular  lineHeight 1.5
+ * Body Text (table obs)            : 9pt   regular  lineHeight 1.4
+ * Table param label                : 9pt   bold
+ * Small / Meta                     : 9pt
+ * Footer / Date / Table header     : 8pt
+ * ─────────────────────────────────────────────────────────────────
+ */
 const styles = StyleSheet.create({
   page: {
-    padding: 40,
+    paddingHorizontal: 30,
+    paddingBottom: 30,
+    paddingTop: 30,
     backgroundColor: COLORS.pageBg,
-    fontFamily: "Helvetica",
+    fontFamily: "DM Sans Upright",
   },
   header: {
     marginBottom: 20,
@@ -83,7 +115,7 @@ const styles = StyleSheet.create({
 
   // Top copy
   heroSubtitle: {
-    fontSize: 11,
+    fontSize: 10,
     color: COLORS.slate600,
     marginBottom: 4,
   },
@@ -91,11 +123,10 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: "600",
     color: COLORS.black,
-    marginBottom: 14,
+    marginBottom: 8,
     lineHeight: 1.4,
   },
 
-  // Head-to-head preview row
   headToHeadRow: {
     flexDirection: "row",
     borderWidth: 1,
@@ -119,14 +150,14 @@ const styles = StyleSheet.create({
     marginBottom: 6,
   },
   siteLabelText: {
-    fontSize: 11,
-    fontWeight: "600",
-    color: COLORS.black,
+    fontSize: 10,
+    fontWeight: "normal",
+    color: COLORS.slate600,
   },
   screenshotFrame: {
     width: "100%",
     height: 130,
-    borderWidth: 1,
+    borderWidth: 0.5,
     borderColor: COLORS.slate200,
     backgroundColor: COLORS.slate100,
     overflow: "hidden",
@@ -146,7 +177,7 @@ const styles = StyleSheet.create({
     marginRight: 8,
   },
   landscapeTitle: {
-    fontSize: 18,
+    fontSize: 14,
     fontWeight: "black",
     color: COLORS.black,
   },
@@ -160,20 +191,19 @@ const styles = StyleSheet.create({
   // Wins row (Your wins / Their wins)
   winsRow: {
     flexDirection: "row",
-    justifyContent: "flex-start",
+    justifyContent: "space-between",
     marginTop: 16,
   },
   winsCol: {
-    width: "50%",
+    width: "48%",
     backgroundColor: COLORS.white,
-    borderWidth: 1,
-    borderColor: COLORS.slate200,
     padding: 10,
+    borderRadius: 4,
   },
   winsHeadingRow: {
     flexDirection: "row",
     alignItems: "center",
-    marginBottom: 8,
+    marginBottom: 12,
   },
   winsDot: {
     width: 6,
@@ -183,8 +213,8 @@ const styles = StyleSheet.create({
     marginRight: 6,
   },
   winsTitle: {
-    fontSize: 13,
-    fontWeight: "black",
+    fontSize: 14,
+    fontWeight: "bold",
     color: COLORS.black,
   },
   winsItemTitle: {
@@ -194,9 +224,9 @@ const styles = StyleSheet.create({
     marginBottom: 2,
   },
   winsItemText: {
-    fontSize: 9,
+    fontSize: 10,
     color: COLORS.slate800,
-    lineHeight: 1.4,
+    lineHeight: 1.5,
     marginBottom: 6,
   },
 
@@ -249,7 +279,7 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   actionPlanTitle: {
-    fontSize: 20,
+    fontSize: 16,
     fontWeight: "bold",
     color: COLORS.black,
     marginBottom: 10,
@@ -279,23 +309,23 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   actionPlanCardTitle: {
-    fontSize: 10.5,
+    fontSize: 10,
     fontWeight: "bold",
     color: COLORS.black,
     marginBottom: 10,
-    lineHeight: 1.2,
+    lineHeight: 1.4,
   },
   actionPlanBody: {
-    fontSize: 9,
+    fontSize: 10,
     color: COLORS.slate800,
-    lineHeight: 1.4,
+    lineHeight: 1.5,
   },
 
   // Divider under the top "Competitive assessment" area (for table pages)
   navDivider: {
     height: 1,
     backgroundColor: COLORS.slate200,
-    marginTop: 10,
+    marginTop: 6,
     marginBottom: 14,
   },
 
@@ -427,10 +457,10 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   foObsText: {
-    fontSize: 8,
+    fontSize: 9,
     fontWeight: "normal",
     color: COLORS.slate800,
-    lineHeight: 1.35,
+    lineHeight: 1.4,
   },
 
   // Strengths/Opportunities
@@ -447,16 +477,16 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   listText: {
-    fontSize: 9,
+    fontSize: 10,
     color: COLORS.slate600,
-    lineHeight: 1.4,
+    lineHeight: 1.5,
   },
 
   footer: {
     position: "absolute",
     bottom: 20,
-    left: 40,
-    right: 40,
+    left: 30,
+    right: 30,
     flexDirection: "row",
     justifyContent: "space-between",
     borderTopWidth: 1,
@@ -505,31 +535,41 @@ const getDomainInitial = (text: string): string => {
 const LogoBadge = ({
   label,
   tableHeader,
+  size = 18,
 }: {
   label: string;
   tableHeader?: boolean;
+  size?: number;
 }) => {
-  const initial = getDomainInitial(label);
+  // Clean URL to plain domain
+  const cleanDomain = (label || "")
+    .toLowerCase()
+    .replace(/^https?:\/\//, "")
+    .replace(/^www\./, "")
+    .split("/")[0]
+    .split("?")[0];
+    
+  // Using icon.horse which returns CORS headers (Access-Control-Allow-Origin: *)
+  // This allows react-pdf to fetch it safely in the browser without failing silently.
+  const faviconUrl = cleanDomain ? `https://icon.horse/icon/${cleanDomain}` : null;
 
   return (
     <View
       style={{
-        width: 18,
-        height: 18,
-        borderWidth: 1,
-        borderColor: COLORS.slate400,
-        borderRadius: 2,
+        width: size,
+        height: size,
         alignItems: "center",
         justifyContent: "center",
-        marginRight: tableHeader ? 0 : 4,
+        marginRight: tableHeader ? 0 : 6,
         backgroundColor: COLORS.white,
+        overflow: "hidden",
+        borderWidth: 0.5,
+        borderColor: COLORS.slate200,
       }}
     >
-      <Text
-        style={{ fontSize: 10, fontWeight: "bold", color: COLORS.slate700 }}
-      >
-        {initial}
-      </Text>
+      {faviconUrl ? (
+        <Image src={{ uri: faviconUrl, method: "GET" }} style={{ width: "100%", height: "100%", objectFit: "contain" }} />
+      ) : null}
     </View>
   );
 };
@@ -660,7 +700,6 @@ export const CompetitorReportPDF: React.FC<CompetitorReportPDFProps> = ({
 
   const leftLabelDisplay = truncateUrlForPdf(leftLabel);
   const rightLabelDisplay = truncateUrlForPdf(rightLabel);
-  const assessmentText = `${leftLabelDisplay} vs ${rightLabelDisplay}`;
 
   const renderFaceOffPage = (
     pageNumber: number,
@@ -690,7 +729,11 @@ export const CompetitorReportPDF: React.FC<CompetitorReportPDFProps> = ({
         </View>
 
         <Text style={styles.heroSubtitle}>Competitive assessment</Text>
-        <Text style={styles.heroAssessment}>{assessmentText}</Text>
+        <Text style={styles.heroAssessment}>
+          {leftLabelDisplay}
+          <Text style={{ fontWeight: "normal", color: COLORS.slate400 }}> vs </Text>
+          {rightLabelDisplay}
+        </Text>
 
         {/* Divider below the top assessment/URL block */}
         <View style={styles.navDivider} />
@@ -705,7 +748,11 @@ export const CompetitorReportPDF: React.FC<CompetitorReportPDFProps> = ({
         </View>
 
         <View style={styles.footer}>
-          <Text style={styles.footerText}>{title.toLowerCase()}</Text>
+          <View style={{ flex: 1 }}>
+            <Text style={[styles.footerText, { color: COLORS.slate400 }]}>
+              Scores are AI powered and represent an overall assessment based on 110+ factors
+            </Text>
+          </View>
           <Text style={styles.footerText}>Page {pageNumber}</Text>
         </View>
       </Page>
@@ -736,7 +783,11 @@ export const CompetitorReportPDF: React.FC<CompetitorReportPDFProps> = ({
 
         {/* Competitive assessment line */}
         <Text style={styles.heroSubtitle}>Competitive assessment</Text>
-        <Text style={styles.heroAssessment}>{assessmentText}</Text>
+        <Text style={styles.heroAssessment}>
+          {leftLabelDisplay}
+          <Text style={{ fontWeight: "normal", color: COLORS.slate400 }}> vs </Text>
+          {rightLabelDisplay}
+        </Text>
 
         {/* Head-to-head layout */}
         <View style={styles.headToHeadRow}>
@@ -762,9 +813,9 @@ export const CompetitorReportPDF: React.FC<CompetitorReportPDFProps> = ({
 
           {/* Right: Competitor */}
           <View style={styles.headToHeadColRight}>
-            <View style={[styles.siteLabelRow, { justifyContent: "flex-end" }]}>
-              <Text style={styles.siteLabelText}>{rightLabelDisplay}</Text>
+            <View style={styles.siteLabelRow}>
               <LogoBadge label={rightLabel} />
+              <Text style={styles.siteLabelText}>{rightLabelDisplay}</Text>
             </View>
             <View style={styles.screenshotFrame}>
               {competitorScreenshotUrl && (
@@ -797,7 +848,7 @@ export const CompetitorReportPDF: React.FC<CompetitorReportPDFProps> = ({
           {/* Your Wins */}
           <View style={styles.winsCol}>
             <View style={styles.winsHeadingRow}>
-              <LogoBadge label={leftLabel} />
+              <LogoBadge label={leftLabel} size={20} />
               <Text style={styles.winsTitle}>Your Wins</Text>
             </View>
             {(data.PrimaryStrengths || []).slice(0, 3).map((s, idx) => (
@@ -813,7 +864,7 @@ export const CompetitorReportPDF: React.FC<CompetitorReportPDFProps> = ({
           {/* Their Wins */}
           <View style={styles.winsCol}>
             <View style={styles.winsHeadingRow}>
-              <LogoBadge label={rightLabel} />
+              <LogoBadge label={rightLabel} size={20} />
               <Text style={styles.winsTitle}>Their Wins</Text>
             </View>
             {(data.CompetitorStrengths || []).slice(0, 3).map((s, idx) => (
@@ -828,7 +879,11 @@ export const CompetitorReportPDF: React.FC<CompetitorReportPDFProps> = ({
         </View>
 
         <View style={styles.footer}>
-          <Text style={styles.footerText}>competitor analysis</Text>
+          <View style={{ flex: 1 }}>
+            <Text style={[styles.footerText, { color: COLORS.slate400 }]}>
+              Scores are AI powered and represent an overall assessment based on 110+ factors
+            </Text>
+          </View>
           <Text style={styles.footerText}>Page 1</Text>
         </View>
       </Page>
@@ -855,7 +910,11 @@ export const CompetitorReportPDF: React.FC<CompetitorReportPDFProps> = ({
 
         {/* Navbar-like top block (Competitive assessment + url vs url) */}
         <Text style={styles.heroSubtitle}>Competitive assessment</Text>
-        <Text style={styles.heroAssessment}>{assessmentText}</Text>
+        <Text style={styles.heroAssessment}>
+          {leftLabelDisplay}
+          <Text style={{ fontWeight: "normal", color: COLORS.slate400 }}> vs </Text>
+          {rightLabelDisplay}
+        </Text>
         <View style={styles.navDivider} />
 
         <View style={styles.actionPlanSection}>
@@ -876,7 +935,11 @@ export const CompetitorReportPDF: React.FC<CompetitorReportPDFProps> = ({
         </View>
 
         <View style={styles.footer}>
-          <Text style={styles.footerText}>action plan</Text>
+          <View style={{ flex: 1 }}>
+            <Text style={[styles.footerText, { color: COLORS.slate400 }]}>
+              Scores are AI powered and represent an overall assessment based on 110+ factors
+            </Text>
+          </View>
           <Text style={styles.footerText}>Page 2</Text>
         </View>
       </Page>
