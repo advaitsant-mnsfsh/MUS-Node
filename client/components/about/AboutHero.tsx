@@ -65,13 +65,12 @@ const AboutHero = () => {
         className="pointer-events-none absolute right-0 top-0 z-0 h-auto w-[72px] select-none object-contain opacity-70 sm:w-[88px] md:w-[120px]"
       />
       {/* Main Content Wrapper — vertical rhythm aligned with API Keys / Pricing heroes */}
-      <div className="relative z-[1] mx-auto flex w-full max-w-[1173px] flex-col items-center gap-16 md:gap-28">
-        {/* --- Top Section: Heading and Stats — heading block matches PricingHero exactly --- */}
-        <div className="relative z-10 flex w-full flex-col items-center gap-10 md:gap-14">
+      <div className="relative z-[1] mx-auto flex w-full max-w-[1173px] flex-col items-center gap-16 md:gap-20">
+        {/* --- Heading --- */}
           <div className="relative z-[1] mx-auto flex w-full shrink-0 flex-col items-center justify-center text-center">
             <h1
               id="hero-heading"
-              className="m-0 w-full max-w-[601px] text-center text-[26px] font-normal leading-[1.2] tracking-[-0.04em] text-[#1a1a1a] sm:text-[30px] sm:leading-[1.15] sm:tracking-[-0.05em] md:text-[36px] lg:text-[40px] lg:tracking-[-0.025em]"
+              className="m-0 w-full max-w-[601px] text-center text-[28px] font-normal leading-[1.2] tracking-[-0.04em] text-[#1a1a1a] sm:text-[30px] sm:leading-[1.15] sm:tracking-[-0.05em] md:text-[36px] lg:text-[40px] lg:tracking-[-0.025em]"
             >
               Find the Truth behind User{" "}
               <span className="relative inline-block font-bold">
@@ -96,19 +95,17 @@ const AboutHero = () => {
             <StatItem value="<5min" label="Audit Creation Time" />
             <StatItem value="110+" label="UX parameters Checked :)" />
           </div>
-        </div>
-
-        {/* --- Bottom Section: Brand Logos --- */}
-        <div className="relative z-10 mx-auto flex w-full max-w-[min(100%,73.3125rem)] flex-col items-center justify-center gap-5 pb-16 sm:gap-6 md:gap-7 md:pb-[153px]">
+          {/* --- Bottom Section: Brand Logos --- */}
+        <div className="relative z-10 mx-auto flex w-full max-w-[min(100%,73.3125rem)] flex-col items-center justify-center gap-8 pb-16 sm:gap-10 md:gap-4 md:pb-10">
           <p className="m-0 font-['DM_Sans'] text-base font-semibold text-[#1A1A1A] md:text-[16px]">
             Our Audits are trusted by:
           </p>
 
-          <div className="flex w-full flex-wrap items-start justify-center gap-x-5 gap-y-7 self-stretch sm:gap-x-6 sm:gap-y-8 md:gap-x-8 lg:flex-nowrap lg:gap-[2rem]">
+          <div className="flex w-full flex-wrap items-start justify-center gap-x-8 gap-y-7 self-stretch sm:gap-x-10 sm:gap-y-8 md:gap-x-8 lg:flex-nowrap lg:gap-[2rem]">
             {brands.map((brand) => (
               <figure
                 key={brand.id}
-                className="m-0 flex h-[4rem] w-[40%] shrink-0 flex-col items-center justify-between bg-transparent sm:w-[30%] md:h-[7.5rem] md:w-[11.375rem]"
+                className="m-0 flex h-[2.25rem] w-[40%] shrink-0 flex-col items-center justify-between bg-transparent sm:w-[30%] md:h-[7.5rem] md:w-[11.375rem]"
               >
                 <img
                   src={brand.path}

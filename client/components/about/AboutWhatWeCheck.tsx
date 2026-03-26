@@ -86,7 +86,7 @@ const AboutWhatWeCheck: React.FC = () => {
                 {cards.map((card) => (
                     <div
                         key={card.title}
-                        className="bg-[#FFEFB266] p-5 flex flex-col justify-between items-start flex-1 self-stretch w-full min-w-0 min-h-[17.5rem] sm:min-h-[19.625rem] max-w-[17.5rem] sm:max-w-none mx-auto sm:mx-0"
+                        className="bg-[#FFEFB266] p-5 flex flex-col justify-start items-start flex-1 self-stretch w-full min-w-0 min-h-[17.5rem] sm:min-h-[19.625rem] max-w-[17.5rem] sm:max-w-none mx-auto sm:mx-0"
                     >
                         {/* Icon circle */}
                         <div className="w-[4.5rem] h-[4.5rem] rounded-full bg-[#2A2A2A] flex items-center justify-center flex-shrink-0">
@@ -96,9 +96,9 @@ const AboutWhatWeCheck: React.FC = () => {
                         </div>
 
                         {/* Text at bottom */}
-                        <div className="mt-8 w-full">
-                            <h3 className="text-[1.125rem] font-bold text-[#1A1A1A] mb-2 leading-tight">{card.title}</h3>
-                            <p className="text-[1rem] font-normal text-[#555] leading-relaxed">{card.description}</p>
+                        <div className="mt-auto w-full pt-4">
+                            <h3 className="text-[1.125rem] font-bold text-[#1A1A1A] mb-2 leading-tight min-h-[3.5rem] flex items-end">{card.title}</h3>
+                            <p className="text-[1rem] font-normal text-[#555] leading-relaxed min-h-[6rem]">{card.description}</p>
                         </div>
                     </div>
                 ))}

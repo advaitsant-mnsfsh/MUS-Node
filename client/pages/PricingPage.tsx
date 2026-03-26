@@ -72,7 +72,7 @@ const PricingPage: React.FC = () => {
       />
 
       <div className="relative z-10 mx-auto mt-4 w-full max-w-[min(23.25rem,100%)] px-4 sm:mt-6 sm:max-w-[24.25rem] sm:px-6 md:mt-8 md:max-w-[1440px] lg:mt-10 lg:px-16 xl:px-[140px]">
-        <div className="grid grid-cols-1 items-stretch gap-4 sm:gap-5 md:grid-cols-3 md:gap-6">
+        <div className="grid grid-cols-1 items-stretch gap-6 md:grid-cols-3 md:gap-6">
           {plans.map((plan, index) => (
             <PricingCard key={index} {...plan} />
           ))}

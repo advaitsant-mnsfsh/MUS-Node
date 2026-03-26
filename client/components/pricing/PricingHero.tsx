@@ -19,7 +19,7 @@ const PricingHero = () => {
                 className="pointer-events-none absolute right-0 top-0 z-0 h-auto w-[72px] select-none object-contain opacity-70 sm:w-[88px] md:w-[120px]"
             />
             <div className="relative z-[1] mx-auto flex w-full max-w-[601px] shrink-0 flex-col items-center justify-center text-center">
-                <h1 className="m-0 w-full text-center text-[26px] font-normal leading-[1.2] tracking-[-0.04em] text-[#1a1a1a] sm:text-[30px] sm:leading-[1.15] sm:tracking-[-0.05em] md:text-[36px] lg:text-[40px] lg:tracking-[-0.025em]">
+                <h1 className="m-0 w-full text-center text-[28px] font-normal leading-[1.2] tracking-[-0.04em] text-[#1a1a1a] sm:text-[30px] sm:leading-[1.15] sm:tracking-[-0.05em] md:text-[36px] lg:text-[40px] lg:tracking-[-0.025em]">
                     Find the Truth behind User{' '}
                     <span className="relative inline-block font-bold">
                         Friction.
