@@ -1,7 +1,21 @@
 import React, { useMemo } from 'react';
-import { Document, Page, Text, View, StyleSheet, Image, Svg, Path, Font } from '@react-pdf/renderer';
+import { Document, Page, Text, View, StyleSheet, Image, Svg, Path, Font, Circle, Rect } from '@react-pdf/renderer';
 import { AnalysisReport, Screenshot, ScoredParameter } from '../../../types';
 import { getThemeStyles } from '../ScoreComponents';
+
+Font.register({
+  family: "DM Sans Upright",
+  fonts: [
+    // Upright (Normal)
+    { src: "https://fonts.gstatic.com/s/dmsans/v17/rP2tp2ywxg089UriI5-g4vlH9VoD8CmcqZG40F9JadbnoEwAopxhTg.ttf", fontWeight: 400, fontStyle: "normal" },
+    { src: "https://fonts.gstatic.com/s/dmsans/v17/rP2tp2ywxg089UriI5-g4vlH9VoD8CmcqZG40F9JadbnoEwAkJxhTg.ttf", fontWeight: 500, fontStyle: "normal" },
+    { src: "https://fonts.gstatic.com/s/dmsans/v17/rP2tp2ywxg089UriI5-g4vlH9VoD8CmcqZG40F9JadbnoEwARZthTg.ttf", fontWeight: 700, fontStyle: "normal" },
+    // Italic
+    { src: "https://fonts.gstatic.com/s/dmsans/v17/rP2rp2ywxg089UriCZaSExd86J3t9jz86Mvy4qCRAL19DksVat-JDW3z.ttf", fontWeight: 400, fontStyle: "italic" },
+    { src: "https://fonts.gstatic.com/s/dmsans/v17/rP2rp2ywxg089UriCZaSExd86J3t9jz86Mvy4qCRAL19DksVat-7DW3z.ttf", fontWeight: 500, fontStyle: "italic" },
+    { src: "https://fonts.gstatic.com/s/dmsans/v17/rP2rp2ywxg089UriCZaSExd86J3t9jz86Mvy4qCRAL19DksVat9uCm3z.ttf", fontWeight: 700, fontStyle: "italic" },
+  ],
+});
 
 // --- DESIGN TOKENS (Matching Web Report) ---
 const COLORS = {
@@ -32,13 +46,33 @@ const PDF_PAGE_PAD_X = 30;
 /** Space reserved below fixed header (logo row + label + URL wrap + divider) */
 const PDF_HEADER_RESERVE_TOP = 120;
 
+/**
+ * TYPOGRAPHY SCALE (A4 PDF Standard — DO NOT deviate without reason)
+ * ─────────────────────────────────────────────────────────────────
+ * Page Title / Section Title (H1)  : 22pt  bold/black  UPPERCASE
+ * Section Heading (H2)             : 16pt  bold        UPPERCASE
+ * Sub-Section Heading (H3)         : 14pt  bold/black
+ * Card / Parameter Title (H4)      : 15pt  bold
+ * Sub-Label / Amber heading (H5)   : 11–12pt  bold
+ * ─────────────────────────────────────────────────────────────────
+ * Body Text (primary)              : 10pt  regular  lineHeight 1.5
+ * Body Text (secondary / overview) : 10pt  regular  lineHeight 1.55
+ * Editorial Labels (Overview etc.) : 9.5pt  bold
+ * Section Subtitle                 : 10pt  regular
+ * Summary Heading (WHAT IS…)       : 10pt  bold  UPPERCASE
+ * ─────────────────────────────────────────────────────────────────
+ * Small / Meta (persona meta, url) : 9pt
+ * Citation / Confidence badge      : 8–9pt
+ * Footer / Date                    : 8pt
+ * ─────────────────────────────────────────────────────────────────
+ */
 const styles = StyleSheet.create({
     page: {
         paddingHorizontal: PDF_PAGE_PAD_X,
         paddingBottom: 30,
         paddingTop: PDF_HEADER_RESERVE_TOP,
         backgroundColor: COLORS.pageBg,
-        fontFamily: 'Helvetica',
+        fontFamily: 'DM Sans Upright',
     },
     headerRow: {
         marginBottom: 20,
@@ -180,8 +214,9 @@ const styles = StyleSheet.create({
         fontWeight: 'bold',
     },
     sectionSubtitle: {
-        fontSize: 9,
+        fontSize: 10,
         color: COLORS.slate600,
+        lineHeight: 1.4,
     },
 
     // --- HERO CARD (MATCHING WEB REPORT) ---
@@ -200,15 +235,16 @@ const styles = StyleSheet.create({
     },
     heroLeft: {
         width: '54%',
-        paddingTop: 4,
-        paddingBottom: 4,
+        paddingTop: 8,
+        paddingBottom: 8,
         paddingHorizontal: 12,
         borderTopWidth: 0,
         borderBottomWidth: 0,
         borderLeftWidth: 0,
         borderRightWidth: 1,
         borderRightColor: '#D4D4D4',
-        justifyContent: 'flex-start',
+        justifyContent: 'center',
+        alignItems: 'center',
     },
     heroRight: {
         width: '46%',
@@ -264,7 +300,7 @@ const styles = StyleSheet.create({
         bottom: 0,
     },
     overallLabel: {
-        fontSize: 9,
+        fontSize: 10,
         fontWeight: 'bold',
         color: COLORS.black,
         marginTop: 2,
@@ -312,8 +348,8 @@ const styles = StyleSheet.create({
         flexDirection: 'column',
     },
     miniGaugeLabel: {
-        marginTop: 4,
-        fontSize: 6.5,
+        marginTop: 3,
+        fontSize: 7,
         fontWeight: 'bold',
         textTransform: 'uppercase',
         color: COLORS.black,
@@ -363,8 +399,7 @@ const styles = StyleSheet.create({
     },
     // Header Badges
     summaryHeaderWrapper: {
-        marginBottom: 10,
-        alignSelf: 'flex-start',
+        marginBottom: 4,
     },
     summaryHeaderShadow: {
         position: 'absolute',
@@ -375,13 +410,9 @@ const styles = StyleSheet.create({
         backgroundColor: COLORS.black,
     },
     summaryHeaderMain: {
-        height: 16,
-        justifyContent: 'center',
-        paddingHorizontal: 4,
-        backgroundColor: COLORS.white,
     },
     summaryHeaderText: {
-        fontSize: 8, // Reduced to fit 16pt height
+        fontSize: 10,
         fontWeight: 'bold',
         color: COLORS.black,
         textTransform: 'uppercase',
@@ -389,8 +420,8 @@ const styles = StyleSheet.create({
     },
     // Content
     summaryPoint: {
-        fontSize: 9,
-        lineHeight: 1.4,
+        fontSize: 10,
+        lineHeight: 1.5,
         color: COLORS.black,
         marginBottom: 2,
     },
@@ -429,10 +460,10 @@ const styles = StyleSheet.create({
         width: '100%',
     },
     contextTitle: {
-        fontSize: 22,
+        fontSize: 16,
         fontWeight: 'black',
         color: COLORS.black,
-        marginBottom: 18,
+        marginBottom: 14,
     },
     contextSectionTitle: {
         fontSize: 14,
@@ -472,13 +503,13 @@ const styles = StyleSheet.create({
     contextItemText: {
         flex: 1,
         fontSize: 10,
-        lineHeight: 1.45,
+        lineHeight: 1.5,
         color: '#111827',
     },
 
     // --- TARGET AUDIENCE (PAGE 3) ---
     targetTitle: {
-        fontSize: 22,
+        fontSize: 16,
         fontWeight: 'black',
         color: COLORS.black,
         marginBottom: 10,
@@ -523,13 +554,13 @@ const styles = StyleSheet.create({
     targetItemText: {
         flex: 1,
         fontSize: 10,
-        lineHeight: 1.45,
+        lineHeight: 1.5,
         color: COLORS.slate800,
     },
 
     // --- USER PERSONAS (PAGE) ---
     personaTitle: {
-        fontSize: 22,
+        fontSize: 16,
         fontWeight: 'black',
         color: COLORS.black,
         marginBottom: 14,
@@ -572,7 +603,7 @@ const styles = StyleSheet.create({
         marginLeft: 2,
     },
     personaSectionTitle: {
-        fontSize: 10,
+        fontSize: 11,
         fontWeight: 'bold',
         color: COLORS.slate900,
         marginTop: 8,
@@ -584,14 +615,14 @@ const styles = StyleSheet.create({
     },
     personaNumber: {
         width: 12,
-        fontSize: 8.5,
+        fontSize: 9,
         fontWeight: 'bold',
         color: COLORS.slate500,
     },
     personaText: {
         flex: 1,
-        fontSize: 9,
-        lineHeight: 1.4,
+        fontSize: 10,
+        lineHeight: 1.5,
         color: COLORS.slate800,
     },
     subHeaderRow: {
@@ -623,8 +654,8 @@ const styles = StyleSheet.create({
         alignItems: 'center',
     },
     sectionText: {
-        fontSize: 9, // Increased
-        lineHeight: 1.4,
+        fontSize: 10,
+        lineHeight: 1.5,
         color: COLORS.slate700,
         marginBottom: 6,
     },
@@ -642,8 +673,8 @@ const styles = StyleSheet.create({
     },
     bulletText: {
         flex: 1,
-        fontSize: 9, // Matched to summaryPoint
-        lineHeight: 1.4,
+        fontSize: 10,
+        lineHeight: 1.5,
         color: COLORS.slate700,
     },
     // (legacy numbered styles removed from usage on page 2)
@@ -716,7 +747,7 @@ const styles = StyleSheet.create({
         fontSize: 15,
         fontWeight: 'bold',
         color: COLORS.black,
-        lineHeight: 1.25,
+        lineHeight: 1.3,
         flexShrink: 1,
     },
     paramHeadingDivider: {
@@ -727,7 +758,7 @@ const styles = StyleSheet.create({
         flexShrink: 0,
     },
     paramConfidenceText: {
-        fontSize: 7,
+        fontSize: 7.5,
         fontWeight: 'bold',
         textTransform: 'uppercase',
         letterSpacing: 0.4,
@@ -781,7 +812,7 @@ const styles = StyleSheet.create({
         fontSize: 9,
         fontStyle: 'italic',
         color: COLORS.slate600,
-        lineHeight: 1.4,
+        lineHeight: 1.5,
         marginBottom: 4,
     },
 
@@ -799,7 +830,7 @@ const styles = StyleSheet.create({
         marginBottom: 4,
     },
     editorialLabelText: {
-        fontSize: 9,
+        fontSize: 9.5,
         fontWeight: 'bold',
         color: COLORS.black,
         letterSpacing: 0.2,
@@ -822,8 +853,8 @@ const styles = StyleSheet.create({
         backgroundColor: COLORS.slate400,
     },
     contentText: {
-        fontSize: 9,
-        lineHeight: 1.4,
+        fontSize: 10,
+        lineHeight: 1.5,
         color: COLORS.slate700,
     },
 
@@ -832,7 +863,7 @@ const styles = StyleSheet.create({
         marginBottom: 8,
     },
     overviewText: {
-        fontSize: 9,
+        fontSize: 10,
         lineHeight: 1.55,
         color: COLORS.slate800,
     },
@@ -982,8 +1013,8 @@ const StandardPdfPageHeaderFixed = ({
 const OverviewIcon = () => (
     <Svg width="14" height="14" viewBox="0 0 20 20">
         <Path d="M10 2.5 L6.2 9.2 H13.8 Z" fill={COLORS.black} />
-        <Path d="M3.5 11 H8.5 V16 H3.5 Z" fill={COLORS.black} />
-        <Path d="M14 11 m-2.2 0 a2.2 2.2 0 1 0 4.4 0 a2.2 2.2 0 1 0-4.4 0" fill={COLORS.black} />
+        <Rect x="3.5" y="11" width="5" height="5" fill={COLORS.black} />
+        <Circle cx="15" cy="13.5" r="2.5" fill={COLORS.black} />
     </Svg>
 );
 
@@ -1283,7 +1314,7 @@ export const StandardReportPDF: React.FC<StandardReportPDFProps> = ({ report, ur
                                 return (
                                     <View key={idx} style={styles.miniGaugeItem}>
                                         <View style={styles.heroMiniGaugeWrap}>
-                                            <HalfGauge score={item.score} size={58} strokeWidth={5} fontSize={14} />
+                                            <HalfGauge score={item.score} size={68} strokeWidth={8} fontSize={16} />
                                         </View>
                                         <Text style={styles.miniGaugeLabel}>{item.label}</Text>
                                         <View style={[styles.statusPillSmall, { backgroundColor: t.pill }]}>

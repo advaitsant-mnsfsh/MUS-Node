@@ -403,7 +403,7 @@ const AboutScrollAnimation: React.FC = () => {
               viewport={{ once: true, margin: "-100px" }}
               transition={{ duration: 0.8, ease: "easeOut" }}
             >
-              <div className="absolute left-[4%] sm:left-[15%] top-[12%] sm:top-[20%] max-w-[min(92vw,18rem)]">
+              <div className="absolute left-[4%] sm:left-[15%] top-[12%] sm:top-[20%] max-w-[min(92vw,18rem)] sm:max-w-none">
                 <div className="bg-white border-2 border-[#1A1A1A] px-2.5 py-2 sm:px-4 sm:py-2.5 text-sm sm:text-lg md:text-[1.5rem] font-semibold text-[#1A1A1A] whitespace-normal sm:whitespace-nowrap shadow-[3px_3px_0px_#1A1A1A] leading-snug">
                   Info grouping's not clear?
                 </div>
@@ -415,7 +415,7 @@ const AboutScrollAnimation: React.FC = () => {
                 </div>
               </div>
 
-              <div className="absolute right-[3%] sm:right-[15%] top-[28%] sm:top-[32%] max-w-[min(92vw,18rem)]">
+              <div className="absolute right-[3%] sm:right-[15%] top-[28%] sm:top-[32%] max-w-[min(92vw,18rem)] sm:max-w-none">
                 <div className="bg-white border-2 border-[#1A1A1A] px-2.5 py-2 sm:px-4 sm:py-2.5 text-sm sm:text-lg md:text-[1.5rem] font-semibold text-[#1A1A1A] whitespace-normal sm:whitespace-nowrap shadow-[3px_3px_0px_#1A1A1A] leading-snug">
                   Does the visual &quot;feel off&quot;?
                 </div>
