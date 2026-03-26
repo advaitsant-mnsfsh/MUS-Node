@@ -231,7 +231,7 @@ const styles = StyleSheet.create({
         backgroundColor: COLORS.white,
         marginBottom: 14,
         overflow: 'hidden',
-        height: 342, // reduce top-section height (~26pt)
+        height: 300, // Reduced from 342px to fit executive summary better
     },
     heroLeft: {
         width: '54%',
