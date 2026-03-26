@@ -36,13 +36,9 @@ const PricingCard: React.FC<PricingCardProps> = ({
       className={`
       font-['DM_Sans'] relative flex w-full flex-col rounded-lg border-1 border-border-main bg-white px-4 py-4 transition-all
       max-md:h-auto max-md:min-h-[22.5rem] max-md:overflow-visible max-md:p-[1.35rem] sm:max-md:p-6
-      md:h-full md:min-h-0 md:p-8 lg:p-9
-      ${
-        isHighlighted
-          ? "shadow-sm ring-1 ring-[#F4D067]/90 sm:ring-2 sm:ring-[#F4D067]/75"
-          : "shadow-sm"
-      }
+      md:h-full md:min-h-0 md:p-8 lg:p-9 shadow-sm
     `}
+      style={isHighlighted ? { boxShadow: "2.572px 2.572px 0px 0px #f8d448" } : undefined}
     >
       <div className="flex min-h-0 flex-1 flex-col gap-2.5 max-md:gap-2.5 md:h-full md:justify-start md:gap-6">
         <div className="flex shrink-0 flex-col gap-2.5 sm:gap-4 md:gap-5">
