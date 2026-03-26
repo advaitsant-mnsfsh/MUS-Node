@@ -56,7 +56,7 @@ const PricingCard: React.FC<PricingCardProps> = ({
               </span>
             ) : null}
           </div>
-          <div className="flex flex-wrap items-baseline gap-1">
+          <div className="flex flex-wrap items-baseline gap-1 min-h-[2.5rem] sm:min-h-[3rem] md:min-h-[3rem]">
             {price === "Prices Tailored for you :)" ? (
               <div className="text-base font-normal leading-snug tracking-tight text-black sm:text-lg md:text-2xl">
                 Prices{" "}
@@ -76,7 +76,7 @@ const PricingCard: React.FC<PricingCardProps> = ({
               </>
             )}
           </div>
-          <p className="text-[13px] font-normal leading-snug tracking-normal text-black sm:text-sm sm:leading-normal md:text-base">
+          <p className="text-[13px] font-normal leading-snug tracking-normal text-black sm:text-sm sm:leading-normal md:text-base min-h-[2rem] sm:min-h-[2.75rem] md:min-h-[3rem]">
             {description}
           </p>
         </div>
