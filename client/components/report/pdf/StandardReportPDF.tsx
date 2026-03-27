@@ -264,7 +264,7 @@ const styles = StyleSheet.create({
         width: '100%',
         alignItems: 'center',
         justifyContent: 'center',
-        marginBottom: 2,
+        marginBottom: 14,
     },
     // NOTE: Don't hard-limit gauge wrapper heights; it clips the HalfGauge and misaligns the score text.
     largeGaugeContainer: {
@@ -727,15 +727,15 @@ const styles = StyleSheet.create({
         borderLeftWidth: 1,
         borderColor: COLORS.slate200,
         borderRadius: 12,
-        marginBottom: 14,
-        paddingVertical: 12,
+        marginBottom: 10, 
+        paddingVertical: 8,
         paddingHorizontal: 12,
     },
     paramHeader: {
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
-        marginBottom: 10,
+        marginBottom: 8,
     },
     paramHeadingLeft: {
         flexDirection: 'row',
@@ -791,7 +791,7 @@ const styles = StyleSheet.create({
         borderBottomWidth: 1,
         borderLeftWidth: 1,
         borderColor: COLORS.slate200,
-        paddingVertical: 8,
+        paddingVertical: 6,
         paddingHorizontal: 8,
         marginRight: 4,
     },
@@ -799,14 +799,14 @@ const styles = StyleSheet.create({
         marginRight: 0,
     },
     paramCitationBlock: {
-        marginTop: 10,
-        paddingTop: 6,
+        marginTop: 4,
+        paddingTop: 2,
     },
     paramCitationLabel: {
         fontSize: 9,
         fontStyle: 'italic',
         color: COLORS.slate500,
-        marginBottom: 6,
+        marginBottom: 4,
     },
     paramCitationItem: {
         fontSize: 9,
@@ -838,8 +838,8 @@ const styles = StyleSheet.create({
 
     // Content sections (stacked with subtle dividers)
     contentSection: {
-        paddingTop: 8,
-        paddingBottom: 8,
+        paddingTop: 6,
+        paddingBottom: 6,
         borderTopWidth: 1,
         borderRightWidth: 0,
         borderBottomWidth: 0,
