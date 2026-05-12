@@ -228,9 +228,9 @@ function AppWithRouting() {
                         <Route path="/pricing" element={<PricingPage />} />
                         <Route path="/feedback" element={<FeedbackPage />} />
                         <Route path="/docs/widget" element={<DocsWidgetPage />} />
-                        <Route path="/checkout" element={<CheckoutPage />} />
                     </Route>
 
+                    <Route path="/checkout" element={<CheckoutPage />} />
                     <Route path="/shared/:auditId" element={<SharedAuditView />} />
                     <Route path="/embed" element={<EmbedPage />} />
                     <Route path="/legal" element={<LegalPage />} />
