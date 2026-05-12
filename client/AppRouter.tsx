@@ -13,6 +13,7 @@ import { DataLoadingScreen } from './components/DataLoadingScreen';
 import { ReportContainer } from './components/report/ReportContainer';
 import DocsWidgetPage from './pages/DocsWidgetPage';
 import LegalPage from './pages/LegalPage';
+import CheckoutPage from './pages/CheckoutPage';
 
 import { Logo } from './components/Logo';
 import { AdminAuditDashboard } from './pages/AdminAuditDashboard';
@@ -227,6 +228,7 @@ function AppWithRouting() {
                         <Route path="/pricing" element={<PricingPage />} />
                         <Route path="/feedback" element={<FeedbackPage />} />
                         <Route path="/docs/widget" element={<DocsWidgetPage />} />
+                        <Route path="/checkout" element={<CheckoutPage />} />
                     </Route>
 
                     <Route path="/shared/:auditId" element={<SharedAuditView />} />
