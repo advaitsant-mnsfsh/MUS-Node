@@ -24,11 +24,16 @@ const PricingCard: React.FC<PricingCardProps> = ({
   const navigate = useNavigate();
 
   const handleButtonClick = () => {
-    if (title === "Scale") {
-      navigate("/feedback");
-    } else {
-      navigate("/");
-    }
+    const finalPrice = price === "Prices Tailored for you :)" ? "Custom Pricing" : price;
+    navigate("/checkout", {
+      state: {
+        plan: {
+          title,
+          price: finalPrice,
+          description
+        }
+      }
+    });
   };
 
   return (
